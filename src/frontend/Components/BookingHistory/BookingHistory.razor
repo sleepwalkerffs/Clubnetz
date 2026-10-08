@@ -1,0 +1,204 @@
+@using System.Globalization
+@using Bookennis.Client.Utils
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.ClubShell
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.Members
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Club
+
+@implements IDisposable
+
+<SectionCard Emoji="📜" Title="@Locale["BookingHistory"]" Subtitle="@Locale["BookingHistorySubtitle"]">
+    @if (ClubStore.Seasons.Count > 0)
+    {
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4" ActivePanelIndexChanged="OnTabChanged">
+            @foreach (var season in OrderedSeasons)
+            {
+                <MudTabPanel Text="@($"{Locale["Season"]} {season.StartDate:yyyy}")">
+                    @if (GetDistinctPlayModes().Count > 1)
+                    {
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            @foreach (var playMode in GetDistinctPlayModes())
+                            {
+                                var isSelected = selectedPlayModeIds.Contains(playMode.Id);
+                                <MudChip T="int"
+                                         Value="@playMode.Id"
+                                         Size="Size.Small"
+                                         Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
+                                         Style="@GetChipStyle(playMode.Color, isSelected)"
+                                         OnClick="() => TogglePlayMode(playMode.Id)">
+                                    @playMode.Name
+                                </MudChip>
+                            }
+                        </div>
+                    }
+
+                    @if (MembersStore.IsLoading)
+                    {
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+                    }
+                    else if (FilteredBookings.Count == 0)
+                    {
+                        <div class="history-empty">
+                            <div class="history-empty__emoji" aria-hidden="true">🎾</div>
+                            <MudText Typo="Typo.body1">@Locale["NoBookingsInSeason"]</MudText>
+                        </div>
+                    }
+                    else
+                    {
+                        var now = DateTimeOffset.Now;
+                        var played = FilteredBookings.Where(b => b.Interval.From <= now).ToList();
+
+                        <div class="history-summary">
+                            <div class="history-summary__item">
+                                <span class="history-summary__value">@played.Count</span>
+                                <span class="history-summary__label">@Locale["HistoryPlayed"]</span>
+                            </div>
+                            <div class="history-summary__item">
+                                <span class="history-summary__value">@FormatHours(played)</span>
+                                <span class="history-summary__label">@Locale["HistoryHours"]</span>
+                            </div>
+                            <div class="history-summary__item">
+                                <span class="history-summary__value">@CountPartners(played)</span>
+                                <span class="history-summary__label">@Locale["HistoryPartners"]</span>
+                            </div>
+                            <div class="history-summary__item">
+                                <span class="history-summary__value">@(FilteredBookings.Count - played.Count)</span>
+                                <span class="history-summary__label">@Locale["HistoryUpcoming"]</span>
+                            </div>
+                        </div>
+
+                        @foreach (var month in FilteredBookings.OrderByDescending(b => b.Interval.From).GroupBy(b => new { b.Interval.From.Year, b.Interval.From.Month }))
+                        {
+                            <div class="history-month">
+                                <span>@(new DateTime(month.Key.Year, month.Key.Month, 1).ToString("MMMM yyyy", CultureInfo.CurrentCulture))</span>
+                                <span class="history-month__count">@month.Count()</span>
+                            </div>
+
+                            @foreach (var booking in month)
+                            {
+                                var isUpcoming = booking.Interval.From > now;
+                                <BookingListItem Booking="@booking" ClubId="@ClubId" CourtName="@GetCourtName(booking.CourtId)"
+                                                 OwnMemberId="@MemberId" Highlight="@isUpcoming"
+                                                 Tag="@(isUpcoming ? Locale["Upcoming"].Value : null)" />
+                            }
+                        }
+                    }
+                </MudTabPanel>
+            }
+        </MudTabs>
+    }
+    else
+    {
+        <div class="history-empty">
+            <div class="history-empty__emoji" aria-hidden="true">🎾</div>
+            <MudText Typo="Typo.body1">@Locale["NoBookingsInSeason"]</MudText>
+        </div>
+    }
+</SectionCard>
+
+@code {
+    [Parameter]
+    public required int MemberId { get; set; }
+
+    [Parameter]
+    public required int ClubId { get; set; }
+
+    [Inject]
+    private IMembersStore MembersStore { get; set; } = null!;
+
+    [Inject]
+    private IClubStore ClubStore { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<ClubShellLocale> Locale { get; set; } = null!;
+
+    private HashSet<int> selectedPlayModeIds = [];
+
+    private List<SeasonResult> OrderedSeasons => ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList();
+
+    private List<BookingResult> FilteredBookings =>
+        selectedPlayModeIds.Count == 0 || selectedPlayModeIds.Count == GetDistinctPlayModes().Count
+            ? MembersStore.BookingHistory
+            : MembersStore.BookingHistory.Where(b => selectedPlayModeIds.Contains(b.PlayMode.Id)).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (ClubStore.Seasons.Count == 0)
+            await ClubStore.LoadSeasons();
+
+        if (ClubStore.Courts.Count == 0)
+            await ClubStore.LoadCourts();
+
+        var firstSeason = OrderedSeasons.FirstOrDefault();
+        if (firstSeason is not null)
+        {
+            await MembersStore.LoadBookingHistory(MemberId, firstSeason.Id);
+            InitializeSelectedPlayModes();
+        }
+
+        MembersStore.OnBookingHistoryChanged += OnBookingHistoryChanged;
+    }
+
+    private void OnBookingHistoryChanged()
+    {
+        InitializeSelectedPlayModes();
+        StateHasChanged();
+    }
+
+    private async Task OnTabChanged(int index)
+    {
+        selectedPlayModeIds.Clear();
+        var seasons = OrderedSeasons;
+        if (index >= 0 && index < seasons.Count)
+        {
+            await MembersStore.LoadBookingHistory(MemberId, seasons[index].Id);
+        }
+    }
+
+    private void TogglePlayMode(int playModeId)
+    {
+        if (!selectedPlayModeIds.Remove(playModeId))
+            selectedPlayModeIds.Add(playModeId);
+    }
+
+    private void InitializeSelectedPlayModes()
+    {
+        selectedPlayModeIds = GetDistinctPlayModes().Select(pm => pm.Id).ToHashSet();
+    }
+
+    private List<PlayModeDto> GetDistinctPlayModes()
+        => MembersStore.BookingHistory
+            .Select(b => b.PlayMode)
+            .DistinctBy(p => p.Id)
+            .OrderBy(p => p.Name)
+            .ToList();
+
+    private string GetCourtName(int courtId)
+    {
+        var court = ClubStore.Courts.FirstOrDefault(c => c.CourtId == courtId);
+        return court?.Name ?? courtId.ToString();
+    }
+
+    private static string FormatHours(List<BookingResult> bookings)
+        => bookings.Sum(b => (b.Interval.To - b.Interval.From).TotalHours).ToString("0.#", CultureInfo.CurrentCulture);
+
+    private int CountPartners(List<BookingResult> bookings)
+        => bookings.SelectMany(b => b.Players).Where(p => p.MemberId != MemberId).Select(p => p.MemberId).Distinct().Count();
+
+    private static string GetChipStyle(int colorArgb, bool isSelected)
+    {
+        var hex = BookingColors.ToHex(colorArgb);
+        return isSelected
+            ? $"background-color: {hex}; color: white; border-color: {hex};"
+            : $"color: {hex}; border-color: {hex};";
+    }
+
+    public void Dispose()
+    {
+        MembersStore.OnBookingHistoryChanged -= OnBookingHistoryChanged;
+    }
+}

@@ -1,0 +1,50 @@
+.stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-inputs);
+    background: var(--mud-palette-surface);
+}
+
+.stepper__button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    font: inherit;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--bk-dark-green, #047857);
+    background: color-mix(in srgb, #059669 12%, transparent);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.stepper__button:hover:not(:disabled) {
+    background: color-mix(in srgb, #059669 22%, transparent);
+}
+
+.stepper__button:disabled {
+    cursor: default;
+    opacity: 0.35;
+}
+
+.stepper__value {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 64px;
+    line-height: 1.1;
+}
+
+.stepper__number {
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.stepper__unit {
+    font-size: 0.7rem;
+    color: var(--mud-palette-text-secondary);
+}

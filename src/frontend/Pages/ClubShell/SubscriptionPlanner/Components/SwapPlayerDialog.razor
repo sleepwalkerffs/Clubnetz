@@ -1,0 +1,87 @@
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.SubscriptionPlanner
+@using Bookennis.Shared.Controller.SubscriptionPlans
+
+<MudDialog>
+    <DialogContent>
+        @if (current is not null)
+        {
+            <div class="d-flex align-center gap-2 mb-2">
+                <MudText Typo="Typo.body2">@L["ReplacePlayer"]</MudText>
+                <ParticipantChip Name="@current.Name" ColorIndex="current.ColorIndex" Size="Size.Small" />
+            </div>
+        }
+
+        @if (candidates.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Dense="true">@L["NoAvailablePlayers"]</MudAlert>
+        }
+        else
+        {
+            <MudList T="int" Dense="true">
+                @foreach (var candidate in candidates)
+                {
+                    <MudListItem T="int" OnClick="@(() => Select(candidate.Id))">
+                        <div class="d-flex align-center justify-space-between gap-2">
+                            <ParticipantChip Name="@candidate.Name" ColorIndex="candidate.ColorIndex" Size="Size.Small" />
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @candidate.Assigned / @SubscriptionPlannerFormat.Number(candidate.Target)
+                            </MudText>
+                        </div>
+                    </MudListItem>
+                }
+            </MudList>
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (current is not null)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.PersonRemove" OnClick="Remove">@L["RemovePlayer"]</MudButton>
+        }
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Cancel">@SharedLocale["Cancel"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    /// <summary>The chosen participant; null removes the player from the week.</summary>
+    public record Selection(int? ParticipantId);
+
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public required SubscriptionPlanDto Plan { get; set; }
+
+    [Parameter, EditorRequired]
+    public required SubscriptionWeekDto Week { get; set; }
+
+    [Parameter]
+    public int? CurrentParticipantId { get; set; }
+
+    [Inject]
+    private IStringLocalizer<SubscriptionPlannerLocale> L { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private SubscriptionParticipantDto? current;
+    private List<SubscriptionParticipantDto> candidates = [];
+
+    protected override void OnParametersSet()
+    {
+        current = Plan.Participants.FirstOrDefault(p => p.Id == CurrentParticipantId);
+
+        // Participants that play the fewest games relative to their target come first
+        candidates = Plan.Participants
+            .Where(p => !Week.ParticipantIds.Contains(p.Id) && !p.UnavailableWeeks.Contains(Week.Monday))
+            .OrderBy(p => p.Assigned - p.Target)
+            .ThenBy(p => p.Name)
+            .ToList();
+    }
+
+    private void Select(int participantId) => MudDialog.Close(DialogResult.Ok(new Selection(participantId)));
+
+    private void Remove() => MudDialog.Close(DialogResult.Ok(new Selection(null)));
+
+    private void Cancel() => MudDialog.Cancel();
+}

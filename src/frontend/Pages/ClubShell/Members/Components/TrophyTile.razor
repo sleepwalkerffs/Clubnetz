@@ -1,0 +1,38 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Trophies
+
+<button type="button" class="@($"trophy-tile {(Level is null ? "trophy-tile--special" : null)} {Class}")"
+        style="--badge-color: @BadgeColors.ForLevel(Level)"
+        @onclick="OnClick">
+    <span class="trophy-tile__glow" aria-hidden="true"></span>
+    <BadgeIcon ImageUrl="@ImageUrl" Level="@Level" Alt="@Name" Size="Size.Large" Class="trophy-tile__icon" />
+    <span class="trophy-tile__name">@Name</span>
+    <span class="trophy-tile__pill">@(Level is { } level ? string.Format(Locale["LevelShort"], level) : Locale["SpecialAward"])</span>
+    @if (Date is { } date)
+    {
+        <span class="trophy-tile__date">@date.ToLocalTime().ToString("d", CultureInfo.CurrentCulture)</span>
+    }
+    @if (ChildContent is not null)
+    {
+        <span class="trophy-tile__extra">@ChildContent</span>
+    }
+</button>
+
+@code {
+    [Parameter, EditorRequired] public string Name { get; set; } = null!;
+    [Parameter] public string? ImageUrl { get; set; }
+
+    /// <summary>Tier level, null for one-time badges.</summary>
+    [Parameter] public int? Level { get; set; }
+
+    /// <summary>Earned or awarded date, hidden when null.</summary>
+    [Parameter] public DateTimeOffset? Date { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    /// <summary>Optional additional lines below the pill.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Inject] private IStringLocalizer<TrophyLocale> Locale { get; set; } = null!;
+}

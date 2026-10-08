@@ -1,0 +1,369 @@
+@page "/clubs/{ClubId:int}/members"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Members
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Pages.ClubShell.Members.Dialogs
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Members
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Members
+@using Bookennis.Shared.Controller.Shared
+@using Bookennis.Shared.Utils.Paging
+@using SortParameters = Bookennis.Shared.Utils.Sorting.SortParameters
+
+@implements IDisposable
+
+<PageTitle>@SharedLocale["Members"]</PageTitle>
+
+<div class="members-page">
+    <AdminHero Emoji="👥" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@SharedLocale["Members"]" Subtitle="@L["MembersSubtitle"]">
+        <Chips>
+            @if (MembersStore.Summary is { } summary)
+            {
+                <span class="hero-chip">👥 @string.Format(L["MembersChip"], summary.TotalMembers)</span>
+                @if (summary.ActiveSeasonId is not null)
+                {
+                    <span class="hero-chip hero-chip--ok">✅ @string.Format(L["ActiveChip"], summary.ActiveSeasonMembers)</span>
+                    <span class="hero-chip">🆕 @string.Format(L["NewChip"], summary.NewMembers)</span>
+                }
+                @if (summary.LapsedMembers > 0)
+                {
+                    <span class="hero-chip hero-chip--warn">👋 @string.Format(L["LapsedChip"], summary.LapsedMembers)</span>
+                }
+            }
+        </Chips>
+        <Aside>
+            <div class="copy-panel__caption">@L["CopyCaption"]</div>
+            <div class="copy-panel__value">@string.Format(L["ResultCount"], MembersStore.TotalMembers)</div>
+            <div class="copy-panel__text">@(state.ActiveFilterCount > 0 ? L["CopyTextFiltered"] : L["CopyTextAll"])</div>
+            <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Class="copy-panel__menu">
+                <ActivatorContent>
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.ContentCopy"
+                               EndIcon="@Icons.Material.Filled.ArrowDropDown" Class="copy-panel__button" Disabled="@(MembersStore.TotalMembers == 0 || copying)">
+                        @L["CopyEmails"]
+                    </MudButton>
+                </ActivatorContent>
+                <ChildContent>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Email" OnClick="@(() => CopyEmails(","))">@L["CopyComma"]</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.MarkEmailRead" OnClick="@(() => CopyEmails(";"))">@L["CopySemicolon"]</MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.FormatListBulleted" OnClick="@(() => CopyEmails("\n"))">@L["CopyLines"]</MudMenuItem>
+                </ChildContent>
+            </MudMenu>
+        </Aside>
+    </AdminHero>
+
+    <MemberFilterPanel State="@state" StateChanged="@ApplyState" Seasons="@SeasonsNewestFirst" Summary="@MembersStore.Summary" />
+
+    <div class="results">
+        <div class="results__toolbar">
+            <div class="results__count">
+                <strong>@MembersStore.TotalMembers</strong> @L["MembersFound"]
+                @if (state.ActiveFilterCount > 0)
+                {
+                    <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.FilterAltOff" OnClick="ClearFilters">@L["ClearFilters"]</MudButton>
+                }
+            </div>
+            <div class="results__sort">
+                <MudSelect T="string" Value="@state.SortBy" ValueChanged="@(value => ApplyState(state with { SortBy = value, Page = 1 }))" Variant="Variant.Outlined"
+                           Margin="Margin.Dense" Dense="true" Label="@SharedLocale["TableSortBy"]" Class="results__sort-select">
+                    @foreach (var column in MemberListState.SortableColumns)
+                    {
+                        <MudSelectItem T="string" Value="@column">@L[$"Sort_{column}"]</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudIconButton Icon="@(state.SortDescending ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward)" Size="Size.Small"
+                               aria-label="@L["SortDirection"]" OnClick="@(() => ApplyState(state with { SortDescending = !state.SortDescending, Page = 1 }))" />
+            </div>
+        </div>
+
+        @if (MembersStore.IsLoading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="results__loading" />
+        }
+
+        @if (MembersStore.Members.Count == 0 && !MembersStore.IsLoading)
+        {
+            <div class="results__empty">
+                <div class="results__empty-emoji" aria-hidden="true">🔍</div>
+                <div class="results__empty-title">@L["NoMembersFound"]</div>
+                @if (state.ActiveFilterCount > 0)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ClearFilters" Class="mt-3">@L["ClearFilters"]</MudButton>
+                }
+            </div>
+        }
+        else
+        {
+            <table class="members-table">
+                <thead>
+                    <tr>
+                        <th>@SortHeader(nameof(MemberResult.LastName), SharedLocale["Name"])</th>
+                        <th>@SortHeader(nameof(MemberResult.Birthday), L["Age"])</th>
+                        <th>@SortHeader(nameof(MemberResult.ContactEmail), SharedLocale["Email"])</th>
+                        <th>@SharedLocale["Role"]</th>
+                        <th>@L["Seasons"]</th>
+                        <th>@SortHeader(nameof(MemberResult.LastPlayed), L["LastPlayed"])</th>
+                        <th class="members-table__actions"><span class="visually-hidden">@L["Edit"]</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var member in MembersStore.Members)
+                    {
+                        <tr @onclick="() => OpenMember(member)" class="members-table__row">
+                            <td>
+                                <div class="member-cell">
+                                    <UserAvatar FirstName="@member.FirstName" LastName="@member.LastName" ProfilePictureUrl="@member.ProfilePictureUrl" Size="Size.Medium" Color="Color.Secondary" />
+                                    <div class="member-cell__text">
+                                        <div class="member-cell__name">@member.LastName @member.FirstName</div>
+                                        @if (member.FamilyId is not null)
+                                        {
+                                            <div class="member-cell__meta">👪 @L["Family"]</div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="age-cell">
+                                    <span class="age-cell__age">@MemberAdminHelpers.Age(member.Birthday)</span>
+                                    <span class="age-cell__group">@L[$"AgeGroup_{MemberAdminHelpers.AgeGroupOf(member.Birthday)}"]</span>
+                                </div>
+                            </td>
+                            <td>@RenderEmail(member)</td>
+                            <td>@RenderRoles(member)</td>
+                            <td>@RenderSeasonDots(member)</td>
+                            <td><span class="last-played @(member.LastPlayed is null ? "last-played--never" : null)">@MemberAdminHelpers.RelativeDate(L, member.LastPlayed)</span></td>
+                            <td class="members-table__actions" @onclick:stopPropagation="true">
+                                <MudTooltip Text="@L["QuickEdit"]">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(member)" aria-label="@L["QuickEdit"]" />
+                                </MudTooltip>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="member-cards">
+                @foreach (var member in MembersStore.Members)
+                {
+                    <div class="member-card" @onclick="() => OpenMember(member)">
+                        <UserAvatar FirstName="@member.FirstName" LastName="@member.LastName" ProfilePictureUrl="@member.ProfilePictureUrl" Size="Size.Large" Color="Color.Secondary" />
+                        <div class="member-card__body">
+                            <div class="member-card__head">
+                                <span class="member-card__name">@member.FirstName @member.LastName</span>
+                                <span class="member-card__age">@MemberAdminHelpers.Age(member.Birthday) @L["YearsShort"]</span>
+                            </div>
+                            @RenderEmail(member)
+                            <div class="member-card__row">
+                                @RenderRoles(member)
+                            </div>
+                            <div class="member-card__row member-card__row--between">
+                                @RenderSeasonDots(member)
+                                <span class="last-played @(member.LastPlayed is null ? "last-played--never" : null)">🎾 @MemberAdminHelpers.RelativeDate(L, member.LastPlayed)</span>
+                            </div>
+                        </div>
+                        <div class="member-card__edit" @onclick:stopPropagation="true">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(member)" aria-label="@L["QuickEdit"]" />
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="results__pager">
+                <span class="results__range">@RangeText</span>
+                <MudPagination Count="@PageCount" Selected="@state.Page" SelectedChanged="@(page => ApplyState(state with { Page = page }))"
+                               Size="Size.Small" Color="Color.Primary" BoundaryCount="1" MiddleCount="3" />
+                <MudSelect T="int" Value="@state.PageSize" ValueChanged="@(size => ApplyState(state with { PageSize = size, Page = 1 }))"
+                           Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true" Label="@L["PerPage"]" Class="results__size">
+                    @foreach (var size in MemberListState.PageSizes)
+                    {
+                        <MudSelectItem T="int" Value="@size">@size</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.Search)] public string? QuerySearch { get; set; }
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.Role)] public int[]? QueryRoles { get; set; }
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.New)] public bool? QueryNew { get; set; }
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.In)] public int[]? QueryIn { get; set; }
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.NotIn)] public int[]? QueryNotIn { get; set; }
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.NoBookingsIn)] public int? QueryNoBookingsIn { get; set; }
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.Gender)] public int[]? QueryGenders { get; set; }
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.Age)] public int[]? QueryAges { get; set; }
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.Email)] public bool? QueryEmail { get; set; }
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.Page)] public int? QueryPage { get; set; }
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.Size)] public int? QuerySize { get; set; }
+    [SupplyParameterFromQuery(Name = MemberListState.QueryKeys.Sort)] public string? QuerySort { get; set; }
+
+    [Inject] private IMembersStore MembersStore { get; set; } = null!;
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembersAdminLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    private MemberListState state = new();
+    private string? loadedQuery;
+    private bool copying;
+
+    private List<SeasonResult> SeasonsNewestFirst => ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList();
+
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(MembersStore.TotalMembers / (double)state.PageSize));
+
+    private string RangeText
+    {
+        get
+        {
+            var from = (state.Page - 1) * state.PageSize + 1;
+            var to = Math.Min(state.Page * state.PageSize, MembersStore.TotalMembers);
+            return string.Format(L["Range"], from, to, MembersStore.TotalMembers);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        MembersStore.OnMembersChanged += StateHasChanged;
+        MembersStore.OnSummaryChanged += StateHasChanged;
+        ClubStore.OnSeasonsChanged += StateHasChanged;
+
+        await Task.WhenAll(ClubStore.LoadSeasons(), MembersStore.LoadSummary());
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        state = MemberListState.FromQuery(QuerySearch, QueryRoles, QueryNew, QueryIn, QueryNotIn, QueryNoBookingsIn,
+            QueryGenders, QueryAges, QueryEmail, QueryPage, QuerySize, QuerySort);
+
+        var query = NavigationManager.GetUriWithQueryParameters(state.ToQuery());
+        if (query == loadedQuery)
+            return;
+
+        loadedQuery = query;
+        MembersStore.ListUri = NavigationManager.Uri;
+        await LoadMembers();
+    }
+
+    private async Task LoadMembers()
+    {
+        var paging = new PaginationParameters { Page = state.Page, PageSize = state.PageSize, EnablePaging = true };
+        var sort = new SortParameters { [state.SortBy] = state.SortDescending ? Bookennis.Shared.Utils.Sorting.SortDirection.Descending : Bookennis.Shared.Utils.Sorting.SortDirection.Ascending };
+        await MembersStore.LoadMembers(paging, sort, state.ToFilter());
+
+        // The page may be out of range after the filter changed, the server returns the last page then
+        if (MembersStore.Page != state.Page && MembersStore.TotalMembers > 0)
+            ApplyState(state with { Page = MembersStore.Page });
+    }
+
+    /// <summary>Changes the list by changing the URL, so the browser history (back button) restores it.</summary>
+    private void ApplyState(MemberListState newState)
+        => NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameters(newState.ToQuery()), replace: true);
+
+    private void ClearFilters() => ApplyState(state.WithoutFilters());
+
+    private async Task CopyEmails(string separator)
+    {
+        copying = true;
+        try
+        {
+            var emails = await MembersStore.GetMemberEmails(state.ToFilter());
+            if (emails.Length == 0)
+            {
+                Snackbar.Add(L["NoEmailsToCopy"], Severity.Warning);
+                return;
+            }
+
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", string.Join(separator, emails));
+            var missing = MembersStore.TotalMembers - emails.Length;
+            Snackbar.Add(missing > 0
+                ? string.Format(L["EmailsCopiedWithMissing"], emails.Length, missing)
+                : string.Format(L["EmailsCopied"], emails.Length), Severity.Success);
+        }
+        finally
+        {
+            copying = false;
+        }
+    }
+
+    private void OpenMember(MemberResult member)
+        => NavigationManager.NavigateTo($"/clubs/{ClubId}/members/{member.MemberId}");
+
+    private async Task OpenEditDialog(MemberResult member)
+    {
+        var parameters = new DialogParameters<MemberEditDialog> { { dialog => dialog.Member, member } };
+        var dialog = await DialogService.ShowAsync<MemberEditDialog>(L["EditMember"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            await Task.WhenAll(LoadMembers(), MembersStore.LoadSummary());
+        }
+    }
+
+    private RenderFragment SortHeader(string column, string text) => __builder =>
+    {
+        var active = state.SortBy == column;
+        <button type="button" class="sort-header @(active ? "sort-header--active" : null)"
+                @onclick="() => ApplyState(state with { SortBy = column, SortDescending = active && !state.SortDescending, Page = 1 })">
+            @text
+            <span class="sort-header__icon" aria-hidden="true">@(active ? state.SortDescending ? "▼" : "▲" : "↕")</span>
+        </button>
+    };
+
+    private RenderFragment RenderEmail(MemberResult member) => __builder =>
+    {
+        if (member.Email is not null)
+        {
+            <span class="email-cell" title="@member.Email">✉️ @member.Email</span>
+        }
+        else if (member.ContactEmail is not null)
+        {
+            <span class="email-cell email-cell--parent" title="@member.ContactEmail">👪 @member.ContactEmail</span>
+        }
+        else
+        {
+            <span class="email-cell email-cell--missing">📭 @L["NoEmail"]</span>
+        }
+    };
+
+    private RenderFragment RenderRoles(MemberResult member) => __builder =>
+    {
+        <div class="role-chips">
+            @foreach (var role in member.Roles.Where(r => r != MemberRole.User).DefaultIfEmpty(MemberRole.User))
+            {
+                <span class="role-chip" style="--role-color: @MemberAdminHelpers.RoleColor(role)">@SharedLocale[$"Role_{role}"]</span>
+            }
+        </div>
+    };
+
+    private RenderFragment RenderSeasonDots(MemberResult member) => __builder =>
+    {
+        var seasons = SeasonsNewestFirst.Take(6).Reverse().ToList();
+        <div class="season-dots" role="img" aria-label="@string.Join(", ", seasons.Where(s => member.AllowedSeasonIds.Contains(s.Id)).Select(MemberAdminHelpers.SeasonLabel))">
+            @foreach (var season in seasons)
+            {
+                var enrolled = member.AllowedSeasonIds.Contains(season.Id);
+                <span class="season-dot @(enrolled ? "season-dot--on" : null) @(season.IsActive ? "season-dot--active" : null)"
+                      title="@($"{MemberAdminHelpers.SeasonLabel(season)}: {(enrolled ? L["Enrolled"] : L["NotEnrolled"])}")"></span>
+            }
+        </div>
+    };
+
+    public void Dispose()
+    {
+        MembersStore.OnMembersChanged -= StateHasChanged;
+        MembersStore.OnSummaryChanged -= StateHasChanged;
+        ClubStore.OnSeasonsChanged -= StateHasChanged;
+    }
+}

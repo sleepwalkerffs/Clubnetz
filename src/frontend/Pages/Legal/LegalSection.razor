@@ -1,0 +1,64 @@
+@* A titled block of a legal page. The text uses a minimal format: lines starting with "- " become a bullet list, everything else a paragraph. *@
+<section class="legal-section">
+    @if (Title is not null)
+    {
+        <h2 class="legal-section__title">@Title</h2>
+    }
+
+    @if (Text is not null)
+    {
+        @foreach (var block in Blocks)
+        {
+            if (block.IsList)
+            {
+                <ul>
+                    @foreach (var item in block.Lines)
+                    {
+                        <li>@item</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p>@string.Join(" ", block.Lines)</p>
+            }
+        }
+    }
+
+    @ChildContent
+</section>
+
+@code {
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Text { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private List<Block> Blocks { get; set; } = [];
+
+    protected override void OnParametersSet() => Blocks = Parse(Text);
+
+    private static List<Block> Parse(string? text)
+    {
+        var blocks = new List<Block>();
+        if (string.IsNullOrWhiteSpace(text))
+            return blocks;
+
+        foreach (var rawLine in text.Split('\n'))
+        {
+            var line = rawLine.Trim();
+            if (line.Length == 0)
+                continue;
+
+            var isListItem = line.StartsWith("- ", StringComparison.Ordinal);
+            var content = isListItem ? line[2..] : line;
+            if (blocks.Count > 0 && blocks[^1].IsList == isListItem && isListItem)
+                blocks[^1].Lines.Add(content);
+            else
+                blocks.Add(new Block(isListItem, [content]));
+        }
+
+        return blocks;
+    }
+
+    private record Block(bool IsList, List<string> Lines);
+}

@@ -1,0 +1,10 @@
+<div class="pa-2">
+    <MudNavMenu Bordered="true" Rounded="true" Color="Color.Primary">
+        <MudNavLink Match="NavLinkMatch.Prefix" Href="/admin/users" Icon="@Icons.Material.Filled.People">@L["Users"]</MudNavLink>
+        <MudNavLink Match="NavLinkMatch.Prefix" Href="/admin/clubs" Icon="@Icons.Material.Filled.SportsTennis">@L["Clubs"]</MudNavLink>
+    </MudNavMenu>
+</div>
+
+@code {
+    [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
+}

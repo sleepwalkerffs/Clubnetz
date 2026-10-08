@@ -1,0 +1,2 @@
+[*.cs]
+dotnet_diagnostic.RCS1170.severity = none # RCS1170: Use read-only auto-implemented property

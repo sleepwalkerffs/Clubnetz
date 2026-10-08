@@ -1,0 +1,153 @@
+.rhythm-section-title {
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.weekday-bars {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    height: 150px;
+}
+
+.weekday-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+}
+
+.weekday-bar__count {
+    height: 18px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.weekday-bar__track {
+    flex: 1;
+    width: 100%;
+    max-width: 44px;
+    display: flex;
+    align-items: flex-end;
+    border-radius: 10px;
+    background: var(--mud-palette-background-gray);
+    overflow: hidden;
+}
+
+.weekday-bar__fill {
+    width: 100%;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #6EE7B7, #10B981);
+    transition: height 0.6s ease;
+}
+
+.weekday-bar__fill--top {
+    background: linear-gradient(180deg, #34D399, #047857);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+}
+
+.weekday-bar__label {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.weekday-bar__label--weekend {
+    font-weight: 700;
+    color: var(--mud-palette-secondary);
+}
+
+.hour-curve {
+    display: flex;
+    align-items: stretch;
+    gap: 3px;
+    height: 110px;
+}
+
+.hour-bar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.hour-bar__track {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+}
+
+.hour-bar__fill {
+    width: 100%;
+    border-radius: 4px 4px 2px 2px;
+    transition: height 0.6s ease;
+}
+
+.hour-bar__fill--morning {
+    background: #F59E0B;
+}
+
+.hour-bar__fill--afternoon {
+    background: #10B981;
+}
+
+.hour-bar__fill--evening {
+    background: #6366F1;
+}
+
+.hour-bar__label {
+    height: 16px;
+    margin-top: 4px;
+    font-size: 0.65rem;
+    text-align: center;
+    color: var(--mud-palette-text-secondary);
+    white-space: nowrap;
+}
+
+.daytime-buckets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.daytime-bucket {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 4px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.daytime-bucket--morning {
+    background: rgba(245, 158, 11, 0.12);
+}
+
+.daytime-bucket--afternoon {
+    background: rgba(16, 185, 129, 0.12);
+}
+
+.daytime-bucket--evening {
+    background: rgba(99, 102, 241, 0.12);
+}
+
+.daytime-bucket__emoji {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+.daytime-bucket__value {
+    margin-top: 4px;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.daytime-bucket__label {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}

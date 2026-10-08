@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Imprint" xml:space="preserve">
+    <value>Imprint</value>
+  </data>
+  <data name="Privacy" xml:space="preserve">
+    <value>Privacy policy</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="LastUpdated" xml:space="preserve">
+    <value>Last updated: {0}</value>
+  </data>
+  <data name="NotConfigured" xml:space="preserve">
+    <value>The operator details have not been configured yet (section "Legal" in wwwroot/appsettings.json).</value>
+  </data>
+  <data name="Operator" xml:space="preserve">
+    <value>Operator</value>
+  </data>
+  <data name="Contact" xml:space="preserve">
+    <value>Contact</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Phone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="Imprint_LegalBasis" xml:space="preserve">
+    <value>Information according to § 5 E-Commerce Act (ECG) and § 25 Media Act (MedienG).</value>
+  </data>
+  <data name="Imprint_PurposeTitle" xml:space="preserve">
+    <value>About Clubnetz</value>
+  </data>
+  <data name="Imprint_Purpose" xml:space="preserve">
+    <value>Clubnetz is a free app for sports clubs to manage members and book courts. It is not a commercial offer and contains no advertising.</value>
+  </data>
+  <data name="Imprint_ClubContentTitle" xml:space="preserve">
+    <value>Content of the clubs</value>
+  </data>
+  <data name="Imprint_ClubContent" xml:space="preserve">
+    <value>The clubs are responsible for the content they publish in Clubnetz (e.g. events, emails, badges). Please contact your club directly about it.</value>
+  </data>
+  <data name="Imprint_LiabilityTitle" xml:space="preserve">
+    <value>Liability for links</value>
+  </data>
+  <data name="Imprint_Liability" xml:space="preserve">
+    <value>Despite careful checks we accept no liability for the content of external links. The operators of the linked pages are solely responsible for their content.</value>
+  </data>
+  <data name="Privacy_Intro" xml:space="preserve">
+    <value>Protecting your data is important to us. This privacy policy explains which personal data Clubnetz processes, why, and which rights you have. We only process the data needed to run the app. There is no advertising, no tracking and no sale of data.</value>
+  </data>
+  <data name="Privacy_Controller_Title" xml:space="preserve">
+    <value>1. Controller</value>
+  </data>
+  <data name="Privacy_Controller_Body" xml:space="preserve">
+    <value>The controller within the meaning of the General Data Protection Regulation (GDPR) is:</value>
+  </data>
+  <data name="Privacy_Data_Title" xml:space="preserve">
+    <value>2. Which data we process</value>
+  </data>
+  <data name="Privacy_Data_Body" xml:space="preserve">
+    <value>- Account: first and last name, email address, date of birth, gender, language, password (stored only as a secure hash), optionally your address and a profile picture.
+- Clubs: your memberships, roles and seasons, your bookings (date, court, play mode, co-players, comment), registrations for club events including your answers, badges and the statistics calculated from your bookings.
+- Guests: guest cards and the bookings made with them.
+- Family: profiles of children that parents create and manage themselves (name, date of birth, gender).
+- Subscription planner: the plans you create, including the names of the participants you enter.
+- Push notifications (only if you switch them on): the address of your device at the push service of your browser and the keys used to encrypt notifications for it. Switching them off or signing out removes this data.
+- Technical data: the IP address and time of requests in the server logs, and failed login attempts to protect your account.</value>
+  </data>
+  <data name="Privacy_Purpose_Title" xml:space="preserve">
+    <value>3. Purposes and legal basis</value>
+  </data>
+  <data name="Privacy_Purpose_Body" xml:space="preserve">
+    <value>- Providing the app (account, club membership, booking, events, emails such as confirmations and booking notifications): Art. 6(1)(b) GDPR (performance of the contract of use).
+- Security of the app, preventing abuse and troubleshooting (server logs, login protection): Art. 6(1)(f) GDPR (legitimate interest in a secure and working service).
+- Optional information such as your address or profile picture: Art. 6(1)(a) GDPR (consent). You can remove it at any time in your profile.</value>
+  </data>
+  <data name="Privacy_Recipients_Title" xml:space="preserve">
+    <value>4. Who can see your data</value>
+  </data>
+  <data name="Privacy_Recipients_Body" xml:space="preserve">
+    <value>- Your club: the club's administrators and officials see your member data (e.g. name, contact details, date of birth, bookings) to organise the club. Other members see your name, profile picture and badge in the booking plan, in the leaderboard (you can opt out) and in your trophy case (you decide whether it is public). Please also contact your club about how it uses your data.
+- Service providers that process data on our behalf under a data processing agreement: hosting of the app and the database ({0}) and delivery of emails ({1}).
+- Push notifications, if you switch them on, are delivered through the push service of your browser or device vendor (Apple, Google, Mozilla or Microsoft). Their content is encrypted for your device, the push service cannot read it.
+- We do not pass on your data to anyone else unless we are legally obliged to do so.</value>
+  </data>
+  <data name="Privacy_Children_Title" xml:space="preserve">
+    <value>5. Children</value>
+  </data>
+  <data name="Privacy_Children_Body" xml:space="preserve">
+    <value>Profiles of children are created and managed by their parents, who are responsible for the data they enter. Children under 14 should not create an account themselves.</value>
+  </data>
+  <data name="Privacy_Cookies_Title" xml:space="preserve">
+    <value>6. Cookies and local storage</value>
+  </data>
+  <data name="Privacy_Cookies_Body" xml:space="preserve">
+    <value>Clubnetz only uses a technically necessary cookie that keeps you signed in, and stores display settings (e.g. dark mode, the selected club) in your browser's local storage. There are no analytics, tracking or advertising cookies, so no consent banner is needed.</value>
+  </data>
+  <data name="Privacy_Retention_Title" xml:space="preserve">
+    <value>7. How long we keep your data</value>
+  </data>
+  <data name="Privacy_Retention_Body" xml:space="preserve">
+    <value>We keep your data as long as you have an account. When you leave a club, your membership in that club is deleted. When you delete your account, all your personal data is deleted immediately; it disappears from backups when they are rotated out. Server logs are only kept for a short time.</value>
+  </data>
+  <data name="Privacy_Rights_Title" xml:space="preserve">
+    <value>8. Your rights</value>
+  </data>
+  <data name="Privacy_Rights_Body" xml:space="preserve">
+    <value>You have the right to access, rectification, erasure, restriction of processing, data portability and to object to the processing of your data, and you can withdraw a consent at any time. You can do most of it yourself in your profile: change your data, download all your data as a file, leave a club or delete your account. For everything else write to us at {0}.</value>
+  </data>
+  <data name="Privacy_Complaint_Title" xml:space="preserve">
+    <value>9. Right to lodge a complaint</value>
+  </data>
+  <data name="Privacy_Complaint_Body" xml:space="preserve">
+    <value>If you believe that the processing of your data violates data protection law, you can lodge a complaint with a supervisory authority, in Austria the Austrian Data Protection Authority (Datenschutzbehörde, Barichgasse 40-42, 1030 Vienna, www.dsb.gv.at), or with the authority of the country you live in.</value>
+  </data>
+</root>

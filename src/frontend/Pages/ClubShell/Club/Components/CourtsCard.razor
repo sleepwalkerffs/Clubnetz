@@ -1,0 +1,108 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubSettings
+@using Bookennis.Client.Pages.ClubShell.Club.Dialogs
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+
+@implements IDisposable
+
+<SectionCard Emoji="🎾" Title="@L["CourtsTitle"]" Subtitle="@string.Format(L["CourtsSubtitle"], ClubStore.Courts.Count)">
+    @if (ClubStore.Courts.Count == 0)
+    {
+        <div class="courts__empty">@L["NoCourts"]</div>
+    }
+    else
+    {
+        <div class="courts">
+            @for (var i = 0; i < Courts.Count; i++)
+            {
+                var court = Courts[i];
+                var index = i;
+                var status = StatusOf(court);
+                <div class="court court--@status.Kind">
+                    <button type="button" class="court__main" @onclick="() => Edit(court)" title="@SharedLocale["Edit"]">
+                        <span class="court__surface" aria-hidden="true">
+                            <span class="court__alias">@court.Alias</span>
+                        </span>
+                        <span class="court__text">
+                            <span class="court__name">@court.Name</span>
+                            <span class="court__status">@status.Text</span>
+                        </span>
+                    </button>
+                    <div class="court__order">
+                        <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" Disabled="@(index == 0 || ClubStore.IsSaving)"
+                                       aria-label="@L["MoveUp"]" OnClick="() => Move(index, -1)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" Disabled="@(index == Courts.Count - 1 || ClubStore.IsSaving)"
+                                       aria-label="@L["MoveDown"]" OnClick="() => Move(index, 1)" />
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="courts__hint">💡 @L["CourtsHint"]</div>
+    }
+</SectionCard>
+
+@code {
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private sealed record CourtStatus(string Kind, string Text);
+
+    protected override void OnInitialized() => ClubStore.OnCourtsDataChanged += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ClubStore.OnCourtsDataChanged -= OnChanged;
+
+    private List<CourtResult> Courts => ClubStore.Courts.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToList();
+
+    private CourtStatus StatusOf(CourtResult court)
+    {
+        var now = DateTimeOffset.Now;
+        if (court.Inactive is { } inactive && inactive.To > now)
+        {
+            return inactive.From <= now
+                ? new CourtStatus("closed", string.Format(L["ClosedUntil"], inactive.To.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)))
+                : new CourtStatus("planned", string.Format(L["ClosurePlanned"], inactive.From.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)));
+        }
+
+        return new CourtStatus("open", L["CourtOpen"]);
+    }
+
+    private async Task Edit(CourtResult court)
+    {
+        var parameters = new DialogParameters<EditCourtDialog> { { d => d.Court, court } };
+        var dialog = await DialogService.ShowAsync<EditCourtDialog>(string.Format(L["EditCourtTitle"], court.Name), parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+        await dialog.Result;
+    }
+
+    // Moves the court and renumbers all courts, so equal sort orders do not block the move
+    private async Task Move(int index, int direction)
+    {
+        var courts = Courts;
+        (courts[index], courts[index + direction]) = (courts[index + direction], courts[index]);
+
+        for (var i = 0; i < courts.Count; i++)
+        {
+            var court = courts[i];
+            var sortOrder = i + 1;
+            if (court.SortOrder == sortOrder)
+                continue;
+
+            var result = await ClubStore.UpdateCourt(court.CourtId, court.Name, court.Alias, court.Inactive, sortOrder);
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return;
+            }
+        }
+    }
+}

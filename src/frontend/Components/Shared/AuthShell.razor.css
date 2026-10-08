@@ -1,0 +1,317 @@
+.auth-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+}
+
+/* ---------- Brand panel ---------- */
+
+.auth-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 22px 20px;
+    border-radius: 20px;
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #064E3B 0%, #047857 45%, #0D9488 80%, #65A30D 130%);
+    box-shadow: 0 10px 30px rgba(6, 78, 59, 0.25);
+}
+
+/* Decorative tennis court lines, same motif as the My Club hero */
+.auth-hero__court {
+    position: absolute;
+    inset: -40px -160px -40px auto;
+    width: 420px;
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    transform: rotate(-12deg);
+    pointer-events: none;
+}
+
+.auth-hero__court::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    border-left: 3px solid rgba(255, 255, 255, 0.12);
+}
+
+.auth-hero__court::after {
+    content: "";
+    position: absolute;
+    left: 22%;
+    right: 22%;
+    top: 50%;
+    border-top: 3px solid rgba(255, 255, 255, 0.12);
+}
+
+.auth-hero > *:not(.auth-hero__court) {
+    position: relative;
+}
+
+.auth-hero__brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+::deep .auth-hero__logo {
+    color: #FFFFFF;
+    font-size: 1.6rem;
+}
+
+.auth-hero__headline {
+    margin: 0;
+    font-size: 1.55rem;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+.auth-hero__lead {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    opacity: 0.92;
+}
+
+.auth-hero__free {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(6px);
+}
+
+.auth-hero__free-badge {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 1.05rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #422006;
+    background: linear-gradient(135deg, #FDE68A 0%, #FACC15 60%, #F59E0B 100%);
+    box-shadow: 0 4px 14px rgba(250, 204, 21, 0.35);
+    white-space: nowrap;
+}
+
+.auth-hero__free-text {
+    flex: 1 1 180px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.auth-hero__features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Mobile: features are compact chips */
+.auth-feature {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px 4px 8px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.auth-feature__text {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-feature__description {
+    display: none;
+}
+
+/* ---------- Card ---------- */
+
+.auth-card {
+    display: flex;
+    flex-direction: column;
+    padding: 22px 18px;
+    border-radius: 20px;
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.auth-card__emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 12px;
+    border-radius: 16px;
+    font-size: 1.8rem;
+    background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+}
+
+.auth-card__title {
+    margin: 0;
+    font-size: 1.45rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--mud-palette-text-primary);
+}
+
+.auth-card__subtitle {
+    margin: 6px 0 0;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--mud-palette-text-secondary);
+    overflow-wrap: anywhere;
+}
+
+.auth-card__content {
+    margin-top: 20px;
+}
+
+::deep .auth-card__legal {
+    margin-top: 16px;
+}
+
+.auth-card__footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+    font-size: 0.9rem;
+    color: var(--mud-palette-text-secondary);
+    text-align: center;
+}
+
+/* ---------- Small phones: keep the form above the fold ---------- */
+
+@media (max-width: 599.98px) {
+    .auth-hero {
+        gap: 10px;
+        padding: 18px 16px;
+    }
+
+    /* The app bar already shows the brand */
+    .auth-hero__brand,
+    .auth-hero__lead,
+    .auth-hero__features {
+        display: none;
+    }
+
+    .auth-hero__headline {
+        font-size: 1.3rem;
+    }
+
+    .auth-hero__free {
+        padding: 10px 12px;
+    }
+
+    .auth-hero__free-badge {
+        font-size: 0.95rem;
+    }
+
+    .auth-hero__free-text {
+        font-size: 0.8rem;
+    }
+}
+
+/* ---------- Larger screens ---------- */
+
+@media (min-width: 600px) {
+    .auth-card {
+        padding: 32px;
+    }
+}
+
+@media (min-width: 960px) {
+    .auth-shell {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 460px);
+        align-items: stretch;
+        gap: 24px;
+        margin-top: 12px;
+    }
+
+    .auth-hero {
+        justify-content: center;
+        gap: 18px;
+        padding: 40px 36px;
+        border-radius: 24px;
+    }
+
+    .auth-hero__headline {
+        font-size: 2.3rem;
+    }
+
+    .auth-hero__lead {
+        font-size: 1.05rem;
+    }
+
+    .auth-hero__features {
+        flex-direction: column;
+        gap: 14px;
+        margin-top: 8px;
+    }
+
+    .auth-feature {
+        align-items: flex-start;
+        gap: 12px;
+        padding: 0;
+        border-radius: 0;
+        font-size: 0.95rem;
+        background: none;
+    }
+
+    .auth-feature__emoji {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        font-size: 1.15rem;
+        background: rgba(255, 255, 255, 0.16);
+    }
+
+    .auth-feature__title {
+        font-weight: 700;
+    }
+
+    .auth-feature__description {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 400;
+        opacity: 0.85;
+    }
+
+    .auth-card {
+        justify-content: center;
+        padding: 40px 36px;
+        border-radius: 24px;
+    }
+}

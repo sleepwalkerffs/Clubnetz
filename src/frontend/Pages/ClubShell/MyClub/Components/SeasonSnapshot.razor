@@ -1,0 +1,99 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.MyClub
+@using Bookennis.Client.Localization.Pages.Statistics
+@using Bookennis.Shared.Controller.Statistics
+
+<div class="snapshot">
+    @if (Data.PlayerType is { } playerType)
+    {
+        <div class="snapshot__persona">
+            <span class="snapshot__persona-emoji" aria-hidden="true">@GetEmoji(playerType)</span>
+            <div class="snapshot__persona-text">
+                <div class="snapshot__caption">@StatisticsLocale["YourPlayStyle"]</div>
+                <div class="snapshot__persona-name">@StatisticsLocale[$"PlayerType_{playerType}"]</div>
+                <div class="snapshot__persona-description">@StatisticsLocale[$"PlayerType_{playerType}_Description"]</div>
+            </div>
+        </div>
+    }
+
+    <div class="snapshot__facts">
+        @if (Data.PartnerUsage.FirstOrDefault() is { } partner)
+        {
+            <div class="fact">
+                <UserAvatar FirstName="@partner.FirstName" LastName="@partner.LastName" ProfilePictureUrl="@partner.ProfilePictureUrl"
+                            Size="Size.Medium" Color="Color.Secondary" />
+                <div class="fact__text">
+                    <div class="fact__label">@Locale["FavouritePartner"]</div>
+                    <div class="fact__value">@partner.FirstName @partner.LastName</div>
+                    <div class="fact__hint">@string.Format(Locale["MatchesTogether"], partner.Count)</div>
+                </div>
+            </div>
+        }
+
+        @if (FavouriteWeekday is { } weekday)
+        {
+            <div class="fact">
+                <span class="fact__icon" aria-hidden="true">📆</span>
+                <div class="fact__text">
+                    <div class="fact__label">@Locale["FavouriteDay"]</div>
+                    <div class="fact__value">@CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(weekday)</div>
+                    @if (FavouriteHour is { } hour)
+                    {
+                        <div class="fact__hint">@string.Format(Locale["MostlyAt"], $"{hour:00}:00")</div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (Data.CourtUsage.OrderByDescending(c => c.Value).FirstOrDefault() is { } court)
+        {
+            <div class="fact">
+                <span class="fact__icon" aria-hidden="true">🏟️</span>
+                <div class="fact__text">
+                    <div class="fact__label">@Locale["FavouriteCourt"]</div>
+                    <div class="fact__value">@court.Label</div>
+                    <div class="fact__hint">@string.Format(Locale["ShareOfMatches"], (int)Math.Round(court.Value * 100 / Math.Max(Data.CourtUsage.Sum(c => c.Value), 1)))</div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (Comparison is { EnrolledMembers: > 1 } comparison)
+    {
+        <div class="snapshot__comparison">
+            <div class="snapshot__comparison-text">
+                @((MarkupString)string.Format(Locale["MorePlayedThan"], $"<strong>{comparison.BetterThanPercentage}%</strong>"))
+            </div>
+            <div class="snapshot__comparison-track">
+                <div class="snapshot__comparison-fill" style="width: @comparison.BetterThanPercentage.ToString(CultureInfo.InvariantCulture)%"></div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public StatisticsData Data { get; set; } = null!;
+    [Parameter] public ClubComparison? Comparison { get; set; }
+
+    [Inject] private IStringLocalizer<MyClubLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<StatisticsLocale> StatisticsLocale { get; set; } = null!;
+
+    /// <summary>WeekdayCounts starts with Monday, DayOfWeek with Sunday.</summary>
+    private DayOfWeek? FavouriteWeekday => Data.WeekdayCounts.Count == 7 && Data.WeekdayCounts.Max() > 0
+        ? (DayOfWeek)((Data.WeekdayCounts.IndexOf(Data.WeekdayCounts.Max()) + 1) % 7)
+        : null;
+
+    private int? FavouriteHour => Data.HourCounts.Count > 0 && Data.HourCounts.Max() > 0
+        ? Data.HourCounts.IndexOf(Data.HourCounts.Max())
+        : null;
+
+    private static string GetEmoji(PlayerType playerType) => playerType switch
+    {
+        PlayerType.EarlyBird => "🌅",
+        PlayerType.AfternoonAce => "☀️",
+        PlayerType.NightOwl => "🦉",
+        PlayerType.WeekendWarrior => "🏖️",
+        _ => "🎾",
+    };
+}

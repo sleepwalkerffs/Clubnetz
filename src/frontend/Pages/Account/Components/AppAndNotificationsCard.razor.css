@@ -1,0 +1,62 @@
+/* Same row layout as the security rows of the profile page */
+.device-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.device-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+::deep .device-row__icon {
+    flex-shrink: 0;
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+}
+
+.device-row__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.device-row__label {
+    font-size: 0.72rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.device-row__value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.device-row__actions {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+/* Phones: long explanations get the full width, the buttons move below */
+@media (max-width: 599.98px) {
+    .device-row {
+        flex-wrap: wrap;
+    }
+
+    .device-row__text {
+        flex-basis: calc(100% - 44px);
+    }
+
+    .device-row__actions,
+    .device-row > ::deep .mud-button-root {
+        margin-left: 44px;
+    }
+}

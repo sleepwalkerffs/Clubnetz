@@ -1,0 +1,41 @@
+@using MudBlazor
+
+@if (ImageUrl is not null)
+{
+    <MudAvatar Size="@Size" Class="@($"badge-icon {Class}")" Style="@GetStyle()">
+        <img src="@ImageUrl" alt="@Alt" style="width: 100%; height: 100%; object-fit: cover;" />
+    </MudAvatar>
+}
+else
+{
+    <MudAvatar Size="@Size" Color="@GetColorForLevel()" Class="@($"badge-icon {Class}")" Style="@GetStyle()">
+        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="@GetIconSize()" />
+    </MudAvatar>
+}
+
+@code {
+    [Parameter] public string? ImageUrl { get; set; }
+    [Parameter] public int? Level { get; set; }
+    [Parameter] public string? Alt { get; set; }
+    [Parameter] public Size Size { get; set; } = Size.Small;
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? ExtraStyle { get; set; }
+
+    private string GetStyle()
+    {
+        var baseStyle = Size == Size.Small ? "width: 24px; height: 24px; font-size: 0.7rem;" : "";
+        return string.IsNullOrEmpty(ExtraStyle) ? baseStyle : $"{baseStyle} {ExtraStyle}";
+    }
+
+    private Size GetIconSize() => Size == Size.Small ? Size.Small : Size.Medium;
+
+    private Color GetColorForLevel() => Level switch
+    {
+        null => Color.Tertiary,
+        <= 3 => Color.Warning,
+        <= 5 => Color.Default,
+        <= 7 => Color.Warning,
+        8 => Color.Secondary,
+        _ => Color.Default
+    };
+}

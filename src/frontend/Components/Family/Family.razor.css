@@ -1,0 +1,60 @@
+.family-group + .family-group {
+    margin-top: 16px;
+}
+
+.family-group__label {
+    margin-bottom: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.family-member {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    background: var(--mud-palette-background-gray);
+}
+
+.family-member__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.family-member__name {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.family-member__meta {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.family-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 12px;
+    border: 2px dashed var(--mud-palette-lines-inputs);
+    background: transparent;
+    color: var(--mud-palette-primary);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.family-add:hover {
+    border-color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent);
+}

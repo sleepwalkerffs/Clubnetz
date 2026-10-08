@@ -1,0 +1,6 @@
+@* The html is rendered from Markdown and sanitized by the backend (ClubEmailRenderer.RenderMarkdown) *@
+<div class="news-body">@((MarkupString)Html)</div>
+
+@code {
+    [Parameter, EditorRequired] public string Html { get; set; } = "";
+}

@@ -1,0 +1,19 @@
+.week-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.week-number {
+    font-weight: 600;
+}
+
+.week-dates {
+    font-size: 0.75rem;
+    opacity: 0.85;
+}
+
+.crossed {
+    text-decoration: line-through;
+    opacity: 0.6;
+}

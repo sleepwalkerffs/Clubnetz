@@ -1,0 +1,369 @@
+@page "/clubs/{ClubId:int}/calendar/new"
+@page "/clubs/{ClubId:int}/calendar/{ClubEventId:int}/edit"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Calendar
+@using Bookennis.Client.Pages.ClubShell.Calendar.Components
+@using Bookennis.Client.Pages.ClubShell.News.Components
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.Store.ClubEvents
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.ClubEvents
+
+@implements IDisposable
+
+<PageTitle>@Locale[IsNew ? "NewEvent" : "EditEvent"]</PageTitle>
+
+<div class="mb-2">
+    <MudButton Href="@BackUrl" Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack">
+        @Locale[IsNew ? "BackToCalendar" : "BackToEvent"]
+    </MudButton>
+</div>
+
+<PageHeader>
+    <Content>@Locale[IsNew ? "NewEvent" : "EditEvent"]</Content>
+</PageHeader>
+
+@if (!CanManage)
+{
+    <div class="editor-muted">@Locale["NotAllowedToManage"]</div>
+}
+else if (draft is null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else
+{
+    <div class="editor">
+        <SectionCard Emoji="📝" Title="@Locale["EventDetails"]">
+            <div class="editor-fields">
+                <MudTextField T="string" @bind-Value="draft.Title" Variant="Variant.Outlined" Label="@Locale["TitleLabel"]"
+                              Placeholder="@Locale["TitlePlaceholder"]" Required="true" MaxLength="200" Immediate="true" />
+
+                <ChoiceChips TItem="ClubEventCategory" Items="@ClubEventHelpers.Categories" @bind-Value="draft.Category" Label="@Locale["CategoryLabel"]"
+                             TextFunc="@(c => $"{ClubEventHelpers.Emoji(c)} {ClubEventHelpers.CategoryName(Locale, c)}")"
+                             ColorFunc="@(c => ClubEventHelpers.Color(c))" />
+
+                <div class="editor-row">
+                    <MudDatePicker @bind-Date="draft.StartDate" Variant="Variant.Outlined" Label="@Locale[draft.IsMultiDay ? "StartDateLabel" : "DateLabel"]"
+                                   Required="true" PickerVariant="PickerVariant.Dialog" />
+                    @if (draft.IsMultiDay)
+                    {
+                        <MudDatePicker @bind-Date="draft.EndDate" Variant="Variant.Outlined" Label="@Locale["EndDateLabel"]"
+                                       MinDate="@draft.StartDate" PickerVariant="PickerVariant.Dialog" />
+                    }
+                </div>
+                <div class="editor-switches">
+                    <MudSwitch T="bool" @bind-Value="draft.IsMultiDay" Color="Color.Primary" Label="@Locale["MultiDay"]" />
+                    <MudSwitch T="bool" @bind-Value="draft.IsAllDay" Color="Color.Primary" Label="@Locale["AllDay"]" />
+                </div>
+                @if (!draft.IsAllDay)
+                {
+                    <div class="editor-row">
+                        <MudTimePicker @bind-Time="draft.StartTime" Variant="Variant.Outlined" Label="@Locale["StartTimeLabel"]"
+                                       MinuteSelectionStep="15" PickerVariant="PickerVariant.Dialog" />
+                        <MudTimePicker @bind-Time="draft.EndTime" Variant="Variant.Outlined" Label="@Locale["EndTimeLabel"]"
+                                       MinuteSelectionStep="15" PickerVariant="PickerVariant.Dialog" Clearable="true" />
+                    </div>
+                }
+
+                <MudTextField T="string" @bind-Value="draft.Location" Variant="Variant.Outlined" Label="@Locale["LocationLabel"]"
+                              Placeholder="@Locale["LocationPlaceholder"]" MaxLength="200" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Place" />
+
+                <div class="editor-description">
+                    <ChoiceChips TItem="string" Items="@(["edit", "preview"])" Value="@descriptionView" ValueChanged="OnDescriptionViewChanged"
+                                 TextFunc="@(v => v == "edit" ? SharedLocale["Edit"] : Locale["Preview"])" />
+
+                    @if (descriptionView == "edit")
+                    {
+                        <MudTextField T="string" @bind-Value="draft.Description" Variant="Variant.Outlined" Label="@Locale["DescriptionLabel"]"
+                                      Placeholder="@Locale["DescriptionPlaceholder"]" HelperText="@Locale["DescriptionHelper"]"
+                                      MaxLength="4000" Lines="5" AutoGrow="true" MaxLines="30" />
+
+                        <details class="editor-help">
+                            <summary>@Locale["HelpTitle"]</summary>
+                            <table>
+                                <tbody>
+                                    <tr><td>@Locale["HelpBold"]</td><td><code>**text**</code></td></tr>
+                                    <tr><td>@Locale["HelpItalic"]</td><td><code>_text_</code></td></tr>
+                                    <tr><td>@Locale["HelpHeading"]</td><td><code>### text</code></td></tr>
+                                    <tr><td>@Locale["HelpList"]</td><td><code>- text</code></td></tr>
+                                    <tr><td>@Locale["HelpLink"]</td><td><code>[text](https://…)</code></td></tr>
+                                    <tr><td>@Locale["HelpButton"]</td><td><code>[text](https://…){.btn}</code></td></tr>
+                                </tbody>
+                            </table>
+                            <p>@Locale["HelpLineBreaks"]</p>
+                        </details>
+                    }
+                    else
+                    {
+                        <div class="editor-preview">
+                            @if (previewError is not null)
+                            {
+                                <MudAlert Severity="Severity.Warning" Dense="true">@previewError</MudAlert>
+                            }
+                            else if (string.IsNullOrWhiteSpace(draft.Description))
+                            {
+                                <div class="editor-muted">@Locale["PreviewEmpty"]</div>
+                            }
+                            else if (previewHtml is not null)
+                            {
+                                <AnnouncementBody Html="@previewHtml" />
+                            }
+                            else
+                            {
+                                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </SectionCard>
+
+        <SectionCard Emoji="🔔" Title="@Locale["NotifyMembersLabel"]" Subtitle="@Locale["NotifyMembersHint"]">
+            <MudSwitch T="bool" @bind-Value="draft.NotifyMembers" Color="Color.Primary" Label="@Locale["NotifyMembersLabel"]" />
+        </SectionCard>
+
+        <SectionCard Emoji="✋" Title="@Locale["Registration"]" Subtitle="@Locale["RegistrationEditorSubtitle"]">
+            <MudSwitch T="bool" @bind-Value="draft.RegistrationEnabled" Color="Color.Primary" Label="@Locale["RegistrationEnabledLabel"]" />
+
+            @if (draft.RegistrationEnabled)
+            {
+                <div class="editor-fields mt-3">
+                    <div class="editor-row">
+                        <MudNumericField T="int?" @bind-Value="draft.MaxParticipants" Variant="Variant.Outlined" Label="@Locale["MaxParticipantsLabel"]"
+                                         HelperText="@Locale["MaxParticipantsHint"]" Min="1" Max="10000" Clearable="true" />
+                    </div>
+                    <div class="editor-row">
+                        <MudDatePicker @bind-Date="draft.DeadlineDate" Variant="Variant.Outlined" Label="@Locale["DeadlineDateLabel"]"
+                                       HelperText="@Locale["DeadlineHint"]" Clearable="true" PickerVariant="PickerVariant.Dialog" />
+                        @if (draft.DeadlineDate is not null)
+                        {
+                            <MudTimePicker @bind-Time="draft.DeadlineTime" Variant="Variant.Outlined" Label="@Locale["DeadlineTimeLabel"]"
+                                           MinuteSelectionStep="15" Clearable="true" PickerVariant="PickerVariant.Dialog" />
+                        }
+                    </div>
+                </div>
+
+                <div class="editor-questions-title">@Locale["Questions"]</div>
+                <div class="editor-muted mb-3">@Locale["QuestionsHint"]</div>
+
+                @for (var index = 0; index < draft.Questions.Count; index++)
+                {
+                    var questionIndex = index;
+                    var question = draft.Questions[questionIndex];
+                    <div class="question-card">
+                        <div class="question-card__header">
+                            <span class="question-card__number">@(questionIndex + 1)</span>
+                            <MudTextField T="string" @bind-Value="question.Text" Variant="Variant.Outlined" Label="@Locale["QuestionLabel"]"
+                                          Placeholder="@Locale["QuestionPlaceholder"]" MaxLength="200" Immediate="true" Class="question-card__text" />
+                            <div class="question-card__tools">
+                                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" Disabled="@(questionIndex == 0)"
+                                               aria-label="@Locale["MoveUp"]" OnClick="() => MoveQuestion(questionIndex, -1)" />
+                                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" Disabled="@(questionIndex == draft.Questions.Count - 1)"
+                                               aria-label="@Locale["MoveDown"]" OnClick="() => MoveQuestion(questionIndex, 1)" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                                               aria-label="@Locale["DeleteQuestion"]" OnClick="() => draft.Questions.RemoveAt(questionIndex)" />
+                            </div>
+                        </div>
+
+                        <ChoiceChips TItem="ClubEventQuestionSelectionMode" Items="@SelectionModes" @bind-Value="question.SelectionMode"
+                                     TextFunc="@(m => Locale[m == ClubEventQuestionSelectionMode.SingleChoice ? "SingleChoice" : "MultipleChoice"])" />
+
+                        <div class="editor-switches">
+                            <MudSwitch T="bool" @bind-Value="question.IsRequired" Color="Color.Primary" Label="@Locale["RequiredLabel"]" />
+                            @if (question.SelectionMode == ClubEventQuestionSelectionMode.MultipleChoice)
+                            {
+                                <MudSwitch T="bool" @bind-Value="question.AllowQuantities" Color="Color.Primary" Label="@Locale["AllowQuantitiesLabel"]" />
+                            }
+                        </div>
+                        @if (question.SelectionMode == ClubEventQuestionSelectionMode.MultipleChoice && question.AllowQuantities)
+                        {
+                            <div class="editor-muted">@Locale["AllowQuantitiesHint"]</div>
+                            <MudSwitch T="bool" @bind-Value="question.LimitQuantityToHeadCount" Color="Color.Primary" Label="@Locale["LimitQuantityLabel"]" />
+                            <div class="editor-muted mb-2">@Locale[question.LimitQuantityToHeadCount ? "LimitQuantityHint" : "UnlimitedQuantityHint"]</div>
+                        }
+
+                        <div class="question-card__options">
+                            @for (var optionIndex = 0; optionIndex < question.Options.Count; optionIndex++)
+                            {
+                                var currentOption = optionIndex;
+                                var option = question.Options[currentOption];
+                                <div class="question-option">
+                                    <MudTextField T="string" @bind-Value="option.Label" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                  Label="@string.Format(Locale["OptionLabel"], currentOption + 1)" MaxLength="100" Immediate="true" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Disabled="@(question.Options.Count <= 1)"
+                                                   aria-label="@Locale["DeleteOption"]" OnClick="() => question.Options.RemoveAt(currentOption)" />
+                                </div>
+                            }
+                            <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="() => question.Options.Add(new OptionDraft())">
+                                @Locale["AddOption"]
+                            </MudButton>
+                        </div>
+                    </div>
+                }
+
+                <MudMenu Label="@Locale["AddQuestion"]" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                         EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small">
+                    <MudMenuItem OnClick="AddYesNoQuestion">✅ @Locale["TemplateYesNo"]</MudMenuItem>
+                    <MudMenuItem OnClick="AddSingleChoiceQuestion">🔘 @Locale["TemplateSingleChoice"]</MudMenuItem>
+                    <MudMenuItem OnClick="AddMultipleChoiceQuestion">☑️ @Locale["TemplateMultipleChoice"]</MudMenuItem>
+                    <MudMenuItem OnClick="AddQuantityQuestion">🍽️ @Locale["TemplateQuantities"]</MudMenuItem>
+                </MudMenu>
+            }
+        </SectionCard>
+
+        <div class="editor-actions">
+            <MudButton Href="@BackUrl" Variant="Variant.Text">@SharedLocale["Cancel"]</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save"
+                       Disabled="@(Store.IsSaving || string.IsNullOrWhiteSpace(draft.Title) || draft.StartDate is null)" OnClick="Save">
+                @Locale[IsNew ? "CreateEvent" : "SaveEvent"]
+            </MudButton>
+        </div>
+    </div>
+}
+
+@code {
+    private static readonly ClubEventQuestionSelectionMode[] SelectionModes =
+        [ClubEventQuestionSelectionMode.SingleChoice, ClubEventQuestionSelectionMode.MultipleChoice];
+
+    [Parameter] public int ClubId { get; set; }
+    [Parameter] public int? ClubEventId { get; set; }
+
+    [Inject] private IClubEventsStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IStringLocalizer<CalendarLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private ClubEventDraft? draft;
+    private ClubEventDto? original;
+
+    private string descriptionView = "edit";
+    private string? previewHtml;
+    private string? previewError;
+
+    private bool IsNew => ClubEventId is null;
+
+    private bool CanManage => ClubEventHelpers.CanManage(ClubProfileStore.Roles);
+
+    private string BackUrl => IsNew ? ClubEventHelpers.CalendarUrl(ClubId) : ClubEventHelpers.EventUrl(ClubId, ClubEventId!.Value);
+
+    protected override void OnInitialized() => ClubProfileStore.OnClubProfileChanged += StateHasChanged;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        descriptionView = "edit";
+
+        if (IsNew)
+        {
+            draft = new ClubEventDraft();
+            original = null;
+            return;
+        }
+
+        draft = null;
+        await Store.LoadEvent(ClubEventId!.Value);
+        if (Store.Event?.Id == ClubEventId)
+        {
+            original = Store.Event;
+            draft = ClubEventDraft.From(Store.Event);
+        }
+    }
+
+    private async Task OnDescriptionViewChanged(string view)
+    {
+        descriptionView = view;
+        if (view != "preview" || string.IsNullOrWhiteSpace(draft?.Description))
+            return;
+
+        previewHtml = null;
+        previewError = null;
+
+        var response = await Store.PreviewDescription(draft.Description);
+        if (response is null)
+            return;
+
+        if (response is { Success: true, Dto: not null })
+            previewHtml = response.Dto.Html;
+        else
+            previewError = response.ErrorCodeResponse?.ErrorCode is { } code ? BackendLocale[code] : Locale["PreviewFailed"];
+    }
+
+    private void MoveQuestion(int index, int direction)
+    {
+        var question = draft!.Questions[index];
+        draft.Questions.RemoveAt(index);
+        draft.Questions.Insert(index + direction, question);
+    }
+
+    private void AddYesNoQuestion() => draft!.Questions.Add(new QuestionDraft
+    {
+        SelectionMode = ClubEventQuestionSelectionMode.SingleChoice,
+        IsRequired = true,
+        Options = [new OptionDraft { Label = Locale["Yes"] }, new OptionDraft { Label = Locale["No"] }],
+    });
+
+    private void AddSingleChoiceQuestion() => draft!.Questions.Add(new QuestionDraft { SelectionMode = ClubEventQuestionSelectionMode.SingleChoice });
+
+    private void AddMultipleChoiceQuestion() => draft!.Questions.Add(new QuestionDraft { SelectionMode = ClubEventQuestionSelectionMode.MultipleChoice });
+
+    private void AddQuantityQuestion() => draft!.Questions.Add(new QuestionDraft
+    {
+        SelectionMode = ClubEventQuestionSelectionMode.MultipleChoice,
+        AllowQuantities = true,
+    });
+
+    private async Task Save()
+    {
+        if (draft is null)
+            return;
+
+        // Removing options deletes the answers of members who already registered
+        if (original is { Registrations.Count: > 0 })
+        {
+            var removed = draft.RemovedOptionIds(original);
+            var affected = original.Registrations.Count(r => r.Answers.Any(a => removed.Contains(a.OptionId)));
+            if (affected > 0)
+            {
+                var confirmed = await DialogService.ShowMessageBox(Locale["RemoveAnswersTitle"], string.Format(Locale["RemoveAnswersConfirm"], affected),
+                    yesText: SharedLocale["Save"], cancelText: SharedLocale["Cancel"]);
+                if (confirmed != true)
+                    return;
+            }
+        }
+
+        var model = draft.ToModel();
+        if (IsNew)
+        {
+            var result = await Store.CreateEvent(model);
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return;
+            }
+
+            Snackbar.Add(Locale["EventCreated"], Severity.Success);
+            NavigationManager.NavigateTo(ClubEventHelpers.EventUrl(ClubId, result.Dto));
+        }
+        else
+        {
+            var result = await Store.UpdateEvent(ClubEventId!.Value, model);
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return;
+            }
+
+            Snackbar.Add(Locale["EventSaved"], Severity.Success);
+            NavigationManager.NavigateTo(ClubEventHelpers.EventUrl(ClubId, ClubEventId.Value));
+        }
+    }
+
+    public void Dispose() => ClubProfileStore.OnClubProfileChanged -= StateHasChanged;
+}

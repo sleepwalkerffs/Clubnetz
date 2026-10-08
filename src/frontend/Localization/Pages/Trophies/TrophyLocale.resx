@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="SeasonTitle" xml:space="preserve">
+    <value>Season {0}</value>
+  </data>
+  <data name="OneBadge" xml:space="preserve">
+    <value>1 badge</value>
+  </data>
+  <data name="BadgesCount" xml:space="preserve">
+    <value>{0} badges</value>
+  </data>
+  <data name="LevelReached" xml:space="preserve">
+    <value>Level {0} reached</value>
+  </data>
+  <data name="LevelShort" xml:space="preserve">
+    <value>Level {0}</value>
+  </data>
+  <data name="SpecialAward" xml:space="preserve">
+    <value>Special award</value>
+  </data>
+  <data name="EarnedToday" xml:space="preserve">
+    <value>today</value>
+  </data>
+  <data name="EarnedYesterday" xml:space="preserve">
+    <value>yesterday</value>
+  </data>
+  <data name="EarnedDaysAgo" xml:space="preserve">
+    <value>{0} days ago</value>
+  </data>
+  <data name="ThisIsYou" xml:space="preserve">
+    <value>That's you</value>
+  </data>
+  <data name="OneSpecialAward" xml:space="preserve">
+    <value>1 special award</value>
+  </data>
+  <data name="SpecialAwardsCount" xml:space="preserve">
+    <value>{0} special awards</value>
+  </data>
+  <data name="OneSeason" xml:space="preserve">
+    <value>1 season</value>
+  </data>
+  <data name="SeasonsCount" xml:space="preserve">
+    <value>{0} seasons</value>
+  </data>
+  <data name="PrivateChip" xml:space="preserve">
+    <value>Trophy case is private</value>
+  </data>
+  <data name="TopAchievement" xml:space="preserve">
+    <value>Top achievement</value>
+  </data>
+  <data name="LevelInSeason" xml:space="preserve">
+    <value>Level {0} · Season {1}</value>
+  </data>
+  <data name="EditProfile" xml:space="preserve">
+    <value>Edit profile</value>
+  </data>
+  <data name="BadgeSettingsLink" xml:space="preserve">
+    <value>Badge settings</value>
+  </data>
+  <data name="BadgesTile" xml:space="preserve">
+    <value>Badges</value>
+  </data>
+  <data name="SpecialAwardsTile" xml:space="preserve">
+    <value>Special awards</value>
+  </data>
+  <data name="SeasonsTile" xml:space="preserve">
+    <value>Seasons with badges</value>
+  </data>
+  <data name="HighestLevelTile" xml:space="preserve">
+    <value>Highest level</value>
+  </data>
+  <data name="PrivateTitle" xml:space="preserve">
+    <value>This trophy case is private</value>
+  </data>
+  <data name="EmptyTitle" xml:space="preserve">
+    <value>No trophies yet</value>
+  </data>
+  <data name="EmptyOwnText" xml:space="preserve">
+    <value>Play matches this season to earn your first badge – it will shine right here.</value>
+  </data>
+  <data name="TrophyCaseSubtitle" xml:space="preserve">
+    <value>Tap a badge to see the details</value>
+  </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>Member not found</value>
+  </data>
+  <data name="ProfileEyebrow" xml:space="preserve">
+    <value>Member · {0}</value>
+  </data>
+  <data name="PrivateText" xml:space="preserve">
+    <value>{0} keeps the badges to themselves – maybe you will see them on court.</value>
+  </data>
+</root>

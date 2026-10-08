@@ -1,0 +1,32 @@
+.participant-color {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid rgba(0, 0, 0, 0.12);
+    flex-shrink: 0;
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 32px);
+    gap: 8px;
+}
+
+.color-option {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.color-option.selected {
+    border-color: var(--mud-palette-text-primary);
+    box-shadow: 0 0 0 2px var(--mud-palette-surface) inset;
+}
+
+::deep .participant-name {
+    flex: 1 1 180px;
+    min-width: 160px;
+}

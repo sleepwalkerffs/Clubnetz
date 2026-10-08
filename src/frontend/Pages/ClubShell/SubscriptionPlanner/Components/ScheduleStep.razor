@@ -1,0 +1,216 @@
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.SubscriptionPlanner
+@using Bookennis.Client.Services.Store.SubscriptionPlans
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.SubscriptionPlans
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <LoadButton Variant="Variant.Filled"
+                Color="Color.Primary"
+                Icon="@(Plan.HasSchedule ? Icons.Material.Filled.Shuffle : Icons.Material.Filled.AutoFixHigh)"
+                Loading="@computing"
+                Disabled="@(!CanCompute || downloading)"
+                FullWidth="false"
+                OnClick="Compute">
+        @(Plan.HasSchedule ? L["Shuffle"] : L["Compute"])
+    </LoadButton>
+    <LoadButton Variant="Variant.Outlined"
+                Color="Color.Primary"
+                Icon="@Icons.Material.Filled.Download"
+                Loading="@downloading"
+                Disabled="@(!Plan.HasSchedule || computing)"
+                FullWidth="false"
+                OnClick="Download">
+        @L["DownloadExcel"]
+    </LoadButton>
+</div>
+
+@if (!CanCompute)
+{
+    <MudAlert Severity="Severity.Warning" Dense="true">@string.Format(L["NotEnoughParticipants"], Plan.PlayersPerWeek)</MudAlert>
+}
+else if (!Plan.HasSchedule)
+{
+    <MudAlert Severity="Severity.Info" Dense="true">@L["ComputeHelp"]</MudAlert>
+}
+else
+{
+    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">@L["SwapHelp"]</MudText>
+
+    <MudPaper Outlined="true" Class="pa-3 mb-4">
+        <MudText Typo="Typo.subtitle2" Class="mb-2">@L["GamesPerParticipant"]</MudText>
+        <div class="d-flex flex-wrap gap-3">
+            @foreach (var participant in Plan.Participants)
+            {
+                <div class="d-flex align-center gap-1">
+                    <ParticipantChip Name="@participant.Name" ColorIndex="participant.ColorIndex" Size="Size.Small" />
+                    <MudText Typo="Typo.body2">
+                        <b>@participant.Assigned</b>
+                        <span class="mud-text-secondary">(@L["Target"] @SubscriptionPlannerFormat.Number(participant.Target))</span>
+                    </MudText>
+                </div>
+            }
+        </div>
+    </MudPaper>
+
+    <MudGrid Spacing="2">
+        @foreach (var week in Plan.Weeks)
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudPaper Outlined="true" Class="@(week.IsExcluded ? "pa-3 week-card excluded" : "pa-3 week-card")">
+                    <div class="d-flex align-center justify-space-between mb-2">
+                        <MudText Typo="Typo.subtitle2">
+                            @L["CalendarWeekShort"] @week.WeekNumber
+                            <span class="mud-text-secondary week-dates">@SubscriptionPlannerFormat.DateRange(week.Monday, week.Sunday)</span>
+                        </MudText>
+                        @if (week.IsUnderstaffed)
+                        {
+                            <MudTooltip Text="@L["Understaffed"]">
+                                <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                            </MudTooltip>
+                        }
+                    </div>
+
+                    @if (week.IsExcluded)
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary"><i>@L["NoPlay"]</i></MudText>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-wrap">
+                            @foreach (var participantId in week.ParticipantIds)
+                            {
+                                var participant = participants[participantId];
+                                <ParticipantChip Name="@participant.Name"
+                                                 ColorIndex="participant.ColorIndex"
+                                                 Size="Size.Small"
+                                                 OnClick="@(() => OpenSwapDialog(week, participantId))" />
+                            }
+                            @for (var i = week.ParticipantIds.Count; i < Plan.PlayersPerWeek; i++)
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Add" OnClick="@(() => OpenSwapDialog(week, null))">
+                                    @L["AddPlayer"]
+                                </MudChip>
+                            }
+                        </div>
+                    }
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+
+    <MudExpansionPanels Outlined="true" Class="mt-4">
+        <MudExpansionPanel Text="@L["PairMatrix"]">
+            <PairMatrix Plan="Plan" />
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required SubscriptionPlanDto Plan { get; set; }
+
+    [Inject]
+    private ISubscriptionPlansStore Store { get; set; } = null!;
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SubscriptionPlannerLocale> L { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private Dictionary<int, SubscriptionParticipantDto> participants = [];
+    private bool computing;
+    private bool downloading;
+
+    private bool CanCompute => Plan.Participants.Count >= Plan.PlayersPerWeek;
+
+    protected override void OnParametersSet()
+        => participants = Plan.Participants.ToDictionary(p => p.Id);
+
+    private async Task Compute()
+    {
+        if (Plan.HasSchedule)
+        {
+            var confirmed = await DialogService.ShowMessageBox(L["Shuffle"], L["ShuffleConfirm"], yesText: L["Shuffle"], cancelText: SharedLocale["Cancel"]);
+            if (confirmed != true)
+                return;
+        }
+
+        computing = true;
+        try
+        {
+            var result = await Store.ComputeSchedule(Plan.Id, seed: null);
+            if (!result.Success)
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+        }
+        finally
+        {
+            computing = false;
+        }
+    }
+
+    private async Task Download()
+    {
+        downloading = true;
+        try
+        {
+            var result = await Store.ExportPlan(Plan.Id);
+            if (result is not { Success: true, Dto: not null })
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return;
+            }
+
+            using var streamReference = new DotNetStreamReference(new MemoryStream(result.Dto.Data));
+            await JsRuntime.InvokeVoidAsync("App.downloadFileFromStream", result.Dto.FileName, streamReference);
+        }
+        finally
+        {
+            downloading = false;
+        }
+    }
+
+    private async Task OpenSwapDialog(SubscriptionWeekDto week, int? participantId)
+    {
+        var parameters = new DialogParameters<SwapPlayerDialog>
+        {
+            { x => x.Plan, Plan },
+            { x => x.Week, week },
+            { x => x.CurrentParticipantId, participantId },
+        };
+        var title = $"{L["CalendarWeekShort"]} {week.WeekNumber} · {SubscriptionPlannerFormat.DateRange(week.Monday, week.Sunday)}";
+        var dialog = await DialogService.ShowAsync<SwapPlayerDialog>(title, parameters, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseButton = true });
+        var dialogResult = await dialog.Result;
+        if (dialogResult is not { Canceled: false, Data: SwapPlayerDialog.Selection selection })
+            return;
+
+        var ids = week.ParticipantIds.ToList();
+        if (participantId is { } current)
+            ids.Remove(current);
+        if (selection.ParticipantId is { } replacement)
+            ids.Add(replacement);
+
+        var weeks = Plan.Weeks
+            .Where(w => !w.IsExcluded)
+            .Select(w => new SubscriptionWeekAssignmentModel(w.Monday, w.Monday == week.Monday ? ids : w.ParticipantIds))
+            .ToList();
+
+        var result = await Store.UpdateSchedule(Plan.Id, new UpdateSubscriptionScheduleModel(weeks));
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+}

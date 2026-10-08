@@ -1,0 +1,25 @@
+@using Bookennis.Client.Components.Shared.Tools
+
+<ScreenProvider>
+    <ScreenXs>
+        <MudGrid Class="grid-style" Style="margin: 0; padding-top: 0; padding-bottom: 0">
+            <MudItem xs="6" Style="padding: 0">
+                <MudText Typo="Typo.body2" Align="Align.Right">@Label</MudText>
+            </MudItem>
+            <MudItem xs="6" Style="padding-top: 0; padding-bottom: 0">
+                <MudText Typo="Typo.body1">@Content</MudText>
+            </MudItem>
+        </MudGrid>
+    </ScreenXs>
+    <ScreenDefault>
+        @Content
+    </ScreenDefault>
+</ScreenProvider>
+
+@code {
+    [Parameter]
+    public RenderFragment? Label { get; set; }
+
+    [Parameter]
+    public RenderFragment? Content { get; set; }
+}

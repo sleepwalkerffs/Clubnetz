@@ -1,0 +1,17 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Shared.Controller.Shared
+
+<MultiChoiceChips TItem="MemberRole" Items="@Roles" Values="@Values" ValuesChanged="@ValuesChanged" Disabled="@Disabled"
+                  TextFunc="@(role => SharedLocale[$"Role_{role}"])" ColorFunc="@(role => MemberAdminHelpers.RoleColor(role))" />
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyCollection<MemberRole> Values { get; set; } = [];
+    [Parameter] public EventCallback<IReadOnlyCollection<MemberRole>> ValuesChanged { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    // Guest is only offered when the member has it already (guests are separate guest members)
+    private IEnumerable<MemberRole> Roles => MemberAdminHelpers.AssignableRoles.Union(Values).OrderBy(r => r);
+}

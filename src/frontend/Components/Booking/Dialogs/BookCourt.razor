@@ -1,0 +1,271 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Components.Booking
+@using Bookennis.Client.Services.Store.Bookings
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Booking
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Shared
+
+<BaseDialog SubmitFunc="Submit" Title=@Locale["Book"] SubmitCaption=@Locale["Book"] CancelFunc="Cancel" CancelCaption=@SharedLocale["Cancel"]
+            CanSubmit="@CanSubmit" Loading="@submitting">
+    <div class="book-court">
+        @* Live summary of the booking *@
+        <div class="book-summary" style="--mode-color: @BookingColors.ToHex(selectedPlayMode.Color)">
+            <div class="book-summary__date">
+                <span class="book-summary__weekday">@Date.ToString("ddd", CultureInfo.CurrentCulture)</span>
+                <span class="book-summary__day">@Date.Day</span>
+                <span class="book-summary__month">@Date.ToString("MMM", CultureInfo.CurrentCulture)</span>
+            </div>
+            <div class="book-summary__text">
+                <div class="book-summary__time">
+                    @SummaryTime
+                    @if (SummaryDuration is { } duration)
+                    {
+                        <span class="book-summary__duration">@FormatDuration(duration)</span>
+                    }
+                </div>
+                <div class="book-summary__meta">
+                    📍 @(SelectedCourt?.Name ?? Locale["ChooseCourt"]) · @selectedPlayMode.Name
+                </div>
+            </div>
+        </div>
+
+        @if (PlayModes.Count > 1)
+        {
+            <ChoiceChips TItem="PlayModeDto" Label="@Locale["PlayMode"]" Items="@PlayModes" Value="@selectedPlayMode"
+                         ValueChanged="OnPlayModeChanged" TextFunc="@(playMode => playMode.Name)"
+                         ColorFunc="@(playMode => BookingColors.ToHex(playMode.Color))" />
+        }
+
+        <ChoiceChips TItem="CourtResult" Label="@Locale["Court"]" Items="@Courts" Value="@SelectedCourt"
+                     ValueChanged="@(court => SelectedCourt = court)" TextFunc="@(court => court.Name)" />
+
+        <div>
+            <div class="book-court__label">@Locale["When"]</div>
+            <div class="book-court__times">
+                <MudTimePicker Time="Time" TimeChanged="OnStartTimeChanged" Variant="Variant.Outlined" Label=@Locale["StartTime"]
+                               MinuteSelectionStep="30" AdornmentIcon="@Icons.Material.Filled.Schedule" />
+                @if (!selectedPlayMode.FixedDuration.HasValue)
+                {
+                    <MudTimePicker @bind-Time="EndTime" Variant="Variant.Outlined" Label=@Locale["EndTime"] MinuteSelectionStep="30"
+                                   Disabled="@EntireDay" AdornmentIcon="@Icons.Material.Filled.Schedule" />
+                }
+            </div>
+
+            @if (!selectedPlayMode.FixedDuration.HasValue)
+            {
+                <div class="book-court__durations">
+                    <ChoiceChips TItem="TimeSpan?" Items="@DurationPresets" Value="@SelectedPreset" ValueChanged="OnDurationChanged"
+                                 TextFunc="@(duration => FormatDuration(duration!.Value))" Disabled="@EntireDay" />
+                    <MudSwitch T="bool" @bind-Value="EntireDay" Label=@Locale["BlockEntireDay"] Color="Color.Primary" />
+                </div>
+            }
+        </div>
+
+        @if (ShowPlayerSelection)
+        {
+            <PlayerSelection @ref="PlayerSelectionComponent" AvailablePlayers="@Players" MaxPlayers="@MaxPlayersForSelection" FixedPlayer="@BookingFixedPlayer" FixedPlayerAlternative="@BookingFixedPlayerAlternatives" />
+        }
+
+        @if (selectedPlayMode.CommentAllowed)
+        {
+            <MudTextField @bind-Value="Comment" Variant="Variant.Outlined" Label="@Locale["Comment"]" Lines="2" AutoGrow="true"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ChatBubbleOutline" />
+        }
+
+        @if (selectedPlayMode.AllowRecurring)
+        {
+            <div class="book-court__recurring @(IsRecurring ? "book-court__recurring--on" : null)">
+                <MudSwitch T="bool" @bind-Value="IsRecurring" Color="Color.Primary">
+                    <span class="d-flex align-center gap-1"><MudIcon Icon="@Icons.Material.Filled.Repeat" Size="Size.Small" /> @Locale["RecurringBooking"]</span>
+                </MudSwitch>
+                @if (IsRecurring)
+                {
+                    <div class="book-court__times mt-2">
+                        <MudNumericField @bind-Value="RecurrenceIntervalWeeks" Label="@Locale["RepeatEveryWeeks"]" Variant="Variant.Outlined" Min="1" Max="52" />
+                        <MudDatePicker @bind-Date="RecurringEndDate" Variant="Variant.Outlined" Label="@Locale["RecurringEndDate"]" Clearable="true" />
+                    </div>
+                    <div class="book-court__hint">@string.Format(Locale["RecurringHint"], Date.ToString("dddd", CultureInfo.CurrentCulture), RecurrenceIntervalWeeks)</div>
+                }
+            </div>
+        }
+    </div>
+</BaseDialog>
+
+@code {
+    private static readonly List<TimeSpan?> DurationPresets = [TimeSpan.FromHours(1), TimeSpan.FromHours(1.5), TimeSpan.FromHours(2)];
+
+    [Parameter]
+    public required List<CourtResult> Courts { get; set; }
+    [Parameter]
+    public required List<PlayModeDto> PlayModes { get; set; }
+    [Parameter]
+    public required List<PlayerResult> Players { get; set; }
+    [Parameter]
+    public required List<PlayerResult> MemberChildren { get; set; }
+    [Parameter]
+    public required DateTime Date { get; set; }
+    [Parameter]
+    public required int MemberId { get; set; }
+    [Parameter]
+    public TimeSpan? Time { get; set; }
+    [Parameter]
+    public CourtResult? SelectedCourt { get; set; }
+    [Parameter]
+    public required int StopHourOfTheDay { get; set; }
+    [Parameter]
+    public bool IsBookingOnlyForChildren { get; set; }
+    [Parameter]
+    public List<int> EligibleChildMemberIds { get; set; } = [];
+
+    [Inject]
+    private IBookingStore BookingStore { get; set; } = null!;
+    [Inject]
+    private ISnackbar snackbar { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BookingSharedLocale> Locale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private PlayModeDto selectedPlayMode { get; set; } = null!;
+    private PlayerSelection? PlayerSelectionComponent;
+    private bool initialized;
+    private bool submitting;
+
+    private PlayerResult? FixedPlayer => Players.SingleOrDefault(player => player.MemberId == MemberId);
+    private List<PlayerResult> FixedPlayerAlternatives => FixedPlayer is null ? [] : [.. MemberChildren, FixedPlayer];
+    private List<PlayerResult> EligibleChildren => MemberChildren.Where(c => EligibleChildMemberIds.Contains(c.MemberId)).ToList();
+
+    private bool ShowPlayerSelection => selectedPlayMode.FixedPlayerCount.HasValue || IsBookingOnlyForChildren;
+
+    // When booking for children without a FixedPlayerCount, show 1 slot for child selection
+    private int? MaxPlayersForSelection => selectedPlayMode.FixedPlayerCount ?? (IsBookingOnlyForChildren ? 1 : null);
+
+    private PlayerResult? BookingFixedPlayer =>
+        IsBookingOnlyForChildren
+            ? EligibleChildren.FirstOrDefault()
+            : FixedPlayer;
+
+    private List<PlayerResult> BookingFixedPlayerAlternatives =>
+        IsBookingOnlyForChildren
+            ? EligibleChildren
+            : FixedPlayerAlternatives;
+
+    private TimeSpan? EndTime { get; set; }
+    private bool EntireDay { get; set; }
+    private string? Comment { get; set; }
+    private bool IsRecurring { get; set; }
+    private int RecurrenceIntervalWeeks { get; set; } = 1;
+    private DateTime? RecurringEndDate { get; set; }
+
+    private TimeSpan? EffectiveEnd => EntireDay
+        ? TimeSpan.FromHours(StopHourOfTheDay)
+        : selectedPlayMode.FixedDuration is { } fixedDuration ? Time + fixedDuration : EndTime;
+
+    private TimeSpan? SummaryDuration => EffectiveEnd - Time is { Ticks: > 0 } duration ? duration : null;
+
+    private string SummaryTime => Time is null
+        ? "–"
+        : $"{Time.Value:hh\\:mm} – {(EffectiveEnd is { } end ? end.ToString(@"hh\:mm") : "…")}";
+
+    private TimeSpan? SelectedPreset => SummaryDuration is { } duration && DurationPresets.Contains(duration) ? duration : null;
+
+    private bool CanSubmit => !submitting && SelectedCourt is not null && Time is not null && SummaryDuration is not null;
+
+    protected override void OnParametersSet()
+    {
+        if (initialized)
+            return;
+
+        initialized = true;
+        Time ??= DateTime.Now.TimeOfDay.Round(TimeSpanRoundingType.HalfHour, MidpointRounding.ToPositiveInfinity);
+        selectedPlayMode = PlayModes.First();
+        EndTime = Time + TimeSpan.FromHours(1);
+    }
+
+    private void OnPlayModeChanged(PlayModeDto playMode)
+    {
+        selectedPlayMode = playMode;
+        if (!playMode.AllowRecurring)
+            IsRecurring = false;
+        PlayerSelectionComponent?.ClearSelection();
+    }
+
+    private void OnStartTimeChanged(TimeSpan? time)
+    {
+        // Moving the start keeps the chosen duration
+        var duration = EndTime - Time;
+        Time = time;
+        if (time is not null && duration is { Ticks: > 0 })
+            EndTime = time + duration;
+    }
+
+    private void OnDurationChanged(TimeSpan? duration) => EndTime = Time + duration;
+
+    private string FormatDuration(TimeSpan duration)
+        => duration.TotalMinutes < 60
+            ? string.Format(Locale["DurationMinutes"], (int)duration.TotalMinutes)
+            : string.Format(Locale["DurationHours"], duration.TotalHours.ToString("0.#", CultureInfo.CurrentCulture));
+
+    private async Task<DialogResult?> Submit()
+    {
+        submitting = true;
+        try
+        {
+            var from = Date.Date.Add(Time ?? TimeSpan.Zero);
+            var to = Date.Date.Add(EffectiveEnd ?? TimeSpan.Zero);
+
+            var players = ShowPlayerSelection && PlayerSelectionComponent is not null
+                ? PlayerSelectionComponent.SelectedPlayers.ConvertAll(player => player.MemberId)
+                : [MemberId];
+
+            if (IsRecurring)
+            {
+                var recurringModel = new BookRecurringCourtModel(
+                    SelectedCourt?.CourtId ?? 0,
+                    from,
+                    to,
+                    TimeZoneInfo.Local.Id,
+                    selectedPlayMode.Id,
+                    players,
+                    RecurrenceIntervalWeeks,
+                    RecurringEndDate.HasValue ? DateOnly.FromDateTime(RecurringEndDate.Value) : null,
+                    Comment);
+                var recurringResponse = await BookingStore.BookRecurringCourt(recurringModel);
+
+                if (!recurringResponse.Success)
+                {
+                    snackbar.ShowErrorDetails(recurringResponse, BackendLocale);
+                    return null;
+                }
+
+                snackbar.Add(Locale["BookingCreated"], Severity.Success);
+                return recurringResponse.Dto is null ? null : DialogResult.Ok(recurringResponse.Dto!);
+            }
+
+            var model = new BookCourtModel(SelectedCourt?.CourtId ?? 0, from, to, TimeZoneInfo.Local.Id, selectedPlayMode.Id, players, Comment);
+            var response = await BookingStore.BookCourt(model);
+
+            if (!response.Success)
+            {
+                snackbar.ShowErrorDetails(response, BackendLocale);
+                return null;
+            }
+
+            snackbar.Add(Locale["BookingCreated"], Severity.Success);
+            return response.Dto is null ? null : DialogResult.Ok(response.Dto!);
+        }
+        finally
+        {
+            submitting = false;
+        }
+    }
+
+    private Task<DialogResult> Cancel() => Task.FromResult(DialogResult.Cancel());
+}

@@ -1,0 +1,8 @@
+@using Bookennis.Client.Services
+
+@code {
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    protected override void OnInitialized() => NavigationManager.NavigateToNotFound();
+}

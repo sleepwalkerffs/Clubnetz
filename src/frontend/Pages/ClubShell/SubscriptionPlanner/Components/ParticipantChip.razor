@@ -1,0 +1,36 @@
+@using Bookennis.Shared.Controller.SubscriptionPlans
+
+@if (OnClick.HasDelegate)
+{
+    <MudChip T="string" Size="@Size" Style="@ChipStyle" Class="@Class" OnClick="OnClick">@Name</MudChip>
+}
+else
+{
+    <MudChip T="string" Size="@Size" Style="@ChipStyle" Class="@Class">@Name</MudChip>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Name { get; set; }
+
+    [Parameter]
+    public int ColorIndex { get; set; }
+
+    [Parameter]
+    public Size Size { get; set; } = Size.Medium;
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    private string ChipStyle
+    {
+        get
+        {
+            var color = SubscriptionPlanColors.Get(ColorIndex);
+            return $"background-color:{color.Background};color:{color.Text};font-weight:600;";
+        }
+    }
+}

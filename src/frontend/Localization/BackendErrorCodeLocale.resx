@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BookingInThePast" xml:space="preserve">
+    <value>Cannot book in the past</value>
+  </data>
+  <data name="CannotBookInAdvanceAsGuest" xml:space="preserve">
+    <value>Guests cannot book in advance twice</value>
+  </data>
+  <data name="CannotBookInAdvanceTwice" xml:space="preserve">
+    <value>User {0} cannot book twice in advance on a day</value>
+  </data>
+  <data name="CannotBookWithGuestMembers" xml:space="preserve">
+    <value>Club members cannot book with guests.</value>
+  </data>
+  <data name="CannotBookWithinPrimeTimeAsGuest" xml:space="preserve">
+    <value>Guests cannot book during prime time hours</value>
+  </data>
+  <data name="CannotDeleteBookingFromThePast" xml:space="preserve">
+    <value>Cannot delete booking in the pas</value>
+  </data>
+  <data name="CannotEditBookingFromThePast" xml:space="preserve">
+    <value>Cannot edit booking in the past</value>
+  </data>
+  <data name="ChildMembersAreNotAllowedToPlayWithinPrimeTime" xml:space="preserve">
+    <value>If only children play they cannot play during prime time</value>
+  </data>
+  <data name="CourtInactive" xml:space="preserve">
+    <value>Court is inactive during booked time</value>
+  </data>
+  <data name="CourtOccupied" xml:space="preserve">
+    <value>Court is already occupied during booked time</value>
+  </data>
+  <data name="DefaultError" xml:space="preserve">
+    <value>An unknown failure has occured.</value>
+  </data>
+  <data name="DuplicateEmail" xml:space="preserve">
+    <value>Email is already taken.</value>
+  </data>
+  <data name="DuplicateName" xml:space="preserve">
+    <value>Name is already taken.</value>
+  </data>
+  <data name="ExternalLoginExists" xml:space="preserve">
+    <value>A user with that external login already exists.</value>
+  </data>
+  <data name="GuestCardConsumed" xml:space="preserve">
+    <value>There are no more available bookings</value>
+  </data>
+  <data name="GuestCardSetupIncorrectly" xml:space="preserve">
+    <value>The code {0} does not match the club {1}</value>
+  </data>
+  <data name="InvalidAmountOfPlayers" xml:space="preserve">
+    <value>Invalid amount of players.</value>
+  </data>
+  <data name="InvalidEmail" xml:space="preserve">
+    <value>Email is invalid.</value>
+  </data>
+  <data name="InvalidPassword" xml:space="preserve">
+    <value>Invalid password</value>
+  </data>
+  <data name="InvalidTime" xml:space="preserve">
+    <value>Cannot play this amount of time</value>
+  </data>
+  <data name="InvalidToken" xml:space="preserve">
+    <value>Invalid token.</value>
+  </data>
+  <data name="InvalidUserName" xml:space="preserve">
+    <value>User name is invalid, can only contain letters or digits.</value>
+  </data>
+  <data name="LockedOut" xml:space="preserve">
+    <value>Too many failed attempts. Your account is locked for 15 minutes. You can unlock it right away by resetting your password.</value>
+  </data>
+  <data name="LockoutNotEnabled" xml:space="preserve">
+    <value>Lockout is not enabled for this user.</value>
+  </data>
+  <data name="MaxBookingsPerWeekExceeded" xml:space="preserve">
+    <value>Bookings per week is limited by Club settings</value>
+  </data>
+  <data name="MaximumReservationsReached" xml:space="preserve">
+    <value>User {0} has reached the maxiumum amount of reservations</value>
+  </data>
+  <data name="MaxBookingsPerSeasonReached" xml:space="preserve">
+    <value>User {0} has reached the maximum bookings per season for {1}</value>
+  </data>
+  <data name="NoClubId" xml:space="preserve">
+    <value>Error getting the club Id try to sign out and try again</value>
+  </data>
+  <data name="NotAllowed" xml:space="preserve">
+    <value>User is not allowed. Have you confirmed your email?</value>
+  </data>
+  <data name="NoTokenProvider" xml:space="preserve">
+    <value>No IUserTokenProvider is registered.</value>
+  </data>
+  <data name="NoTwoFactorProvider" xml:space="preserve">
+    <value>No IUserTwoFactorProvider for is registered.</value>
+  </data>
+  <data name="OutsideClubOpeningHours" xml:space="preserve">
+    <value>Cannot play outside the club opening hours from {0} to {1}</value>
+  </data>
+  <data name="PasswordMismatch" xml:space="preserve">
+    <value>Incorrect password.</value>
+  </data>
+  <data name="PasswordRequireDigit" xml:space="preserve">
+    <value>Passwords must have at least one digit ('0'-'9').</value>
+  </data>
+  <data name="PasswordRequireLower" xml:space="preserve">
+    <value>Passwords must have at least one lowercase ('a'-'z').</value>
+  </data>
+  <data name="PasswordRequireNonLetterOrDigit" xml:space="preserve">
+    <value>Passwords must have at least one non letter or digit character.</value>
+  </data>
+  <data name="PasswordRequireUpper" xml:space="preserve">
+    <value>Passwords must have at least one uppercase ('A'-'Z').</value>
+  </data>
+  <data name="PasswordTooShort" xml:space="preserve">
+    <value>Passwords must be at least characters.</value>
+  </data>
+  <data name="PlayerHasActiveBookingAtBookedInterval" xml:space="preserve">
+    <value>User {0} has already booked at that time</value>
+  </data>
+  <data name="PlayerIsNotAllwedToPlay" xml:space="preserve">
+    <value>User {0} is not allowed to play</value>
+  </data>
+  <data name="PropertyTooShort" xml:space="preserve">
+    <value>Cannot be null or empty.</value>
+  </data>
+  <data name="RoleNotFound" xml:space="preserve">
+    <value>Role does not exist.</value>
+  </data>
+  <data name="TokenInvalid" xml:space="preserve">
+    <value>Token invalid</value>
+  </data>
+  <data name="UserAlreadyHasPassword" xml:space="preserve">
+    <value>User already has a password set.</value>
+  </data>
+  <data name="UserAlreadyInRole" xml:space="preserve">
+    <value>User already in role.</value>
+  </data>
+  <data name="UserIdNotFound" xml:space="preserve">
+    <value>UserId not found.</value>
+  </data>
+  <data name="UserNameNotFound" xml:space="preserve">
+    <value>User does not exist.</value>
+  </data>
+  <data name="UserNotInRole" xml:space="preserve">
+    <value>User is not in role.</value>
+  </data>
+  <data name="SeasonsCannotOverlap" xml:space="preserve">
+    <value>Seasons cannot overlap. Please choose different dates.</value>
+  </data>
+  <data name="NoActiveSeasonForClub" xml:space="preserve">
+    <value>No active season found for the club.</value>
+  </data>
+  <data name="UserNotAllowedToBook" xml:space="preserve">
+    <value>You are not allowed to make a booking for the selected players.</value>
+  </data>
+  <data name="RecurrenceIntervalTooSmall" xml:space="preserve">
+    <value>The recurrence interval must be at least 1 week.</value>
+  </data>
+  <data name="PlayModeDoesNotAllowRecurring" xml:space="preserve">
+    <value>This play mode does not allow recurring bookings.</value>
+  </data>
+  <data name="NoOccurrencesInDateRange" xml:space="preserve">
+    <value>No occurrences fall within the specified date range.</value>
+  </data>
+  <data name="BookingNotPartOfSeries" xml:space="preserve">
+    <value>This booking is not part of a recurring series.</value>
+  </data>
+  <data name="UnsupportedImageType" xml:space="preserve">
+    <value>Unsupported image type. Allowed: JPEG, PNG, WebP, GIF.</value>
+  </data>
+  <data name="FileTooLarge" xml:space="preserve">
+    <value>File is too large. Maximum allowed size is 5 MB.</value>
+  </data>
+  <data name="BadgeTierNotFound" xml:space="preserve">
+    <value>Badge tier not found.</value>
+  </data>
+  <data name="CouldNotDecodeImage" xml:space="preserve">
+    <value>Could not decode the uploaded image. Please try a different file.</value>
+  </data>
+  <data name="BadgeTierAlreadyEarned" xml:space="preserve">
+    <value>Cannot delete a badge tier that a member has already earned.</value>
+  </data>
+  <data name="NameAlreadyUsedInSeason" xml:space="preserve">
+    <value>A one-time badge with this name already exists for the selected season.</value>
+  </data>
+  <data name="OneTimeBadgeAlreadyAwarded" xml:space="preserve">
+    <value>Cannot delete a one-time badge that has already been awarded to a member.</value>
+  </data>
+  <data name="SourceSeasonHasNoOneTimeBadges" xml:space="preserve">
+    <value>The selected season has no one-time badges to copy.</value>
+  </data>
+  <data name="TargetSeasonAlreadyHasOneTimeBadges" xml:space="preserve">
+    <value>The target season already has one-time badges configured.</value>
+  </data>
+  <data name="OneTimeBadgeNotFound" xml:space="preserve">
+    <value>One-time badge not found.</value>
+  </data>
+  <data name="CannotSetBothDisplayBadgeTypes" xml:space="preserve">
+    <value>Only one display badge can be selected at a time.</value>
+  </data>
+  <data name="SourceSeasonHasNoBadgeTiers" xml:space="preserve">
+    <value>The selected season has no badge tiers to copy.</value>
+  </data>
+  <data name="TargetSeasonAlreadyHasBadgeTiers" xml:space="preserve">
+    <value>This season already has badge tiers configured.</value>
+  </data>
+  <data name="UserNotFound" xml:space="preserve">
+    <value>User not found.</value>
+  </data>
+  <data name="SubscriptionPlanNameRequired" xml:space="preserve">
+    <value>Please enter a name for the plan.</value>
+  </data>
+  <data name="SubscriptionPlanInvalidDateRange" xml:space="preserve">
+    <value>The start date must not be after the end date.</value>
+  </data>
+  <data name="SubscriptionPlanDateRangeTooLong" xml:space="preserve">
+    <value>A plan can span at most 53 weeks.</value>
+  </data>
+  <data name="SubscriptionPlanInvalidPlayersPerWeek" xml:space="preserve">
+    <value>The number of players per week must be between 2 and 30.</value>
+  </data>
+  <data name="SubscriptionPlanTooManyParticipants" xml:space="preserve">
+    <value>A plan can have at most 30 participants.</value>
+  </data>
+  <data name="SubscriptionPlanParticipantNameRequired" xml:space="preserve">
+    <value>Every participant needs a name.</value>
+  </data>
+  <data name="SubscriptionPlanDuplicateParticipantName" xml:space="preserve">
+    <value>The name "{0}" is used more than once.</value>
+  </data>
+  <data name="SubscriptionPlanInvalidPercentage" xml:space="preserve">
+    <value>The share must be between 1 and 100 %.</value>
+  </data>
+  <data name="SubscriptionPlanNotEnoughParticipants" xml:space="preserve">
+    <value>There are fewer participants than players per week.</value>
+  </data>
+  <data name="SubscriptionPlanNoActiveWeeks" xml:space="preserve">
+    <value>All weeks are crossed out. There is nothing to schedule.</value>
+  </data>
+  <data name="SubscriptionPlanInvalidAssignment" xml:space="preserve">
+    <value>This change is not possible: the player is not available in this week or the week is full.</value>
+  </data>
+  <data name="InvalidEmailTemplateSyntax" xml:space="preserve">
+    <value>The email template contains an error: {0}</value>
+  </data>
+  <data name="UnknownEmailTemplateVariable" xml:space="preserve">
+    <value>The email template uses unknown variables: {0}</value>
+  </data>
+  <data name="EmailTemplateRenderingFailed" xml:space="preserve">
+    <value>The email template could not be rendered: {0}</value>
+  </data>
+  <data name="DuplicateEmailTemplateLanguage" xml:space="preserve">
+    <value>Every language can only be saved once.</value>
+  </data>
+  <data name="CurrentUserHasNoEmail" xml:space="preserve">
+    <value>Your account has no email address to send the test email to.</value>
+  </data>
+  <data name="InvalidWebsiteUrl" xml:space="preserve">
+    <value>Please enter a complete website address starting with https://.</value>
+  </data>
+  <data name="InvalidReplyToEmail" xml:space="preserve">
+    <value>Please enter a valid email address.</value>
+  </data>
+  <data name="EmailUnchanged" xml:space="preserve">
+    <value>The new email address is the same as your current one.</value>
+  </data>
+  <data name="ClubEventTitleRequired" xml:space="preserve">
+    <value>Please enter a title.</value>
+  </data>
+  <data name="ClubEventTextTooLong" xml:space="preserve">
+    <value>A text is too long.</value>
+  </data>
+  <data name="ClubEventInvalidDateRange" xml:space="preserve">
+    <value>The last day must not be before the first day.</value>
+  </data>
+  <data name="ClubEventInvalidTimeRange" xml:space="preserve">
+    <value>The end time must not be before the start time.</value>
+  </data>
+  <data name="ClubEventInvalidMaxParticipants" xml:space="preserve">
+    <value>The maximum number of participants must be at least 1.</value>
+  </data>
+  <data name="ClubEventQuestionTextRequired" xml:space="preserve">
+    <value>Every question needs a text.</value>
+  </data>
+  <data name="ClubEventQuestionNeedsOptions" xml:space="preserve">
+    <value>The question "{0}" needs at least one option.</value>
+  </data>
+  <data name="ClubEventTooManyQuestions" xml:space="preserve">
+    <value>An event can have at most 20 questions.</value>
+  </data>
+  <data name="ClubEventOptionLabelRequired" xml:space="preserve">
+    <value>Every option of "{0}" needs a text.</value>
+  </data>
+  <data name="ClubEventRegistrationDisabled" xml:space="preserve">
+    <value>This event does not accept registrations.</value>
+  </data>
+  <data name="ClubEventRegistrationClosed" xml:space="preserve">
+    <value>The registration is closed.</value>
+  </data>
+  <data name="ClubEventFull" xml:space="preserve">
+    <value>Not enough places left. Only {0} more people can register.</value>
+  </data>
+  <data name="ClubEventInvalidHeadCount" xml:space="preserve">
+    <value>Please enter between 1 and 50 people.</value>
+  </data>
+  <data name="ClubEventRequiredQuestionNotAnswered" xml:space="preserve">
+    <value>Please answer "{0}".</value>
+  </data>
+  <data name="ClubEventInvalidAnswer" xml:space="preserve">
+    <value>Your answers are not valid. Please check them.</value>
+  </data>
+  <data name="ClubEventNotRegistered" xml:space="preserve">
+    <value>You are not registered for this event.</value>
+  </data>
+  <data name="InvalidCredentials" xml:space="preserve">
+    <value>Email or password is incorrect.</value>
+  </data>
+  <data name="TooManyRequests" xml:space="preserve">
+    <value>Too many requests. Please wait a moment and try again.</value>
+  </data>
+  <data name="PrivacyPolicyNotAccepted" xml:space="preserve">
+    <value>Please confirm that you have read the privacy policy.</value>
+  </data>
+  <data name="LastClubAdmin" xml:space="preserve">
+    <value>You are the last admin of {0}. Give another member admin rights first.</value>
+  </data>
+  <data name="InvalidPushSubscription" xml:space="preserve">
+    <value>Push notifications could not be switched on with this browser.</value>
+  </data>
+  <data name="PushNotificationsNotAvailable" xml:space="preserve">
+    <value>Push notifications are currently not available.</value>
+  </data>
+  <data name="ClubAnnouncementTitleRequired" xml:space="preserve">
+    <value>Please enter a title.</value>
+  </data>
+  <data name="ClubAnnouncementBodyRequired" xml:space="preserve">
+    <value>Please enter a text.</value>
+  </data>
+  <data name="ClubAnnouncementTextTooLong" xml:space="preserve">
+    <value>The title or the text is too long.</value>
+  </data>
+  <data name="ClubAnnouncementTooManyAttachments" xml:space="preserve">
+    <value>An announcement can have at most {0} attachments.</value>
+  </data>
+  <data name="ClubAnnouncementAttachmentTooLarge" xml:space="preserve">
+    <value>The file is too large. A file can have at most {0} MB.</value>
+  </data>
+  <data name="ClubAnnouncementAttachmentsTooLarge" xml:space="preserve">
+    <value>The attachments are too large. Together they can have at most {0} MB.</value>
+  </data>
+  <data name="ClubAnnouncementAttachmentTypeNotAllowed" xml:space="preserve">
+    <value>This file type can not be attached.</value>
+  </data>
+  <data name="ClubAnnouncementAttachmentEmpty" xml:space="preserve">
+    <value>The file is empty.</value>
+  </data>
+  <data name="ClubAnnouncementRolesRequired" xml:space="preserve">
+    <value>Select at least one role.</value>
+  </data>
+  <data name="ClubAnnouncementNoActiveSeason" xml:space="preserve">
+    <value>The club has no current season.</value>
+  </data>
+  <data name="ClubAnnouncementNoRecipients" xml:space="preserve">
+    <value>Nobody in this group can be reached by email.</value>
+  </data>
+  <data name="CourtBlocked" xml:space="preserve">
+    <value>The court is blocked at this time: {0}</value>
+  </data>
+  <data name="CourtBlockingTitleRequired" xml:space="preserve">
+    <value>Please enter a reason.</value>
+  </data>
+  <data name="CourtBlockingTitleTooLong" xml:space="preserve">
+    <value>The reason must not be longer than {0} characters.</value>
+  </data>
+  <data name="CourtBlockingCourtRequired" xml:space="preserve">
+    <value>Please select at least one court.</value>
+  </data>
+  <data name="CourtBlockingInvalidDateRange" xml:space="preserve">
+    <value>The end must not be before the start, and a blocking can last one year at most.</value>
+  </data>
+  <data name="CourtBlockingInvalidTimeRange" xml:space="preserve">
+    <value>The end time must be after the start time.</value>
+  </data>
+  <data name="CourtBlockingInvalidRecurrence" xml:space="preserve">
+    <value>The repetition is invalid: it needs an end date and the blocking must be shorter than the interval.</value>
+  </data>
+  <data name="CourtBlockingTooManyOccurrences" xml:space="preserve">
+    <value>The blocking repeats too often (at most {0} times). Choose an earlier end date.</value>
+  </data>
+  <data name="CourtBlockingInvalidTimeZone" xml:space="preserve">
+    <value>The time zone of your device is unknown.</value>
+  </data>
+  <data name="CourtBlockingHasConflictingBookings" xml:space="preserve">
+    <value>There are {0} bookings in the blocked time. Please confirm that they are deleted.</value>
+  </data>
+  <data name="InvalidNotificationType" xml:space="preserve">
+    <value>Unknown type of notification.</value>
+  </data>
+</root>

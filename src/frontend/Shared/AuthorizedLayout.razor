@@ -1,0 +1,49 @@
+@using Microsoft.AspNetCore.Components.Sections
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Services.Store.ClubProfile
+@inherits LayoutComponentBase
+@layout BaseLayout
+
+<MudAppBar Elevation="0" Class="bookennis-appbar">
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+    <div class="d-flex gap-4 mud-width-full align-center justify-space-between mr-4">
+        <div class="d-flex gap-1 align-center">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" OnClick="BackButtonClicked" />
+            <MudText Typo="Typo.h1" Style="color: inherit;">@(ClubProfileStore.SelectedClub?.ClubName ?? "Clubnetz")</MudText>
+        </div>
+
+        <div class="d-flex flex-column align-center justify-center">
+            <SectionOutlet SectionName="app-bar-outlet" />
+        </div>
+    </div>
+    <ThemeToggle />
+</MudAppBar>
+<MudDrawer @bind-Open="drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2" Class="bookennis-drawer">
+    <NavMenu />
+</MudDrawer>
+<MudMainContent Class="bookennis-main-content">
+    <div class="pa-4 pa-sm-6">
+        <ProfileCompletionBanner />
+        @Body
+    </div>
+</MudMainContent>
+
+@code {
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = null!;
+
+    [Inject]
+    private IClubProfileStore ClubProfileStore { get; set; } = null!;
+
+    private bool drawerOpen = true;
+
+    void DrawerToggle()
+    {
+        drawerOpen = !drawerOpen;
+    }
+
+    async Task BackButtonClicked()
+    {
+        await JSRuntime.InvokeVoidAsync("history.back");
+    }
+}

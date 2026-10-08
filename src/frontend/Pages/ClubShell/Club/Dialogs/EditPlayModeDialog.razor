@@ -1,0 +1,189 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubSettings
+@using Bookennis.Client.Pages.ClubShell.Club.Components
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Shared
+@using MudBlazor.Utilities
+
+<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@ClubStore.IsSaving" Title="@(Name.Length > 0 ? Name : L["AddPlayMode"])">
+    <div class="pm-edit">
+        <div class="pm-edit__preview" style="--pm-color: @color">
+            <span class="pm-edit__preview-dot"></span>
+            <span class="pm-edit__preview-name">@(string.IsNullOrWhiteSpace(Name) ? L["PlayModeNamePlaceholder"] : Name)</span>
+            <span class="pm-edit__preview-facts">
+                👥 @(HasFixedPlayerCount ? string.Format(L[FixedPlayerCount == 1 ? "PlayersFixedOne" : "PlayersFixed"], FixedPlayerCount) : L["PlayersFlexible"])
+                · ⏱️ @(HasFixedDuration && FixedDuration is { } duration ? PlayModeColors.Duration(duration) : L["DurationFlexible"])
+            </span>
+        </div>
+
+        <section class="pm-edit__section">
+            <h3 class="pm-edit__title">✏️ @L["SectionBasics"]</h3>
+            <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Name"]" @bind-Value="@Name" Immediate="true"
+                          Required="true" RequiredError="@L["PlayModeNameRequired"]" Margin="Margin.Dense" />
+
+            <div class="pm-edit__label">@L["Color"]</div>
+            <div class="swatches" role="radiogroup" aria-label="@L["Color"]">
+                @foreach (var swatch in PlayModeColors.Palette)
+                {
+                    var selected = string.Equals(swatch, color, StringComparison.OrdinalIgnoreCase);
+                    <button type="button" class="swatch @(selected ? "swatch--selected" : null)" style="--swatch: @swatch"
+                            role="radio" aria-checked="@(selected ? "true" : "false")" aria-label="@swatch" @onclick="() => color = swatch"></button>
+                }
+                <MudColorPicker Variant="Variant.Outlined" Label="@L["CustomColor"]" Value="@(new MudColor(color))"
+                                ValueChanged="@(value => color = value.Value[..7])" PickerVariant="PickerVariant.Dialog" ShowAlpha="false"
+                                Margin="Margin.Dense" Class="swatches__custom" />
+            </div>
+        </section>
+
+        <section class="pm-edit__section">
+            <h3 class="pm-edit__title">📏 @L["SectionRules"]</h3>
+            <div class="pm-edit__grid">
+                <div class="pm-option @(HasFixedPlayerCount ? "pm-option--on" : null)">
+                    <MudSwitch T="bool" @bind-Value="HasFixedPlayerCount" Color="Color.Primary" Label="@L["HasFixedPlayerCount"]" />
+                    @if (HasFixedPlayerCount)
+                    {
+                        <NumberStepper @bind-Value="FixedPlayerCount" Min="1" Max="8" Unit="@L["Players"]" Label="@L["HasFixedPlayerCount"]" />
+                    }
+                </div>
+                <div class="pm-option @(HasFixedDuration ? "pm-option--on" : null)">
+                    <MudSwitch T="bool" @bind-Value="HasFixedDuration" Color="Color.Primary" Label="@L["HasFixedDuration"]" />
+                    @if (HasFixedDuration)
+                    {
+                        <div class="durations">
+                            @foreach (var preset in DurationPresets)
+                            {
+                                <button type="button" class="duration @(FixedDuration == preset ? "duration--selected" : null)" @onclick="() => FixedDuration = preset">
+                                    @PlayModeColors.Duration(preset)
+                                </button>
+                            }
+                        </div>
+                        <MudTimePicker Variant="Variant.Outlined" Label="@L["OtherDuration"]" @bind-Time="@FixedDuration" PickerVariant="PickerVariant.Dialog"
+                                       TimeEditMode="TimeEditMode.Normal" Margin="Margin.Dense" />
+                    }
+                </div>
+                <div class="pm-option @(MaxBookingsPerSeason is not null ? "pm-option--on" : null)">
+                    <MudSwitch T="bool" Value="@(MaxBookingsPerSeason is not null)" ValueChanged="@(value => MaxBookingsPerSeason = value ? 10 : null)"
+                               Color="Color.Primary" Label="@L["LimitPerSeason"]" />
+                    @if (MaxBookingsPerSeason is { } max)
+                    {
+                        <NumberStepper Value="@max" ValueChanged="@(value => MaxBookingsPerSeason = value)" Min="1" Max="200" Unit="@L["PerSeason"]" Label="@L["LimitPerSeason"]" />
+                    }
+                </div>
+            </div>
+
+            <div class="pm-edit__flags">
+                @Toggle("💳", L["FlagCharging"], L["FlagChargingHint"], IsChargingBookingSubscription, value => IsChargingBookingSubscription = value)
+                @Toggle("🔁", L["FlagRecurring"], L["FlagRecurringHint"], AllowRecurring, value => AllowRecurring = value)
+                @Toggle("➕", L["FlagOverbook"], L["FlagOverbookHint"], CanOverbook, value => CanOverbook = value)
+                @Toggle("💬", L["FlagComment"], L["FlagCommentHint"], CommentAllowed, value => CommentAllowed = value)
+            </div>
+        </section>
+
+        <section class="pm-edit__section">
+            <h3 class="pm-edit__title">🔐 @L["SectionAccess"]</h3>
+            <p class="pm-edit__hint">@L["AllowedRolesHint"]</p>
+            <MultiChoiceChips TItem="MemberRole" Items="@(Enum.GetValues<MemberRole>())" Values="@SelectedRoles" ValuesChanged="@(roles => SelectedRoles = roles.ToList())"
+                              TextFunc="@(role => SharedLocale[$"Role_{role}"])" />
+            @if (SelectedRoles.Count == 0)
+            {
+                <div class="pm-edit__warning">⚠️ @L["RoleRequired"]</div>
+            }
+        </section>
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter] public PlayModeDto? PlayMode { get; set; }
+
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private static readonly TimeSpan[] DurationPresets = [TimeSpan.FromMinutes(30), TimeSpan.FromHours(1), TimeSpan.FromMinutes(90), TimeSpan.FromHours(2)];
+
+    private string Name = string.Empty;
+    private bool HasFixedPlayerCount = true;
+    private int FixedPlayerCount = 2;
+    private bool HasFixedDuration = true;
+    private TimeSpan? FixedDuration = TimeSpan.FromHours(1);
+    private string color = "#795548";
+    private List<MemberRole> SelectedRoles = [MemberRole.User];
+    private bool IsChargingBookingSubscription;
+    private bool CanOverbook;
+    private bool CommentAllowed;
+    private bool AllowRecurring;
+    private int? MaxBookingsPerSeason;
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(Name) && SelectedRoles.Count > 0 && (!HasFixedDuration || FixedDuration is { TotalMinutes: > 0 }) && (!HasFixedPlayerCount || FixedPlayerCount >= 1);
+
+    protected override void OnInitialized()
+    {
+        if (PlayMode is null)
+            return;
+
+        Name = PlayMode.Name;
+        HasFixedPlayerCount = PlayMode.FixedPlayerCount is not null;
+        FixedPlayerCount = PlayMode.FixedPlayerCount ?? 2;
+        HasFixedDuration = PlayMode.FixedDuration is not null;
+        FixedDuration = PlayMode.FixedDuration ?? TimeSpan.FromHours(1);
+        color = PlayModeColors.ToHex(PlayMode.Color);
+        SelectedRoles = PlayMode.AllowedRoles.ToList();
+        IsChargingBookingSubscription = PlayMode.IsChargingBookingSubscription;
+        CanOverbook = PlayMode.CanOverbook;
+        CommentAllowed = PlayMode.CommentAllowed;
+        AllowRecurring = PlayMode.AllowRecurring;
+        MaxBookingsPerSeason = PlayMode.MaxBookingsPerSeason;
+    }
+
+    private RenderFragment Toggle(string emoji, string title, string hint, bool value, Action<bool> setter) => __builder =>
+    {
+        <div class="pm-flag @(value ? "pm-flag--on" : null)">
+            <MudSwitch T="bool" Value="@value" ValueChanged="@(v => setter(v))" Color="Color.Primary" />
+            <span>
+                <span class="pm-flag__title"><span aria-hidden="true">@emoji</span> @title</span>
+                <span class="pm-flag__hint">@hint</span>
+            </span>
+        </div>
+    };
+
+    private PlayModeRequest BuildRequest() => new()
+    {
+        Name = Name.Trim(),
+        AllowedRoles = SelectedRoles.ToList(),
+        Color = PlayModeColors.ToArgb(color),
+        FixedPlayerCount = HasFixedPlayerCount ? FixedPlayerCount : null,
+        IsChargingBookingSubscription = IsChargingBookingSubscription,
+        FixedDuration = HasFixedDuration ? FixedDuration : null,
+        CanOverbook = CanOverbook,
+        CommentAllowed = CommentAllowed,
+        AllowRecurring = AllowRecurring,
+        MaxBookingsPerSeason = MaxBookingsPerSeason,
+    };
+
+    private async Task<DialogResult?> Submit()
+    {
+        var request = BuildRequest();
+        var result = PlayMode is not null
+            ? await ClubStore.UpdatePlayMode(PlayMode.Id, request)
+            : await ClubStore.AddPlayMode(request);
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(string.Format(L["PlayModeSaved"], request.Name), Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+}

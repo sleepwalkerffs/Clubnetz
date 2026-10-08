@@ -1,0 +1,29 @@
+@using Bookennis.Client.Components.Shared.Buttons
+<MudPaper Class="mb-6 pa-4 pa-sm-5" Elevation="@Elevation" Outlined="@Outlined">
+    @if (Header is not null)
+    {
+        <div class="d-flex gap-4 align-center mb-3">
+            <MudText Typo="@Typo" Class="section-header">@Header</MudText>
+            @HeaderAction
+        </div>
+    }
+    @Content
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string? Header { get; set; }
+    [Parameter]
+    public Typo Typo { get; set; } = Typo.h3;
+    [Parameter]
+    public int Elevation { get; set; } = 1;
+    [Parameter]
+    public bool Outlined { get; set; } = false;
+
+    [Parameter]
+    public RenderFragment? Content { get; set; }
+
+    [Parameter]
+    public RenderFragment? HeaderAction { get; set; }
+
+}

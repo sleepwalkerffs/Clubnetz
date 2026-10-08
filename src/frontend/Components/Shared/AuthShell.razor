@@ -1,0 +1,89 @@
+@using Bookennis.Client.Localization.Pages.Account
+
+@* Branded two-column frame for the account pages (login, registration, password reset, ...).
+   Left: what Clubnetz is and that it is free. Right: the page's card. Stacks on mobile. *@
+<div class="@($"auth-shell {(ShowFeatures ? "" : "auth-shell--compact")}")">
+    <section class="auth-hero" aria-label="Clubnetz">
+        <div class="auth-hero__court" aria-hidden="true"></div>
+
+        <div class="auth-hero__brand">
+            <MudIcon Icon="@Icons.Material.Filled.SportsTennis" Class="auth-hero__logo" />
+            <span>Clubnetz</span>
+        </div>
+
+        <h1 class="auth-hero__headline">@Locale["Pitch_Headline"]</h1>
+        <p class="auth-hero__lead">@Locale["Pitch_Lead"]</p>
+
+        <div class="auth-hero__free">
+            <span class="auth-hero__free-badge">@Locale["Pitch_FreeBadge"]</span>
+            <span class="auth-hero__free-text">@Locale["Pitch_FreeText"]</span>
+        </div>
+
+        @if (ShowFeatures)
+        {
+            <ul class="auth-hero__features">
+                @foreach (var (emoji, key) in Features)
+                {
+                    <li class="auth-feature">
+                        <span class="auth-feature__emoji" aria-hidden="true">@emoji</span>
+                        <span class="auth-feature__text">
+                            <span class="auth-feature__title">@Locale[$"Pitch_Feature_{key}"]</span>
+                            <span class="auth-feature__description">@Locale[$"Pitch_Feature_{key}_Description"]</span>
+                        </span>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
+    <section class="auth-card">
+        @if (Emoji is not null)
+        {
+            <div class="auth-card__emoji" aria-hidden="true">@Emoji</div>
+        }
+        <h2 class="auth-card__title">@Title</h2>
+        @if (Subtitle is not null)
+        {
+            <p class="auth-card__subtitle">@Subtitle</p>
+        }
+
+        <div class="auth-card__content">
+            @ChildContent
+        </div>
+
+        @if (Footer is not null)
+        {
+            <div class="auth-card__footer">@Footer</div>
+        }
+
+        @* New tab, so a half filled registration form isn't lost *@
+        <LegalLinks NewTab="true" Class="auth-card__legal" />
+    </section>
+</div>
+
+@code {
+    private static readonly (string Emoji, string Key)[] Features =
+    [
+        ("🎾", "Booking"),
+        ("👥", "Members"),
+        ("🎟️", "Guests"),
+        ("📊", "Statistics"),
+        ("🏆", "Badges")
+    ];
+
+    [Inject] private IStringLocalizer<AccountLocale> Locale { get; set; } = null!;
+
+    [Parameter, EditorRequired] public string Title { get; set; } = null!;
+    [Parameter] public string? Subtitle { get; set; }
+
+    /// <summary>Optional emoji shown above the title, e.g. on status pages like "check your inbox".</summary>
+    [Parameter] public string? Emoji { get; set; }
+
+    /// <summary>Shows the feature list in the brand panel. Secondary pages (password reset, confirmations) hide it.</summary>
+    [Parameter] public bool ShowFeatures { get; set; } = true;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Links below the card content, separated by a divider.</summary>
+    [Parameter] public RenderFragment? Footer { get; set; }
+}

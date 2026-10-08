@@ -1,0 +1,15 @@
+﻿@code {
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Parameter]
+    public int? ClubId { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (ClubId is null)
+            NavigationManager.NavigateTo($"/Clubs/{ClubId}");
+        else
+            NavigationManager.NavigateTo("/");
+    }
+}

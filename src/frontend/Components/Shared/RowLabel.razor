@@ -1,0 +1,18 @@
+﻿<MudPaper Style="margin-bottom: 8px">
+    <MudGrid Class="grid-style" Style="margin: 0px">
+        <MudItem xs="6">
+            <MudText Typo="Typo.body2" Align="Align.Right">@Label</MudText>
+        </MudItem>
+        <MudItem xs="6">
+            <MudText Typo="Typo.body1">@Content</MudText>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public RenderFragment? Label { get; set; }
+
+    [Parameter]
+    public RenderFragment? Content { get; set; }
+}

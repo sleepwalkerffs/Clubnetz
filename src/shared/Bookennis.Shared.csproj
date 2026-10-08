@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Utils\Searching\**" />
+    <EmbeddedResource Remove="Utils\Searching\**" />
+    <None Remove="Utils\Searching\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\global\Bookennis.Global.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,71 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Trophies
+@using Bookennis.Client.Pages.ClubShell.Members.Dialogs
+@using Bookennis.Shared.Controller.MemberBadges
+@using Bookennis.Shared.Controller.OneTimeBadges
+
+<div class="showcase">
+    @foreach (var club in TrophyCase.Clubs.Where(HasBadges))
+    {
+        @if (ShowClubNames)
+        {
+            <div class="showcase__club">🏟️ @club.ClubName</div>
+        }
+
+        @foreach (var season in club.Seasons.Where(s => s.Badges.Count > 0 || s.OneTimeBadges.Count > 0))
+        {
+            var count = season.Badges.Count + season.OneTimeBadges.Count;
+            var highest = season.Badges.Count > 0 ? season.Badges.Max(b => b.Level) : (int?)null;
+
+            <section class="shelf">
+                <div class="shelf__header">
+                    <span class="shelf__title">@string.Format(Locale["SeasonTitle"], season.SeasonFrom.Year)</span>
+                    <span class="shelf__count">@string.Format(Locale[count == 1 ? "OneBadge" : "BadgesCount"], count)</span>
+                    @if (highest is { } level)
+                    {
+                        <span class="shelf__level" style="--badge-color: @BadgeColors.ForLevel(level)">@string.Format(Locale["LevelReached"], level)</span>
+                    }
+                </div>
+
+                <div class="shelf__items">
+                    @foreach (var badge in season.Badges.OrderByDescending(b => b.Level))
+                    {
+                        <TrophyTile Name="@badge.Name" ImageUrl="@badge.ImageUrl" Level="@badge.Level" Date="@badge.EarnedAt"
+                                    OnClick="() => OpenDetail(new TrophyDetailDialog.BadgeDetailViewModel(badge.Name, badge.Description, badge.ImageUrl, badge.Level, badge.EarnedAt), season, club)" />
+                    }
+                    @foreach (var badge in season.OneTimeBadges.OrderByDescending(b => b.AwardedAt))
+                    {
+                        <TrophyTile Name="@badge.Name" ImageUrl="@badge.ImageUrl" Date="@badge.AwardedAt"
+                                    OnClick="() => OpenDetail(new TrophyDetailDialog.BadgeDetailViewModel(badge.Name, badge.Description, badge.ImageUrl, null, badge.AwardedAt), season, club)" />
+                    }
+                </div>
+                <div class="shelf__board" aria-hidden="true"></div>
+            </section>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public GetTrophyCaseResult TrophyCase { get; set; } = null!;
+
+    [Inject] private IStringLocalizer<TrophyLocale> Locale { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+
+    private bool ShowClubNames => TrophyCase.Clubs.Count(HasBadges) > 1;
+
+    private static bool HasBadges(ClubTrophiesDto club)
+        => club.Seasons.Any(season => season.Badges.Count > 0 || season.OneTimeBadges.Count > 0);
+
+    private Task OpenDetail(TrophyDetailDialog.BadgeDetailViewModel badge, SeasonTrophiesDto season, ClubTrophiesDto club)
+    {
+        var parameters = new DialogParameters<TrophyDetailDialog>
+        {
+            { x => x.Badge, badge },
+            { x => x.SeasonLabel, string.Format(Locale["SeasonTitle"], season.SeasonFrom.Year) },
+            { x => x.ClubName, club.ClubName },
+        };
+        return DialogService.ShowAsync<TrophyDetailDialog>(string.Empty, parameters,
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, NoHeader = true, CloseOnEscapeKey = true, BackdropClick = true });
+    }
+}

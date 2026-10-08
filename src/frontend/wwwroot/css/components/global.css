@@ -1,0 +1,87 @@
+/* ===== Global Styles ===== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth transitions for layout */
+.bookennis-main-content {
+  min-height: 100vh;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--mud-palette-gray-light);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mud-palette-gray-default);
+}
+
+/* Drawer styling */
+.bookennis-drawer {
+  border-right: none !important;
+}
+
+/* MudProgressCircular with primary color */
+.mud-progress-circular {
+  color: var(--mud-palette-primary) !important;
+}
+
+/* Selection color */
+::selection {
+  background-color: rgba(5, 150, 105, 0.15);
+  color: inherit;
+}
+
+/* Smooth page transitions */
+.mud-main-content > div {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Chips */
+.mud-chip {
+  font-weight: 500 !important;
+  transition: all 0.15s ease !important;
+}
+
+/* Snackbar */
+.mud-snackbar {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Tabs */
+.mud-tabs-toolbar {
+  border-bottom: 2px solid var(--mud-palette-gray-lighter) !important;
+}
+
+.mud-tab.mud-tab-active {
+  font-weight: 600 !important;
+}

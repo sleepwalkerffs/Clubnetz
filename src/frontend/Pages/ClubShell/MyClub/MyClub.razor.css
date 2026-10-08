@@ -1,0 +1,32 @@
+.myclub-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+::deep .myclub-stack > .section-card {
+    height: auto;
+}
+
+.myclub-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 12px;
+    text-align: center;
+}
+
+.myclub-empty__emoji {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+.myclub-empty__title {
+    margin-top: 8px;
+    font-weight: 700;
+}
+
+.myclub-empty__text {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}

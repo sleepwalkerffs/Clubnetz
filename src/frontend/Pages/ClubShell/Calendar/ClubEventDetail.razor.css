@@ -1,0 +1,240 @@
+.event-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 24px;
+    border-radius: 20px;
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #1E3A8A 0%, #4338CA 45%, #7C3AED 85%, #DB2777 130%);
+    box-shadow: 0 10px 30px rgba(67, 56, 202, 0.25);
+}
+
+.event-hero__text {
+    flex: 1 1 320px;
+    min-width: 0;
+}
+
+.event-hero__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+
+.event-hero__title {
+    margin: 10px 0 0;
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+}
+
+.event-hero__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    margin-top: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.event-hero__organizer {
+    flex-basis: 100%;
+    font-size: 0.8rem;
+    font-weight: 500;
+    opacity: 0.85;
+}
+
+.event-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+::deep .event-hero__button {
+    background: rgba(255, 255, 255, 0.18);
+    color: #FFFFFF;
+    font-weight: 700;
+    box-shadow: none;
+}
+
+::deep .event-hero__button:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+::deep .event-hero__menu .mud-icon-button {
+    color: #FFFFFF;
+}
+
+.event-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+::deep .event-stack > .section-card {
+    height: auto;
+}
+
+.event-muted {
+    font-size: 0.9rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.event-capacity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+::deep .event-capacity .mud-progress-linear {
+    flex: 1 1 auto;
+}
+
+.event-capacity__label {
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.participant {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 12px;
+}
+
+.participant + .participant {
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.participant--me {
+    background: color-mix(in srgb, var(--mud-palette-primary) 7%, transparent);
+}
+
+.participant__body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.participant__name {
+    font-weight: 700;
+}
+
+.participant__plus {
+    margin-left: 4px;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+    background: var(--mud-palette-background-gray);
+}
+
+.participant__answers {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+    overflow-wrap: anywhere;
+}
+
+.participant__comment {
+    margin-top: 2px;
+    font-size: 0.8rem;
+    font-style: italic;
+    overflow-wrap: anywhere;
+}
+
+.totals-question + .totals-question {
+    margin-top: 14px;
+}
+
+.totals-question__text {
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.totals-option {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) 32px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+}
+
+.totals-option__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.totals-option__bar {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--mud-palette-background-gray);
+    overflow: hidden;
+}
+
+.totals-option__fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--mud-palette-primary);
+}
+
+.totals-option__value {
+    text-align: right;
+    font-weight: 800;
+}
+
+.event-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 12px;
+    text-align: center;
+}
+
+.event-empty__emoji {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+.event-empty__title {
+    margin-top: 8px;
+    font-weight: 700;
+}
+
+@media (max-width: 599px) {
+    .event-hero {
+        padding: 20px 16px;
+    }
+
+    .event-hero__title {
+        font-size: 1.45rem;
+    }
+
+    .event-hero__actions {
+        width: 100%;
+    }
+}

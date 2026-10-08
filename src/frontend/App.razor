@@ -1,0 +1,124 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Profile
+@using Bookennis.Client.Services.Store.Push
+@using Bookennis.Client.Shared
+@using Bookennis.Client.Shared.Redirects
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <CascadingValue Value="@routeData">
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(AuthorizedLayout)">
+                    <NotAuthorized>
+                        <RedirectToLogin />
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            </CascadingValue>
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(AuthorizedLayout)">
+                <RedirectToNotFound />
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+
+@code{
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Inject]
+    private IProfileStore ProfileStore { get; set; } = null!;
+
+    [Inject]
+    private IClubProfileStore ClubProfileStore { get; set; } = null!;
+
+    [Inject]
+    private IPushStore PushStore { get; set; } = null!;
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+
+    [Inject]
+    private IAuthStateChanged AuthenticationStateChanged { get; set; } = null!;
+
+    [Inject]
+    private ITenantProvider TenantProvider { get; set; } = null!;
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        AuthenticationStateProvider.AuthenticationStateChanged += AuthStateChanged;
+        AuthenticationStateChanged.AuthStateChanged();
+    }
+
+    private async void AuthStateChanged(Task<AuthenticationState> authState)
+    {
+        var state = await authState;
+        if (state.User.Identity?.IsAuthenticated ?? false)
+        {
+            await ProfileStore.LoadProfileAsync();
+
+            // Keeps the push subscription of this device registered for the signed-in user
+            _ = PushStore.Load();
+
+            if (!ProfileStore.HasClubsAssigned)
+            {
+                var dialogResult = await DialogService.ShowAsync<SelectClubDialog>(SharedLocale["SelectClub"],
+                    new DialogOptions { CloseButton = false, BackdropClick = false });
+
+                var result = await dialogResult.Result;
+                if (result is null || result.Canceled)
+                {
+                    NavigationManager.NavigateToAccessDenied();
+                    return;
+                }
+
+                // Set up tenant before reloading profile to prevent race conditions
+                // from OnProfileChanged event handlers triggering navigation
+                // before the tenant is configured
+                TenantProvider.SetCurrentClub((int)result.Data!);
+                await ProfileStore.LoadProfileAsync();
+            }
+
+            if (ProfileStore.HasClubsAssigned)
+            {
+                // Keep the club of a deep link (e.g. a shared event) instead of switching to the favorite club
+                var clubId = GetClubIdFromUri() is { } routeClubId && ProfileStore.IsClubAssigned(routeClubId)
+                    ? routeClubId
+                    : ProfileStore.FavoriteClubId;
+                TenantProvider.SetCurrentClub(clubId);
+                await ClubProfileStore.LoadClubProfile(clubId);
+
+                var currentUri = new Uri(NavigationManager.Uri);
+                var relativePath = currentUri.AbsolutePath.TrimEnd('/');
+                if (string.IsNullOrEmpty(relativePath) || relativePath == "/account/login")
+                {
+                    NavigationManager.NavigateTo("/");
+                }
+            }
+            else
+            {
+                NavigationManager.NavigateToAccessDenied();
+            }
+        }
+    }
+
+    private int? GetClubIdFromUri()
+    {
+        var segments = new Uri(NavigationManager.Uri).AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return segments is ["clubs", var id, ..] && int.TryParse(id, out var clubId) ? clubId : null;
+    }
+}

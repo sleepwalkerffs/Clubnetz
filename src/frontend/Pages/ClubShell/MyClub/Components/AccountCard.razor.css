@@ -1,0 +1,79 @@
+.account-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.account-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+::deep .account-row__icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+}
+
+.account-row__text {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.account-row__label {
+    font-size: 0.72rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.account-row__value {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.account-row__value--wrap {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.account-row__muted {
+    font-weight: 400;
+    color: var(--mud-palette-text-secondary);
+}
+
+.account-row__party {
+    margin-left: 6px;
+    font-weight: 700;
+    color: var(--bk-dark-pink, #DB2777);
+}
+
+.account-row__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.account-chip {
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+}
+
+.account-chip--on {
+    color: var(--bk-dark-green, #047857);
+    background: color-mix(in srgb, #10B981 16%, transparent);
+}
+
+.account-chip--off {
+    color: var(--mud-palette-text-secondary);
+    background: var(--mud-palette-background-gray);
+}

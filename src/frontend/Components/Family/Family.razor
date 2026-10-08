@@ -1,0 +1,156 @@
+@using Bookennis.Client.Components.Family.Dialogs
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Components.Family
+@using Bookennis.Client.Services.Store.Family
+@using Bookennis.Shared.Controller.Families
+
+@implements IDisposable
+
+<SectionCard Emoji="👨‍👩‍👧" Title="@FamilySharedLocale["Family"]" Subtitle="@FamilySharedLocale["FamilySubtitle"]">
+    <div class="family-group">
+        <div class="family-group__label">@FamilySharedLocale["Partner"]</div>
+        @if (Partners.Count > 0)
+        {
+            @foreach (var parent in Partners)
+            {
+                <div class="family-member">
+                    <UserAvatar FirstName="@parent.FirstName" LastName="@parent.LastName" Color="Color.Secondary" />
+                    <div class="family-member__text">
+                        <div class="family-member__name">@parent.FirstName @parent.LastName</div>
+                    </div>
+                    <MudTooltip Text="@FamilySharedLocale["RemoveFamilyMember"]">
+                        <MudIconButton Size="Size.Small" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete"
+                                       aria-label="@FamilySharedLocale["RemoveFamilyMember"]"
+                                       OnClick="_ => OpenDeleteDialog(parent)" />
+                    </MudTooltip>
+                </div>
+            }
+        }
+        else
+        {
+            <button type="button" class="family-add" @onclick="AddPartner">
+                <MudIcon Icon="@Icons.Material.Filled.FavoriteBorder" Size="Size.Small" />
+                @FamilySharedLocale["SelectPartner"]
+            </button>
+        }
+    </div>
+
+    <div class="family-group">
+        <div class="family-group__label">@FamilySharedLocale["Children"]</div>
+        @foreach (var child in Children)
+        {
+            <div class="family-member">
+                <UserAvatar FirstName="@child.FirstName" LastName="@child.LastName" Color="Color.Tertiary" />
+                <div class="family-member__text">
+                    <div class="family-member__name">@child.FirstName @child.LastName</div>
+                    <div class="family-member__meta">@string.Format(FamilySharedLocale["ChildAge"], GetAge(child.Birthday))</div>
+                </div>
+                <div class="d-flex">
+                    @if (child.IsOwnedAccount)
+                    {
+                        <MudTooltip Text="@FamilySharedLocale["EditChild"]">
+                            <MudIconButton Size="Size.Small" Color="Color.Primary" Icon="@Icons.Material.Outlined.Edit"
+                                           aria-label="@FamilySharedLocale["EditChild"]"
+                                           OnClick="_ => OpenEditChildDialog(child)" />
+                        </MudTooltip>
+                    }
+                    <MudTooltip Text="@FamilySharedLocale["RemoveFamilyMember"]">
+                        <MudIconButton Size="Size.Small" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete"
+                                       aria-label="@FamilySharedLocale["RemoveFamilyMember"]"
+                                       OnClick="_ => OpenDeleteDialog(child)" />
+                    </MudTooltip>
+                </div>
+            </div>
+        }
+        <button type="button" class="family-add" @onclick="AddChildren">
+            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+            @FamilySharedLocale["AddChild"]
+        </button>
+    </div>
+</SectionCard>
+
+@code {
+    [Parameter]
+    public required int MemberId { get; set; }
+    [Parameter]
+    public required int? FamilyId { get; set; }
+
+    [Inject]
+    private IFamilyStore FamilyStore { get; set; } = null!;
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<FamilySharedLocale> FamilySharedLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private List<FamilyParentDto> Partners => FamilyStore.Family?.Parents.Where(p => p.MemberId != MemberId).ToList() ?? [];
+
+    private List<FamilyChildDto> Children => FamilyStore.Family?.Children.Where(c => c.MemberId != MemberId).ToList() ?? [];
+
+    private static int GetAge(DateOnly birthday)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var age = today.Year - birthday.Year;
+        return birthday > today.AddYears(-age) ? age - 1 : age;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (FamilyId is not null && !FamilyStore.LoadedForFamilyId(FamilyId.Value))
+            await FamilyStore.LoadFamily(FamilyId.Value);
+
+        FamilyStore.OnFamilyChanged += StateHasChanged;
+    }
+
+    private async Task LoadFamily(int familyId)
+    {
+        if (!await FamilyStore.WaitUntilLoaded() && !FamilyStore.LoadedForFamilyId(familyId))
+            await FamilyStore.LoadFamily(familyId);
+    }
+
+    private async Task AddPartner()
+    {
+        var parameters = new DialogParameters<SelectPartner>();
+        parameters.Add(dialog => dialog.MemberId, MemberId);
+
+        await DialogService.ShowAsync<SelectPartner>(FamilySharedLocale["SelectPartner"], parameters, new DialogOptions { FullScreen = false });
+    }
+
+    private async Task AddChildren()
+    {
+        var parameters = new DialogParameters<AddNewChild>();
+        parameters.Add(dialog => dialog.MemberId, MemberId);
+
+        await DialogService.ShowAsync<AddNewChild>(FamilySharedLocale["AddChild"], parameters, new DialogOptions());
+    }
+
+    private async Task OpenEditChildDialog(FamilyChildDto child)
+    {
+        var parameters = new DialogParameters<EditChildDialog>();
+        parameters.Add(dialog => dialog.Child, child);
+
+        await DialogService.ShowAsync<EditChildDialog>(FamilySharedLocale["EditChild"], parameters, new DialogOptions());
+    }
+
+    private async Task OpenDeleteDialog(FamilyMemberDto familyMember)
+    {
+        var approved = await DialogService.ShowMessageBox(
+            title: FamilySharedLocale["RemoveFamilyMember"],
+            message: string.Format(FamilySharedLocale["RemoveFamilyMemberConfirmation"], $"{familyMember.FirstName} {familyMember.LastName}"),
+            yesText: SharedLocale["Delete"],
+            cancelText: SharedLocale["Cancel"]);
+
+        if (approved is not null && approved.Value)
+            await FamilyStore.RemoveFamilyMember(familyMember.MemberId);
+    }
+
+    public void Dispose()
+    {
+        FamilyStore.OnFamilyChanged -= StateHasChanged;
+        FamilyStore.ResetFamily();
+    }
+}

@@ -1,0 +1,99 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Trophies
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Microsoft.Extensions.Localization
+
+<MudDialog>
+    <DialogContent>
+        <div class="trophy-detail" style="--badge-color: @BadgeColors.ForLevel(Badge.Level)">
+            <div class="trophy-detail__spotlight">
+                <span class="trophy-detail__rays" aria-hidden="true"></span>
+                <BadgeIcon ImageUrl="@Badge.ImageUrl" Level="@Badge.Level" Alt="@Badge.Name" Size="Size.Large" Class="trophy-detail__icon" />
+            </div>
+
+            <div class="trophy-detail__name">@Badge.Name</div>
+            <span class="trophy-detail__pill">
+                @(Badge.Level is { } level ? $"{SharedLocale["Level"]} {level}" : TrophyLocale["SpecialAward"])
+            </span>
+
+            @if (!string.IsNullOrWhiteSpace(Badge.Description))
+            {
+                <p class="trophy-detail__description">@Badge.Description</p>
+            }
+
+            <div class="trophy-detail__facts">
+                <div class="trophy-detail__fact">
+                    <span aria-hidden="true">🏟️</span>
+                    <span>@ClubName</span>
+                </div>
+                <div class="trophy-detail__fact">
+                    <span aria-hidden="true">📅</span>
+                    <span>@SeasonLabel</span>
+                </div>
+                @if (Badge.EarnedAt is { } earnedAt)
+                {
+                    <div class="trophy-detail__fact">
+                        <span aria-hidden="true">🏅</span>
+                        <span>
+                            @SharedLocale["EarnedOn"]: @earnedAt.ToLocalTime().ToString("D", CultureInfo.CurrentCulture)
+                            <span class="trophy-detail__ago">· @EarnedAgo(earnedAt)</span>
+                        </span>
+                    </div>
+                }
+                @Facts
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        @Actions
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="Close">
+            @SharedLocale["Close"]
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    /// <remarks><c>EarnedAt</c> is null for a preview of a badge that was not earned (e.g. in the club administration).</remarks>
+    public record BadgeDetailViewModel(string Name, string Description, string? ImageUrl, int? Level, DateTimeOffset? EarnedAt);
+
+    [Parameter]
+    public required BadgeDetailViewModel Badge { get; set; }
+
+    [Parameter]
+    public required string SeasonLabel { get; set; }
+
+    [Parameter]
+    public required string ClubName { get; set; }
+
+    /// <summary>Additional facts, use elements with the <c>trophy-detail__fact</c> class.</summary>
+    [Parameter]
+    public RenderFragment? Facts { get; set; }
+
+    /// <summary>Additional buttons next to the close button.</summary>
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<TrophyLocale> TrophyLocale { get; set; } = null!;
+
+    private string EarnedAgo(DateTimeOffset earnedAt)
+    {
+        var days = DateOnly.FromDateTime(DateTime.Today).DayNumber - DateOnly.FromDateTime(earnedAt.ToLocalTime().DateTime).DayNumber;
+        return days switch
+        {
+            <= 0 => TrophyLocale["EarnedToday"],
+            1 => TrophyLocale["EarnedYesterday"],
+            _ => string.Format(TrophyLocale["EarnedDaysAgo"], days),
+        };
+    }
+
+    private void Close() => MudDialog.Close();
+}

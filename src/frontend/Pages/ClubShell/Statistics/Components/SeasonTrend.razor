@@ -1,0 +1,33 @@
+@using System.Globalization
+@using Bookennis.Shared.Controller.Statistics
+
+<div class="season-trend">
+    @foreach (var season in seasons)
+    {
+        var data = season.Data!;
+        var isBest = data.TotalBookings == maxBookings && maxBookings > 0;
+        <div class="season-column">
+            <div class="season-column__value">@(isBest ? "👑 " : "")@data.TotalBookings</div>
+            <div class="season-column__track">
+                <div class="season-column__fill @(isBest ? "season-column__fill--best" : "")"
+                     style="height: @(maxBookings > 0 ? Math.Max(data.TotalBookings * 100.0 / maxBookings, data.TotalBookings > 0 ? 4 : 0).ToString("0.#", CultureInfo.InvariantCulture) : "0")%"></div>
+            </div>
+            <div class="season-column__label">@season.StartDate.ToString("yyyy")</div>
+            <div class="season-column__hours">@data.TotalHoursOnCourt.ToString("0.#", CultureInfo.CurrentCulture) h</div>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>Seasons with data, in any order.</summary>
+    [Parameter, EditorRequired] public List<SeasonStatisticsResult> Seasons { get; set; } = null!;
+
+    private List<SeasonStatisticsResult> seasons = [];
+    private int maxBookings;
+
+    protected override void OnParametersSet()
+    {
+        seasons = Seasons.Where(s => s.Data is not null).OrderBy(s => s.StartDate).ToList();
+        maxBookings = seasons.Count > 0 ? seasons.Max(s => s.Data!.TotalBookings) : 0;
+    }
+}

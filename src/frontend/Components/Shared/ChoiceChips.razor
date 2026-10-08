@@ -1,0 +1,45 @@
+@typeparam TItem
+
+<div class="choice-chips" role="radiogroup" aria-label="@Label">
+    @if (Label is not null)
+    {
+        <div class="choice-chips__label">@Label</div>
+    }
+    <div class="choice-chips__items">
+        @foreach (var item in Items)
+        {
+            var selected = Value is not null && EqualityComparer<TItem>.Default.Equals(item, Value);
+            var color = ColorFunc?.Invoke(item);
+            <button type="button"
+                    class="choice-chip @(selected ? "choice-chip--selected" : null)"
+                    style="@(color is null ? null : $"--chip-color: {color}")"
+                    role="radio" aria-checked="@(selected ? "true" : "false")"
+                    disabled="@Disabled"
+                    @onclick="() => Select(item)">
+                @if (color is not null)
+                {
+                    <span class="choice-chip__dot"></span>
+                }
+                @TextFunc(item)
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<TItem> Items { get; set; } = [];
+    [Parameter, EditorRequired] public Func<TItem, string> TextFunc { get; set; } = null!;
+    [Parameter] public TItem? Value { get; set; }
+    [Parameter] public EventCallback<TItem> ValueChanged { get; set; }
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Optional accent color (CSS value) per item, shown as a dot and used when selected.</summary>
+    [Parameter] public Func<TItem, string?>? ColorFunc { get; set; }
+
+    private async Task Select(TItem item)
+    {
+        Value = item;
+        await ValueChanged.InvokeAsync(item);
+    }
+}

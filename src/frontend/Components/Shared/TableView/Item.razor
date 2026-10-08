@@ -1,0 +1,14 @@
+<MudItem xs="6" Class="d-flex align-center">
+    <MudText Typo="Typo.body2" Align="Align.Right" Style="width: 100%">@Label</MudText>
+</MudItem>
+<MudItem xs="6" Class="d-flex align-center">
+    <MudText Typo="Typo.body1">@Content</MudText>
+</MudItem>
+
+@code {
+    [Parameter]
+    public RenderFragment? Label { get; set; }
+
+    [Parameter]
+    public RenderFragment? Content { get; set; }
+}

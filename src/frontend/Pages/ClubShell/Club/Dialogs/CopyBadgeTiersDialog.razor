@@ -1,0 +1,67 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubShell
+@using Bookennis.Client.Services.Store.Badges
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+
+<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption=@SharedLocale["Save"] CancelFunc="Cancel" CancelCaption=@SharedLocale["Cancel"]>
+    <div class="mud-width-full d-flex flex-column gap-3">
+        <MudSelect Variant="Variant.Outlined" T="int?" Label="@SharedLocale["CopySourceSeason"]" @bind-Value="sourceSeasonId">
+            @foreach (var season in AvailableSourceSeasons)
+            {
+                <MudSelectItem T="int?" Value="@((int?)season.Id)">@ClubLocale["Season"] @season.StartDate.Year</MudSelectItem>
+            }
+        </MudSelect>
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter]
+    public int TargetSeasonId { get; set; }
+
+    [Parameter]
+    public List<SeasonResult> AvailableSourceSeasons { get; set; } = [];
+
+    [Inject]
+    private IBadgesStore BadgesStore { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<ClubShellLocale> ClubLocale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private int? sourceSeasonId;
+
+    private bool CanSubmit => sourceSeasonId.HasValue;
+
+    private async Task<DialogResult?> Submit()
+    {
+        var result = await BadgesStore.CopyBadgeTiers(sourceSeasonId!.Value, TargetSeasonId);
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+        return null;
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

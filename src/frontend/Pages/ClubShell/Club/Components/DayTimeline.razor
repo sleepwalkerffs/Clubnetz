@@ -1,0 +1,41 @@
+@using System.Globalization
+
+<div class="day-timeline" role="img" aria-label="@Description">
+    <div class="day-timeline__track">
+        <div class="day-timeline__open" style="left: @Pct(OpenFrom); width: @Pct(OpenTo - OpenFrom)">
+            <span class="day-timeline__open-label">@Format(OpenFrom) – @Format(OpenTo)</span>
+        </div>
+        @if (PrimeFrom is { } primeFrom && PrimeTo is { } primeTo && primeTo > primeFrom)
+        {
+            <div class="day-timeline__prime" style="left: @Pct(primeFrom); width: @Pct(primeTo - primeFrom)" title="@PrimeLabel">
+                <span>⚡</span>
+            </div>
+        }
+        @if (NowHour is { } now)
+        {
+            <div class="day-timeline__now" style="left: @Pct(now)"></div>
+        }
+    </div>
+    <div class="day-timeline__ticks">
+        @foreach (var hour in new[] { 0, 6, 12, 18, 24 })
+        {
+            <span style="left: @Pct(hour)">@hour:00</span>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>Opening hours as hours of the day (0-24).</summary>
+    [Parameter] public double OpenFrom { get; set; }
+    [Parameter] public double OpenTo { get; set; } = 24;
+    [Parameter] public double? PrimeFrom { get; set; }
+    [Parameter] public double? PrimeTo { get; set; }
+    [Parameter] public string? PrimeLabel { get; set; }
+    [Parameter] public string? Description { get; set; }
+
+    private static double? NowHour => DateTime.Now.TimeOfDay.TotalHours;
+
+    private static string Pct(double hours) => (Math.Clamp(hours, 0, 24) / 24 * 100).ToString("0.##", CultureInfo.InvariantCulture) + "%";
+
+    private static string Format(double hours) => TimeSpan.FromHours(hours).ToString(@"hh\:mm", CultureInfo.InvariantCulture);
+}

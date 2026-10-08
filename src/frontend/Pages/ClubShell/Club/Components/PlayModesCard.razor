@@ -1,0 +1,115 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubSettings
+@using Bookennis.Client.Pages.ClubShell.Club.Dialogs
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Shared
+
+@implements IDisposable
+
+<SectionCard Emoji="🏷️" Title="@L["PlayModesTitle"]" Subtitle="@L["PlayModesSubtitle"]">
+    <Actions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="Add">@L["Add"]</MudButton>
+    </Actions>
+    <ChildContent>
+        @if (ClubStore.PlayModes.Count == 0)
+        {
+            <div class="playmodes__empty">@L["NoPlayModes"]</div>
+        }
+        else
+        {
+            <div class="playmodes">
+                @foreach (var playMode in ClubStore.PlayModes.OrderBy(p => p.Name))
+                {
+                    var color = PlayModeColors.ToHex(playMode.Color);
+                    <div class="playmode" style="--pm-color: @color">
+                        <button type="button" class="playmode__main" @onclick="() => Edit(playMode)" title="@SharedLocale["Edit"]">
+                            <span class="playmode__head">
+                                <span class="playmode__dot"></span>
+                                <span class="playmode__name">@playMode.Name</span>
+                            </span>
+                            <span class="playmode__facts">
+                                <span class="fact">👥 @(playMode.FixedPlayerCount is { } players ? string.Format(L[players == 1 ? "PlayersFixedOne" : "PlayersFixed"], players) : L["PlayersFlexible"])</span>
+                                <span class="fact">⏱️ @(playMode.FixedDuration is { } duration ? PlayModeColors.Duration(duration) : L["DurationFlexible"])</span>
+                                @if (playMode.MaxBookingsPerSeason is { } max)
+                                {
+                                    <span class="fact fact--quota">🎯 @string.Format(L["QuotaFact"], max)</span>
+                                }
+                            </span>
+                            <span class="playmode__flags">
+                                @Flag(playMode.IsChargingBookingSubscription, "💳", L["FlagCharging"])
+                                @Flag(playMode.AllowRecurring, "🔁", L["FlagRecurring"])
+                                @Flag(playMode.CanOverbook, "➕", L["FlagOverbook"])
+                                @Flag(playMode.CommentAllowed, "💬", L["FlagComment"])
+                            </span>
+                            <span class="playmode__roles">
+                                @foreach (var role in playMode.AllowedRoles.Order())
+                                {
+                                    <span class="playmode__role">@SharedLocale[$"Role_{role}"]</span>
+                                }
+                            </span>
+                        </button>
+                        <div class="playmode__actions">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@SharedLocale["Edit"]" OnClick="() => Edit(playMode)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@SharedLocale["Delete"]" OnClick="() => Delete(playMode)" />
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </ChildContent>
+</SectionCard>
+
+@code {
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    protected override void OnInitialized() => ClubStore.OnPlayModesChanged += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private RenderFragment Flag(bool active, string emoji, string text) => __builder =>
+    {
+        <span class="flag @(active ? "flag--on" : "flag--off")" title="@text">
+            <span aria-hidden="true">@emoji</span> @text
+        </span>
+    };
+
+    private Task Add() => OpenDialog(null, L["AddPlayMode"]);
+
+    private Task Edit(PlayModeDto playMode) => OpenDialog(playMode, string.Format(L["EditPlayModeTitle"], playMode.Name));
+
+    private async Task OpenDialog(PlayModeDto? playMode, string title)
+    {
+        var parameters = new DialogParameters<EditPlayModeDialog> { { d => d.PlayMode, playMode } };
+        var dialog = await DialogService.ShowAsync<EditPlayModeDialog>(title, parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true });
+        await dialog.Result;
+    }
+
+    private async Task Delete(PlayModeDto playMode)
+    {
+        var confirmed = await DialogService.ShowMessageBox(
+            SharedLocale["Delete"],
+            string.Format(L["DeletePlayModeConfirmation"], playMode.Name),
+            yesText: SharedLocale["Delete"],
+            cancelText: SharedLocale["Cancel"]);
+
+        if (confirmed != true)
+            return;
+
+        var result = await ClubStore.DeletePlayMode(playMode.Id);
+        if (result.Success)
+            Snackbar.Add(string.Format(L["PlayModeDeleted"], playMode.Name), Severity.Success);
+        else
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    public void Dispose() => ClubStore.OnPlayModesChanged -= OnChanged;
+}

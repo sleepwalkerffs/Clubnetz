@@ -1,0 +1,90 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.Statistics
+@using Bookennis.Global
+@using Bookennis.Shared.Controller.Statistics
+
+<div class="calendar-scroll">
+    <div class="calendar-grid" style="grid-template-columns: auto repeat(@weeks.Count, minmax(10px, 1fr)); max-width: calc(32px + @weeks.Count * 22px);">
+        <div></div>
+        @for (var i = 0; i < weeks.Count; i++)
+        {
+            <div class="calendar-month">@GetMonthLabel(i)</div>
+        }
+
+        @for (var dayIndex = 0; dayIndex < 7; dayIndex++)
+        {
+            <div class="calendar-weekday">@(dayIndex % 2 == 0 ? GetWeekdayLabel(dayIndex) : "")</div>
+            @foreach (var monday in weeks)
+            {
+                var date = monday.AddDays(dayIndex);
+                if (date < From || date > To)
+                {
+                    <div class="calendar-cell calendar-cell--outside"></div>
+                }
+                else
+                {
+                    var count = countsByDate.GetValueOrDefault(date);
+                    <div class="calendar-cell calendar-cell--level-@Math.Min(count, 3)"
+                         title="@($"{date.ToString("D", CultureInfo.CurrentCulture)}: {count} {(count == 1 ? Locale["Match"] : Locale["Matches"])}")"></div>
+                }
+            }
+        }
+    </div>
+</div>
+
+<div class="calendar-footer">
+    <span>@string.Format(Locale["PlayedOnDays"], playedDays, totalDays)</span>
+    <span class="calendar-legend">
+        @Locale["Less"]
+        @for (var level = 0; level <= 3; level++)
+        {
+            <span class="calendar-cell calendar-cell--legend calendar-cell--level-@level"></span>
+        }
+        @Locale["More"]
+    </span>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<DayActivity> Days { get; set; } = null!;
+    [Parameter, EditorRequired] public DateOnly From { get; set; }
+    [Parameter, EditorRequired] public DateOnly To { get; set; }
+
+    [Inject] private IStringLocalizer<StatisticsLocale> Locale { get; set; } = null!;
+
+    private List<DateOnly> weeks = [];
+    private Dictionary<DateOnly, int> countsByDate = [];
+    private int playedDays;
+    private int totalDays;
+
+    protected override void OnParametersSet()
+    {
+        weeks = CalendarWeeks.Between(From, To).Select(w => w.Monday).ToList();
+        countsByDate = Days
+            .Where(d => d.Date >= From && d.Date <= To)
+            .ToDictionary(d => d.Date, d => d.Count);
+        playedDays = countsByDate.Count;
+        totalDays = To.DayNumber - From.DayNumber + 1;
+    }
+
+    private string GetMonthLabel(int weekIndex)
+    {
+        var monday = weeks[weekIndex];
+        var firstVisibleDay = monday < From ? From : monday;
+        var sunday = monday.AddDays(6);
+
+        // Label the column in which a month starts (or the first column)
+        var showLabel = weekIndex == 0
+            ? firstVisibleDay.Day <= 21
+            : sunday.Day <= 7;
+
+        if (!showLabel)
+            return "";
+
+        var monthDate = weekIndex == 0 ? firstVisibleDay : new DateOnly(sunday.Year, sunday.Month, 1);
+        return CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(monthDate.Month);
+    }
+
+    // dayIndex 0 = Monday
+    private static string GetWeekdayLabel(int dayIndex)
+        => CultureInfo.CurrentCulture.DateTimeFormat.GetShortestDayName((DayOfWeek)((dayIndex + 1) % 7));
+}

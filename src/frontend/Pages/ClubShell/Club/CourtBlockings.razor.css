@@ -1,0 +1,123 @@
+.blockings-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.blockings-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 28px 12px;
+    border-radius: 16px;
+    border: 2px dashed var(--mud-palette-lines-inputs);
+    text-align: center;
+}
+
+.blockings-empty__emoji {
+    font-size: 2.4rem;
+    line-height: 1;
+}
+
+.blockings-empty__title {
+    margin-top: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.blockings-empty__text {
+    max-width: 420px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.blockings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.blocking {
+    --blocking-color: var(--bk-dark-violet, #6D28D9);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 8px 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-left: 4px solid var(--blocking-color);
+    background: var(--mud-palette-surface);
+}
+
+.blocking--active {
+    --blocking-color: var(--bk-dark-red, #B91C1C);
+    background: color-mix(in srgb, var(--blocking-color) 6%, var(--mud-palette-surface));
+}
+
+.blocking--over {
+    --blocking-color: var(--mud-palette-text-secondary);
+    opacity: 0.75;
+}
+
+.blocking__main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.blocking__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+}
+
+.blocking__title {
+    font-size: 1rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.blocking__status {
+    padding: 1px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--blocking-color);
+    background: color-mix(in srgb, var(--blocking-color) 14%, transparent);
+}
+
+.blocking__fact {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-primary);
+}
+
+::deep .blocking__icon {
+    flex: 0 0 auto;
+    margin-top: 2px;
+    font-size: 1rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.blocking__muted {
+    color: var(--mud-palette-text-secondary);
+}
+
+.blocking__actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+@media (max-width: 599.98px) {
+    .blocking__actions {
+        flex-direction: column;
+    }
+}

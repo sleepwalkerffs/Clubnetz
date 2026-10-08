@@ -1,0 +1,44 @@
+.availability-grid-wrapper {
+    overflow-x: auto;
+}
+
+.availability-grid {
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.availability-grid th,
+.availability-grid td {
+    border: 1px solid var(--mud-palette-lines-default);
+    text-align: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 4px;
+}
+
+.availability-grid .name-column {
+    position: sticky;
+    left: 0;
+    background: var(--mud-palette-surface);
+    text-align: left;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.availability-grid .cell {
+    cursor: pointer;
+    user-select: none;
+}
+
+.availability-grid .available {
+    color: var(--mud-palette-success);
+}
+
+.availability-grid .unavailable {
+    color: var(--mud-palette-error);
+    background: var(--mud-palette-error-hover);
+}
+
+.availability-grid .excluded {
+    background: var(--mud-palette-action-disabled-background);
+}

@@ -1,0 +1,71 @@
+.choice-chips__label {
+    margin-bottom: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.choice-chips__items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.choice-chip {
+    --chip-color: var(--mud-palette-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--mud-palette-lines-inputs);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.choice-chip:hover:not(:disabled) {
+    border-color: var(--chip-color);
+}
+
+.choice-chip:focus-visible {
+    outline: 2px solid var(--chip-color);
+    outline-offset: 2px;
+}
+
+.choice-chip:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+.choice-chip__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--chip-color);
+}
+
+.choice-chip--selected {
+    color: #FFFFFF;
+    border-color: var(--chip-color);
+    background: var(--chip-color);
+}
+
+.choice-chip--selected .choice-chip__dot {
+    background: #FFFFFF;
+}
+
+.choice-chip__check {
+    font-weight: 800;
+}
+
+.choice-chip--dense {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+}

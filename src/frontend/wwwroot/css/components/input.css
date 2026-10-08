@@ -1,0 +1,30 @@
+/* ===== Input Styles ===== */
+
+.mud-input-outlined .mud-input-outlined-border {
+  border-radius: 10px !important;
+  border-width: 1.5px !important;
+  transition: all 0.2s ease !important;
+}
+
+.mud-input.mud-input-outlined:hover .mud-input-outlined-border {
+  border-color: var(--mud-palette-primary) !important;
+}
+
+.mud-input.mud-input-outlined.mud-input-adorned-end .mud-input-outlined-border,
+.mud-input.mud-input-outlined.mud-input-adorned-start .mud-input-outlined-border {
+  border-radius: 10px !important;
+}
+
+.mud-select .mud-input-outlined .mud-input-outlined-border {
+  border-radius: 10px !important;
+}
+
+/* Checkbox */
+.mud-checkbox .mud-icon-root {
+  transition: all 0.15s ease !important;
+}
+
+/* Picker */
+.mud-picker .mud-input-outlined .mud-input-outlined-border {
+  border-radius: 10px !important;
+}

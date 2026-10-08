@@ -1,0 +1,17 @@
+@using Texts = Bookennis.Api.Resources.Localization.View_Emails_VerifyUser;
+@using Bookennis.Api.Business.Account;
+@model VerifyUserEmailViewModel
+
+@{
+    <div class="email-wrapper">
+        <div class="email-container">
+            <div class="email-header">
+                <h1>@Texts.Welcome</h1>
+            </div>
+            <div class="email-body">
+                <p>@string.Format(Texts.Description, Model.LastName, Model.FirstName)</p>
+                <a class="btn" href="@Model.Url">@Texts.LinkText</a>
+            </div>
+        </div>
+    </div>
+}

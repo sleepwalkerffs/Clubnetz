@@ -1,0 +1,78 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Trophies
+
+<div class="profile-hero">
+    <div class="profile-hero__main">
+        <UserAvatar FirstName="@FirstName" LastName="@LastName" ProfilePictureUrl="@ProfilePictureUrl"
+                    BadgeImageUrl="@DisplayBadgeImageUrl" BadgeLevel="@DisplayBadgeLevel"
+                    Size="Size.Large" Color="Color.Secondary"
+                    Class="profile-hero__avatar-wrapper" AvatarClass="profile-hero__avatar" />
+
+        <div class="profile-hero__text">
+            <div class="profile-hero__eyebrow">@Eyebrow</div>
+            <h1 class="profile-hero__name">@FirstName @LastName</h1>
+
+            <div class="profile-hero__chips">
+                @if (IsOwnProfile)
+                {
+                    <span class="profile-chip profile-chip--you">@Locale["ThisIsYou"]</span>
+                }
+                @if (Summary is { IsEmpty: false } summary)
+                {
+                    <span class="profile-chip">🏅 @string.Format(Locale[summary.TotalBadges == 1 ? "OneBadge" : "BadgesCount"], summary.TotalBadges)</span>
+                    @if (summary.SpecialAwards > 0)
+                    {
+                        <span class="profile-chip">⭐ @string.Format(Locale[summary.SpecialAwards == 1 ? "OneSpecialAward" : "SpecialAwardsCount"], summary.SpecialAwards)</span>
+                    }
+                    <span class="profile-chip">📅 @string.Format(Locale[summary.Seasons == 1 ? "OneSeason" : "SeasonsCount"], summary.Seasons)</span>
+                }
+                @if (IsOwnProfile && !IsPublic)
+                {
+                    <span class="profile-chip profile-chip--private">🔒 @Locale["PrivateChip"]</span>
+                }
+            </div>
+
+            @if (Actions is not null)
+            {
+                <div class="profile-hero__actions">@Actions</div>
+            }
+        </div>
+    </div>
+
+    @if (Summary?.TopBadge is { } top)
+    {
+        <div class="profile-hero__top" style="--badge-color: @BadgeColors.ForLevel(top.Level)">
+            <div class="profile-hero__top-caption">🏆 @Locale["TopAchievement"]</div>
+            <BadgeIcon ImageUrl="@top.ImageUrl" Level="@top.Level" Alt="@top.Name" Size="Size.Large" Class="profile-hero__top-icon" />
+            <div class="profile-hero__top-name">@top.Name</div>
+            <div class="profile-hero__top-meta">@string.Format(Locale["LevelInSeason"], top.Level, top.SeasonFrom.Year)</div>
+        </div>
+    }
+    else if (Summary?.LatestSpecialAward is { } special)
+    {
+        <div class="profile-hero__top" style="--badge-color: @BadgeColors.ForLevel(null)">
+            <div class="profile-hero__top-caption">⭐ @Locale["SpecialAward"]</div>
+            <BadgeIcon ImageUrl="@special.ImageUrl" Alt="@special.Name" Size="Size.Large" Class="profile-hero__top-icon" />
+            <div class="profile-hero__top-name">@special.Name</div>
+            <div class="profile-hero__top-meta">@string.Format(Locale["SeasonTitle"], special.SeasonFrom.Year)</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string FirstName { get; set; } = null!;
+    [Parameter, EditorRequired] public string LastName { get; set; } = null!;
+    [Parameter, EditorRequired] public string Eyebrow { get; set; } = null!;
+    [Parameter] public string? ProfilePictureUrl { get; set; }
+    [Parameter] public string? DisplayBadgeImageUrl { get; set; }
+    [Parameter] public int? DisplayBadgeLevel { get; set; }
+    [Parameter] public bool IsOwnProfile { get; set; }
+    [Parameter] public bool IsPublic { get; set; } = true;
+
+    /// <summary>Null while the trophy case is loading or when it is private.</summary>
+    [Parameter] public TrophySummary? Summary { get; set; }
+
+    [Parameter] public RenderFragment? Actions { get; set; }
+
+    [Inject] private IStringLocalizer<TrophyLocale> Locale { get; set; } = null!;
+}

@@ -1,0 +1,23 @@
+@page "/clubs/{ClubId:int}/members/{MemberId:int}/trophy-case"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+
+<PageTitle>@SharedLocale["TrophyCase"]</PageTitle>
+
+<PageHeader>
+    <Content>@SharedLocale["TrophyCase"]</Content>
+</PageHeader>
+
+<TrophyCaseView ClubId="@ClubId" MemberId="@MemberId" Eyebrow="@SharedLocale["TrophyCase"]" />
+
+@code {
+    [Parameter]
+    public int ClubId { get; set; }
+
+    [Parameter]
+    public int MemberId { get; set; }
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+}

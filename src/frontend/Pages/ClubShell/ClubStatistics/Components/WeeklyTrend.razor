@@ -1,0 +1,105 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.ClubStatistics
+@using Bookennis.Shared.Controller.Statistics
+
+@if (Weeks.Count == 0)
+{
+    <div class="trend__empty">@L["NoDaysYet"]</div>
+}
+else
+{
+    var max = Math.Max(Weeks.Max(w => w.Hours), Previous?.Take(Weeks.Count).Select(w => w.Hours).DefaultIfEmpty(0).Max() ?? 0);
+    max = max <= 0 ? 1 : max * 1.1;
+    var points = Points(Weeks.Select(w => w.Hours).ToList(), max);
+    var best = Weeks.MaxBy(w => w.Hours)!;
+    var average = Weeks.Average(w => w.Hours);
+
+    <div class="trend">
+        <div class="trend__legend">
+            <span><i class="trend__swatch trend__swatch--current"></i>@CurrentLabel</span>
+            @if (Previous is { Count: > 0 })
+            {
+                <span><i class="trend__swatch trend__swatch--previous"></i>@PreviousLabel</span>
+            }
+            <span class="trend__legend-avg">Ø @average.ToString("0.#", CultureInfo.CurrentCulture) h / @L["Week"]</span>
+        </div>
+
+        <svg class="trend__chart" viewBox="0 0 @Width @Height" preserveAspectRatio="none" role="img" aria-label="@L["WeeklyTrend"]">
+            <defs>
+                <linearGradient id="trend-fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#10B981" stop-opacity="0.45" />
+                    <stop offset="100%" stop-color="#10B981" stop-opacity="0.02" />
+                </linearGradient>
+            </defs>
+            @for (var i = 1; i <= 3; i++)
+            {
+                var y = (Height * i / 4.0).ToString("0.#", CultureInfo.InvariantCulture);
+                <line x1="0" x2="@Width" y1="@y" y2="@y" class="trend__grid" />
+            }
+            @{ var averageY = Y(average, max).ToString("0.#", CultureInfo.InvariantCulture); }
+            <line x1="0" x2="@Width" y1="@averageY" y2="@averageY" class="trend__avg" />
+
+            @if (Previous is { Count: > 0 })
+            {
+                <polyline points="@PolylinePoints(Previous.Take(Weeks.Count).Select(w => w.Hours).ToList(), max, Weeks.Count)" class="trend__previous" />
+            }
+            <path d="@AreaPath(points)" fill="url(#trend-fill)" />
+            <polyline points="@string.Join(" ", points.Select(p => $"{F(p.X)},{F(p.Y)}"))" class="trend__line" />
+        </svg>
+
+        <div class="trend__axis">
+            <span>@Weeks[0].WeekStart.ToString("dd.MM.", CultureInfo.CurrentCulture)</span>
+            @if (Weeks.Count > 2)
+            {
+                <span>@Weeks[Weeks.Count / 2].WeekStart.ToString("dd.MM.", CultureInfo.CurrentCulture)</span>
+            }
+            <span>@Weeks[^1].WeekStart.ToString("dd.MM.", CultureInfo.CurrentCulture)</span>
+        </div>
+
+        <div class="trend__facts">
+            <div class="trend__fact">
+                <span class="trend__fact-value">🏆 @best.Hours.ToString("0.#", CultureInfo.CurrentCulture) h</span>
+                <span class="trend__fact-label">@string.Format(L["BestWeek"], best.WeekStart.ToString("dd.MM.", CultureInfo.CurrentCulture))</span>
+            </div>
+            <div class="trend__fact">
+                <span class="trend__fact-value">👥 @Weeks.Max(w => w.ActivePlayers)</span>
+                <span class="trend__fact-label">@L["MostPlayersInAWeek"]</span>
+            </div>
+            <div class="trend__fact">
+                <span class="trend__fact-value">📉 @Weeks.Count(w => w.Bookings == 0)</span>
+                <span class="trend__fact-label">@L["WeeksWithoutBookings"]</span>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public List<WeeklyActivityEntry> Weeks { get; set; } = [];
+
+    /// <summary>Weeks of the previous season, aligned by their position.</summary>
+    [Parameter] public List<WeeklyActivityEntry>? Previous { get; set; }
+    [Parameter] public string? CurrentLabel { get; set; }
+    [Parameter] public string? PreviousLabel { get; set; }
+
+    [Inject] private IStringLocalizer<ClubStatisticsLocale> L { get; set; } = null!;
+
+    private const int Width = 600;
+    private const int Height = 180;
+
+    private static string F(double value) => value.ToString("0.#", CultureInfo.InvariantCulture);
+
+    private static double Y(double value, double max) => Height - value / max * (Height - 6);
+
+    private static List<(double X, double Y)> Points(List<double> values, double max, int? count = null)
+    {
+        var n = count ?? values.Count;
+        var step = n > 1 ? (double)Width / (n - 1) : 0;
+        return values.Select((v, i) => (n > 1 ? i * step : Width / 2.0, Y(v, max))).ToList();
+    }
+
+    private static string PolylinePoints(List<double> values, double max, int count)
+        => string.Join(" ", Points(values, max, count).Select(p => $"{F(p.X)},{F(p.Y)}"));
+
+    private static string AreaPath(List<(double X, double Y)> points)
+        => $"M {F(points[0].X)},{Height} " + string.Join(" ", points.Select(p => $"L {F(p.X)},{F(p.Y)}")) + $" L {F(points[^1].X)},{Height} Z";
+}

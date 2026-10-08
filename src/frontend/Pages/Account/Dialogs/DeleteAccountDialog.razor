@@ -1,0 +1,78 @@
+@using System.ComponentModel.DataAnnotations
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Account
+@using Bookennis.Client.Services.Store.Profile
+@using Bookennis.Client.Utils
+
+@* Final confirmation before the account and all personal data are deleted. Requires the current password. *@
+<BaseDialog Title="@Locale["DeleteAccount"]"
+            SubmitFunc="Submit"
+            SubmitCaption="@Locale["DeleteAccount_Confirm"]"
+            SubmitColor="Color.Error"
+            CancelFunc="Cancel"
+            CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@saving">
+    <MudAlert Severity="Severity.Error" Variant="Variant.Text" Dense="true" Class="mb-3">@Locale["DeleteAccount_Warning"]</MudAlert>
+    <ul class="delete-account__list">
+        <li>@Locale["DeleteAccount_Consequence_Data"]</li>
+        <li>@Locale["DeleteAccount_Consequence_Clubs"]</li>
+        <li>@Locale["DeleteAccount_Consequence_Children"]</li>
+    </ul>
+    <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">@Locale["DeleteAccount_ExportHint"]</MudText>
+    <EditForm EditContext="@context">
+        <DataAnnotationsValidator />
+        <PasswordField TType="string" Label="@Locale["CurrentPassword"]" AutoComplete="current-password"
+                       @bind-Value="model.CurrentPassword" For="@(() => model.CurrentPassword)" />
+    </EditForm>
+</BaseDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Inject] private IProfileStore ProfileStore { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private readonly DeleteAccountForm model = new();
+    private EditContext context = null!;
+    private bool saving;
+
+    protected override void OnInitialized() => context = new EditContext(model);
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (!context.Validate())
+            return null;
+
+        saving = true;
+        StateHasChanged();
+        try
+        {
+            var result = await ProfileStore.DeleteAccount(model.CurrentPassword!);
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return null;
+            }
+
+            return DialogResult.Ok(true);
+        }
+        finally
+        {
+            saving = false;
+            StateHasChanged();
+        }
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+
+    private class DeleteAccountForm
+    {
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "PasswordValidation")]
+        public string? CurrentPassword { get; set; }
+    }
+}

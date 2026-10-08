@@ -1,0 +1,45 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.Statistics
+@using Bookennis.Shared.Controller.Statistics
+
+<div class="comparison">
+    <div class="comparison__gauge" style="--percentage: @Comparison.BetterThanPercentage">
+        <div class="comparison__gauge-inner">
+            <span class="comparison__percentage">@Comparison.BetterThanPercentage%</span>
+        </div>
+    </div>
+    <MudText Typo="Typo.body2" Class="comparison__sentence">
+        @((MarkupString)string.Format(Locale["BetterThanSentence"], $"<strong>{Comparison.BetterThanPercentage}%</strong>", Comparison.EnrolledMembers - 1))
+    </MudText>
+</div>
+
+<div class="comparison-bars">
+    <div class="comparison-bar">
+        <span class="comparison-bar__label">@Locale["You"]</span>
+        <div class="comparison-bar__track">
+            <div class="comparison-bar__fill comparison-bar__fill--you" style="width: @Width(OwnBookings)"></div>
+        </div>
+        <span class="comparison-bar__value">@OwnBookings</span>
+    </div>
+    <div class="comparison-bar">
+        <span class="comparison-bar__label">@Locale["ClubAverage"]</span>
+        <div class="comparison-bar__track">
+            <div class="comparison-bar__fill comparison-bar__fill--club" style="width: @Width(Comparison.ClubAverageBookings)"></div>
+        </div>
+        <span class="comparison-bar__value">@Comparison.ClubAverageBookings.ToString("0.#", CultureInfo.CurrentCulture)</span>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ClubComparison Comparison { get; set; } = null!;
+    [Parameter, EditorRequired] public int OwnBookings { get; set; }
+
+    [Inject] private IStringLocalizer<StatisticsLocale> Locale { get; set; } = null!;
+
+    private string Width(double value)
+    {
+        var max = Math.Max(OwnBookings, Comparison.ClubAverageBookings);
+        var percentage = max > 0 ? value * 100 / max : 0;
+        return $"{percentage.ToString("0.#", CultureInfo.InvariantCulture)}%";
+    }
+}

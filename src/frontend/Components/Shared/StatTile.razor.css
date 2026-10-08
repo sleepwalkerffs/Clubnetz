@@ -1,0 +1,67 @@
+.stat-tile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 100%;
+    padding: 14px;
+    border-radius: 16px;
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.stat-tile__icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    color: var(--tile-color);
+    background: color-mix(in srgb, var(--tile-color) 14%, transparent);
+}
+
+.stat-tile__body {
+    min-width: 0;
+}
+
+.stat-tile__value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stat-tile__unit {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--mud-palette-text-secondary);
+}
+
+.stat-tile__label {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.stat-tile__hint {
+    margin-top: 2px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--tile-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Lighten the accent color so the hint stays readable on a dark surface */
+:root[data-theme="dark"] .stat-tile__hint {
+    color: color-mix(in srgb, var(--tile-color) 60%, #FFFFFF);
+}

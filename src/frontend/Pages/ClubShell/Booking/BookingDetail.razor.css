@@ -1,0 +1,207 @@
+.booking-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.detail-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid color-mix(in srgb, var(--mode-color) 35%, transparent);
+    background:
+        radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--mode-color) 30%, transparent) 0, transparent 55%),
+        color-mix(in srgb, var(--mode-color) 10%, var(--mud-palette-surface));
+}
+
+.detail-hero__date {
+    flex: 0 0 76px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+    border-radius: 16px;
+    color: #FFFFFF;
+    background: var(--mode-color);
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--mode-color) 40%, transparent);
+}
+
+.detail-hero__weekday,
+.detail-hero__month {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.detail-hero__day {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.05;
+}
+
+.detail-hero__text {
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.detail-hero__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--mode-color) 70%, var(--mud-palette-text-primary));
+}
+
+.detail-hero__time {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.detail-hero__duration {
+    padding: 1px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: var(--mud-palette-text-secondary);
+    background: var(--mud-palette-surface);
+}
+
+.detail-hero__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.detail-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 12px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: var(--mud-palette-surface);
+}
+
+.detail-chip--mode {
+    color: #FFFFFF;
+    background: var(--mode-color);
+}
+
+.detail-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.detail-players {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.detail-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 10px;
+    border-radius: 16px;
+    text-align: center;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+}
+
+.detail-player--clickable {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.detail-player--clickable:hover,
+.detail-player--clickable:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+    outline: none;
+}
+
+.detail-player__name {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.detail-player__tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+}
+
+.detail-player__tag {
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+    background: var(--mud-palette-background-gray);
+}
+
+.detail-player__tag--you {
+    color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+}
+
+.detail-player__tag--atp {
+    color: #FFFFFF;
+    background: var(--mud-palette-info);
+}
+
+.detail-comment {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 0.95rem;
+}
+
+.detail-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.detail-edit__times {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 599px) {
+    .detail-hero {
+        padding: 16px;
+        gap: 14px;
+    }
+
+    .detail-hero__date {
+        flex-basis: 64px;
+    }
+
+    .detail-hero__time {
+        font-size: 1.5rem;
+    }
+
+    .detail-hero__actions {
+        width: 100%;
+    }
+}

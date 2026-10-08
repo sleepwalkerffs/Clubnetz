@@ -1,0 +1,206 @@
+.lb-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 20px;
+    padding: 24px;
+    border-radius: 20px;
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #312E81 0%, #4F46E5 45%, #7C3AED 80%, #F59E0B 150%);
+    box-shadow: 0 10px 30px rgba(49, 46, 129, 0.3);
+}
+
+/* Decorative trophy glow */
+.lb-hero::before {
+    content: "🏆";
+    position: absolute;
+    right: -18px;
+    bottom: -40px;
+    font-size: 11rem;
+    line-height: 1;
+    opacity: 0.08;
+    transform: rotate(-12deg);
+    pointer-events: none;
+}
+
+.lb-hero__content {
+    position: relative;
+    flex: 1 1 280px;
+    min-width: 0;
+}
+
+.lb-hero__eyebrow {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.lb-hero__rank {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.lb-hero__rank-number {
+    font-size: 3.75rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+}
+
+.lb-hero__rank-of {
+    font-size: 1.15rem;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.lb-hero__sub {
+    margin-top: 6px;
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.lb-hero__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.lb-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(4px);
+}
+
+.lb-chip--up {
+    background: rgba(134, 239, 172, 0.3);
+}
+
+.lb-chip--down {
+    background: rgba(254, 202, 202, 0.3);
+}
+
+.lb-chip--new {
+    background: rgba(196, 181, 253, 0.35);
+}
+
+.lb-chip--gold {
+    background: rgba(253, 230, 138, 0.35);
+}
+
+.lb-hero__progress {
+    height: 8px;
+    max-width: 360px;
+    margin-top: 14px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.lb-hero__progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #FDE68A, #F59E0B);
+    transition: width 0.8s ease;
+}
+
+.lb-hero__state {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.lb-hero__state-emoji {
+    font-size: 2.6rem;
+    line-height: 1;
+}
+
+.lb-hero__state-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+}
+
+.lb-hero__state-text {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.lb-hero__leader {
+    position: relative;
+    flex: 0 1 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 16px;
+    border-radius: 16px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.lb-hero__leader-caption {
+    margin-bottom: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+::deep .lb-hero__leader-avatar {
+    width: 64px !important;
+    height: 64px !important;
+    font-size: 1.3rem !important;
+    border: 3px solid #FCD34D;
+    box-shadow: 0 0 0 4px rgba(252, 211, 77, 0.25);
+}
+
+.lb-hero__leader-name {
+    margin-top: 4px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.lb-hero__leader-hours {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+@media (max-width: 599px) {
+    .lb-hero {
+        padding: 20px 16px;
+    }
+
+    .lb-hero__rank-number {
+        font-size: 3rem;
+    }
+
+    .lb-hero__leader {
+        flex-basis: 100%;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 12px;
+        text-align: left;
+    }
+
+    .lb-hero__leader-caption {
+        display: none;
+    }
+}

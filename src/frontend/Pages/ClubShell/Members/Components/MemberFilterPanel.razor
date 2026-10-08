@@ -1,0 +1,206 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Members
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Members
+@using Bookennis.Shared.Controller.Shared
+
+<div class="filter-panel">
+    <div class="filter-panel__top">
+        <MudTextField T="string" Value="@State.Search" ValueChanged="@(value => Update(State with { Search = value }))" DebounceInterval="350" Immediate="true"
+                      Placeholder="@L["SearchPlaceholder"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="filter-panel__search" />
+
+        <MudButton Variant="@(expanded ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune"
+                   OnClick="() => expanded = !expanded" Class="filter-panel__toggle">
+            @L["Filters"]
+            @if (AdvancedFilterCount > 0)
+            {
+                <span class="filter-panel__count">@AdvancedFilterCount</span>
+            }
+        </MudButton>
+    </div>
+
+    @if (Presets.Count > 0)
+    {
+        <div class="filter-panel__presets" role="group" aria-label="@L["QuickFilters"]">
+            @foreach (var preset in Presets)
+            {
+                var selected = IsPresetSelected(preset);
+                <button type="button" class="preset @(selected ? "preset--selected" : null)" style="--preset-color: @preset.Color"
+                        aria-pressed="@(selected ? "true" : "false")" @onclick="() => ApplyPreset(preset, selected)">
+                    <span aria-hidden="true">@preset.Emoji</span>
+                    <span>@preset.Label</span>
+                    @if (preset.Count is { } count)
+                    {
+                        <span class="preset__count">@count</span>
+                    }
+                </button>
+            }
+        </div>
+    }
+
+    @if (expanded)
+    {
+        <div class="filter-panel__advanced">
+            @if (Seasons.Count > 0)
+            {
+                <div class="filter-group">
+                    <div class="filter-group__label">@L["SeasonsFilter"]</div>
+                    <div class="filter-group__hint">@L["SeasonsFilterHint"]</div>
+                    <div class="season-rules">
+                        @foreach (var season in Seasons)
+                        {
+                            var rule = RuleOf(season.Id);
+                            <button type="button" class="season-rule season-rule--@rule.ToString().ToLowerInvariant()"
+                                    title="@RuleTitle(rule)" @onclick="() => CycleSeason(season.Id)">
+                                <span class="season-rule__icon" aria-hidden="true">@(rule switch { SeasonRule.In => "✓", SeasonRule.NotIn => "✕", _ => "○" })</span>
+                                <span class="season-rule__label">@MemberAdminHelpers.SeasonLabel(season)</span>
+                                @if (season.IsActive)
+                                {
+                                    <span class="season-rule__live">●</span>
+                                }
+                            </button>
+                        }
+                    </div>
+                    @if (State.NoBookingsInSeasonId is { } noBookingsSeasonId && Seasons.FirstOrDefault(s => s.Id == noBookingsSeasonId) is { } noBookingsSeason)
+                    {
+                        <div class="filter-group__extra">
+                            <MudChip T="string" Color="Color.Warning" Variant="Variant.Text" OnClose="@(() => Update(State with { NoBookingsInSeasonId = null }))">
+                                💤 @string.Format(L["NoBookingsInSeasonChip"], MemberAdminHelpers.SeasonLabel(noBookingsSeason))
+                            </MudChip>
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="filter-grid">
+                <MultiChoiceChips TItem="MemberRole" Label="@SharedLocale["Role"]" Items="@(Enum.GetValues<MemberRole>())" Dense="true"
+                                  Values="@State.Roles.ToList()" ValuesChanged="@(values => Update(State with { Roles = values.ToList() }))"
+                                  TextFunc="@(role => SharedLocale[$"Role_{role}"])" ColorFunc="@(role => MemberAdminHelpers.RoleColor(role))" />
+
+                <MultiChoiceChips TItem="AgeGroup" Label="@L["AgeGroup"]" Items="@(Enum.GetValues<AgeGroup>())" Dense="true"
+                                  Values="@State.AgeGroups.ToList()" ValuesChanged="@(values => Update(State with { AgeGroups = values.ToList() }))"
+                                  TextFunc="@(group => L[$"AgeGroup_{group}"])" />
+
+                <MultiChoiceChips TItem="Gender" Label="@L["Gender"]" Items="@(Enum.GetValues<Gender>())" Dense="true"
+                                  Values="@State.Genders.ToList()" ValuesChanged="@(values => Update(State with { Genders = values.ToList() }))"
+                                  TextFunc="@(gender => L[$"Gender_{gender}"])" />
+
+                <ChoiceChips TItem="EmailOption" Label="@SharedLocale["Email"]" Items="@EmailOptions"
+                             Value="@(State.HasEmail switch { true => EmailOption.With, false => EmailOption.Without, _ => EmailOption.Any })"
+                             ValueChanged="@(option => Update(State with { HasEmail = option switch { EmailOption.With => true, EmailOption.Without => false, _ => null } }))"
+                             TextFunc="@(option => L[$"Email_{option}"])" />
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public MemberListState State { get; set; } = null!;
+    [Parameter, EditorRequired] public EventCallback<MemberListState> StateChanged { get; set; }
+
+    /// <summary>Seasons of the club, newest first.</summary>
+    [Parameter, EditorRequired] public List<SeasonResult> Seasons { get; set; } = [];
+    [Parameter] public GetMembersSummaryResult? Summary { get; set; }
+
+    [Inject] private IStringLocalizer<MembersAdminLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private enum SeasonRule
+    {
+        Any,
+        In,
+        NotIn,
+    }
+
+    private enum EmailOption
+    {
+        Any,
+        With,
+        Without,
+    }
+
+    private static readonly EmailOption[] EmailOptions = Enum.GetValues<EmailOption>();
+
+    public sealed record Preset(string Emoji, string Label, string Color, int? Count, MemberListState Filter);
+
+    private bool expanded;
+    private bool autoExpanded;
+
+    protected override void OnParametersSet()
+    {
+        // Show the advanced filters right away when they are used (e.g. when coming back to the list)
+        if (!autoExpanded && AdvancedFilterCount > 0)
+        {
+            expanded = true;
+            autoExpanded = true;
+        }
+    }
+
+    private int AdvancedFilterCount
+        => State.Roles.Count + State.AgeGroups.Count + State.Genders.Count + State.InSeasonIds.Count + State.NotInSeasonIds.Count
+           + (State.HasEmail is null ? 0 : 1) + (State.NoBookingsInSeasonId is null ? 0 : 1);
+
+    private List<Preset> Presets
+    {
+        get
+        {
+            var presets = new List<Preset>();
+            var baseState = State.WithoutFilters();
+            if (Summary?.ActiveSeasonId is { } activeId)
+            {
+                presets.Add(new("✅", L["PresetActive"], "#059669", Summary.ActiveSeasonMembers, baseState with { InSeasonIds = [activeId] }));
+                presets.Add(new("🆕", L["PresetNew"], "#0EA5E9", Summary.NewMembers, baseState with { NewMembersOnly = true }));
+                if (Summary.PreviousSeasonId is { } previousId)
+                    presets.Add(new("👋", L["PresetLapsed"], "#DC2626", Summary.LapsedMembers, baseState with { InSeasonIds = [previousId], NotInSeasonIds = [activeId] }));
+                presets.Add(new("⛔", L["PresetNotEnrolled"], "#6B7280", Summary.TotalMembers - Summary.ActiveSeasonMembers, baseState with { NotInSeasonIds = [activeId] }));
+                presets.Add(new("💤", L["PresetNoBookings"], "#D97706", null, baseState with { InSeasonIds = [activeId], NoBookingsInSeasonId = activeId }));
+            }
+            else if (Summary?.PreviousSeasonId is { } lastId)
+            {
+                presets.Add(new("🗓️", L["PresetLastSeason"], "#059669", null, baseState with { InSeasonIds = [lastId] }));
+            }
+
+            if (Summary is { WithoutEmail: > 0 })
+                presets.Add(new("📭", L["PresetWithoutEmail"], "#9333EA", Summary.WithoutEmail, baseState with { HasEmail = false }));
+
+            return presets;
+        }
+    }
+
+    private bool IsPresetSelected(Preset preset)
+        => Serialize(preset.Filter with { Search = State.Search }) == Serialize(State with { Page = 1 });
+
+    private static string Serialize(MemberListState state)
+        => string.Join("&", state.ToQuery().Where(p => p.Value is not null).Select(p => $"{p.Key}={(p.Value is int[] a ? string.Join(",", a) : p.Value)}"));
+
+    private Task ApplyPreset(Preset preset, bool selected)
+        => Update(selected ? State.WithoutFilters() with { Search = State.Search } : preset.Filter with { Search = State.Search });
+
+    private SeasonRule RuleOf(int seasonId)
+        => State.InSeasonIds.Contains(seasonId) ? SeasonRule.In : State.NotInSeasonIds.Contains(seasonId) ? SeasonRule.NotIn : SeasonRule.Any;
+
+    private string RuleTitle(SeasonRule rule) => L[$"SeasonRule_{rule}"];
+
+    // Any -> enrolled -> not enrolled -> any
+    private Task CycleSeason(int seasonId)
+    {
+        var inSeasons = State.InSeasonIds.Where(id => id != seasonId).ToList();
+        var notInSeasons = State.NotInSeasonIds.Where(id => id != seasonId).ToList();
+
+        switch (RuleOf(seasonId))
+        {
+            case SeasonRule.Any:
+                inSeasons.Add(seasonId);
+                break;
+            case SeasonRule.In:
+                notInSeasons.Add(seasonId);
+                break;
+        }
+
+        return Update(State with { InSeasonIds = inSeasons, NotInSeasonIds = notInSeasons });
+    }
+
+    private Task Update(MemberListState state) => StateChanged.InvokeAsync(state with { Page = 1 });
+}

@@ -1,0 +1,122 @@
+.partner-podium {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 8px;
+    padding-top: 8px;
+}
+
+.podium-slot {
+    flex: 1 1 0;
+    max-width: 170px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.podium-medal {
+    font-size: 1.6rem;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.podium-slot--1 .podium-medal {
+    font-size: 2rem;
+    animation: medal-bounce 2.4s ease-in-out infinite;
+}
+
+@keyframes medal-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+::deep .podium-avatar--1 {
+    box-shadow: 0 0 0 3px #FBBF24;
+}
+
+::deep .podium-avatar--2 {
+    box-shadow: 0 0 0 3px #CBD5E1;
+}
+
+::deep .podium-avatar--3 {
+    box-shadow: 0 0 0 3px #FDBA74;
+}
+
+.podium-name {
+    margin-top: 8px;
+    max-width: 100%;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+.podium-count {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+}
+
+.podium-step {
+    width: 100%;
+    margin-top: 8px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 6px;
+    border-radius: 12px 12px 0 0;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: rgba(15, 23, 42, 0.55);
+}
+
+.podium-slot--1 .podium-step {
+    height: 84px;
+    background: linear-gradient(180deg, #FDE68A, #FBBF24);
+}
+
+.podium-slot--2 .podium-step {
+    height: 60px;
+    background: linear-gradient(180deg, #F1F5F9, #CBD5E1);
+}
+
+.podium-slot--3 .podium-step {
+    height: 44px;
+    background: linear-gradient(180deg, #FFEDD5, #FDBA74);
+}
+
+.partner-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.partner-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.partner-row__name {
+    flex: 0 1 180px;
+    min-width: 0;
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .partner-row__bar {
+    flex: 1 1 auto;
+}
+
+.partner-row__count {
+    flex-shrink: 0;
+    min-width: 32px;
+    text-align: right;
+    font-size: 0.85rem;
+    font-weight: 700;
+}

@@ -1,0 +1,15 @@
+<InputGroup Header="@Header">
+    <Content>
+        <MudGrid Style="width: 100%; margin: 0">
+            @ChildContent
+        </MudGrid>
+    </Content>
+</InputGroup>
+
+@code {
+    [Parameter]
+    public string? Header { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

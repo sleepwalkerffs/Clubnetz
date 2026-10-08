@@ -1,0 +1,98 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Members
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.Members
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Members
+@using Bookennis.Shared.Controller.Shared
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Update"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@MembersStore.IsSaving" CanSubmit="@IsDirty" Title="@Member.FullName">
+    <div class="member-edit">
+        <div class="member-edit__head">
+            <UserAvatar FirstName="@Member.FirstName" LastName="@Member.LastName" ProfilePictureUrl="@Member.ProfilePictureUrl" Size="Size.Large" Color="Color.Secondary" />
+            <div>
+                <div class="member-edit__name">@Member.FullName</div>
+                <div class="member-edit__meta">@(Member.ContactEmail ?? L["NoEmail"]) · @string.Format(L["AgeYears"], MemberAdminHelpers.Age(Member.Birthday))</div>
+            </div>
+        </div>
+
+        <section class="member-edit__section">
+            <h3 class="member-edit__title">🗓️ @L["SeasonEnrollment"]</h3>
+            <p class="member-edit__hint">@L["SeasonEnrollmentHint"]</p>
+            <SeasonEnrollmentEditor Seasons="@ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList()"
+                                    SelectedIds="@selectedSeasonIds" SelectedIdsChanged="@(ids => selectedSeasonIds = ids.ToList())" />
+        </section>
+
+        <section class="member-edit__section">
+            <h3 class="member-edit__title">⭐ @SharedLocale["Role"]</h3>
+            <RoleEditor Values="@selectedRoles" ValuesChanged="@(roles => selectedRoles = roles.ToList())" />
+        </section>
+
+        <section class="member-edit__section member-edit__section--inline">
+            <div>
+                <h3 class="member-edit__title">🎾 @L["BookingsPerWeek"]</h3>
+                <p class="member-edit__hint">@L["BookingsPerWeekHint"]</p>
+            </div>
+            <NumberStepper @bind-Value="bookingsPerWeek" Min="0" Max="10" Unit="@L["PerWeek"]" Label="@L["BookingsPerWeek"]" />
+        </section>
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter] public required MemberResult Member { get; set; }
+
+    [Inject] private IMembersStore MembersStore { get; set; } = null!;
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembersAdminLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private int bookingsPerWeek;
+    private List<MemberRole> selectedRoles = [];
+    private List<int> selectedSeasonIds = [];
+
+    private bool RolesChanged => !Member.Roles.Order().SequenceEqual(selectedRoles.Order());
+    private bool BookingOptionsChanged => bookingsPerWeek != Member.BookingsPerWeek || !Member.AllowedSeasonIds.Order().SequenceEqual(selectedSeasonIds.Order());
+    private bool IsDirty => (RolesChanged || BookingOptionsChanged) && selectedRoles.Count > 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        bookingsPerWeek = Member.BookingsPerWeek;
+        selectedRoles = Member.Roles.ToList();
+        selectedSeasonIds = Member.AllowedSeasonIds.ToList();
+        await ClubStore.LoadSeasons();
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (RolesChanged)
+        {
+            var result = await MembersStore.UpdateMemberRoles(Member.MemberId, selectedRoles.ToArray());
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return null;
+            }
+        }
+
+        if (BookingOptionsChanged)
+        {
+            var result = await MembersStore.UpdateMemberBookingOptions(Member.MemberId, selectedSeasonIds.ToArray(), bookingsPerWeek);
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return null;
+            }
+        }
+
+        Snackbar.Add(string.Format(L["MemberSaved"], Member.FullName), Severity.Success);
+        return DialogResult.Ok(Member);
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+}

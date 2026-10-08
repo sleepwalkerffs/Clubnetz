@@ -1,0 +1,198 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Components.Booking
+@using Bookennis.Shared.Controller.Booking.Shared
+
+<div class="player-selection">
+    <div class="player-selection__header">
+        <span class="player-selection__title">@Locale["Players"]</span>
+        @if (MaxPlayers is { } max)
+        {
+            <span class="player-selection__count @(IsFull ? "player-selection__count--full" : null)">
+                @SelectedPlayers.Count / @max
+            </span>
+        }
+    </div>
+
+    <div class="player-selection__list">
+        @if (currentFixedPlayer is not null)
+        {
+            <div class="player-card player-card--fixed">
+                <UserAvatar FirstName="@currentFixedPlayer.FirstName" LastName="@currentFixedPlayer.LastName"
+                            ProfilePictureUrl="@currentFixedPlayer.ProfilePictureUrl" Color="Color.Primary" Size="Size.Small" />
+                <div class="player-card__text">
+                    <span class="player-card__name">@currentFixedPlayer.FirstName @currentFixedPlayer.LastName</span>
+                    <span class="player-card__tag">@Locale["Booker"]</span>
+                </div>
+                @if (FixedPlayerAlternative.Count > 1)
+                {
+                    <MudTooltip Text="@Locale["SwitchPlayer"]">
+                        <MudIconButton Icon="@Icons.Material.Filled.SwapHoriz" Size="Size.Small" Color="Color.Primary"
+                                       aria-label="@Locale["SwitchPlayer"]" OnClick="CycleFixedPlayer" />
+                    </MudTooltip>
+                }
+            </div>
+        }
+
+        @foreach (var player in selectedPlayers)
+        {
+            <div class="player-card">
+                <UserAvatar FirstName="@player.FirstName" LastName="@player.LastName"
+                            ProfilePictureUrl="@player.ProfilePictureUrl" Color="Color.Secondary" Size="Size.Small" />
+                <div class="player-card__text">
+                    <span class="player-card__name">@player.FirstName @player.LastName</span>
+                    @if (player.IsGuest)
+                    {
+                        <span class="player-card__tag player-card__tag--muted">@Locale["Guest"]</span>
+                    }
+                </div>
+                <MudTooltip Text="@Locale["RemovePlayer"]">
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                                   aria-label="@Locale["RemovePlayer"]" OnClick="() => RemovePlayer(player)" />
+                </MudTooltip>
+            </div>
+        }
+
+        @for (var i = 0; i < FreeSlots; i++)
+        {
+            <div class="player-card player-card--empty">
+                <span class="player-card__placeholder"><MudIcon Icon="@Icons.Material.Filled.PersonAddAlt" Size="Size.Small" /></span>
+                <span class="player-card__name">@Locale["FreeSlot"]</span>
+            </div>
+        }
+    </div>
+
+    @if (!IsFull)
+    {
+        <MudAutocomplete @ref="autocomplete"
+                         T="PlayerResult"
+                         Variant="Variant.Outlined"
+                         Label="@Locale["SelectPlayer"]"
+                         Placeholder="@Locale["SearchPlaceholder"]"
+                         SearchFunc="@Search"
+                         ValueChanged="@OnValueChanged"
+                         ResetValueOnEmptyText="true"
+                         CoerceText="false"
+                         CoerceValue="false"
+                         Strict="false"
+                         MaxItems="30"
+                         Dense="true"
+                         AdornmentIcon="@Icons.Material.Filled.Search"
+                         AdornmentColor="Color.Primary"
+                         ToStringFunc="@(player => player is null ? null : $"{player.FirstName} {player.LastName}")">
+            <ItemTemplate Context="player">
+                <div class="player-option">
+                    <UserAvatar FirstName="@player.FirstName" LastName="@player.LastName" ProfilePictureUrl="@player.ProfilePictureUrl"
+                                Color="Color.Secondary" Size="Size.Small" />
+                    <span class="player-option__name">@player.FirstName @player.LastName</span>
+                    @if (player.IsGuest)
+                    {
+                        <span class="player-card__tag player-card__tag--muted">@Locale["Guest"]</span>
+                    }
+                </div>
+            </ItemTemplate>
+            <NoItemsTemplate>
+                <div class="pa-2 mud-text-secondary">@Locale["NoPlayersFound"]</div>
+            </NoItemsTemplate>
+        </MudAutocomplete>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public required List<PlayerResult> AvailablePlayers { get; set; }
+    [Parameter]
+    public List<PlayerResult> FixedPlayerAlternative { get; set; } = [];
+    [Parameter]
+    public int? MaxPlayers { get; set; }
+    [Parameter]
+    public required PlayerResult? FixedPlayer { get; set; }
+    [Parameter]
+    public List<PlayerResult> InitialPlayers { get; set; } = [];
+
+    [Inject]
+    private IStringLocalizer<PlayerSelectionLocale> Locale { get; set; } = null!;
+
+    private MudAutocomplete<PlayerResult>? autocomplete;
+    private List<PlayerResult> selectedPlayers = [];
+    private bool initialized;
+
+    // The fixed player can be switched (e.g. to a child), so it is kept apart from the parameter
+    private PlayerResult? currentFixedPlayer;
+    private PlayerResult? lastFixedPlayerParameter;
+
+    public List<PlayerResult> SelectedPlayers => currentFixedPlayer is null ? [.. selectedPlayers] : [.. selectedPlayers, currentFixedPlayer];
+
+    private bool IsFull => MaxPlayers is { } max && SelectedPlayers.Count >= max;
+
+    private int FreeSlots => MaxPlayers is { } max ? Math.Max(max - SelectedPlayers.Count, 0) : 0;
+
+    public void ClearSelection()
+    {
+        selectedPlayers.Clear();
+        initialized = false;
+        StateHasChanged();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (FixedPlayer != lastFixedPlayerParameter)
+        {
+            lastFixedPlayerParameter = FixedPlayer;
+            currentFixedPlayer = FixedPlayer;
+        }
+
+        if (!initialized && InitialPlayers.Count > 0)
+        {
+            selectedPlayers = [.. InitialPlayers];
+            initialized = true;
+        }
+
+        // A smaller player count (e.g. after changing the play mode) drops the surplus players
+        if (MaxPlayers is { } max)
+        {
+            var allowed = Math.Max(max - (currentFixedPlayer is null ? 0 : 1), 0);
+            if (selectedPlayers.Count > allowed)
+                selectedPlayers = selectedPlayers.Take(allowed).ToList();
+        }
+    }
+
+    private void RemovePlayer(PlayerResult player) => selectedPlayers.Remove(player);
+
+    private void CycleFixedPlayer()
+    {
+        if (currentFixedPlayer is null || FixedPlayerAlternative.Count == 0)
+            return;
+
+        var index = FixedPlayerAlternative.FindIndex(p => p.MemberId == currentFixedPlayer.MemberId);
+        currentFixedPlayer = FixedPlayerAlternative[(index + 1) % FixedPlayerAlternative.Count];
+        selectedPlayers.RemoveAll(p => p.MemberId == currentFixedPlayer.MemberId);
+    }
+
+    private async Task OnValueChanged(PlayerResult? value)
+    {
+        if (value is null || IsFull || !AvailablePlayers.Contains(value) || SelectedPlayers.Any(p => p.MemberId == value.MemberId))
+            return;
+
+        selectedPlayers.Add(value);
+
+        if (autocomplete is not null)
+            await autocomplete.ClearAsync();
+    }
+
+    private Task<IEnumerable<PlayerResult>> Search(string searchValue, CancellationToken cancellationToken)
+    {
+        var selectedIds = SelectedPlayers.Select(p => p.MemberId).ToHashSet();
+        var available = AvailablePlayers.Where(p => !selectedIds.Contains(p.MemberId));
+        if (string.IsNullOrWhiteSpace(searchValue))
+            return Task.FromResult(available.OrderBy(p => p.FirstName).ThenBy(p => p.LastName).AsEnumerable());
+
+        // Split on whitespace so "firstname lastname" (or "lastname firstname") matches too:
+        // each term just needs to match the start of either name field.
+        var terms = searchValue.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var matches = available.Where(x => terms.All(term =>
+            x.FirstName.StartsWith(term, StringComparison.CurrentCultureIgnoreCase) ||
+            x.LastName.StartsWith(term, StringComparison.CurrentCultureIgnoreCase)));
+
+        return Task.FromResult(matches);
+    }
+}

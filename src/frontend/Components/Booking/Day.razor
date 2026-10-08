@@ -1,0 +1,385 @@
+@using System.Globalization
+@using Bookennis.Client.Utils
+@using Bookennis.Client.Components.Booking.Dialogs
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Components.Booking
+@using Bookennis.Client.Services
+@using Bookennis.Global.Intervals
+@using Bookennis.Shared.Controller.Booking
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.CourtBlockings
+
+@implements IDisposable
+
+<div class="day-scroll-container" @ref="scrollContainer">
+    <div class="day" style="--slot-count: @SlotCount; --court-count: @Courts.Count">
+
+        <div class="day__corner"></div>
+
+        @* Court headers *@
+        @for (var i = 0; i < Courts.Count; i++)
+        {
+            var court = Courts[i];
+            <div class="day__court" style="grid-column: @(i + ColumnOffset)" title="@court.Name">
+                <span class="day__court-alias">@court.Alias</span>
+                <span class="day__court-count">@BookingsPerCourt(court.CourtId)</span>
+            </div>
+        }
+
+        @* Hour lines and labels *@
+        @for (var hour = 0; hour <= Hours; hour++)
+        {
+            var row = hour * 2 + RowOffset;
+            <div class="day__hour-line" style="grid-row: @row"></div>
+            @if (hour < Hours)
+            {
+                <div class="day__half-line" style="grid-row: @(row + 1)"></div>
+            }
+            <div class="day__time @(hour == 0 ? "day__time--first" : null)" style="grid-row: @row">
+                <span>@(((openingHourStart + hour) % 24).ToString("00")):00</span>
+            </div>
+        }
+
+        @* Prime time band *@
+        @if (PrimeTimeRows is { } primeTime)
+        {
+            <div class="day__prime-time" style="grid-row: @primeTime.Start / @primeTime.End">
+                <span class="day__prime-time-label">@Locale["PrimeTime"]</span>
+            </div>
+        }
+
+        @* Time that already passed *@
+        @if (PastEndRow > RowOffset)
+        {
+            <div class="day__past" style="grid-row: @RowOffset / @PastEndRow"></div>
+        }
+
+        @* Free slots, hover is pure CSS so moving the mouse does not re-render the grid *@
+        @if (CanBook)
+        {
+            var firstFutureRow = PastEndRow;
+            @for (var i = 0; i < Courts.Count; i++)
+            {
+                var court = Courts[i];
+                @for (var slot = 0; slot < SlotCount; slot++)
+                {
+                    var row = slot + RowOffset;
+                    if (row < firstFutureRow)
+                        continue;
+
+                    var time = TimeSpan.FromMinutes(openingHourStart * 60 + slot * 30);
+                    <div class="day__slot" style="grid-column: @(i + ColumnOffset); grid-row: @row"
+                         @onclick="() => OpenBookCourtDialog(time, court)">
+                        <span class="day__slot-label">+ @time.ToString(@"hh\:mm")</span>
+                    </div>
+                }
+            }
+        }
+
+        @* Inactive courts *@
+        @for (var i = 0; i < Courts.Count; i++)
+        {
+            var court = Courts[i];
+            if (court.Inactive is not null && bookableRange.Intersects(court.Inactive))
+            {
+                <div class="day__inactive"
+                     style="grid-column: @(i + ColumnOffset); grid-row: @CalculateGridRowStart(court.Inactive.From) / @CalculateGridRowEnd(court.Inactive.To)">
+                    <span>@Locale["CourtClosed"]</span>
+                </div>
+            }
+        }
+
+        @* Court blockings (tournaments, maintenance, weather) *@
+        @for (var i = 0; i < Courts.Count; i++)
+        {
+            var court = Courts[i];
+            foreach (var blocking in BlockingsOfDay.Where(b => b.CourtIds.Contains(court.CourtId)))
+            {
+                <div class="day__blocking"
+                     style="grid-column: @(i + ColumnOffset); grid-row: @CalculateGridRowStart(blocking.Interval.From) / @CalculateGridRowEnd(blocking.Interval.To)"
+                     title="@BlockingTooltip(blocking)">
+                    <span class="day__blocking-title"><span aria-hidden="true">🔒</span> @blocking.Title</span>
+                    <span class="day__blocking-time">@BlockingTime(blocking)</span>
+                </div>
+            }
+        }
+
+        @* Bookings *@
+        @for (var i = 0; i < Courts.Count; i++)
+        {
+            var column = i + ColumnOffset;
+            foreach (var booking in BookingsOfDay.Where(b => b.CourtId == Courts[i].CourtId))
+            {
+                var rowStart = CalculateGridRowStart(booking.Interval.From);
+                var rowEnd = CalculateGridRowEnd(booking.Interval.To);
+                var span = rowEnd - rowStart;
+                var isMine = IsOwnBooking(booking);
+                var isPast = booking.Interval.To <= DateTimeOffset.Now;
+                var sizeClass = span <= 1 ? "booking-block--xs" : span == 2 ? "booking-block--sm" : null;
+
+                <div class="booking-block @sizeClass @(isMine ? "booking-block--mine" : null) @(isPast ? "booking-block--past" : null)"
+                     style="grid-column: @column; grid-row: @rowStart / @rowEnd; --mode-color: @BookingColors.ToHex(booking.PlayMode.Color)"
+                     title="@BookingTooltip(booking)"
+                     role="button" tabindex="0"
+                     @onclick="() => OpenDetail(booking.BookingEntryId)"
+                     @onkeydown="e => OnBookingKeyDown(e, booking.BookingEntryId)">
+                    <div class="booking-block__head">
+                        <span class="booking-block__time">@booking.Interval.From.ToString("HH:mm")–@booking.Interval.To.ToString("HH:mm")</span>
+                        @if (booking.RecurringBookingSeriesId is not null)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Repeat" Class="booking-block__icon" />
+                        }
+                        @if (isMine)
+                        {
+                            <span class="booking-block__mine" aria-label="@Locale["YourBooking"]">★</span>
+                        }
+                    </div>
+                    <div class="booking-block__mode">@booking.PlayMode.Name</div>
+                    <div class="booking-block__players">
+                        <div class="booking-block__avatars">
+                            @foreach (var player in booking.Players.Take(4))
+                            {
+                                <UserAvatar FirstName="@player.FirstName" LastName="@player.LastName" ProfilePictureUrl="@player.ProfilePictureUrl"
+                                            Color="Color.Primary" Size="Size.Small" AvatarClass="booking-block__avatar" />
+                            }
+                        </div>
+                        <span class="booking-block__names">
+                            @string.Join(", ", booking.Players.Select(p => p.IsAtpPlayer ? $"{p.FirstName} (ATP)" : p.FirstName))
+                        </span>
+                    </div>
+                </div>
+            }
+        }
+
+        @* Current time *@
+        @if (NowRow is { } nowRow)
+        {
+            <div class="day__now" style="grid-row: @nowRow; --now-offset: @NowOffsetPixels.ToString(CultureInfo.InvariantCulture)px" @ref="nowLine">
+                <span class="day__now-label">@DateTime.Now.ToString("HH:mm")</span>
+            </div>
+        }
+    </div>
+</div>
+
+<MudHidden Breakpoint="Breakpoint.Xs" Invert="true">
+    <div class="add-entry mb-6">
+        <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@OpenBookDialog" Disabled="!CanBook" aria-label="@Locale["Book"]" />
+    </div>
+</MudHidden>
+
+@code {
+    private const int RowOffset = 2;
+    private const int ColumnOffset = 2;
+    private const int SlotHeight = 32;
+    private const int EntireDayInMinutes = 1440;
+
+    private int openingHourStart;
+    private int openingHourEnd;
+
+    [Parameter]
+    public required DateOnly Date { get; set; }
+    [Parameter]
+    public required List<CourtResult> Courts { get; set; }
+    [Parameter]
+    public required List<BookingResult> Bookings { get; set; }
+    /// <summary>Blocked time windows, see <c>CourtBlocking</c>.</summary>
+    [Parameter]
+    public List<CourtBlockingOccurrenceDto> Blockings { get; set; } = [];
+    [Parameter]
+    public required List<PlayerResult> Players { get; set; }
+    [Parameter]
+    public required List<PlayerResult> MemberChildren { get; set; }
+    [Parameter]
+    public required List<PlayModeDto> PlayModes { get; set; }
+    [Parameter]
+    public required int MemberId { get; set; }
+    [Parameter]
+    public required int ClubId { get; set; }
+
+    [Parameter]
+    public required ClubInformationResult ClubInformation { get; set; }
+
+    [Parameter]
+    public required bool CanBook { get; set; }
+
+    [Parameter]
+    public bool IsBookingOnlyForChildren { get; set; }
+
+    [Parameter]
+    public List<int> EligibleChildMemberIds { get; set; } = [];
+
+    /// <summary>Raised after a booking was created, so the page can reload its bookings.</summary>
+    [Parameter]
+    public EventCallback OnBooked { get; set; }
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BookingSharedLocale> Locale { get; set; } = null!;
+
+    private ElementReference scrollContainer;
+    private ElementReference nowLine;
+    private DateOnly? scrolledForDate;
+    private Timer? clockTimer;
+
+    private DateTimeOffsetInterval bookableRange = null!;
+    private List<BookingResult> BookingsOfDay { get; set; } = [];
+    private List<CourtBlockingOccurrenceDto> BlockingsOfDay { get; set; } = [];
+
+    private DateTime DateOfDay => Date.ToDateTime(TimeOnly.MinValue);
+    private int Hours => openingHourEnd - openingHourStart;
+    private int SlotCount => Hours * 2;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    /// <summary>First row that is still in the future (exclusive end of the "past" overlay).</summary>
+    private int PastEndRow
+    {
+        get
+        {
+            if (Date < Today)
+                return SlotCount + RowOffset;
+            if (Date > Today)
+                return RowOffset;
+
+            var minutes = (int)DateTime.Now.TimeOfDay.TotalMinutes - openingHourStart * 60;
+            return Math.Clamp(minutes / 30 + RowOffset, RowOffset, SlotCount + RowOffset);
+        }
+    }
+
+    private int? NowRow
+    {
+        get
+        {
+            if (Date != Today)
+                return null;
+
+            var minutes = (int)DateTime.Now.TimeOfDay.TotalMinutes - openingHourStart * 60;
+            return minutes < 0 || minutes >= Hours * 60 ? null : minutes / 30 + RowOffset;
+        }
+    }
+
+    private double NowOffsetPixels => (DateTime.Now.TimeOfDay.TotalMinutes % 30) / 30 * SlotHeight;
+
+    private (int Start, int End)? PrimeTimeRows
+    {
+        get
+        {
+            var primeTime = ClubInformation.PrimeTimeSettings;
+            if (!primeTime.IsEnabled || !primeTime.ApplicableWeekdays.Contains(Date.DayOfWeek))
+                return null;
+
+            var start = (int)primeTime.PrimeTimeHours.From.ToTimeSpan().TotalMinutes - openingHourStart * 60;
+            var end = start + (int)primeTime.PrimeTimeHours.GetDifference().TotalMinutes;
+            var rowStart = Math.Clamp(start / 30, 0, SlotCount) + RowOffset;
+            var rowEnd = Math.Clamp(end / 30, 0, SlotCount) + RowOffset;
+            return rowEnd > rowStart ? (rowStart, rowEnd) : null;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        // Keeps the current time line and the past overlay up to date
+        clockTimer = new Timer(_ => InvokeAsync(StateHasChanged), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+    }
+
+    protected override void OnParametersSet()
+    {
+        openingHourStart = ClubInformation.OpeningHours.From.Hour;
+        openingHourEnd = ClubInformation.OpeningHours.From.Hour + (int)ClubInformation.OpeningHours.GetDifference().TotalHours;
+
+        bookableRange = new DateTimeOffsetInterval(new DateTime(Date, ClubInformation.OpeningHours.From), new DateTime(Date, ClubInformation.OpeningHours.To));
+        BookingsOfDay = Bookings.Where(b => DateOnly.FromDateTime(b.Interval.From.DateTime) == Date).ToList();
+        BlockingsOfDay = Blockings.Where(b => bookableRange.Intersects(b.Interval)).ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (scrolledForDate == Date)
+            return;
+
+        scrolledForDate = Date;
+        // Jump to the current time on today, otherwise to the start of the day
+        await JSRuntime.InvokeVoidAsync("App.scrollToChild", scrollContainer, NowRow is null ? null : nowLine);
+    }
+
+    private bool IsOwnBooking(BookingResult booking)
+        => booking.Players.Any(p => p.MemberId == MemberId || MemberChildren.Any(c => c.MemberId == p.MemberId));
+
+    private int BookingsPerCourt(int courtId) => BookingsOfDay.Count(b => b.CourtId == courtId);
+
+    private string BookingTooltip(BookingResult booking)
+        => $"{booking.Interval.From:HH:mm}–{booking.Interval.To:HH:mm} · {booking.PlayMode.Name}\n{string.Join(", ", booking.Players.Select(p => $"{p.FirstName} {p.LastName}"))}";
+
+    /// <summary>The blocked time on this day, e.g. "14:00–18:00" or "All day" when it covers the whole day.</summary>
+    private string BlockingTime(CourtBlockingOccurrenceDto blocking)
+    {
+        var from = blocking.Interval.From < bookableRange.From ? bookableRange.From : blocking.Interval.From;
+        var to = blocking.Interval.To > bookableRange.To ? bookableRange.To : blocking.Interval.To;
+        return from == bookableRange.From && to == bookableRange.To ? Locale["AllDay"] : $"{from:HH:mm}–{to:HH:mm}";
+    }
+
+    private string BlockingTooltip(CourtBlockingOccurrenceDto blocking) => $"{blocking.Title}\n{BlockingTime(blocking)}";
+
+    /// <summary>Opens the booking dialog without a preselected court and time.</summary>
+    public Task OpenBookDialog() => OpenBookCourtDialog(null, null);
+
+    private async Task OpenBookCourtDialog(TimeSpan? time, CourtResult? court)
+    {
+        if (!CanBook)
+            return;
+
+        var parameters = new DialogParameters<BookCourt>();
+        parameters.Add(dialog => dialog.Courts, Courts);
+        parameters.Add(dialog => dialog.Players, Players.Where(x => !x.IsGuest).ToList());
+        parameters.Add(dialog => dialog.Date, DateOfDay);
+        parameters.Add(dialog => dialog.MemberId, MemberId);
+        parameters.Add(dialog => dialog.MemberChildren, MemberChildren);
+        parameters.Add(dialog => dialog.PlayModes, PlayModes);
+        parameters.Add(dialog => dialog.StopHourOfTheDay, openingHourEnd);
+        parameters.Add(dialog => dialog.IsBookingOnlyForChildren, IsBookingOnlyForChildren);
+        parameters.Add(dialog => dialog.EligibleChildMemberIds, EligibleChildMemberIds);
+        if (time is not null)
+            parameters.Add(dialog => dialog.Time, time);
+        if (court is not null)
+            parameters.Add(dialog => dialog.SelectedCourt, court);
+
+        var dialog = await DialogService.ShowAsync<BookCourt>(Locale["Book"], parameters, new DialogOptions { FullScreen = false, MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+            await OnBooked.InvokeAsync();
+    }
+
+    private int CalculateGridRowStart(DateTimeOffset from)
+    {
+        var totalMinutes = DateOnly.FromDateTime(from.DateTime) < Date ? openingHourStart * 60 : from.TimeOfDay.TotalMinutes;
+        return Math.Clamp((int)(totalMinutes - openingHourStart * 60) / 30, 0, SlotCount) + RowOffset;
+    }
+
+    private int CalculateGridRowEnd(DateTimeOffset to)
+    {
+        var endMinutes = to.TimeOfDay.TotalMinutes == 0 || DateOnly.FromDateTime(to.DateTime) > Date
+            ? EntireDayInMinutes
+            : to.TimeOfDay.TotalMinutes;
+
+        // Round up, so bookings that end within a slot still cover it
+        var row = (int)Math.Ceiling((endMinutes - openingHourStart * 60) / 30);
+        return Math.Clamp(row, 1, SlotCount) + RowOffset;
+    }
+
+    private void OpenDetail(int bookingEntryId) => NavigationManager.NavigateToBooking(ClubId, bookingEntryId);
+
+    private void OnBookingKeyDown(KeyboardEventArgs e, int bookingEntryId)
+    {
+        if (e.Key is "Enter" or " ")
+            OpenDetail(bookingEntryId);
+    }
+
+    public void Dispose() => clockTimer?.Dispose();
+}

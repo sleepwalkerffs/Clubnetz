@@ -1,0 +1,60 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Components.Family
+@using Bookennis.Client.Services.Store.Family
+@using Bookennis.Shared.Controller.Families
+@using Bookennis.Shared.Controller.Shared
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption=@SharedLocale["Update"] CancelFunc="Cancel" CancelCaption=@SharedLocale["Cancel"] AllowFullScreen="false">
+    <MudForm @ref="mudForm">
+        <div class="d-flex gap-2 flex-column">
+            <MudSelect T="int" Label=@SharedLocale["Gender"] Variant="Variant.Outlined" @bind-Value="gender" For="@(() => gender)">
+                <MudSelectItem T="int" Value="0">@SharedLocale["Mr"].</MudSelectItem>
+                <MudSelectItem T="int" Value="1">@SharedLocale["Mrs"].</MudSelectItem>
+                <MudSelectItem T="int" Value="2">@SharedLocale["None"]</MudSelectItem>
+            </MudSelect>
+            <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Firstname"] @bind-Value="firstName" Required="true" />
+            <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Lastname"] @bind-Value="lastName" Required="true" />
+            <MudDatePicker Variant="Variant.Outlined" Label=@SharedLocale["Birthday"] @bind-Date="birthday" DateFormat="dd.MM.yyyy" Required="true" PickerVariant="PickerVariant.Dialog" />
+        </div>
+    </MudForm>
+</BaseDialog>
+
+@code {
+    [Parameter]
+    public required FamilyChildDto Child { get; set; }
+
+    [Inject]
+    private IFamilyStore FamilyStore { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private MudForm mudForm = null!;
+    private string firstName = string.Empty;
+    private string lastName = string.Empty;
+    private DateTime? birthday;
+    private int gender;
+
+    protected override void OnParametersSet()
+    {
+        firstName = Child.FirstName;
+        lastName = Child.LastName;
+        birthday = Child.Birthday.ToDateTime(TimeOnly.MinValue);
+        gender = (int)Child.Gender;
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        await mudForm.Validate();
+        if (!mudForm.IsValid)
+            return null;
+
+        await FamilyStore.UpdateOwnedChild(
+            Child.MemberId,
+            new UpdateOwnedChildRequest(firstName, lastName, DateOnly.FromDateTime(birthday!.Value), (Gender)gender));
+
+        return DialogResult.Ok(Child);
+    }
+
+    private Task<DialogResult> Cancel() => Task.FromResult(DialogResult.Cancel());
+}

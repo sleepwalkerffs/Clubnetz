@@ -1,0 +1,100 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Account
+@using Bookennis.Client.Services.Store.Push
+@using Bookennis.Client.Utils
+
+@implements IDisposable
+
+@* Install the app on this device and switch its push notifications on or off. Both are per device, not per account. *@
+<SectionCard Emoji="🔔" Title="@Locale["Push_Title"]" Subtitle="@Locale["Push_Subtitle"]">
+    <div class="device-list">
+        @if (PushStore.InstallState != InstallState.None)
+        {
+            <div class="device-row">
+                <MudIcon Icon="@Icons.Material.Filled.InstallMobile" Size="Size.Small" Class="device-row__icon" />
+                <div class="device-row__text">
+                    <div class="device-row__label">@Locale["Push_App"]</div>
+                    <div class="device-row__value">@Locale[InstallText]</div>
+                </div>
+                @if (PushStore.InstallState == InstallState.Prompt)
+                {
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="PushStore.Install">@Locale["Push_Install"]</MudButton>
+                }
+            </div>
+        }
+
+        <div class="device-row">
+            <MudIcon Icon="@(PushStore.State == PushState.On ? Icons.Material.Filled.NotificationsActive : Icons.Material.Filled.NotificationsNone)" Size="Size.Small" Class="device-row__icon" />
+            <div class="device-row__text">
+                <div class="device-row__label">@Locale["Push_Notifications"]</div>
+                <div class="device-row__value">@(PushStore.State == PushState.Unknown ? "…" : Locale[$"Push_State_{PushStore.State}"])</div>
+            </div>
+            @if (PushStore.State == PushState.Off)
+            {
+                <LoadButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" FullWidth="false" Loading="@PushStore.IsSaving" Disabled="@PushStore.IsSaving" OnClick="Enable">
+                    @Locale["Push_Enable"]
+                </LoadButton>
+            }
+            else if (PushStore.State == PushState.On)
+            {
+                <div class="device-row__actions">
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" Disabled="@PushStore.IsSaving" OnClick="SendTest">@Locale["Push_Test"]</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Default" Size="Size.Small" Disabled="@PushStore.IsSaving" OnClick="Disable">@Locale["Push_Disable"]</MudButton>
+                </div>
+            }
+        </div>
+    </div>
+</SectionCard>
+
+@code {
+    [Inject] private IPushStore PushStore { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private string InstallText => PushStore.InstallState switch
+    {
+        InstallState.Installed => "Push_AppInstalled",
+        InstallState.Ios => "Push_AppInstallIos",
+        _ => "Push_AppInstallHint"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        PushStore.OnPushChanged += OnPushChanged;
+        await PushStore.Load();
+    }
+
+    private async Task Enable()
+    {
+        var result = await PushStore.Enable();
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+        else if (PushStore.State == PushState.On)
+            Snackbar.Add(Locale["Push_Enabled"], Severity.Success);
+        else if (PushStore.State == PushState.Off)
+            Snackbar.Add(Locale[PushStore.PushServiceBlockedByBrowser ? "Push_EnableFailedBrave" : "Push_EnableFailed"], Severity.Warning, config => config.RequireInteraction = PushStore.PushServiceBlockedByBrowser);
+    }
+
+    private async Task Disable()
+    {
+        var result = await PushStore.Disable();
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private async Task SendTest()
+    {
+        var result = await PushStore.SendTest();
+        if (result.Success)
+            Snackbar.Add(Locale["Push_TestSent"], Severity.Info);
+        else
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private void OnPushChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => PushStore.OnPushChanged -= OnPushChanged;
+}

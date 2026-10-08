@@ -1,0 +1,207 @@
+.editor-view-switch {
+    display: block;
+    margin-bottom: 12px;
+}
+
+.editor-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.editor-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.editor-layout--edit .preview-pane,
+.editor-layout--preview .editor-pane {
+    display: none;
+}
+
+@media (min-width: 1100px) {
+    .editor-view-switch {
+        display: none;
+    }
+
+    .editor-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .editor-layout--edit .preview-pane,
+    .editor-layout--preview .editor-pane {
+        display: flex;
+    }
+
+    .editor-layout--edit .preview-pane,
+    .editor-layout--preview .preview-pane {
+        display: block;
+        position: sticky;
+        top: 80px;
+    }
+}
+
+.editor-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.editor-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.editor-muted {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.editor-help {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.editor-help summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--mud-palette-primary);
+}
+
+.editor-help table {
+    margin: 8px 0;
+    border-collapse: collapse;
+}
+
+.editor-help td {
+    padding: 3px 16px 3px 0;
+    vertical-align: top;
+}
+
+.editor-help code {
+    padding: 1px 5px;
+    border-radius: 6px;
+    background: var(--mud-palette-background-gray);
+    color: var(--mud-palette-text-primary);
+}
+
+.editor-help p {
+    margin: 0;
+}
+
+.editor-upload {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--mud-palette-primary);
+    border: 1px solid var(--mud-palette-primary);
+    transition: background 0.15s ease;
+}
+
+.editor-upload:hover {
+    background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent);
+}
+
+.editor-upload--disabled {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+.editor-files {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.editor-file {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 6px 6px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-background-gray);
+}
+
+.editor-file--new {
+    border-style: dashed;
+    border-color: var(--mud-palette-primary);
+}
+
+::deep .editor-file__icon {
+    flex-shrink: 0;
+    color: var(--mud-palette-primary);
+}
+
+.editor-file__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.editor-file__badge {
+    flex-shrink: 0;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.6;
+    color: var(--mud-palette-primary-text);
+    background: var(--mud-palette-primary);
+}
+
+.editor-file__size {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.editor-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-top: 4px solid var(--bk-dark-indigo, #4F46E5);
+    background: var(--mud-palette-background);
+}
+
+.editor-preview__title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 599px) {
+    .editor-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 1;
+        padding: 8px 0;
+        background: var(--mud-palette-background);
+    }
+
+    .editor-file__badge {
+        display: none;
+    }
+}

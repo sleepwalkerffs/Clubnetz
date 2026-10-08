@@ -1,0 +1,119 @@
+@page "/clubs/{ClubId:int}/profile"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubSettings
+@using Bookennis.Client.Pages.ClubShell.Club.Components
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+
+@implements IDisposable
+
+<PageTitle>@SharedLocale["Settings"]: @ClubProfileStore.SelectedClub?.ClubName</PageTitle>
+
+@if (!loaded)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else
+{
+    var details = ClubStore.ClubDetails;
+    var prime = details.PrimeTimeSettings;
+    var activeSeason = ClubStore.Seasons.FirstOrDefault(s => s.IsActive);
+    var closedCourts = ClubStore.Courts.Count(c => c.Inactive is { } inactive && inactive.From <= DateTimeOffset.Now && inactive.To > DateTimeOffset.Now);
+
+    <div class="club-settings">
+        <AdminHero Emoji="🏟️" Eyebrow="@L["Eyebrow"]" Title="@(ClubProfileStore.SelectedClub?.ClubName ?? SharedLocale["Settings"])" Subtitle="@L["Subtitle"]">
+            <Chips>
+                <span class="hero-chip">🕗 @details.OpeningHours.From.ToString("HH:mm", CultureInfo.CurrentCulture) – @details.OpeningHours.To.ToString("HH:mm", CultureInfo.CurrentCulture)</span>
+                @if (prime.IsEnabled)
+                {
+                    <span class="hero-chip">⚡ @string.Format(L["PrimeTimeChip"], prime.PrimeTimeHours.From.ToString("HH:mm", CultureInfo.CurrentCulture), prime.PrimeTimeHours.To.ToString("HH:mm", CultureInfo.CurrentCulture))</span>
+                }
+                <span class="hero-chip">🎾 @string.Format(L["CourtsChip"], ClubStore.Courts.Count)</span>
+                @if (closedCourts > 0)
+                {
+                    <span class="hero-chip hero-chip--warn">🚧 @string.Format(L["ClosedCourtsChip"], closedCourts)</span>
+                }
+                <span class="hero-chip">🏷️ @string.Format(L["PlayModesChip"], ClubStore.PlayModes.Count)</span>
+            </Chips>
+            <Aside>
+                @if (activeSeason is not null)
+                {
+                    var length = activeSeason.EndDate.DayNumber - activeSeason.StartDate.DayNumber + 1;
+                    var elapsed = DateOnly.FromDateTime(DateTime.Today).DayNumber - activeSeason.StartDate.DayNumber + 1;
+                    <div class="season-aside__caption">@L["CurrentSeason"]</div>
+                    <div class="season-aside__value">@string.Format(L["SeasonName"], MemberAdminHelpers.SeasonLabel(activeSeason))</div>
+                    <div class="season-aside__text">@string.Format(L["DaysLeft"], activeSeason.EndDate.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber)</div>
+                    <div class="season-aside__bar"><span style="width: @((elapsed * 100.0 / length).ToString("0.#", CultureInfo.InvariantCulture))%"></span></div>
+                }
+                else
+                {
+                    <div class="season-aside__caption">@L["CurrentSeason"]</div>
+                    <div class="season-aside__value">⛔ @L["NoActiveSeason"]</div>
+                    <div class="season-aside__text">@L["NoActiveSeasonHint"]</div>
+                }
+            </Aside>
+        </AdminHero>
+
+        <nav class="club-settings__nav" aria-label="@L["Sections"]">
+            <a href="@($"/clubs/{ClubId}/profile#rules")">⏰ @L["RulesTitle"]</a>
+            <a href="@($"/clubs/{ClubId}/profile#seasons")">🗓️ @L["SeasonsTitle"]</a>
+            <a href="@($"/clubs/{ClubId}/profile#courts")">🎾 @L["CourtsTitle"]</a>
+            <a href="@($"/clubs/{ClubId}/profile#playmodes")">🏷️ @L["PlayModesTitle"]</a>
+        </nav>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" lg="7">
+                <div id="rules" class="club-settings__anchor">
+                    <ClubRulesCard OnSaved="StateHasChanged" />
+                </div>
+            </MudItem>
+            <MudItem xs="12" lg="5">
+                <div id="seasons" class="club-settings__anchor">
+                    <SeasonsCard />
+                </div>
+            </MudItem>
+        </MudGrid>
+
+        <div id="courts" class="club-settings__anchor">
+            <CourtsCard />
+        </div>
+
+        <div id="playmodes" class="club-settings__anchor">
+            <PlayModesCard />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private bool loaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ClubStore.OnSeasonsChanged += OnChanged;
+        ClubStore.OnCourtsDataChanged += OnChanged;
+        ClubStore.OnPlayModesChanged += OnChanged;
+
+        await Task.WhenAll(ClubStore.LoadCourts(), ClubStore.LoadClubDetails(), ClubStore.LoadPlayModes(), ClubStore.LoadSeasons());
+        loaded = true;
+    }
+
+    // Keeps the hero chips up to date
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        ClubStore.OnSeasonsChanged -= OnChanged;
+        ClubStore.OnCourtsDataChanged -= OnChanged;
+        ClubStore.OnPlayModesChanged -= OnChanged;
+    }
+}

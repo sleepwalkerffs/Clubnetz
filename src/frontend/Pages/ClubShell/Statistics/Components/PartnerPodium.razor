@@ -1,0 +1,63 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Statistics
+@using Bookennis.Shared.Controller.Statistics
+
+<div class="partner-podium">
+    @foreach (var (partner, place) in podium)
+    {
+        <div class="podium-slot podium-slot--@place">
+            <div class="podium-medal">@(place switch { 1 => "🥇", 2 => "🥈", _ => "🥉" })</div>
+            <UserAvatar FirstName="@partner.FirstName" LastName="@partner.LastName" ProfilePictureUrl="@partner.ProfilePictureUrl"
+                        Size="@(place == 1 ? Size.Large : Size.Medium)" Color="Color.Secondary" AvatarClass="@($"podium-avatar podium-avatar--{place}")" />
+            <div class="podium-name">@partner.FirstName @partner.LastName</div>
+            <div class="podium-count">@partner.Count×</div>
+            <div class="podium-step">@place</div>
+        </div>
+    }
+</div>
+
+@if (others.Count > 0)
+{
+    <div class="partner-list">
+        @foreach (var partner in showAll ? others : others.Take(CollapsedCount))
+        {
+            <div class="partner-row">
+                <UserAvatar FirstName="@partner.FirstName" LastName="@partner.LastName" ProfilePictureUrl="@partner.ProfilePictureUrl" Size="Size.Small" />
+                <span class="partner-row__name">@partner.FirstName @partner.LastName</span>
+                <MudProgressLinear Value="@partner.Count" Max="@Partners[0].Count" Color="Color.Secondary" Rounded="true" Size="Size.Medium" Class="partner-row__bar" />
+                <span class="partner-row__count">@partner.Count×</span>
+            </div>
+        }
+    </div>
+
+    @if (others.Count > CollapsedCount)
+    {
+        <div class="d-flex justify-center mt-2">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="@(() => showAll = !showAll)"
+                       EndIcon="@(showAll ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)">
+                @(showAll ? Locale["ShowLess"] : string.Format(Locale["ShowAllPartners"], Partners.Count))
+            </MudButton>
+        </div>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired] public List<PartnerEntry> Partners { get; set; } = null!;
+
+    [Inject] private IStringLocalizer<StatisticsLocale> Locale { get; set; } = null!;
+
+    private const int CollapsedCount = 5;
+
+    private List<(PartnerEntry Partner, int Place)> podium = [];
+    private List<PartnerEntry> others = [];
+    private bool showAll;
+
+    protected override void OnParametersSet()
+    {
+        var top = Partners.Take(3).Select((p, i) => (p, i + 1)).ToList();
+
+        // Classic podium order: 2nd, 1st, 3rd
+        podium = top.OrderBy(t => t.Item2 switch { 2 => 0, 1 => 1, _ => 2 }).ToList();
+        others = Partners.Skip(3).ToList();
+    }
+}

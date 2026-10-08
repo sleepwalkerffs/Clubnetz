@@ -1,0 +1,46 @@
+.member-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.member-edit__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.member-edit__name {
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.member-edit__meta {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+    overflow-wrap: anywhere;
+}
+
+.member-edit__title {
+    margin: 0 0 4px;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.member-edit__hint {
+    margin: 0 0 10px;
+    font-size: 0.78rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.member-edit__section--inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.member-edit__section--inline .member-edit__hint {
+    margin-bottom: 0;
+}

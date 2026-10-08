@@ -1,0 +1,169 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubShell
+@using Bookennis.Client.Services.Store.Badges
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.MemberBadges
+@using Bookennis.Shared.Controller.OneTimeBadges
+@using Microsoft.Extensions.Localization
+
+<BaseDialog Title="@SharedLocale["BadgeSettings"]"
+            Loading="@BadgesStore.IsSaving"
+            SubmitFunc="Submit"
+            SubmitCaption="@SharedLocale["Save"]"
+            CancelFunc="Cancel"
+            CancelCaption="@SharedLocale["Cancel"]">
+    <div class="mud-width-full d-flex flex-column gap-4">
+        <MudSelect Variant="Variant.Outlined" T="int?" Label="@ClubLocale["Season"]" Value="@selectedSeasonId" ValueChanged="OnSeasonChanged">
+            @foreach (var season in Seasons)
+            {
+                <MudSelectItem T="int?" Value="@((int?)season.SeasonId)">
+                    @ClubLocale["Season"] @season.SeasonFrom.Year
+                </MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect Variant="Variant.Outlined" T="BadgeOption?" Label="@SharedLocale["DisplayBadge"]" Value="@selectedOption" ValueChanged="OnOptionChanged">
+            <MudSelectItem T="BadgeOption?" Value="@((BadgeOption?)null)">@SharedLocale["NoBadgeSelected"]</MudSelectItem>
+            @foreach (var badge in TierBadgesForSelectedSeason)
+            {
+                <MudSelectItem T="BadgeOption?" Value="@((BadgeOption?)new BadgeOption(badge.MemberBadgeId, false))">@BadgeDisplayText(badge)</MudSelectItem>
+            }
+            @foreach (var badge in OneTimeBadgesForSelectedSeason)
+            {
+                <MudSelectItem T="BadgeOption?" Value="@((BadgeOption?)new BadgeOption(badge.MemberOneTimeBadgeId, true))">@badge.Name</MudSelectItem>
+            }
+        </MudSelect>
+
+        <div class="d-flex flex-column gap-2">
+            <MudText Typo="Typo.subtitle2">@SharedLocale["TrophyCaseVisibility"]</MudText>
+            <MudSwitch T="bool"
+                       @bind-Value="trophyCasePublic"
+                       Label="@SharedLocale["TrophyCasePublicLabel"]"
+                       Color="Color.Primary" />
+        </div>
+    </div>
+</BaseDialog>
+
+@code {
+    private record struct BadgeOption(int Id, bool IsOneTime);
+
+    [Parameter]
+    public int MemberId { get; set; }
+
+    [Parameter]
+    public List<EarnedBadgeDto> EarnedBadges { get; set; } = [];
+
+    [Parameter]
+    public List<OneTimeBadgeAwardDto> OneTimeBadges { get; set; } = [];
+
+    [Parameter]
+    public int? CurrentDisplayBadgeId { get; set; }
+
+    [Parameter]
+    public int? CurrentDisplayOneTimeBadgeId { get; set; }
+
+    [Parameter]
+    public bool TrophyCasePublic { get; set; }
+
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Inject]
+    private IBadgesStore BadgesStore { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<ClubShellLocale> ClubLocale { get; set; } = null!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private BadgeOption? selectedOption;
+    private bool trophyCasePublic;
+    private int? selectedSeasonId;
+
+    private record SeasonOption(int SeasonId, DateOnly SeasonFrom);
+
+    private List<SeasonOption> Seasons => EarnedBadges
+        .Select(b => new { b.SeasonId, b.SeasonFrom })
+        .Concat(OneTimeBadges.Select(b => new { b.SeasonId, b.SeasonFrom }))
+        .GroupBy(b => new { b.SeasonId, b.SeasonFrom })
+        .Select(g => new SeasonOption(g.Key.SeasonId, g.Key.SeasonFrom))
+        .OrderByDescending(s => s.SeasonFrom)
+        .ToList();
+
+    private List<EarnedBadgeDto> TierBadgesForSelectedSeason => selectedSeasonId.HasValue
+        ? EarnedBadges.Where(b => b.SeasonId == selectedSeasonId.Value).ToList()
+        : EarnedBadges;
+
+    private List<OneTimeBadgeAwardDto> OneTimeBadgesForSelectedSeason => selectedSeasonId.HasValue
+        ? OneTimeBadges.Where(b => b.SeasonId == selectedSeasonId.Value).ToList()
+        : OneTimeBadges;
+
+    protected override void OnInitialized()
+    {
+        trophyCasePublic = TrophyCasePublic;
+
+        if (CurrentDisplayBadgeId.HasValue)
+        {
+            selectedOption = new BadgeOption(CurrentDisplayBadgeId.Value, false);
+            var currentBadge = EarnedBadges.FirstOrDefault(b => b.MemberBadgeId == CurrentDisplayBadgeId);
+            selectedSeasonId = currentBadge?.SeasonId ?? Seasons.FirstOrDefault()?.SeasonId;
+        }
+        else if (CurrentDisplayOneTimeBadgeId.HasValue)
+        {
+            selectedOption = new BadgeOption(CurrentDisplayOneTimeBadgeId.Value, true);
+            var currentBadge = OneTimeBadges.FirstOrDefault(b => b.MemberOneTimeBadgeId == CurrentDisplayOneTimeBadgeId);
+            selectedSeasonId = currentBadge?.SeasonId ?? Seasons.FirstOrDefault()?.SeasonId;
+        }
+        else
+        {
+            selectedSeasonId = Seasons.FirstOrDefault()?.SeasonId;
+        }
+    }
+
+    private void OnSeasonChanged(int? newSeasonId)
+    {
+        selectedSeasonId = newSeasonId;
+        // Clear badge selection if it no longer belongs to the new season
+        var stillValid = selectedOption is { IsOneTime: false } t && TierBadgesForSelectedSeason.Any(b => b.MemberBadgeId == t.Id)
+            || selectedOption is { IsOneTime: true } o && OneTimeBadgesForSelectedSeason.Any(b => b.MemberOneTimeBadgeId == o.Id);
+        if (!stillValid)
+            selectedOption = null;
+    }
+
+    private void OnOptionChanged(BadgeOption? option) => selectedOption = option;
+
+    private async Task<DialogResult?> Submit()
+    {
+        var result = await BadgesStore.UpdateBadgeSettings(MemberId, new UpdateMemberBadgeSettingsModel
+        {
+            DisplayBadgeId = selectedOption is { IsOneTime: false } t ? t.Id : null,
+            DisplayOneTimeBadgeId = selectedOption is { IsOneTime: true } o ? o.Id : null,
+            TrophyCasePublic = trophyCasePublic
+        });
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+        return null;
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+
+    private string BadgeDisplayText(EarnedBadgeDto badge) => $"{badge.Name} ({SharedLocale["Level"]} {badge.Level})";
+}

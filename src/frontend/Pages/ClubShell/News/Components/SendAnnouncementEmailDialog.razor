@@ -1,0 +1,78 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.News
+@using Bookennis.Client.Services.Store.ClubAnnouncements
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.ClubAnnouncements
+@using Bookennis.Shared.Controller.Shared
+
+<BaseDialog Title="@Locale["SendAsEmail"]" CanSubmit="@CanSubmit" Loading="@isSending" SubmitFunc="Submit" SubmitCaption="@SubmitCaption"
+            CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]">
+    <div class="mud-width-full d-flex flex-column gap-3">
+        <div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Locale["EmailDialogAnnouncement"]</MudText>
+            <MudText Typo="Typo.subtitle1" Style="font-weight: 700; overflow-wrap: anywhere;">@Announcement.Title</MudText>
+        </div>
+
+        @if (Announcement.EmailSentAt is { } sentAt)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true">
+                @string.Format(Locale["AlreadySentWarning"], NewsHelpers.FormatDateTime(Locale, sentAt), Announcement.EmailRecipientCount ?? 0)
+            </MudAlert>
+        }
+
+        <AudiencePicker @bind-Audience="audience" @bind-Roles="roles" @bind-RecipientCount="recipientCount" Disabled="@isSending" />
+
+        @if (Announcement.Attachments.Count > 0)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                📎 @NewsHelpers.Count(Locale, "EmailIncludesAttachments", Announcement.Attachments.Count)
+            </MudText>
+        }
+
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@Locale["EmailDialogHint"]</MudText>
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter, EditorRequired] public ClubAnnouncementDto Announcement { get; set; } = null!;
+
+    [Inject] private IClubAnnouncementsStore Store { get; set; } = null!;
+    [Inject] private IStringLocalizer<NewsLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private ClubAnnouncementAudience audience = ClubAnnouncementAudience.AllMembers;
+    private IReadOnlyCollection<MemberRole> roles = [];
+    private int? recipientCount;
+    private bool isSending;
+
+    private bool CanSubmit => recipientCount > 0 && !isSending;
+
+    private string SubmitCaption => recipientCount is > 0 ? NewsHelpers.Count(Locale, "SendToRecipients", recipientCount.Value) : Locale["Send"];
+
+    private async Task<DialogResult?> Submit()
+    {
+        isSending = true;
+        var result = await Store.SendEmail(Announcement.Id, new SendClubAnnouncementEmailModel { Audience = audience, Roles = [.. roles] });
+        isSending = false;
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        MudDialog.Close(DialogResult.Ok(Store.Announcement?.EmailRecipientCount ?? recipientCount ?? 0));
+        return null;
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

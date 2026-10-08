@@ -1,0 +1,143 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Components.Family
+@using Bookennis.Client.Localization.Pages.Account
+@using Bookennis.Client.Services.Store.Family
+@using Bookennis.Shared.Controller.Families
+@using System.ComponentModel.DataAnnotations
+@using Bookennis.Shared.Controller.Shared
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption=@SharedLocale["Add"] CancelFunc="Cancel" CancelCaption=@SharedLocale["Cancel"] AllowFullScreen="false">
+    @if (!FamilyStore.IsLoading)
+    {
+        @if (FamilyStore.AvailableFamilyMembers.Count != 0)
+        {
+            <div class="d-flex flex-row gap-4 align-center">
+                <MudText Class="">@FamilySharedLocale["SelectMembers"]</MudText>
+                <MudSwitch T="bool" @bind-Value="selection"/>
+            </div>
+        }
+
+        @if (selection)
+        {
+            @if (FamilyStore.AvailableFamilyMembers.Count == 0)
+            {
+                <span>@FamilySharedLocale["NoMember"]</span>
+            }
+            else
+            {
+                <MudSelect T="FamilyMemberDto"
+                           Label=@SharedLocale["Select"]
+                           AnchorOrigin="Origin.CenterCenter"
+                           MultiSelection="true"
+                           ToStringFunc="@((value) => $"{value?.FirstName} {value?.LastName}".Trim())"
+                           @bind-SelectedValues="@selectedMembers">
+
+                    @foreach (var member in FamilyStore.AvailableFamilyMembers)
+                    {
+                        <MudSelectItem Tag="@member.MemberId" Value="@member"/>
+                    }
+                </MudSelect>
+            }
+        }
+        else
+        {
+            <MudForm @ref="mudForm">
+                <div class="d-flex gap-2 flex-column">
+                    <MudSelect T="int" Label=@SharedLocale["Gender"] Variant="Variant.Outlined" @bind-Value="formModel.Gender" For="@(() => formModel.Gender)">
+                        <MudSelectItem T="int" Value="0">@SharedLocale["Mr"].</MudSelectItem>
+                        <MudSelectItem T="int" Value="1">@SharedLocale["Mrs"].</MudSelectItem>
+                        <MudSelectItem T="int" Value="2">@SharedLocale["None"]</MudSelectItem>
+                    </MudSelect>
+                    <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Firstname"] @bind-Value="formModel.FirstName" For="@(() => formModel.FirstName)" Required="true"/>
+                    <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Lastname"] @bind-Value="formModel.LastName" For="@(() => formModel.LastName)" Required="true"/>
+                    <MudDatePicker Variant="Variant.Outlined" Label=@SharedLocale["Birthday"] @bind-Date="formModel.Birthday" For="@(() => formModel.Birthday)" DateFormat="dd.MM.yyyy" Required="true" PickerVariant="PickerVariant.Dialog" />
+                </div>
+            </MudForm>
+        }
+    }
+</BaseDialog>
+
+@code {
+    [Parameter]
+    public int MemberId { get; set; }
+
+    [Inject]
+    private IFamilyStore FamilyStore { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<FamilySharedLocale> FamilySharedLocale { get; set; } = null!;
+
+    private bool selection;
+    private MemberModel formModel = new();
+    private MudForm mudForm = null!;
+    private IEnumerable<FamilyMemberDto> selectedMembers = new List<FamilyMemberDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        await FamilyStore.LoadAvailableFamilyMembers(MemberId);
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (selection)
+        {
+            if (!selectedMembers.Any())
+                return null;
+
+            if (FamilyStore.Family is null)
+            {
+                await FamilyStore.CreateFamily(new CreateFamilyRequest
+                {
+                    ParentContractUserIds = [MemberId],
+                    ChildrenUserContractIds = selectedMembers.Select(i => i.MemberId).ToList()
+                });
+            }
+            else
+            {
+                await FamilyStore.AddChildren(selectedMembers.Select(i => i.MemberId).ToList());
+            }
+        }
+        else
+        {
+            await mudForm.Validate();
+            if (!mudForm.IsValid)
+                return null;
+
+            if (FamilyStore.Family is null)
+            {
+                await FamilyStore.CreateFamily(new CreateFamilyRequest
+                {
+                    ParentContractUserIds = new List<int> { MemberId },
+                    NewChildUsers = new List<AddNewChildRequest> { new(formModel.FirstName, formModel.LastName, DateOnly.FromDateTime(formModel.Birthday!.Value), (Gender)formModel.Gender) }
+                });
+            }
+            else
+            {
+                await FamilyStore.AddNewChild(new AddNewChildRequest(formModel.FirstName, formModel.LastName, DateOnly.FromDateTime(formModel.Birthday!.Value), (Gender)formModel.Gender));
+            }
+        }
+
+
+        return DialogResult.Ok((object?)null);
+    }
+
+    private Task<DialogResult> Cancel() => Task.FromResult(DialogResult.Cancel());
+
+    public class MemberModel
+    {
+        public int Gender { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "FirstnameValidation")]
+        public string FirstName { get; set; } = null!;
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "LastnameValidation")]
+        public string LastName { get; set; } = null!;
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "BirthdayValidation")]
+        public DateTime? Birthday { get; set; } = DateTime.Now.AddYears(-6);
+    }
+}

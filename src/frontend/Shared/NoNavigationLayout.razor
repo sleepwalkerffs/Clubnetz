@@ -1,0 +1,15 @@
+@inherits LayoutComponentBase
+@using Bookennis.Client.Components.Shared
+@layout BaseLayout
+
+<MudAppBar Elevation="0" Class="bookennis-appbar">
+    <MudIcon Icon="@Icons.Material.Filled.SportsTennis" Class="mr-2" Style="color: inherit;" />
+    <MudText Typo="Typo.h1" Style="color: inherit;">Clubnetz</MudText>
+    <MudSpacer />
+    <ThemeToggle />
+</MudAppBar>
+<MudMainContent Class="bookennis-main-content">
+    <div class="pa-4 pa-sm-6">
+        @Body
+    </div>
+</MudMainContent>

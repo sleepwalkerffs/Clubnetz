@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Leaderboard" xml:space="preserve">
+    <value>Leaderboard</value>
+  </data>
+  <data name="AllTime" xml:space="preserve">
+    <value>All Time</value>
+  </data>
+  <data name="Season" xml:space="preserve">
+    <value>Season</value>
+  </data>
+  <data name="Rank" xml:space="preserve">
+    <value>Rank</value>
+  </data>
+  <data name="Player" xml:space="preserve">
+    <value>Player</value>
+  </data>
+  <data name="TotalHours" xml:space="preserve">
+    <value>Total Hours</value>
+  </data>
+  <data name="Hours" xml:space="preserve">
+    <value>hours</value>
+  </data>
+  <data name="NoDataAvailable" xml:space="preserve">
+    <value>No leaderboard data available for this period.</value>
+  </data>
+  <data name="OptOutLabel" xml:space="preserve">
+    <value>Opt out of this season's leaderboard</value>
+  </data>
+  <data name="OptedOutInfo" xml:space="preserve">
+    <value>You have opted out of this season's leaderboard. Your playing time will not be counted.</value>
+  </data>
+  <data name="YourRank" xml:space="preserve">
+    <value>Your Rank</value>
+  </data>
+  <data name="NotRanked" xml:space="preserve">
+    <value>Not ranked</value>
+  </data>
+  <data name="TopPlayers" xml:space="preserve">
+    <value>Top Players</value>
+  </data>
+  <data name="Place1" xml:space="preserve">
+    <value>1st</value>
+  </data>
+  <data name="Place2" xml:space="preserve">
+    <value>2nd</value>
+  </data>
+  <data name="Place3" xml:space="preserve">
+    <value>3rd</value>
+  </data>
+  <data name="SeasonTitle" xml:space="preserve">
+    <value>Season {0}</value>
+  </data>
+  <data name="OfPlayers" xml:space="preserve">
+    <value>of {0} players</value>
+  </data>
+  <data name="HoursAndMatches" xml:space="preserve">
+    <value>{0} h on court · {1} matches</value>
+  </data>
+  <data name="NewThisWeek" xml:space="preserve">
+    <value>New on the leaderboard this week</value>
+  </data>
+  <data name="MovedUp" xml:space="preserve">
+    <value>{0} places up this week</value>
+  </data>
+  <data name="MovedDown" xml:space="preserve">
+    <value>{0} places down this week</value>
+  </data>
+  <data name="NoMovement" xml:space="preserve">
+    <value>Same place as last week</value>
+  </data>
+  <data name="NumberOne" xml:space="preserve">
+    <value>You're number one!</value>
+  </data>
+  <data name="TiedWithNext" xml:space="preserve">
+    <value>Tied with #{0}</value>
+  </data>
+  <data name="HoursToNext" xml:space="preserve">
+    <value>{0} h to #{1}</value>
+  </data>
+  <data name="HiddenTitle" xml:space="preserve">
+    <value>You're hidden this season</value>
+  </data>
+  <data name="NotRankedTitle" xml:space="preserve">
+    <value>Not ranked yet</value>
+  </data>
+  <data name="NotRankedText" xml:space="preserve">
+    <value>Play your first match to enter the leaderboard.</value>
+  </data>
+  <data name="Leader" xml:space="preserve">
+    <value>Leader</value>
+  </data>
+  <data name="HoursUnit" xml:space="preserve">
+    <value>h</value>
+  </data>
+  <data name="You" xml:space="preserve">
+    <value>You</value>
+  </data>
+  <data name="PlayersTile" xml:space="preserve">
+    <value>Players ranked</value>
+  </data>
+  <data name="HoursTile" xml:space="preserve">
+    <value>Hours played</value>
+  </data>
+  <data name="MatchesTile" xml:space="preserve">
+    <value>Matches played</value>
+  </data>
+  <data name="AverageTile" xml:space="preserve">
+    <value>Average per player</value>
+  </data>
+  <data name="EmptyTitle" xml:space="preserve">
+    <value>The race has not started yet</value>
+  </data>
+  <data name="TopPlayersSubtitle" xml:space="preserve">
+    <value>The most hours on court</value>
+  </data>
+  <data name="Ranking" xml:space="preserve">
+    <value>Ranking</value>
+  </data>
+  <data name="RankingSubtitle" xml:space="preserve">
+    <value>Top {0} by hours on court, arrows show the change since last week</value>
+  </data>
+  <data name="Privacy" xml:space="preserve">
+    <value>Privacy</value>
+  </data>
+  <data name="PrivacySubtitle" xml:space="preserve">
+    <value>Decide whether you appear in this season's leaderboard</value>
+  </data>
+  <data name="MatchesCount" xml:space="preserve">
+    <value>{0} matches</value>
+  </data>
+  <data name="NewEntry" xml:space="preserve">
+    <value>NEW</value>
+  </data>
+  <data name="OneMatch" xml:space="preserve">
+    <value>1 match</value>
+  </data>
+  <data name="HoursAndOneMatch" xml:space="preserve">
+    <value>{0} h on court · 1 match</value>
+  </data>
+</root>

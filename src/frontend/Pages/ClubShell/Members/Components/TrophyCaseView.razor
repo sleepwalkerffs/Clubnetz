@@ -1,0 +1,133 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Trophies
+@using Bookennis.Client.Services.Store.Badges
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Members
+
+@implements IDisposable
+
+@if (!loaded)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else if (member is null || trophyCase is null)
+{
+    <div class="trophy-state">
+        <div class="trophy-state__emoji" aria-hidden="true">🤷</div>
+        <div class="trophy-state__title">@Locale["NotFound"]</div>
+    </div>
+}
+else
+{
+    var isVisible = trophyCase.IsPublic || trophyCase.IsOwnProfile;
+    var summary = isVisible ? TrophySummary.From(trophyCase) : null;
+
+    <div class="trophy-view">
+        <ProfileHero FirstName="@member.FirstName"
+                     LastName="@member.LastName"
+                     Eyebrow="@Eyebrow"
+                     ProfilePictureUrl="@trophyCase.ProfilePictureUrl"
+                     DisplayBadgeImageUrl="@trophyCase.DisplayBadgeImageUrl"
+                     DisplayBadgeLevel="@trophyCase.DisplayBadgeLevel"
+                     IsOwnProfile="@trophyCase.IsOwnProfile"
+                     IsPublic="@trophyCase.IsPublic"
+                     Summary="@summary">
+            <Actions>
+                @if (trophyCase.IsOwnProfile)
+                {
+                    <MudButton Href="/account/profile" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit" Class="profile-action">
+                        @Locale["EditProfile"]
+                    </MudButton>
+                    <MudButton Href="@($"/clubs/{ClubId}/my-club")" Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.Settings" Class="profile-action profile-action--outlined">
+                        @Locale["BadgeSettingsLink"]
+                    </MudButton>
+                }
+            </Actions>
+        </ProfileHero>
+
+        @if (summary is { IsEmpty: false })
+        {
+            <MudGrid Spacing="3">
+                <MudItem xs="6" md="3">
+                    <StatTile Icon="@Icons.Material.Filled.MilitaryTech" Color="#D97706" Value="@summary.TotalBadges.ToString()" Label="@Locale["BadgesTile"]" />
+                </MudItem>
+                <MudItem xs="6" md="3">
+                    <StatTile Icon="@Icons.Material.Filled.AutoAwesome" Color="#EC4899" Value="@summary.SpecialAwards.ToString()" Label="@Locale["SpecialAwardsTile"]" />
+                </MudItem>
+                <MudItem xs="6" md="3">
+                    <StatTile Icon="@Icons.Material.Filled.CalendarMonth" Color="#6366F1" Value="@summary.Seasons.ToString()" Label="@Locale["SeasonsTile"]" />
+                </MudItem>
+                <MudItem xs="6" md="3">
+                    <StatTile Icon="@Icons.Material.Filled.TrendingUp" Color="#059669"
+                              Value="@(summary.HighestLevel?.ToString(CultureInfo.CurrentCulture) ?? "–")" Label="@Locale["HighestLevelTile"]" />
+                </MudItem>
+            </MudGrid>
+        }
+
+        @if (!isVisible)
+        {
+            <div class="trophy-state">
+                <div class="trophy-state__emoji" aria-hidden="true">🔒</div>
+                <div class="trophy-state__title">@Locale["PrivateTitle"]</div>
+                <div class="trophy-state__text">@string.Format(Locale["PrivateText"], member.FirstName)</div>
+            </div>
+        }
+        else if (summary!.IsEmpty)
+        {
+            <div class="trophy-state">
+                <div class="trophy-state__emoji" aria-hidden="true">🏆</div>
+                <div class="trophy-state__title">@Locale["EmptyTitle"]</div>
+                <div class="trophy-state__text">@(trophyCase.IsOwnProfile ? Locale["EmptyOwnText"] : SharedLocale["TrophyCaseEmpty"])</div>
+            </div>
+        }
+        else
+        {
+            <SectionCard Emoji="🏆" Title="@SharedLocale["TrophyCase"]" Subtitle="@Locale["TrophyCaseSubtitle"]">
+                <TrophyShowcase TrophyCase="@trophyCase" />
+            </SectionCard>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+    [Parameter, EditorRequired] public int MemberId { get; set; }
+    [Parameter, EditorRequired] public string Eyebrow { get; set; } = null!;
+
+    [Inject] private IMembersStore MembersStore { get; set; } = null!;
+    [Inject] private IBadgesStore BadgesStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<TrophyLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private Bookennis.Shared.Controller.Members.MembersDetailResult? member;
+    private Bookennis.Shared.Controller.MemberBadges.GetTrophyCaseResult? trophyCase;
+    private int loadedMemberId;
+    private bool loaded;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (loadedMemberId == MemberId)
+            return;
+
+        loadedMemberId = MemberId;
+        loaded = false;
+        member = null;
+        trophyCase = null;
+
+        await Task.WhenAll(MembersStore.LoadMember(MemberId), BadgesStore.LoadTrophyCase(MemberId));
+
+        // Both stores hold shared state, keep a copy so other pages loading data don't change this view
+        member = MembersStore.MemberDetail?.MemberId == MemberId ? MembersStore.MemberDetail : null;
+        trophyCase = BadgesStore.TrophyCase;
+        loaded = true;
+    }
+
+    public void Dispose()
+    {
+        // Other pages expect the member store to hold the signed-in member, not the one viewed here
+        if (MembersStore.MemberDetail?.MemberId == MemberId)
+            MembersStore.ResetMember();
+    }
+}

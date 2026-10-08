@@ -1,0 +1,66 @@
+.season-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.season-edit__suggestion {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px dashed #059669;
+    background: color-mix(in srgb, #059669 6%, var(--mud-palette-surface));
+    color: inherit;
+    font: inherit;
+    font-size: 1.2rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.season-edit__suggestion:hover {
+    background: color-mix(in srgb, #059669 12%, var(--mud-palette-surface));
+}
+
+.season-edit__suggestion-title {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.season-edit__suggestion-text {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.season-edit__summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.season-edit__summary > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 6px;
+    border-radius: 12px;
+    background: var(--mud-palette-background-gray);
+}
+
+.season-edit__value {
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.season-edit__unit {
+    font-size: 0.72rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.season-edit__hint {
+    font-size: 0.78rem;
+    color: var(--mud-palette-text-secondary);
+}

@@ -1,0 +1,35 @@
+.text-steel-80 {
+    color: var(--mud-palette-gray-darker) !important;
+}
+
+.text-steel-70 {
+    color: var(--mud-palette-gray-dark) !important;
+}
+
+.text-steel-50 {
+    color: var(--mud-palette-gray-default) !important;
+}
+
+.text-steel-30 {
+    color: var(--mud-palette-gray-light) !important;
+}
+
+.text-steel-20 {
+    color: var(--mud-palette-gray-lighter) !important;
+}
+
+.section-header {
+    font-weight: 700;
+    color: var(--mud-palette-text-primary);
+    margin-bottom: 4px;
+}
+
+.section-subtitle {
+    color: var(--mud-palette-text-secondary);
+    font-size: 13px;
+}
+
+.accent-border-left {
+    border-left: 3px solid var(--mud-palette-primary);
+    padding-left: 12px;
+}

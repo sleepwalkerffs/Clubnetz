@@ -1,0 +1,14 @@
+.bookennis-appbar {
+    background: linear-gradient(135deg, #064E3B 0%, #047857 50%, #059669 100%) !important;
+    border-bottom: none !important;
+    box-shadow: 0 4px 20px rgba(5, 150, 105, 0.25) !important;
+}
+
+.bookennis-appbar .mud-icon-button {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.bookennis-appbar .mud-icon-button:hover {
+    color: #FFFFFF !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}

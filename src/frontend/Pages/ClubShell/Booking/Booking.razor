@@ -1,0 +1,361 @@
+@page "/clubs/{ClubId:int}/booking"
+@using System.Globalization
+@using Bookennis.Client.Components.Booking
+@using Bookennis.Client.Localization.Components.Booking
+@using Bookennis.Client.Pages.ClubShell.Club.Components
+@using Bookennis.Client.Services.Store.Bookings
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.CourtBlockings
+@using Bookennis.Client.Services.Store.Family
+@using Bookennis.Client.Services.Store.Members
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.CourtBlockings
+
+<PageTitle>@Locale["Book"]</PageTitle>
+
+@if (!loaded)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else
+{
+    var dayBookings = BookingsOn(SelectedDate);
+    var ownBookings = dayBookings.Where(IsOwnBooking).OrderBy(b => b.Interval.From).ToList();
+    var dayBlockings = BlockingsOn(SelectedDate);
+
+    <div class="booking-page">
+        <MudSwipeArea OnSwipeEnd="@OnSwiped" Class="booking-toolbar">
+            <div class="booking-toolbar__date">
+                <div class="booking-toolbar__eyebrow">@RelativeDayLabel(SelectedDate)</div>
+                <h1 class="booking-toolbar__title">@SelectedDate.ToString("dddd, d. MMMM", CultureInfo.CurrentCulture)</h1>
+                <div class="booking-toolbar__chips">
+                    <span class="toolbar-chip">
+                        🎾 @(dayBookings.Count == 0 ? Locale["NoBookingsOnDay"] : string.Format(Locale["BookingsCount"], dayBookings.Count))
+                    </span>
+                    @if (ownBookings.FirstOrDefault() is { } ownBooking)
+                    {
+                        <span class="toolbar-chip toolbar-chip--mine">★ @string.Format(Locale["YourMatchAt"], ownBooking.Interval.From.ToString("HH:mm"))</span>
+                    }
+                    @if (SelectedDate == Today && FreeCourtsNow is { } freeCourts)
+                    {
+                        <span class="toolbar-chip toolbar-chip--free">🟢 @string.Format(Locale["CourtsFreeNow"], freeCourts, Courts.Count)</span>
+                    }
+                    @foreach (var blockingTitle in dayBlockings.Select(b => b.Title).Distinct().Take(2))
+                    {
+                        <span class="toolbar-chip toolbar-chip--blocked">🔒 @blockingTitle</span>
+                    }
+                </div>
+            </div>
+
+            <div class="booking-toolbar__actions">
+                <div class="booking-toolbar__nav">
+                    <MudTooltip Text="@Locale["PreviousDay"]">
+                        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small" OnClick="@(() => SelectDate(SelectedDate.AddDays(-1)))" aria-label="@Locale["PreviousDay"]" />
+                    </MudTooltip>
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary" OnClick="@(() => SelectDate(Today))"
+                               Disabled="@(SelectedDate == Today)" Class="booking-toolbar__today">
+                        @Locale["Today"]
+                    </MudButton>
+                    <MudTooltip Text="@Locale["NextDay"]">
+                        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" OnClick="@(() => SelectDate(SelectedDate.AddDays(1)))" aria-label="@Locale["NextDay"]" />
+                    </MudTooltip>
+                    <MudDatePicker Date="@SelectedDate.ToDateTime(TimeOnly.MinValue)" DateChanged="OnDatePicked"
+                                   PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                   Label="@Locale["GoToDate"]" DateFormat="dd.MM.yy" Class="booking-toolbar__picker" />
+                    @if (CanManageBlockings)
+                    {
+                        <MudTooltip Text="@Locale["ManageCourtBlockings"]">
+                            <MudIconButton Icon="@Icons.Material.Filled.Lock" Size="Size.Small" Href="@CourtBlockingHelpers.Url(ClubProfileStore.SelectedClubId)"
+                                           aria-label="@Locale["ManageCourtBlockings"]" />
+                        </MudTooltip>
+                    }
+                </div>
+                <MudHidden Breakpoint="Breakpoint.Xs">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                               Disabled="@(!CanBook)" OnClick="@(() => dayView!.OpenBookDialog())">
+                        @Locale["Book"]
+                    </MudButton>
+                </MudHidden>
+            </div>
+        </MudSwipeArea>
+
+        <div class="day-strip">
+            <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft" Size="Size.Small" OnClick="@(() => ShiftRange(-1))"
+                           aria-label="@Locale["PreviousWeek"]" Class="day-strip__shift" />
+            <div class="day-strip__days">
+                @for (var date = Start; date <= End; date = date.AddDays(1))
+                {
+                    var day = date;
+                    var count = BookingsOn(day).Count;
+                    var hasOwn = BookingsOn(day).Any(IsOwnBooking);
+                    var hasBlocking = Blockings.Any(b => b.IsOn(day));
+                    <button type="button"
+                            class="day-pill @(day == SelectedDate ? "day-pill--selected" : null) @(day == Today ? "day-pill--today" : null) @(day < Today ? "day-pill--past" : null)"
+                            aria-pressed="@(day == SelectedDate ? "true" : "false")"
+                            @onclick="() => SelectDate(day)">
+                        <span class="day-pill__weekday">@day.ToString("ddd", CultureInfo.CurrentCulture)</span>
+                        <span class="day-pill__day">@day.Day</span>
+                        <span class="day-pill__dots">
+                            @if (hasOwn)
+                            {
+                                <span class="day-pill__dot day-pill__dot--mine" title="@Locale["YourBooking"]"></span>
+                            }
+                            @if (hasBlocking)
+                            {
+                                <span class="day-pill__dot day-pill__dot--blocked" title="@Locale["CourtBlocking"]"></span>
+                            }
+                            @if (count > 0)
+                            {
+                                <span class="day-pill__count">@count</span>
+                            }
+                        </span>
+                    </button>
+                }
+            </div>
+            <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight" Size="Size.Small" OnClick="@(() => ShiftRange(1))"
+                           aria-label="@Locale["NextWeek"]" Class="day-strip__shift" />
+        </div>
+
+        @if (dayBookings.Count > 0 || dayBlockings.Count > 0 || ClubStore.ClubDetails.PrimeTimeSettings.IsEnabled)
+        {
+            <div class="booking-legend">
+                @foreach (var playMode in dayBookings.Select(b => b.PlayMode).DistinctBy(p => p.Id).OrderBy(p => p.Name))
+                {
+                    <span class="booking-legend__item"><span class="booking-legend__swatch" style="background: @BookingColors.ToHex(playMode.Color)"></span>@playMode.Name</span>
+                }
+                @if (ownBookings.Count > 0)
+                {
+                    <span class="booking-legend__item"><span class="booking-legend__swatch booking-legend__swatch--mine"></span>@Locale["YourBooking"]</span>
+                }
+                @if (ClubStore.ClubDetails.PrimeTimeSettings.IsEnabled && ClubStore.ClubDetails.PrimeTimeSettings.ApplicableWeekdays.Contains(SelectedDate.DayOfWeek))
+                {
+                    <span class="booking-legend__item"><span class="booking-legend__swatch booking-legend__swatch--prime"></span>@Locale["PrimeTime"]</span>
+                }
+                @if (dayBlockings.Count > 0)
+                {
+                    <span class="booking-legend__item"><span class="booking-legend__swatch booking-legend__swatch--blocked"></span>@Locale["CourtBlocking"]</span>
+                }
+            </div>
+        }
+
+        <div class="booking-grid">
+            @if (BookingStore.IsLoading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="booking-grid__loading" />
+            }
+            <Day @ref="dayView"
+                 Date="@SelectedDate"
+                 Courts="@Courts"
+                 ClubInformation="ClubStore.ClubDetails"
+                 Bookings="@Bookings"
+                 Blockings="@Blockings"
+                 Players="@Players"
+                 MemberId="@MemberId"
+                 ClubId="@ClubProfileStore.SelectedClubId"
+                 CanBook="@CanBook"
+                 IsBookingOnlyForChildren="@(ClubProfileStore.BookingOptions?.IsBookingOnlyForChildren ?? false)"
+                 EligibleChildMemberIds="@(ClubProfileStore.BookingOptions?.EligibleChildMemberIds ?? [])"
+                 MemberChildren="@MemberChildren"
+                 PlayModes="@AllowedPlaymodes"
+                 OnBooked="@(() => ReloadBookings())" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int ClubId { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public DateOnly Start { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public DateOnly End { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddDays(6));
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "Day")]
+    public DateOnly? SelectedDay { get; set; }
+
+    [Inject]
+    private IBookingStore BookingStore { get; set; } = null!;
+    [Inject]
+    private ICourtBlockingsStore CourtBlockingsStore { get; set; } = null!;
+    [Inject]
+    private IClubStore ClubStore { get; set; } = null!;
+    [Inject]
+    private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject]
+    private IMembersStore MembersStore { get; set; } = null!;
+    [Inject]
+    private IFamilyStore FamilyStore { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BookingSharedLocale> Locale { get; set; } = null!;
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavManager { get; set; } = null!;
+
+    private List<CourtResult> Courts { get; set; } = [];
+    private List<BookingResult> Bookings { get; set; } = [];
+    private List<CourtBlockingOccurrenceDto> Blockings { get; set; } = [];
+    private List<PlayerResult> Players { get; set; } = [];
+    private List<PlayerResult> MemberChildren { get; set; } = [];
+    private List<PlayModeDto> AllowedPlaymodes { get; set; } = [];
+    private Dictionary<DateOnly, List<BookingResult>> bookingsByDay = [];
+    private DateOnly SelectedDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    private int MemberId { get; set; }
+    private bool loaded;
+    private Day? dayView;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    private bool CanBook => ClubProfileStore.BookingOptions?.IsAllowedToBook ?? false;
+
+    private bool CanManageBlockings => CourtBlockingHelpers.CanManage(ClubProfileStore.Roles);
+
+    private int? FreeCourtsNow
+    {
+        get
+        {
+            var now = DateTimeOffset.Now;
+            var openingHours = ClubStore.ClubDetails.OpeningHours;
+            var time = TimeOnly.FromDateTime(now.DateTime);
+            if (time < openingHours.From || time >= openingHours.To)
+                return null;
+
+            var busyCourts = BookingsOn(Today).Where(b => b.Interval.From <= now && now < b.Interval.To).Select(b => b.CourtId).ToHashSet();
+            var blockedCourts = Blockings.Where(b => b.IsActive(now)).SelectMany(b => b.CourtIds).ToHashSet();
+            return Courts.Count(c => !busyCourts.Contains(c.CourtId) && !blockedCourts.Contains(c.CourtId) && (c.Inactive is null || !(c.Inactive.From <= now && now < c.Inactive.To)));
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Missing query parameters are supplied as default(DateOnly), not the initial values
+        if (Start == default)
+            Start = Today;
+        if (End < Start)
+            End = Start.AddDays(6);
+        SelectedDate = SelectedDay is { } day && day >= Start && day <= End ? day : Start;
+
+        // Bookings do not depend on the other data, so everything is loaded in parallel
+        var loadMember = MembersStore.LoadedMemberId(ClubProfileStore.MemberId) ? Task.CompletedTask : MembersStore.LoadMember(ClubProfileStore.MemberId);
+        await Task.WhenAll(
+            ClubProfileStore.LoadBookingOptions(),
+            ClubStore.LoadCourts(),
+            ClubStore.LoadPlayers(),
+            ClubStore.LoadClubDetails(),
+            ClubStore.LoadPlayModes(),
+            loadMember,
+            LoadBookings());
+
+        if (MembersStore.MemberDetail?.FamilyId is not null && !FamilyStore.LoadedForFamilyId(MembersStore.MemberDetail.FamilyId.Value))
+            await FamilyStore.LoadFamily(MembersStore.MemberDetail.FamilyId.Value);
+
+        Courts = ClubStore.Courts;
+        Players = ClubStore.ClubPlayers.Union(ClubStore.GuestPlayers).ToList();
+        MemberId = ClubProfileStore.MemberId;
+        AllowedPlaymodes = ClubStore.PlayModes.Where(mode => mode.AllowedRoles.Any(ClubProfileStore.Roles.Contains)).ToList();
+        MemberChildren = FamilyStore.Family?.Children.ConvertAll(child => new PlayerResult(child.MemberId, child.FirstName, child.LastName, false)) ?? [];
+
+        loaded = true;
+    }
+
+    private List<BookingResult> BookingsOn(DateOnly date) => bookingsByDay.GetValueOrDefault(date) ?? [];
+
+    private List<CourtBlockingOccurrenceDto> BlockingsOn(DateOnly date) => Blockings.Where(b => b.IsOn(date)).ToList();
+
+    private bool IsOwnBooking(BookingResult booking)
+        => booking.Players.Any(p => p.MemberId == MemberId || MemberChildren.Any(c => c.MemberId == p.MemberId));
+
+    private string RelativeDayLabel(DateOnly date) => (date.DayNumber - Today.DayNumber) switch
+    {
+        0 => Locale["Today"],
+        1 => Locale["Tomorrow"],
+        -1 => Locale["Yesterday"],
+        > 1 and var days => string.Format(Locale["InDays"], days),
+        var days => string.Format(Locale["DaysAgo"], -days),
+    };
+
+    private async Task SelectDate(DateOnly date)
+    {
+        SelectedDate = date;
+
+        // Leaving the loaded range moves it, so neighbouring days are available without another request
+        if (date < Start || date > End)
+        {
+            var length = End.DayNumber - Start.DayNumber;
+            Start = date < Start ? date.AddDays(-length) : date;
+            End = Start.AddDays(length);
+            await ReloadBookings();
+        }
+        else
+        {
+            await UpdateUrl();
+        }
+    }
+
+    private async Task ShiftRange(int direction)
+    {
+        var length = End.DayNumber - Start.DayNumber + 1;
+        Start = Start.AddDays(direction * length);
+        End = End.AddDays(direction * length);
+        SelectedDate = SelectedDate.AddDays(direction * length);
+        await ReloadBookings();
+    }
+
+    private async Task OnDatePicked(DateTime? date)
+    {
+        if (date is null)
+            return;
+
+        var picked = DateOnly.FromDateTime(date.Value);
+        if (picked < Start || picked > End)
+        {
+            // Show the week starting at the picked day
+            var length = End.DayNumber - Start.DayNumber;
+            Start = picked;
+            End = picked.AddDays(length);
+            SelectedDate = picked;
+            await ReloadBookings();
+            return;
+        }
+
+        await SelectDate(picked);
+    }
+
+    private Task OnSwiped(SwipeEventArgs args) => args.SwipeDirection switch
+    {
+        SwipeDirection.LeftToRight => SelectDate(SelectedDate.AddDays(-1)),
+        SwipeDirection.RightToLeft => SelectDate(SelectedDate.AddDays(1)),
+        _ => Task.CompletedTask,
+    };
+
+    private async Task ReloadBookings()
+    {
+        await LoadBookings();
+        await UpdateUrl();
+        StateHasChanged();
+    }
+
+    private async Task LoadBookings()
+    {
+        await Task.WhenAll(
+            BookingStore.LoadBookings(ClubProfileStore.SelectedClubId, Start, End),
+            CourtBlockingsStore.LoadOccurrences(Start, End));
+        Bookings = BookingStore.Bookings;
+        Blockings = CourtBlockingsStore.Occurrences;
+        bookingsByDay = Bookings
+            .GroupBy(b => DateOnly.FromDateTime(b.Interval.From.DateTime))
+            .ToDictionary(g => g.Key, g => g.ToList());
+    }
+
+    private async Task UpdateUrl()
+    {
+        var url = NavManager.BaseUri
+            + $"clubs/{ClubProfileStore.SelectedClubId}/booking?Start={Start.ToString(CultureInfo.InvariantCulture)}&End={End.ToString(CultureInfo.InvariantCulture)}&Day={SelectedDate.ToString(CultureInfo.InvariantCulture)}";
+        await JSRuntime.InvokeVoidAsync("ChangeUrl", url);
+    }
+}

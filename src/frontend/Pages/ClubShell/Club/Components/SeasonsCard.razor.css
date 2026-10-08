@@ -1,0 +1,148 @@
+.seasons__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 20px 8px;
+    text-align: center;
+    color: var(--mud-palette-text-secondary);
+}
+
+.seasons__empty-emoji {
+    font-size: 2rem;
+}
+
+.seasons {
+    position: relative;
+    margin: 0;
+    padding: 0 0 0 26px;
+    list-style: none;
+}
+
+/* Timeline line */
+.seasons::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background: var(--mud-palette-lines-inputs);
+}
+
+.season {
+    position: relative;
+    padding: 4px 0;
+}
+
+.season__marker {
+    position: absolute;
+    left: -24px;
+    top: 20px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid var(--mud-palette-surface);
+    background: #94A3B8;
+    box-shadow: 0 0 0 2px #94A3B8;
+}
+
+.season--active .season__marker {
+    background: #059669;
+    box-shadow: 0 0 0 2px #059669, 0 0 0 7px rgba(5, 150, 105, 0.2);
+}
+
+.season--upcoming .season__marker {
+    background: #0EA5E9;
+    box-shadow: 0 0 0 2px #0EA5E9;
+}
+
+.season__card {
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+}
+
+.season--active .season__card {
+    border-color: #059669;
+    background: color-mix(in srgb, #059669 6%, var(--mud-palette-surface));
+}
+
+.season__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.season__label {
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.season__state {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+    background: rgba(148, 163, 184, 0.2);
+}
+
+.season__state--active {
+    color: var(--bk-dark-green, #047857);
+    background: rgba(5, 150, 105, 0.14);
+}
+
+.season__state--upcoming {
+    color: var(--bk-dark-blue, #0369A1);
+    background: rgba(14, 165, 233, 0.14);
+}
+
+.season__actions {
+    display: flex;
+    margin-left: auto;
+}
+
+.season__dates {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.season__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 14px;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.season__progress {
+    flex: 1 1 100%;
+    height: 6px;
+    margin-top: 4px;
+    border-radius: 3px;
+    background: var(--mud-palette-background-gray);
+    overflow: hidden;
+}
+
+.season__progress span {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #34D399, #059669);
+}
+
+.season-gap {
+    position: relative;
+    padding: 4px 0 4px 4px;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.season-gap--overlap {
+    font-weight: 700;
+    color: var(--bk-dark-red, #B91C1C);
+}

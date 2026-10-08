@@ -1,0 +1,253 @@
+@page "/clubs/{ClubId:int}/statistics"
+@layout ClubWithStoreLayout
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Statistics
+@using Bookennis.Client.Pages.ClubShell.Statistics.Components
+@using Bookennis.Client.Services.Store.Statistics
+@using Bookennis.Shared.Controller.Statistics
+
+@implements IDisposable
+
+<PageTitle>@Locale["Statistics"]</PageTitle>
+
+<PageHeader>
+    <Content>@Locale["Statistics"]</Content>
+</PageHeader>
+
+@if (StatisticsStore.IsLoading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else if (StatisticsStore.Statistics is not null)
+{
+    var statistics = StatisticsStore.Statistics;
+
+    <div class="stats-page">
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2 pa-sm-4" Class="mb-4">
+            <MudTabPanel Text="@Locale["AllTime"]" Icon="@Icons.Material.Filled.AllInclusive">
+                @RenderAllTime(statistics)
+            </MudTabPanel>
+
+            @for (var i = 0; i < statistics.SeasonStatistics.Count; i++)
+            {
+                var season = statistics.SeasonStatistics[i];
+                // Seasons are ordered newest first, the previous season is the next one in the list
+                var previousSeason = statistics.SeasonStatistics.Skip(i + 1).FirstOrDefault(s => s.Data is not null);
+
+                <MudTabPanel Text="@($"{Locale["Season"]} {season.StartDate:yyyy}")">
+                    @RenderSeason(season, previousSeason)
+                </MudTabPanel>
+            }
+        </MudTabs>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int ClubId { get; set; }
+
+    [Inject]
+    private IStatisticsStore StatisticsStore { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<StatisticsLocale> Locale { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        StatisticsStore.OnStatisticsChanged += StateHasChanged;
+        await StatisticsStore.LoadStatistics();
+    }
+
+    private RenderFragment RenderAllTime(GetMemberStatisticsResult statistics) => __builder =>
+    {
+        var data = statistics.AllTime;
+        if (data.TotalBookings == 0)
+        {
+            @RenderEmptyState()
+            return;
+        }
+
+        var seasonsWithData = statistics.SeasonStatistics.Where(s => s.Data is { TotalBookings: > 0 }).ToList();
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12">
+                <StatsHero Data="@data" Title="@Locale["AllTimeHeroTitle"]" ShowSince="true" SeasonsPlayed="@seasonsWithData.Count" />
+            </MudItem>
+
+            @RenderTiles(data)
+
+            @if (seasonsWithData.Count > 1)
+            {
+                <MudItem xs="12">
+                    @RenderCard("📈", Locale["SeasonTrend"], Locale["SeasonTrendSubtitle"], @<SeasonTrend Seasons="@seasonsWithData" />)
+                </MudItem>
+            }
+
+            <MudItem xs="12">
+                @RenderCard("🗓️", Locale["ActivityCalendar"], Locale["LastTwelveMonths"],
+                    @<ActivityCalendar Days="@data.ActivityDays" From="@today.AddYears(-1).AddDays(1)" To="@today" />)
+            </MudItem>
+
+            @RenderRhythmAndRecords(data)
+            @RenderPartnersCourtsAndModes(data)
+        </MudGrid>
+    };
+
+    private RenderFragment RenderSeason(SeasonStatisticsResult season, SeasonStatisticsResult? previousSeason) => __builder =>
+    {
+        if (!season.IsActivated)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
+                @Locale["NotActivatedForSeason"]
+            </MudAlert>
+            return;
+        }
+
+        var data = season.Data;
+
+        <MudGrid Spacing="3">
+            @if (data is { TotalBookings: > 0 })
+            {
+                <MudItem xs="12">
+                    <StatsHero Data="@data"
+                               Title="@string.Format(Locale["SeasonHeroTitle"], season.StartDate.ToString("yyyy"))"
+                               PreviousData="@previousSeason?.Data"
+                               PreviousLabel="@previousSeason?.StartDate.ToString("yyyy")" />
+                </MudItem>
+            }
+
+            @if (season.PlayModeQuotas.Count > 0)
+            {
+                <MudItem xs="12">
+                    @RenderCard("🎟️", Locale["PlayModeQuotas"], null, @<PlayModeQuotaRings Quotas="@season.PlayModeQuotas" />)
+                </MudItem>
+            }
+
+            @if (data is not { TotalBookings: > 0 })
+            {
+                <MudItem xs="12">
+                    @RenderEmptyState()
+                </MudItem>
+            }
+            else
+            {
+                @RenderTiles(data)
+
+                <MudItem xs="12" md="@(season.ClubComparison is null ? 12 : 7)">
+                    @RenderCard("🗓️", Locale["ActivityCalendar"], Locale["ActivityCalendarSubtitle"],
+                        @<ActivityCalendar Days="@data.ActivityDays" From="@season.StartDate" To="@season.EndDate" />)
+                </MudItem>
+
+                @if (season.ClubComparison is { } comparison)
+                {
+                    <MudItem xs="12" md="5">
+                        @RenderCard("🏟️", Locale["YouVsClub"], Locale["YouVsClubSubtitle"],
+                            @<ClubComparisonCard Comparison="@comparison" OwnBookings="@data.TotalBookings" />)
+                    </MudItem>
+                }
+
+                @RenderRhythmAndRecords(data)
+                @RenderPartnersCourtsAndModes(data)
+            }
+        </MudGrid>
+    };
+
+    private RenderFragment RenderTiles(StatisticsData data) => __builder =>
+    {
+        var favouriteCourt = data.CourtUsage.OrderByDescending(c => c.Value).FirstOrDefault();
+
+        <MudItem xs="6" md="3">
+            <StatTile Icon="@Icons.Material.Filled.Groups" Color="#6366F1"
+                      Value="@data.DistinctPartners.ToString()" Label="@Locale["DifferentPartners"]" />
+        </MudItem>
+        <MudItem xs="6" md="3">
+            <StatTile Icon="@Icons.Material.Filled.LocalFireDepartment" Color="#F97316"
+                      Value="@data.LongestWeekStreak.ToString()" Unit="@Locale["WeeksUnit"]" Label="@Locale["LongestStreak"]" />
+        </MudItem>
+        <MudItem xs="6" md="3">
+            <StatTile Icon="@Icons.Material.Filled.Cake" Color="#EC4899"
+                      Value="@(data.DistinctPartners > 0 ? data.AverageOpponentAge.ToString("0", CultureInfo.CurrentCulture) : "–")"
+                      Unit="@(data.DistinctPartners > 0 ? Locale["Years"].Value : null)" Label="@Locale["AverageOpponentAge"]" />
+        </MudItem>
+        <MudItem xs="6" md="3">
+            <StatTile Icon="@Icons.Material.Filled.Stadium" Color="#059669"
+                      Value="@(favouriteCourt?.Label ?? "–")" Label="@Locale["FavouriteCourt"]" />
+        </MudItem>
+    };
+
+    private RenderFragment RenderRhythmAndRecords(StatisticsData data) => __builder =>
+    {
+        <MudItem xs="12" md="7">
+            @RenderCard("⏰", Locale["WhenYouPlay"], Locale["WhenYouPlaySubtitle"], @<PlayRhythm Data="@data" />)
+        </MudItem>
+        <MudItem xs="12" md="5">
+            @RenderCard("🏆", Locale["PersonalRecords"], null, @<RecordsCard Data="@data" />)
+        </MudItem>
+    };
+
+    private RenderFragment RenderPartnersCourtsAndModes(StatisticsData data) => __builder =>
+    {
+        @if (data.PartnerUsage.Count > 0)
+        {
+            <MudItem xs="12" md="7">
+                @RenderCard("🤝", Locale["DreamTeam"], string.Format(Locale["DreamTeamSubtitle"], data.DistinctPartners),
+                    @<PartnerPodium Partners="@data.PartnerUsage" />)
+            </MudItem>
+        }
+
+        <MudItem xs="12" md="@(data.PartnerUsage.Count > 0 ? 5 : 12)">
+            <div class="d-flex flex-column gap-3 stats-stack">
+                @if (data.CourtUsage.Count > 0)
+                {
+                    @RenderCard("📍", Locale["CourtUsage"], null, RenderCourtUsage(data.CourtUsage))
+                }
+                @if (data.PlayModeUsage.Count > 1)
+                {
+                    @RenderCard("🎯", Locale["PlayModeUsage"], null,
+                        @<MudChart ChartType="ChartType.Donut"
+                                   InputData="@(data.PlayModeUsage.Select(p => p.Value).ToArray())"
+                                   InputLabels="@(data.PlayModeUsage.Select(p => p.Label).ToArray())"
+                                   Width="100%"
+                                   Height="220px" />)
+                }
+            </div>
+        </MudItem>
+    };
+
+    private RenderFragment RenderCourtUsage(List<ChartEntry> courts) => __builder =>
+    {
+        var max = courts.Max(c => c.Value);
+        var total = courts.Sum(c => c.Value);
+        foreach (var court in courts)
+        {
+            var isFavourite = court.Value == max;
+            <div class="court-row">
+                <span class="court-row__name">@court.Label</span>
+                <MudProgressLinear Value="@court.Value" Max="@max" Color="@(isFavourite ? Color.Primary : Color.Info)" Rounded="true" Size="Size.Large" Class="court-row__bar" />
+                <span class="court-row__value">@((int)Math.Round(court.Value * 100 / total))%</span>
+            </div>
+        }
+    };
+
+    private static RenderFragment RenderCard(string emoji, string title, string? subtitle, RenderFragment content) => __builder =>
+    {
+        <SectionCard Emoji="@emoji" Title="@title" Subtitle="@subtitle">@content</SectionCard>
+    };
+
+    private RenderFragment RenderEmptyState() => __builder =>
+    {
+        <MudPaper Class="stats-empty pa-8" Elevation="0">
+            <div class="stats-empty__emoji">🎾</div>
+            <MudText Typo="Typo.h6">@Locale["NoPlayingDataTitle"]</MudText>
+            <MudText Typo="Typo.body2" Class="mt-1">@Locale["NoPlayingData"]</MudText>
+        </MudPaper>
+    };
+
+    public void Dispose()
+    {
+        StatisticsStore.OnStatisticsChanged -= StateHasChanged;
+    }
+}

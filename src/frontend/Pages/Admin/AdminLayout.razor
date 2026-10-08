@@ -1,0 +1,29 @@
+@inherits LayoutComponentBase
+@layout BaseLayout
+
+@using Bookennis.Client.Shared
+@using Bookennis.Client.Components.Shared
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Administrator")]
+
+<MudAppBar Elevation="0" Class="bookennis-appbar">
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(() => drawerOpen = !drawerOpen)" />
+    <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Class="mr-2" Style="color: inherit;" />
+    <MudText Typo="Typo.h1" Style="color: inherit;">@L["AdminPanel"]</MudText>
+    <MudSpacer />
+    <ThemeToggle />
+    <MudIconButton Icon="@Icons.Material.Filled.Home" Color="Color.Inherit" Href="/" />
+</MudAppBar>
+<MudDrawer @bind-Open="drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2" Class="bookennis-drawer">
+    <AdminNavMenu />
+</MudDrawer>
+<MudMainContent Class="bookennis-main-content">
+    <div class="pa-4 pa-sm-6">
+        @Body
+    </div>
+</MudMainContent>
+
+@code {
+    [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
+    private bool drawerOpen = true;
+}

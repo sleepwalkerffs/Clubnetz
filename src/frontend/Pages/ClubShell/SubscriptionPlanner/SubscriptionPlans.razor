@@ -1,0 +1,131 @@
+@page "/clubs/{ClubId:int}/subscription-planner"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.SubscriptionPlanner
+@using Bookennis.Client.Pages.ClubShell.SubscriptionPlanner.Components
+@using Bookennis.Client.Services.Store.SubscriptionPlans
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.SubscriptionPlans
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+<PageTitle>@L["SubscriptionPlanner"]</PageTitle>
+
+<PageHeader>
+    <Content>@L["SubscriptionPlanner"]</Content>
+</PageHeader>
+
+<MudText Typo="Typo.body1" Class="mb-4">@L["PlannerIntro"]</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreatePlan" Class="mb-4">
+    @L["NewPlan"]
+</MudButton>
+
+@if (Store.Plans is null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+}
+else if (Store.Plans.Plans.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">@L["NoPlansYet"]</MudAlert>
+}
+else
+{
+    <MudGrid Spacing="3">
+        @foreach (var plan in Store.Plans.Plans)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Outlined="true" Class="h-100 d-flex flex-column">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">@plan.Name</MudText>
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">@plan.StartDate.ToString("d") – @plan.EndDate.ToString("d")</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Class="pt-0">
+                        <div class="d-flex flex-wrap gap-2 align-center">
+                            <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.Groups">@string.Format(L["ParticipantsCount"], plan.ParticipantCount)</MudChip>
+                            <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.SportsTennis">@string.Format(L["PerWeekCount"], plan.PlayersPerWeek)</MudChip>
+                            @if (plan.HasSchedule)
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Icon="@Icons.Material.Filled.CheckCircle">@L["ScheduleReady"]</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.EditNote">@L["Draft"]</MudChip>
+                            }
+                        </div>
+                    </MudCardContent>
+                    <MudSpacer />
+                    <MudCardActions Class="justify-space-between">
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="@(() => Open(plan))">@L["OpenPlan"]</MudButton>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" aria-label="@SharedLocale["Delete"]" OnClick="@(() => Delete(plan))" />
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    [Parameter]
+    public int ClubId { get; set; }
+
+    [Inject]
+    private ISubscriptionPlansStore Store { get; set; } = null!;
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SubscriptionPlannerLocale> L { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnPlansChanged += StateHasChanged;
+        await Store.LoadPlans();
+    }
+
+    private void Open(SubscriptionPlanSummaryDto plan)
+        => Navigation.NavigateTo($"/clubs/{ClubId}/subscription-planner/{plan.Id}");
+
+    private async Task CreatePlan()
+    {
+        var dialog = await DialogService.ShowAsync<CreateSubscriptionPlanDialog>(L["NewPlan"], new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: int planId })
+            Navigation.NavigateTo($"/clubs/{ClubId}/subscription-planner/{planId}");
+    }
+
+    private async Task Delete(SubscriptionPlanSummaryDto plan)
+    {
+        var confirmed = await DialogService.ShowMessageBox(
+            L["DeletePlan"],
+            string.Format(L["DeletePlanConfirm"], plan.Name),
+            yesText: SharedLocale["Delete"],
+            cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true)
+            return;
+
+        var result = await Store.DeletePlan(plan.Id);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    public void Dispose() => Store.OnPlansChanged -= StateHasChanged;
+}

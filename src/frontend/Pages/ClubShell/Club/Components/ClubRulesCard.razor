@@ -1,0 +1,218 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubSettings
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Utils
+@using Bookennis.Global.Intervals
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Shared
+
+<SectionCard Emoji="⏰" Title="@L["RulesTitle"]" Subtitle="@L["RulesSubtitle"]">
+    <DayTimeline OpenFrom="@Hours(openingFrom)" OpenTo="@EndHours(openingTo)"
+                 PrimeFrom="@(primeTimeEnabled ? Hours(primeFrom) : null)" PrimeTo="@(primeTimeEnabled ? EndHours(primeTo) : null)"
+                 PrimeLabel="@L["PrimeTime"]" Description="@L["TimelineDescription"]" />
+
+    <div class="rules">
+        <section class="rules__group">
+            <h3 class="rules__title">🕗 @L["OpeningHours"]</h3>
+            <div class="rules__row">
+                <MudTimePicker Label="@L["From"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                               Time="@openingFrom" TimeChanged="@(value => { openingFrom = value; errors = []; })" Margin="Margin.Dense" />
+                <MudTimePicker Label="@L["To"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                               Time="@openingTo" TimeChanged="@(value => { openingTo = value; errors = []; })" Margin="Margin.Dense" />
+            </div>
+        </section>
+
+        <section class="rules__group">
+            <h3 class="rules__title">⏳ @L["GracePeriod"]</h3>
+            <p class="rules__hint">@L["GracePeriodHint"]</p>
+            <NumberStepper Value="@(gracePeriod ?? 0)" ValueChanged="@(value => gracePeriod = value)" Min="0" Max="30" Unit="@L["Minutes"]" Label="@L["GracePeriod"]" />
+        </section>
+
+        <section class="rules__group rules__group--wide">
+            <div class="rules__header">
+                <h3 class="rules__title">⚡ @L["PrimeTime"]</h3>
+                <MudSwitch T="bool" Value="@primeTimeEnabled" ValueChanged="@(value => { primeTimeEnabled = value; errors = []; })" Color="Color.Warning"
+                           Label="@(primeTimeEnabled ? L["Enabled"] : L["Disabled"])" />
+            </div>
+            <p class="rules__hint">@L["PrimeTimeHint"]</p>
+
+            @if (primeTimeEnabled)
+            {
+                <div class="rules__row">
+                    <MudTimePicker Label="@L["From"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                                   Time="@primeFrom" TimeChanged="@(value => { primeFrom = value; errors = []; })" Margin="Margin.Dense" />
+                    <MudTimePicker Label="@L["To"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                                   Time="@primeTo" TimeChanged="@(value => { primeTo = value; errors = []; })" Margin="Margin.Dense" />
+                </div>
+
+                <MultiChoiceChips TItem="DayOfWeek" Label="@L["PrimeTimeWeekdays"]" Items="@WeekdaysMondayFirst" Values="@weekdays"
+                                  ValuesChanged="@(values => weekdays = values.ToList())" TextFunc="@(day => CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day))"
+                                  ColorFunc="@(_ => "#D97706")" />
+
+                <div class="rules__restrictions">
+                    <div class="restriction @(restrictChildren ? "restriction--on" : null)">
+                        <MudSwitch T="bool" @bind-Value="restrictChildren" Color="Color.Warning" />
+                        <span>
+                            <span class="restriction__title">🧒 @L["RestrictChildren"]</span>
+                            <span class="restriction__text">@string.Format(L["RestrictChildrenHint"], childAgeThreshold)</span>
+                        </span>
+                    </div>
+                    @if (restrictChildren)
+                    {
+                        <div class="rules__inline">
+                            <span class="rules__inline-label">@L["ChildAgeThreshold"]</span>
+                            <NumberStepper @bind-Value="childAgeThreshold" Min="0" Max="18" Unit="@L["Years"]" Label="@L["ChildAgeThreshold"]" />
+                        </div>
+                    }
+                    <div class="restriction @(restrictGuests ? "restriction--on" : null)">
+                        <MudSwitch T="bool" @bind-Value="restrictGuests" Color="Color.Warning" />
+                        <span>
+                            <span class="restriction__title">🎟️ @L["RestrictGuests"]</span>
+                            <span class="restriction__text">@L["RestrictGuestsHint"]</span>
+                        </span>
+                    </div>
+                </div>
+            }
+        </section>
+    </div>
+
+    @foreach (var error in errors)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">@error</MudAlert>
+    }
+
+    <div class="rules__actions">
+        @if (IsDirty)
+        {
+            <span class="rules__dirty">✏️ @L["UnsavedChanges"]</span>
+            <MudButton Variant="Variant.Text" OnClick="Reset" Disabled="@saving">@L["Discard"]</MudButton>
+        }
+        <LoadButton Variant="Variant.Filled" Color="Color.Primary" Loading="@saving" Disabled="@(!IsDirty)" OnClick="Save">
+            @SharedLocale["Save"]
+        </LoadButton>
+    </div>
+</SectionCard>
+
+@code {
+    [Parameter] public EventCallback OnSaved { get; set; }
+
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private static readonly DayOfWeek[] WeekdaysMondayFirst =
+        [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday];
+
+    private TimeSpan? openingFrom;
+    private TimeSpan? openingTo;
+    private TimeSpan? primeFrom;
+    private TimeSpan? primeTo;
+    private int? gracePeriod;
+    private bool primeTimeEnabled;
+    private List<DayOfWeek> weekdays = [];
+    private bool restrictChildren;
+    private bool restrictGuests;
+    private int childAgeThreshold;
+    private bool saving;
+    private string[] errors = [];
+
+    private ClubInformationResult Details => ClubStore.ClubDetails;
+
+    private bool IsDirty
+        => openingFrom != Details.OpeningHours.From.ToTimeSpan()
+           || openingTo != Details.OpeningHours.To.ToTimeSpan()
+           || primeFrom != Details.PrimeTimeSettings.PrimeTimeHours.From.ToTimeSpan()
+           || primeTo != Details.PrimeTimeSettings.PrimeTimeHours.To.ToTimeSpan()
+           || gracePeriod != Details.BookingGracePeriodInMinutes && !(gracePeriod == 0 && Details.BookingGracePeriodInMinutes is null)
+           || primeTimeEnabled != Details.PrimeTimeSettings.IsEnabled
+           || !weekdays.Order().SequenceEqual(Details.PrimeTimeSettings.ApplicableWeekdays.Order())
+           || restrictChildren != Details.PrimeTimeSettings.RestrictChildren
+           || restrictGuests != Details.PrimeTimeSettings.RestrictGuests
+           || childAgeThreshold != Details.PrimeTimeSettings.ChildAgeThreshold;
+
+    protected override void OnInitialized() => Reset();
+
+    private void Reset()
+    {
+        openingFrom = Details.OpeningHours.From.ToTimeSpan();
+        openingTo = Details.OpeningHours.To.ToTimeSpan();
+        primeFrom = Details.PrimeTimeSettings.PrimeTimeHours.From.ToTimeSpan();
+        primeTo = Details.PrimeTimeSettings.PrimeTimeHours.To.ToTimeSpan();
+        gracePeriod = Details.BookingGracePeriodInMinutes;
+        primeTimeEnabled = Details.PrimeTimeSettings.IsEnabled;
+        weekdays = Details.PrimeTimeSettings.ApplicableWeekdays.ToList();
+        restrictChildren = Details.PrimeTimeSettings.RestrictChildren;
+        restrictGuests = Details.PrimeTimeSettings.RestrictGuests;
+        childAgeThreshold = Details.PrimeTimeSettings.ChildAgeThreshold;
+        errors = [];
+    }
+
+    private static double Hours(TimeSpan? value) => value?.TotalHours ?? 0;
+
+    // Midnight as end means the end of the day
+    private static double EndHours(TimeSpan? value) => value is { TotalHours: 0 } || value is null ? 24 : value.Value.TotalHours;
+
+    private async Task Save()
+    {
+        if (openingFrom is null || openingTo is null || primeFrom is null || primeTo is null)
+            return;
+
+        errors = [];
+        if (!TimeOnlyIntervalExtensions.TryCreateTimeOnlyInterval(openingFrom.Value, openingTo.Value, out var openingHours))
+        {
+            errors = [L["InvalidOpeningHours"]];
+            return;
+        }
+
+        if (!TimeOnlyIntervalExtensions.TryCreateTimeOnlyInterval(primeFrom.Value, primeTo.Value, out var primeTimeHours))
+        {
+            errors = [L["InvalidPrimeTimeHours"]];
+            return;
+        }
+
+        if (!openingHours.Contains(primeTimeHours))
+        {
+            errors = [L["PrimeTimeOutsideOpeningHours"]];
+            return;
+        }
+
+        saving = true;
+        try
+        {
+            var result = await ClubStore.SaveClubDetails(new ClubInformationModel
+            {
+                OpeningHours = openingHours,
+                PrimeTimeSettings = new PrimeTimeSettingsDto
+                {
+                    IsEnabled = primeTimeEnabled,
+                    PrimeTimeHours = primeTimeHours,
+                    ApplicableWeekdays = weekdays.ToArray(),
+                    RestrictChildren = restrictChildren,
+                    RestrictGuests = restrictGuests,
+                    ChildAgeThreshold = childAgeThreshold,
+                },
+                BookingGracePeriodInMinutes = gracePeriod,
+            });
+
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return;
+            }
+
+            await ClubStore.LoadClubDetails();
+            Reset();
+            Snackbar.Add(L["RulesSaved"], Severity.Success);
+            await OnSaved.InvokeAsync();
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

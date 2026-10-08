@@ -1,0 +1,35 @@
+@using Bookennis.Client.Localization.Pages.SubscriptionPlanner
+@using Bookennis.Global
+
+<MudChip T="string"
+         Variant="@(Crossed ? Variant.Outlined : Variant.Filled)"
+         Color="@(Crossed ? Color.Default : ActiveColor)"
+         Disabled="@Disabled"
+         OnClick="OnClick"
+         Class="ma-1">
+    <span class="@(Crossed ? "week-chip crossed" : "week-chip")">
+        <span class="week-number">@L["CalendarWeekShort"] @Week.WeekNumber</span>
+        <span class="week-dates">@SubscriptionPlannerFormat.DateRange(Week.Monday, Week.Sunday)</span>
+    </span>
+</MudChip>
+
+@code {
+    [Parameter, EditorRequired]
+    public CalendarWeek Week { get; set; }
+
+    /// <summary>Shown struck through, e.g. a blocked week or a week a participant can't play.</summary>
+    [Parameter]
+    public bool Crossed { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public Color ActiveColor { get; set; } = Color.Primary;
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    [Inject]
+    private IStringLocalizer<SubscriptionPlannerLocale> L { get; set; } = null!;
+}

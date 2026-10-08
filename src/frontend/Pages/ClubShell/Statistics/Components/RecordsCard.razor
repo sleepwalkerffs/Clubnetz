@@ -1,0 +1,53 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.Statistics
+@using Bookennis.Shared.Controller.Statistics
+
+<div class="records">
+    @if (Data.BestWeek is { } bestWeek)
+    {
+        @RenderRecord("📅", Locale["BestWeek"], string.Format(Locale["MatchesCount"], bestWeek.Count),
+            string.Format(Locale["WeekOf"], bestWeek.WeekStart.ToString("d", CultureInfo.CurrentCulture)))
+    }
+    @if (Data.BusiestMonth is { } busiestMonth)
+    {
+        @RenderRecord("🗓️", Locale["BusiestMonth"], string.Format(Locale["MatchesCount"], busiestMonth.Count),
+            new DateOnly(busiestMonth.Year, busiestMonth.Month, 1).ToString("MMMM yyyy", CultureInfo.CurrentCulture))
+    }
+    @if (Data.LongestWeekStreak > 0)
+    {
+        @RenderRecord("🔥", Locale["LongestStreak"], string.Format(Locale["WeeksCount"], Data.LongestWeekStreak), Locale["WeeksInARow"])
+    }
+    @if (Data.LongestBreakDays is { } longestBreak)
+    {
+        @RenderRecord("⏸️", Locale["LongestBreak"], string.Format(Locale["DaysCount"], longestBreak), Locale["BetweenTwoMatches"])
+    }
+    @if (Data.FirstBooking is { } first)
+    {
+        @RenderRecord("🎾", Locale["FirstMatch"], first.ToString("d", CultureInfo.CurrentCulture), null)
+    }
+    @if (Data.LastBooking is { } last && last != Data.FirstBooking)
+    {
+        @RenderRecord("🏁", Locale["LastMatch"], last.ToString("d", CultureInfo.CurrentCulture), null)
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public StatisticsData Data { get; set; } = null!;
+
+    [Inject] private IStringLocalizer<StatisticsLocale> Locale { get; set; } = null!;
+
+    private static RenderFragment RenderRecord(string emoji, string title, string value, string? caption) => __builder =>
+    {
+        <div class="record">
+            <div class="record__emoji">@emoji</div>
+            <div class="record__body">
+                <div class="record__title">@title</div>
+                <div class="record__value">@value</div>
+                @if (caption is not null)
+                {
+                    <div class="record__caption">@caption</div>
+                }
+            </div>
+        </div>
+    };
+}

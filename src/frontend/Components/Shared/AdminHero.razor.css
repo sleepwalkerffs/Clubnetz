@@ -1,0 +1,173 @@
+.admin-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 20px;
+    padding: 24px;
+    border-radius: 20px;
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #064E3B 0%, #047857 45%, #0D9488 80%, #65A30D 130%);
+    box-shadow: 0 10px 30px rgba(6, 78, 59, 0.25);
+}
+
+/* Decorative tennis court lines */
+.admin-hero__court {
+    position: absolute;
+    inset: -40px -120px -40px auto;
+    width: 420px;
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    transform: rotate(-12deg);
+    pointer-events: none;
+}
+
+.admin-hero__court::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    border-left: 3px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-hero__court::after {
+    content: "";
+    position: absolute;
+    left: 22%;
+    right: 22%;
+    top: 50%;
+    border-top: 3px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-hero__main {
+    position: relative;
+    flex: 1 1 320px;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.admin-hero__emoji {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    font-size: 2rem;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    backdrop-filter: blur(4px);
+}
+
+.admin-hero__media {
+    flex-shrink: 0;
+}
+
+.admin-hero__text {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.admin-hero__eyebrow {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.admin-hero__title {
+    margin: 2px 0 0;
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+}
+
+.admin-hero__subtitle {
+    margin-top: 6px;
+    font-size: 0.95rem;
+    opacity: 0.92;
+}
+
+.admin-hero__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.admin-hero__chips ::deep .hero-chip,
+.admin-hero__chips .hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: none;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+
+.admin-hero__chips ::deep button.hero-chip {
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.admin-hero__chips ::deep button.hero-chip:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.admin-hero__chips ::deep .hero-chip--ok {
+    background: rgba(167, 243, 208, 0.3);
+}
+
+.admin-hero__chips ::deep .hero-chip--warn {
+    background: rgba(254, 202, 202, 0.32);
+}
+
+.admin-hero__aside {
+    position: relative;
+    flex: 0 1 300px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(6px);
+}
+
+@media (max-width: 599px) {
+    .admin-hero {
+        padding: 20px 16px;
+    }
+
+    .admin-hero__emoji {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        font-size: 1.5rem;
+    }
+
+    .admin-hero__title {
+        font-size: 1.45rem;
+    }
+
+    .admin-hero__aside {
+        flex-basis: 100%;
+    }
+}

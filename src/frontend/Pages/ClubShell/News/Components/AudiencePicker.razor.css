@@ -1,0 +1,27 @@
+.audience {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.audience__hint {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.audience__count {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-weight: 700;
+    background: var(--mud-palette-background-gray);
+}
+
+.audience__count--error {
+    font-weight: 600;
+    color: var(--bk-dark-amber, #B45309);
+    background: color-mix(in srgb, var(--bk-dark-amber, #D97706) 12%, transparent);
+}

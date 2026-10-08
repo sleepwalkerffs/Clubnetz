@@ -1,0 +1,73 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Components.Family
+@using Bookennis.Client.Services.Store.Family
+@using Bookennis.Shared.Controller.Families
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption=@SharedLocale["Select"] CancelFunc="Cancel" CancelCaption=@SharedLocale["Cancel"] CanSubmit="selectedMembers.Any()" AllowFullScreen="false">
+    @if (!FamilyStore.IsLoading)
+    {
+        @if (FamilyStore.AvailableFamilyMembers.Count == 0)
+        {
+            <span>@FamilySharedLocale["SelectMembers"]</span>
+        }
+        else
+        {
+            <MudSelect T="FamilyMemberDto"
+                       Label=@SharedLocale["Select"]
+                       AnchorOrigin="Origin.CenterCenter"
+                       ToStringFunc="@((value) => $"{value?.FirstName} {value?.LastName}".Trim())"
+                       @bind-SelectedValues="@selectedMembers">
+
+                @foreach (var member in FamilyStore.AvailableFamilyMembers)
+                {
+                    <MudSelectItem Tag="@member.MemberId" Value="@member"/>
+                }
+            </MudSelect>
+        }
+    }
+</BaseDialog>
+
+@code {
+    [Parameter]
+    public int MemberId { get; set; }
+
+    [Inject]
+    private IFamilyStore FamilyStore { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<FamilySharedLocale> FamilySharedLocale { get; set; } = null!;
+
+    private IEnumerable<FamilyMemberDto> selectedMembers = new List<FamilyMemberDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        await FamilyStore.LoadAvailableFamilyMembers(MemberId);
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (!selectedMembers.Any())
+            return null;
+
+        if (FamilyStore.Family is null)
+        {
+            await FamilyStore.CreateFamily(new CreateFamilyRequest
+            {
+                ParentContractUserIds = [MemberId, selectedMembers.Select(i => i.MemberId).Single()]
+            });
+        }
+        else
+        {
+            await FamilyStore.AddParent(selectedMembers.Select(i => i.MemberId).Single());
+        }
+
+        return DialogResult.Ok((object?)null);
+    }
+
+    private Task<DialogResult> Cancel() => Task.FromResult(DialogResult.Cancel());
+}

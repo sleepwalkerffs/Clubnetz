@@ -1,0 +1,117 @@
+@using Bookennis.Client.Localization.Pages.SubscriptionPlanner
+
+<MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">@L["AvailabilityHelp"]</MudText>
+
+@if (Draft.Participants.Count == 0)
+{
+    <MudAlert Severity="Severity.Info" Dense="true">@L["NoParticipantsYet"]</MudAlert>
+}
+else
+{
+    <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
+        <MudSwitch T="bool" @bind-Value="gridView" Color="Color.Primary" Label="@L["GridView"]" Class="mb-2" />
+    </MudHidden>
+
+    @if (gridView)
+    {
+        <div class="availability-grid-wrapper">
+            <table class="availability-grid">
+                <thead>
+                    <tr>
+                        <th class="name-column"></th>
+                        @foreach (var week in Draft.Weeks)
+                        {
+                            <th class="@(IsExcluded(week.Monday) ? "excluded" : "")" title="@SubscriptionPlannerFormat.DateRange(week.Monday, week.Sunday)">
+                                @week.WeekNumber
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var participant in Draft.Participants)
+                    {
+                        <tr>
+                            <td class="name-column">
+                                <ParticipantChip Name="@participant.Name" ColorIndex="participant.ColorIndex" Size="Size.Small" />
+                            </td>
+                            @foreach (var week in Draft.Weeks)
+                            {
+                                var monday = week.Monday;
+                                if (IsExcluded(monday))
+                                {
+                                    <td class="excluded"></td>
+                                }
+                                else
+                                {
+                                    var unavailable = participant.UnavailableWeeks.Contains(monday);
+                                    <td class="@(unavailable ? "cell unavailable" : "cell available")"
+                                        title="@SubscriptionPlannerFormat.DateRange(week.Monday, week.Sunday)"
+                                        @onclick="@(() => Toggle(participant, monday))">
+                                        @(unavailable ? "✕" : "✓")
+                                    </td>
+                                }
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <MudExpansionPanels MultiExpansion="true" Outlined="true">
+            @foreach (var participant in Draft.Participants)
+            {
+                <MudExpansionPanel>
+                    <TitleContent>
+                        <div class="d-flex align-center flex-wrap gap-2">
+                            <ParticipantChip Name="@participant.Name" ColorIndex="participant.ColorIndex" Size="Size.Small" />
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @string.Format(L["UnavailableWeeksCount"], UnavailableCount(participant))
+                            </MudText>
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                        <div class="d-flex flex-wrap">
+                            @foreach (var week in Draft.Weeks)
+                            {
+                                var monday = week.Monday;
+                                <WeekChip Week="week"
+                                          Crossed="@(IsExcluded(monday) || participant.UnavailableWeeks.Contains(monday))"
+                                          Disabled="@IsExcluded(monday)"
+                                          ActiveColor="Color.Success"
+                                          OnClick="@(() => Toggle(participant, monday))" />
+                            }
+                        </div>
+                    </ChildContent>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public required SubscriptionPlanDraft Draft { get; set; }
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    [Inject]
+    private IStringLocalizer<SubscriptionPlannerLocale> L { get; set; } = null!;
+
+    private bool gridView;
+
+    private bool IsExcluded(DateOnly monday) => Draft.ExcludedWeeks.Contains(monday);
+
+    private int UnavailableCount(ParticipantDraft participant)
+        => participant.UnavailableWeeks.Count(week => !IsExcluded(week) && Draft.Weeks.Any(w => w.Monday == week));
+
+    private Task Toggle(ParticipantDraft participant, DateOnly monday)
+    {
+        if (!participant.UnavailableWeeks.Remove(monday))
+            participant.UnavailableWeeks.Add(monday);
+
+        return OnChanged.InvokeAsync();
+    }
+}

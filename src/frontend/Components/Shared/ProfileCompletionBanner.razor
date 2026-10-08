@@ -1,0 +1,64 @@
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.Store.Profile
+
+@implements IDisposable
+
+@if (ProfileStore.IsProfileLoaded && !ProfileStore.IsProfileComplete && !ProfileStore.IsProfileBannerDismissed)
+{
+    <div class="profile-banner" role="status">
+        <span class="profile-banner__emoji" aria-hidden="true">👋</span>
+        <div class="profile-banner__body">
+            <div class="profile-banner__title">@Locale["ProfileIncomplete"]</div>
+            <div class="profile-banner__chips">
+                @foreach (var field in ProfileStore.MissingProfileFields)
+                {
+                    <span class="profile-banner__chip">@Locale[field]</span>
+                }
+            </div>
+        </div>
+        <div class="profile-banner__actions">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Person"
+                       OnClick="NavigateToProfile">
+                @Locale["CompleteProfile"]
+            </MudButton>
+            <MudTooltip Text="@Locale["DontShowAgain"]">
+                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                               Size="Size.Small"
+                               aria-label="@Locale["DontShowAgain"]"
+                               OnClick="Dismiss" />
+            </MudTooltip>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject]
+    private IProfileStore ProfileStore { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> Locale { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        ProfileStore.OnProfileChanged += StateHasChanged;
+    }
+
+    private void NavigateToProfile()
+    {
+        NavigationManager.NavigateToProfile();
+    }
+
+    private Task Dismiss() => ProfileStore.DismissProfileBanner();
+
+    public void Dispose()
+    {
+        ProfileStore.OnProfileChanged -= StateHasChanged;
+    }
+}

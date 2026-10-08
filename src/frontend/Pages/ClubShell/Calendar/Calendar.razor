@@ -1,0 +1,242 @@
+@page "/clubs/{ClubId:int}/calendar"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Calendar
+@using Bookennis.Client.Pages.ClubShell.Calendar.Components
+@using Bookennis.Client.Services.Store.ClubEvents
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Shared.Controller.ClubEvents
+
+@implements IDisposable
+
+<PageTitle>@Locale["Calendar"]</PageTitle>
+
+<PageHeader>
+    <Content>@Locale["Calendar"]</Content>
+</PageHeader>
+
+<div class="calendar-page">
+    <div class="calendar-hero">
+        <div class="calendar-hero__text">
+            <div class="calendar-hero__eyebrow">@ClubProfileStore.SelectedClub?.ClubName</div>
+            <div class="calendar-hero__title">@Locale["HeroTitle"] 🗓️</div>
+            <div class="calendar-hero__subtitle">@Locale["HeroSubtitle"]</div>
+            @if (CanManage)
+            {
+                <MudButton Href="@($"{ClubEventHelpers.CalendarUrl(ClubId)}/new")" Variant="Variant.Filled" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Add" Class="calendar-hero__new mt-4">
+                    @Locale["NewEvent"]
+                </MudButton>
+            }
+        </div>
+
+        <div class="calendar-hero__next @(NextEvent is not null ? "calendar-hero__next--clickable" : null)" @onclick="OpenNextEvent">
+            <div class="next__caption">@Locale["NextUp"]</div>
+            @if (NextEvent is { } next)
+            {
+                <div class="next__countdown">@ClubEventHelpers.Countdown(Locale, next.StartDate, next.LastDate)</div>
+                <div class="next__title">@ClubEventHelpers.Emoji(next.Category) @next.Title</div>
+                <div class="next__when">@ClubEventHelpers.FormatDateRange(Locale, next.StartDate, next.EndDate) · @ClubEventHelpers.FormatTime(Locale, next.StartTime, next.EndTime)</div>
+                @if (next.MyHeadCount is { } myHeadCount)
+                {
+                    <div class="next__status">✅ @string.Format(Locale["YoureIn"], myHeadCount)</div>
+                }
+            }
+            else if (upcomingLoaded)
+            {
+                <div class="next__empty-emoji" aria-hidden="true">🌤️</div>
+                <div class="next__empty">@Locale["NothingPlanned"]</div>
+            }
+            else
+            {
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mt-2" Style="color: #FFFFFF;" />
+            }
+        </div>
+    </div>
+
+    <div class="calendar-toolbar">
+        <ChoiceChips TItem="CalendarView" Items="@Views" Value="@view" ValueChanged="ChangeView"
+                     TextFunc="@(v => v == CalendarView.Upcoming ? $"📋 {Locale["ViewList"]}" : $"🗓️ {Locale["ViewMonth"]}")" />
+        @if (view == CalendarView.Upcoming)
+        {
+            <MudSwitch T="bool" Value="@showPast" ValueChanged="TogglePast" Color="Color.Primary" Label="@Locale["ShowPastEvents"]" Class="ma-0" />
+        }
+    </div>
+
+    @if (view == CalendarView.Upcoming)
+    {
+        <SectionCard Emoji="@(showPast ? "🕰️" : "📅")" Title="@Locale[showPast ? "PastEvents" : "UpcomingEvents"]"
+                     Subtitle="@(listLoaded ? ClubEventHelpers.Count(Locale, "EventCount", ListEvents.Count) : null)">
+            @if (!listLoaded)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else if (ListEvents.Count == 0)
+            {
+                <div class="calendar-empty">
+                    <span class="calendar-empty__emoji" aria-hidden="true">🗓️</span>
+                    <span>@Locale[showPast ? "NoPastEvents" : "NoUpcomingEvents"]</span>
+                </div>
+            }
+            else
+            {
+                @foreach (var month in ListEvents.GroupBy(e => new DateOnly(e.StartDate.Year, e.StartDate.Month, 1)))
+                {
+                    <div class="calendar-month-label">@month.Key.ToString("MMMM yyyy", CultureInfo.CurrentCulture)</div>
+                    @foreach (var clubEvent in month)
+                    {
+                        <ClubEventListItem Event="@clubEvent" ClubId="@ClubId" ShowCountdown="@(!showPast)" />
+                    }
+                }
+            }
+        </SectionCard>
+    }
+    else
+    {
+        <MudGrid Spacing="3">
+            <MudItem xs="12" lg="8">
+                <div class="section-card-like">
+                    <MonthCalendar Month="@month" MonthChanged="ChangeMonth" @bind-SelectedDay="selectedDay" Events="@MonthEvents" />
+                    @if (Store.IsLoading)
+                    {
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-2" />
+                    }
+                </div>
+            </MudItem>
+            <MudItem xs="12" lg="4">
+                <SectionCard Emoji="📌" Title="@(selectedDay?.ToString("D", CultureInfo.CurrentCulture) ?? month.ToString("MMMM yyyy", CultureInfo.CurrentCulture))"
+                             Subtitle="@ClubEventHelpers.Count(Locale, "EventCount", SelectedEvents.Count)">
+                    @if (SelectedEvents.Count == 0)
+                    {
+                        <div class="calendar-empty">
+                            <span class="calendar-empty__emoji" aria-hidden="true">🌿</span>
+                            <span>@Locale[selectedDay is null ? "NoEventsInMonth" : "NoEventsOnDay"]</span>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var clubEvent in SelectedEvents)
+                        {
+                            <ClubEventListItem Event="@clubEvent" ClubId="@ClubId" />
+                        }
+                    }
+                </SectionCard>
+            </MudItem>
+        </MudGrid>
+    }
+</div>
+
+@code {
+    private enum CalendarView
+    {
+        Upcoming,
+        Month,
+    }
+
+    private const int ListRangeInDays = 365;
+
+    private static readonly CalendarView[] Views = [CalendarView.Upcoming, CalendarView.Month];
+
+    [Parameter]
+    public int ClubId { get; set; }
+
+    [Inject] private IClubEventsStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IStringLocalizer<CalendarLocale> Locale { get; set; } = null!;
+
+    private CalendarView view = CalendarView.Upcoming;
+    private bool showPast;
+    private bool listLoaded;
+    private bool upcomingLoaded;
+    private DateOnly month = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private DateOnly? selectedDay;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    private bool CanManage => ClubEventHelpers.CanManage(ClubProfileStore.Roles);
+
+    private ClubEventSummaryDto? NextEvent => Store.UpcomingEvents?.FirstOrDefault();
+
+    private List<ClubEventSummaryDto> ListEvents
+    {
+        get
+        {
+            var events = Store.Events?.Events ?? [];
+            return showPast
+                ? events.Where(e => e.LastDate < Today).OrderByDescending(e => e.StartDate).ThenByDescending(e => e.StartTime).ToList()
+                : events.Where(e => e.LastDate >= Today).ToList();
+        }
+    }
+
+    private List<ClubEventSummaryDto> MonthEvents => Store.Events?.Events ?? [];
+
+    private List<ClubEventSummaryDto> SelectedEvents => selectedDay is { } day
+        ? MonthEvents.Where(e => e.StartDate <= day && e.LastDate >= day).ToList()
+        : MonthEvents.Where(e => e.StartDate <= month.AddMonths(1).AddDays(-1) && e.LastDate >= month).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnEventsChanged += StateHasChanged;
+        Store.OnUpcomingEventsChanged += OnUpcomingEventsChanged;
+
+        await Task.WhenAll(LoadList(), Store.LoadUpcomingEvents(1));
+    }
+
+    private void OnUpcomingEventsChanged()
+    {
+        upcomingLoaded = true;
+        StateHasChanged();
+    }
+
+    private async Task LoadList()
+    {
+        listLoaded = false;
+        if (showPast)
+            await Store.LoadEvents(Today.AddDays(-ListRangeInDays), Today.AddDays(-1));
+        else
+            await Store.LoadEvents(Today, Today.AddDays(ListRangeInDays));
+        listLoaded = true;
+    }
+
+    private async Task LoadMonth()
+    {
+        var (from, to) = MonthCalendar.GetVisibleRange(month);
+        await Store.LoadEvents(from, to);
+    }
+
+    private async Task ChangeView(CalendarView newView)
+    {
+        view = newView;
+        if (view == CalendarView.Month)
+            await LoadMonth();
+        else
+            await LoadList();
+    }
+
+    private async Task TogglePast(bool value)
+    {
+        showPast = value;
+        await LoadList();
+    }
+
+    private async Task ChangeMonth(DateOnly newMonth)
+    {
+        month = newMonth;
+        if (selectedDay is { } day && (day.Year != month.Year || day.Month != month.Month))
+            selectedDay = null;
+        await LoadMonth();
+    }
+
+    private void OpenNextEvent()
+    {
+        if (NextEvent is not null)
+            NavigationManager.NavigateTo(ClubEventHelpers.EventUrl(ClubId, NextEvent.Id));
+    }
+
+    public void Dispose()
+    {
+        Store.OnEventsChanged -= StateHasChanged;
+        Store.OnUpcomingEventsChanged -= OnUpcomingEventsChanged;
+    }
+}

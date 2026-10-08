@@ -1,0 +1,118 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Account
+@using Bookennis.Client.Services.Store.Notifications
+@using Bookennis.Client.Services.Store.Push
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Notifications
+
+@implements IDisposable
+
+@* What the user is notified about and on which channel (push, email). Belongs to the account, unlike the device settings above. *@
+<SectionCard Emoji="📬" Title="@Locale["Notif_Title"]" Subtitle="@Locale["Notif_Subtitle"]">
+    @if (Store.Preferences.Count == 0)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="@(Store.IsLoading ? "" : "d-none")" />
+    }
+    else
+    {
+        @if (PushStore.State is PushState.Off or PushState.Denied or PushState.NeedsInstall)
+        {
+            <div class="prefs-note">
+                <MudIcon Icon="@Icons.Material.Filled.NotificationsOff" Size="Size.Small" />
+                <span>@Locale["Notif_PushOffHint"]</span>
+            </div>
+        }
+
+        <div class="prefs">
+            <div class="prefs__head">
+                <span></span>
+                <MudTooltip Text="@Locale[AllPush ? "Notif_AllOff" : "Notif_AllOn"]">
+                    <button type="button" class="prefs__channel" disabled="@Store.IsSaving" @onclick="() => SetAll(push: !AllPush, email: null)">
+                        <MudIcon Icon="@Icons.Material.Filled.Notifications" Size="Size.Small" />
+                        <span>@Locale["Notif_Push"]</span>
+                    </button>
+                </MudTooltip>
+                <MudTooltip Text="@Locale[AllEmail ? "Notif_AllOff" : "Notif_AllOn"]">
+                    <button type="button" class="prefs__channel" disabled="@Store.IsSaving" @onclick="() => SetAll(push: null, email: !AllEmail)">
+                        <MudIcon Icon="@Icons.Material.Filled.MailOutline" Size="Size.Small" />
+                        <span>@Locale["Notif_Email"]</span>
+                    </button>
+                </MudTooltip>
+            </div>
+
+            @foreach (var group in Groups)
+            {
+                <div class="prefs__group">@Locale[$"Notif_Group_{group.Key}"]</div>
+
+                @foreach (var type in group.Types)
+                {
+                    var preference = Store.Preferences.FirstOrDefault(p => p.Type == type);
+                    if (preference is null)
+                        continue;
+
+                    var name = Locale[$"Notif_Type_{type}"].Value;
+                    <div class="prefs__row">
+                        <div class="prefs__text">
+                            <div class="prefs__label">@name</div>
+                            <div class="prefs__hint">@Locale[$"Notif_Hint_{type}"]</div>
+                        </div>
+                        <div class="prefs__switch">
+                            <MudSwitch T="bool" Value="preference.Push" ValueChanged="value => Set(preference with { Push = value })" Color="Color.Primary"
+                                       Disabled="@Store.IsSaving" aria-label="@string.Format(Locale["Notif_PushAria"], name)" />
+                        </div>
+                        <div class="prefs__switch">
+                            <MudSwitch T="bool" Value="preference.Email" ValueChanged="value => Set(preference with { Email = value })" Color="Color.Primary"
+                                       Disabled="@Store.IsSaving" aria-label="@string.Format(Locale["Notif_EmailAria"], name)" />
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    }
+</SectionCard>
+
+@code {
+    private static readonly (string Key, NotificationType[] Types)[] Groups =
+    [
+        ("Bookings", [NotificationType.BookingAdded, NotificationType.BookingDeleted, NotificationType.BookingReminder]),
+        ("Events", [NotificationType.ClubEventCreated, NotificationType.ClubEventReminder, NotificationType.ClubEventRegistrationDeadline]),
+        ("Club", [NotificationType.ClubAnnouncement, NotificationType.BadgeAwarded])
+    ];
+
+    [Inject] private INotificationPreferencesStore Store { get; set; } = null!;
+    [Inject] private IPushStore PushStore { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private bool AllPush => Store.Preferences.All(p => p.Push);
+    private bool AllEmail => Store.Preferences.All(p => p.Email);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnPreferencesChanged += OnChanged;
+        PushStore.OnPushChanged += OnChanged;
+        await Store.Load();
+    }
+
+    private Task Set(NotificationPreferenceDto preference) => Save([preference]);
+
+    private Task SetAll(bool? push, bool? email)
+        => Save(Store.Preferences.Select(p => p with { Push = push ?? p.Push, Email = email ?? p.Email }).ToList());
+
+    private async Task Save(IReadOnlyCollection<NotificationPreferenceDto> preferences)
+    {
+        var result = await Store.Update(preferences);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Store.OnPreferencesChanged -= OnChanged;
+        PushStore.OnPushChanged -= OnChanged;
+    }
+}

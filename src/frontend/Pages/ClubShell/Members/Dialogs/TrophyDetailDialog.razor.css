@@ -1,0 +1,107 @@
+.trophy-detail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0 4px;
+    text-align: center;
+}
+
+.trophy-detail__spotlight {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 200px;
+    height: 200px;
+}
+
+/* Slowly turning light rays behind the badge */
+.trophy-detail__rays {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, color-mix(in srgb, var(--badge-color) 35%, transparent) 0%, transparent 62%),
+        repeating-conic-gradient(color-mix(in srgb, var(--badge-color) 18%, transparent) 0deg 10deg, transparent 10deg 20deg);
+    mask-image: radial-gradient(circle, #000 35%, transparent 70%);
+    animation: trophy-rays 24s linear infinite;
+}
+
+@keyframes trophy-rays {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .trophy-detail__rays {
+        animation: none;
+    }
+}
+
+::deep .trophy-detail__icon {
+    position: relative;
+    width: 112px !important;
+    height: 112px !important;
+    box-shadow: 0 0 0 4px var(--mud-palette-surface), 0 0 0 7px var(--badge-color), 0 16px 36px color-mix(in srgb, var(--badge-color) 45%, transparent);
+    animation: trophy-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes trophy-pop {
+    from {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.trophy-detail__name {
+    margin-top: 4px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.trophy-detail__pill {
+    margin-top: 6px;
+    padding: 2px 14px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    background: var(--badge-color);
+}
+
+.trophy-detail__description {
+    margin: 14px 0 0;
+    font-size: 0.95rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.trophy-detail__facts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    text-align: left;
+    background: var(--mud-palette-background-gray);
+}
+
+.trophy-detail__fact,
+.trophy-detail__facts ::deep .trophy-detail__fact {
+    display: flex;
+    gap: 10px;
+    font-size: 0.88rem;
+}
+
+.trophy-detail__ago {
+    color: var(--mud-palette-text-secondary);
+}

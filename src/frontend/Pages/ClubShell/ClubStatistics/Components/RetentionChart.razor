@@ -1,0 +1,74 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.ClubStatistics
+@using Bookennis.Shared.Controller.Statistics
+
+@{
+    var seasons = Seasons.Where(s => s.State != SeasonState.Upcoming || s.EnrolledMembers > 0).ToList();
+    var maxUp = seasons.Count > 0 ? seasons.Max(s => s.ReturningMembers + s.NewMembers) : 0;
+    var maxDown = seasons.Count > 0 ? seasons.Max(s => s.LapsedMembers) : 0;
+    var scale = Math.Max(maxUp + maxDown, 1);
+}
+
+@if (seasons.Count == 0)
+{
+    <div class="retention__empty">@L["NoSeasons"]</div>
+}
+else
+{
+    <div class="retention">
+        <div class="retention__legend">
+            <span><i class="retention__dot retention__dot--returning"></i>@L["Returning"]</span>
+            <span><i class="retention__dot retention__dot--new"></i>@L["New"]</span>
+            <span><i class="retention__dot retention__dot--lapsed"></i>@L["Lapsed"]</span>
+        </div>
+
+        <div class="retention__chart">
+            @for (var i = 0; i < seasons.Count; i++)
+            {
+                var season = seasons[i];
+                var previous = i > 0 ? seasons[i - 1] : null;
+                var retentionRate = previous is { EnrolledMembers: > 0 } ? season.ReturningMembers * 100.0 / previous.EnrolledMembers : (double?)null;
+
+                <div class="retention__column">
+                    <div class="retention__total">@season.EnrolledMembers</div>
+                    <div class="retention__bars">
+                        <div class="retention__up" style="height: @Pct(maxUp, scale)">
+                            <div class="retention__stack" style="height: @Pct(season.ReturningMembers + season.NewMembers, maxUp)">
+                                <span class="retention__new" style="flex: @season.NewMembers" title="@($"{L["New"]}: {season.NewMembers}")"></span>
+                                <span class="retention__returning" style="flex: @season.ReturningMembers" title="@($"{L["Returning"]}: {season.ReturningMembers}")"></span>
+                            </div>
+                        </div>
+                        <div class="retention__axis"></div>
+                        <div class="retention__down" style="height: @Pct(maxDown, scale)">
+                            @if (season.LapsedMembers > 0 && previous is not null)
+                            {
+                                <a class="retention__lapsed" style="height: @Pct(season.LapsedMembers, maxDown)"
+                                   href="@LapsedUrl(season, previous)" title="@string.Format(L["ShowLapsedMembers"], season.LapsedMembers)">
+                                    <span>−@season.LapsedMembers</span>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                    <div class="retention__label">@season.SeasonLabel</div>
+                    <div class="retention__rate">@(retentionRate is { } rate ? string.Format(L["RetentionRate"], rate.ToString("0", CultureInfo.CurrentCulture)) : "")</div>
+                </div>
+            }
+        </div>
+        <div class="retention__hint">💡 @L["LapsedHint"]</div>
+    </div>
+}
+
+@code {
+    /// <summary>Seasons, oldest first.</summary>
+    [Parameter, EditorRequired] public List<ClubSeasonSummary> Seasons { get; set; } = [];
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+
+    [Inject] private IStringLocalizer<ClubStatisticsLocale> L { get; set; } = null!;
+
+    private static string Pct(int value, int max)
+        => max == 0 ? "0%" : (value * 100.0 / max).ToString("0.#", CultureInfo.InvariantCulture) + "%";
+
+    // Members of the previous season that did not enroll again, filtered in the members list (for copying their emails)
+    private string LapsedUrl(ClubSeasonSummary season, ClubSeasonSummary previous)
+        => $"/clubs/{ClubId}/members?in={previous.SeasonId}&notIn={season.SeasonId}";
+}

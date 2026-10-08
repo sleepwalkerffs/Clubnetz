@@ -1,0 +1,54 @@
+.trophy-view {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+::deep .profile-action {
+    border-radius: 999px;
+    background: #FFFFFF;
+    color: #3730A3;
+    font-weight: 700;
+}
+
+::deep .profile-action:hover {
+    background: #EEF2FF;
+}
+
+::deep .profile-action--outlined {
+    background: transparent;
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.7);
+}
+
+::deep .profile-action--outlined:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.trophy-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px;
+    border-radius: 18px;
+    text-align: center;
+    border: 2px dashed var(--mud-palette-lines-inputs);
+}
+
+.trophy-state__emoji {
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.trophy-state__title {
+    margin-top: 10px;
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.trophy-state__text {
+    max-width: 420px;
+    margin-top: 4px;
+    font-size: 0.9rem;
+    color: var(--mud-palette-text-secondary);
+}

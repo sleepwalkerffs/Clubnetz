@@ -1,0 +1,102 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.MyClub
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Members
+
+<SectionCard Emoji="👤" Title="@Locale["Account"]" Subtitle="@Locale["AccountSubtitle"]">
+    <Actions>
+        <MudTooltip Text="@Locale["EditProfile"]">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Href="/account/profile" aria-label="@Locale["EditProfile"]" />
+        </MudTooltip>
+    </Actions>
+    <ChildContent>
+        <div class="account-list">
+            <div class="account-row">
+                <MudIcon Icon="@Icons.Material.Filled.AlternateEmail" Size="Size.Small" Class="account-row__icon" />
+                <div class="account-row__text">
+                    <div class="account-row__label">@SharedLocale["Email"]</div>
+                    <div class="account-row__value account-row__value--wrap">@(Member.Email ?? "–")</div>
+                </div>
+            </div>
+
+            <div class="account-row">
+                <MudIcon Icon="@Icons.Material.Filled.Cake" Size="Size.Small" Class="account-row__icon" />
+                <div class="account-row__text">
+                    <div class="account-row__label">@Locale["Birthday"]</div>
+                    <div class="account-row__value">
+                        @Member.Birthday.ToString("d", CultureInfo.CurrentCulture)
+                        <span class="account-row__muted">· @string.Format(Locale["YearsOld"], Age)</span>
+                        @if (IsBirthdayToday)
+                        {
+                            <span class="account-row__party">🎉 @Locale["HappyBirthday"]</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="account-row">
+                <MudIcon Icon="@Icons.Material.Filled.EventAvailable" Size="Size.Small" Class="account-row__icon" />
+                <div class="account-row__text">
+                    <div class="account-row__label">@Locale["BookingsPerWeek"]</div>
+                    <div class="account-row__value">@string.Format(Locale["BookingsPerWeekValue"], Member.BookingsPerWeek)</div>
+                </div>
+            </div>
+
+            <div class="account-row">
+                <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Small" Class="account-row__icon" />
+                <div class="account-row__text">
+                    <div class="account-row__label">@SharedLocale["Role"]</div>
+                    <div class="account-row__chips">
+                        @foreach (var role in Member.Roles)
+                        {
+                            <span class="account-chip">@SharedLocale[$"Role_{role}"]</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @if (Seasons.Count > 0)
+            {
+                <div class="account-row">
+                    <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" Class="account-row__icon" />
+                    <div class="account-row__text">
+                        <div class="account-row__label">@Locale["Seasons"]</div>
+                        <div class="account-row__chips">
+                            @foreach (var season in Seasons.OrderByDescending(s => s.StartDate))
+                            {
+                                var enrolled = Member.AllowedSeasonIds.Contains(season.Id);
+                                <span class="account-chip @(enrolled ? "account-chip--on" : "account-chip--off")"
+                                      title="@(enrolled ? Locale["Enrolled"] : Locale["NotEnrolled"])">
+                                    @(enrolled ? "✓" : "✕") @season.StartDate.Year
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </ChildContent>
+</SectionCard>
+
+@code {
+    [Parameter, EditorRequired] public MembersDetailResult Member { get; set; } = null!;
+    [Parameter] public List<SeasonResult> Seasons { get; set; } = [];
+
+    [Inject] private IStringLocalizer<MyClubLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    private int Age
+    {
+        get
+        {
+            var age = Today.Year - Member.Birthday.Year;
+            return Member.Birthday > Today.AddYears(-age) ? age - 1 : age;
+        }
+    }
+
+    private bool IsBirthdayToday => Member.Birthday.Month == Today.Month && Member.Birthday.Day == Today.Day;
+}

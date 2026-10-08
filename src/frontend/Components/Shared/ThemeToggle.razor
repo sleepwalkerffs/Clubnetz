@@ -1,0 +1,41 @@
+@using Bookennis.Client.Localization.Navigation
+@using Bookennis.Client.Services.Theme
+@implements IDisposable
+
+<MudMenu Icon="@CurrentIcon" Color="Color.Inherit" AriaLabel="@Locale["Theme"]"
+         AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+    @foreach (var (mode, icon, label) in Options)
+    {
+        <MudMenuItem Icon="@icon" OnClick="@(() => ThemeService.SetModeAsync(mode))"
+                     Class="@(mode == ThemeService.Mode ? "mud-selected-item" : null)">
+            @Locale[label]
+        </MudMenuItem>
+    }
+</MudMenu>
+
+@code {
+    [Inject]
+    private IThemeService ThemeService { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<NavigationLocale> Locale { get; set; } = null!;
+
+    private static readonly (ThemeMode Mode, string Icon, string Label)[] Options =
+    [
+        (ThemeMode.System, Icons.Material.Filled.BrightnessAuto, "ThemeSystem"),
+        (ThemeMode.Light, Icons.Material.Filled.LightMode, "ThemeLight"),
+        (ThemeMode.Dark, Icons.Material.Filled.DarkMode, "ThemeDark"),
+    ];
+
+    private string CurrentIcon => Options.First(o => o.Mode == ThemeService.Mode).Icon;
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= StateHasChanged;
+    }
+}

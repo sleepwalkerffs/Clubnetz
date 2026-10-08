@@ -1,0 +1,102 @@
+@page "/clubs/{ClubId:int}/news"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.News
+@using Bookennis.Client.Pages.ClubShell.News.Components
+@using Bookennis.Client.Services.Store.ClubAnnouncements
+@using Bookennis.Client.Services.Store.ClubProfile
+
+@implements IDisposable
+
+<PageTitle>@Locale["News"]</PageTitle>
+
+<PageHeader>
+    <Content>@Locale["News"]</Content>
+</PageHeader>
+
+<div class="news-page">
+    <div class="news-hero">
+        <div class="news-hero__text">
+            <div class="news-hero__eyebrow">@ClubProfileStore.SelectedClub?.ClubName</div>
+            <div class="news-hero__title">@Locale["HeroTitle"] 📣</div>
+            <div class="news-hero__subtitle">@Locale["HeroSubtitle"]</div>
+            @if (CanManage)
+            {
+                <MudButton Href="@($"{NewsHelpers.NewsUrl(ClubId)}/new")" Variant="Variant.Filled" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Add" Class="news-hero__new mt-4">
+                    @Locale["NewAnnouncement"]
+                </MudButton>
+            }
+        </div>
+    </div>
+
+    @if (CanManage)
+    {
+        <div class="news-toolbar">
+            <MudSwitch T="bool" Value="@showExpired" ValueChanged="ToggleExpired" Color="Color.Primary" Label="@Locale["ShowExpired"]" Class="ma-0" />
+        </div>
+    }
+
+    <SectionCard Emoji="📰" Title="@Locale["AllNews"]"
+                 Subtitle="@(Announcements is null ? null : NewsHelpers.Count(Locale, "AnnouncementCount", Announcements.Count))">
+        @if (Announcements is null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (Announcements.Count == 0)
+        {
+            <div class="news-empty">
+                <span class="news-empty__emoji" aria-hidden="true">🗞️</span>
+                <span>@Locale[CanManage ? "NoNewsManager" : "NoNews"]</span>
+            </div>
+        }
+        else
+        {
+            @foreach (var announcement in Announcements)
+            {
+                <AnnouncementListItem @key="announcement.Id" Announcement="@announcement" ClubId="@ClubId" ShowExpiry="@CanManage" />
+            }
+        }
+    </SectionCard>
+</div>
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [Inject] private IClubAnnouncementsStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<NewsLocale> Locale { get; set; } = null!;
+
+    private bool showExpired;
+    private bool loaded;
+
+    private bool CanManage => NewsHelpers.CanManage(ClubProfileStore.Roles);
+
+    private List<Bookennis.Shared.Controller.ClubAnnouncements.ClubAnnouncementSummaryDto>? Announcements => loaded ? Store.Announcements : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnAnnouncementsChanged += StateHasChanged;
+        ClubProfileStore.OnClubProfileChanged += StateHasChanged;
+
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        loaded = false;
+        await Store.LoadAnnouncements(showExpired);
+        loaded = true;
+    }
+
+    private async Task ToggleExpired(bool value)
+    {
+        showExpired = value;
+        await Load();
+    }
+
+    public void Dispose()
+    {
+        Store.OnAnnouncementsChanged -= StateHasChanged;
+        ClubProfileStore.OnClubProfileChanged -= StateHasChanged;
+    }
+}

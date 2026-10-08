@@ -1,0 +1,212 @@
+.filter-panel {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.filter-panel__top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+::deep .filter-panel__search {
+    flex: 1 1 auto;
+    margin: 0;
+}
+
+::deep .filter-panel__toggle {
+    flex-shrink: 0;
+    height: 40px;
+    border-radius: 12px;
+}
+
+.filter-panel__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    margin-left: 6px;
+    padding: 0 6px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--mud-palette-primary);
+    background: #FFFFFF;
+}
+
+.filter-panel__presets {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+}
+
+.preset {
+    --preset-color: var(--mud-palette-primary);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--preset-color) 35%, var(--mud-palette-lines-inputs));
+    background: color-mix(in srgb, var(--preset-color) 8%, var(--mud-palette-surface));
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.preset:hover {
+    border-color: var(--preset-color);
+}
+
+.preset:focus-visible {
+    outline: 2px solid var(--preset-color);
+    outline-offset: 2px;
+}
+
+.preset__count {
+    padding: 0 7px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--preset-color);
+    background: color-mix(in srgb, var(--preset-color) 14%, transparent);
+}
+
+.preset--selected {
+    color: #FFFFFF;
+    border-color: var(--preset-color);
+    background: var(--preset-color);
+}
+
+.preset--selected .preset__count {
+    color: var(--preset-color);
+    background: #FFFFFF;
+}
+
+.filter-panel__advanced {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--mud-palette-lines-inputs);
+}
+
+.filter-group__label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.filter-group__hint {
+    margin: 2px 0 8px;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.filter-group__extra {
+    margin-top: 6px;
+}
+
+.season-rules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.season-rule {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--mud-palette-lines-inputs);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.season-rule:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 2px;
+}
+
+.season-rule__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--mud-palette-text-secondary);
+    border: 1.5px solid currentColor;
+}
+
+.season-rule__live {
+    font-size: 0.6rem;
+    color: var(--bk-dark-red, #DC2626);
+}
+
+.season-rule--in {
+    color: #FFFFFF;
+    border-color: #059669;
+    background: #059669;
+}
+
+.season-rule--in .season-rule__icon {
+    color: #059669;
+    border-color: #FFFFFF;
+    background: #FFFFFF;
+}
+
+.season-rule--notin {
+    color: #FFFFFF;
+    border-color: #DC2626;
+    background: #DC2626;
+}
+
+.season-rule--notin .season-rule__icon {
+    color: #DC2626;
+    border-color: #FFFFFF;
+    background: #FFFFFF;
+}
+
+.season-rule--notin .season-rule__label {
+    text-decoration: line-through;
+}
+
+.season-rule--in .season-rule__live,
+.season-rule--notin .season-rule__live {
+    color: #FFFFFF;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+@media (max-width: 599px) {
+    .filter-panel {
+        padding: 12px;
+    }
+}

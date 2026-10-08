@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  bookennis:
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    stdin_open: true
+    tty: true
+    command: >
+        bash -c "openssl pkcs12 -in /https/aspnetapp.pfx -clcerts -nokeys -out /https/certificate.crt -passin pass:developer && 
+                 mv /https/certificate.crt /usr/local/share/ca-certificates/ &&
+                 update-ca-certificates &&
+                #  apt-get update &&
+                #  apt-get install -y python3 && 
+                #  dotnet workload restore wasm-tools --project /src/backend/Bookennis.Api/Bookennis.Api.csproj  &&
+                 dotnet run --project /src/backend/Bookennis.Api/Bookennis.Api.csproj"
+    environment:
+      - TZ=UTC
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Kestrel:Certificates:Default:Password=developer
+      - Kestrel:Certificates:Default:Path=/https/aspnetapp.pfx
+      - Kestrel:Endpoints:Http:Url=https://*:5000
+      - ConnectionString=Host=host.docker.internal;Port=8432;Database=bookennis;User Id=postgres;Password=password
+      - Email:SmtpServer=maildev
+      - Email:SmtpPort=1025
+    volumes:
+      - ../../src:/src
+      - nuget:/root/.nuget/packages
+      - ~/.aspnet/https:/https
+    ports:
+      - "5000:5000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  nuget:
+
+networks:
+  default:
+    name: bookennis_default
+    external: true

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Imprint" xml:space="preserve">
+    <value>Impressum</value>
+  </data>
+  <data name="Privacy" xml:space="preserve">
+    <value>Datenschutzerklärung</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Zurück</value>
+  </data>
+  <data name="LastUpdated" xml:space="preserve">
+    <value>Stand: {0}</value>
+  </data>
+  <data name="NotConfigured" xml:space="preserve">
+    <value>Die Angaben zum Betreiber sind noch nicht hinterlegt (Abschnitt "Legal" in wwwroot/appsettings.json).</value>
+  </data>
+  <data name="Operator" xml:space="preserve">
+    <value>Betreiber</value>
+  </data>
+  <data name="Contact" xml:space="preserve">
+    <value>Kontakt</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>E-Mail</value>
+  </data>
+  <data name="Phone" xml:space="preserve">
+    <value>Telefon</value>
+  </data>
+  <data name="Imprint_LegalBasis" xml:space="preserve">
+    <value>Angaben gemäß § 5 E-Commerce-Gesetz (ECG) und § 25 Mediengesetz (MedienG).</value>
+  </data>
+  <data name="Imprint_PurposeTitle" xml:space="preserve">
+    <value>Über Clubnetz</value>
+  </data>
+  <data name="Imprint_Purpose" xml:space="preserve">
+    <value>Clubnetz ist eine kostenlose App, mit der Sportvereine ihre Mitglieder verwalten und Plätze buchen. Es handelt sich um kein kommerzielles Angebot, die App enthält keine Werbung.</value>
+  </data>
+  <data name="Imprint_ClubContentTitle" xml:space="preserve">
+    <value>Inhalte der Vereine</value>
+  </data>
+  <data name="Imprint_ClubContent" xml:space="preserve">
+    <value>Für Inhalte, die Vereine in Clubnetz veröffentlichen (z. B. Veranstaltungen, E-Mails, Abzeichen), ist der jeweilige Verein verantwortlich. Bitte wende dich dazu direkt an deinen Verein.</value>
+  </data>
+  <data name="Imprint_LiabilityTitle" xml:space="preserve">
+    <value>Haftung für Links</value>
+  </data>
+  <data name="Imprint_Liability" xml:space="preserve">
+    <value>Trotz sorgfältiger Kontrolle übernehmen wir keine Haftung für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten sind ausschließlich deren Betreiber verantwortlich.</value>
+  </data>
+  <data name="Privacy_Intro" xml:space="preserve">
+    <value>Der Schutz deiner Daten ist uns wichtig. Diese Datenschutzerklärung erklärt, welche personenbezogenen Daten Clubnetz verarbeitet, wozu, und welche Rechte du hast. Wir verarbeiten nur die Daten, die für den Betrieb der App nötig sind. Es gibt keine Werbung, kein Tracking und keinen Verkauf von Daten.</value>
+  </data>
+  <data name="Privacy_Controller_Title" xml:space="preserve">
+    <value>1. Verantwortlicher</value>
+  </data>
+  <data name="Privacy_Controller_Body" xml:space="preserve">
+    <value>Verantwortlicher im Sinne der Datenschutz-Grundverordnung (DSGVO) ist:</value>
+  </data>
+  <data name="Privacy_Data_Title" xml:space="preserve">
+    <value>2. Welche Daten wir verarbeiten</value>
+  </data>
+  <data name="Privacy_Data_Body" xml:space="preserve">
+    <value>- Konto: Vor- und Nachname, E-Mail-Adresse, Geburtsdatum, Geschlecht, Sprache, Passwort (nur als sicherer Hash gespeichert), optional deine Adresse und ein Profilbild.
+- Vereine: deine Mitgliedschaften, Rollen und Saisonen, deine Buchungen (Datum, Platz, Spielmodus, Mitspieler*innen, Kommentar), Anmeldungen zu Vereinsveranstaltungen samt deinen Antworten, Abzeichen und die aus deinen Buchungen berechneten Statistiken.
+- Gäste: Gästekarten und die damit gemachten Buchungen.
+- Familie: Profile von Kindern, die Eltern selbst anlegen und verwalten (Name, Geburtsdatum, Geschlecht).
+- Abo-Planer: die Pläne, die du erstellst, einschließlich der Namen der Teilnehmer*innen, die du einträgst.
+- Push-Benachrichtigungen (nur wenn du sie einschaltest): die Adresse deines Geräts beim Push-Dienst deines Browsers und die Schlüssel, mit denen Benachrichtigungen dafür verschlüsselt werden. Beim Ausschalten oder Abmelden werden diese Daten entfernt.
+- Technische Daten: IP-Adresse und Zeitpunkt von Anfragen in den Server-Logs sowie fehlgeschlagene Anmeldeversuche zum Schutz deines Kontos.</value>
+  </data>
+  <data name="Privacy_Purpose_Title" xml:space="preserve">
+    <value>3. Zwecke und Rechtsgrundlagen</value>
+  </data>
+  <data name="Privacy_Purpose_Body" xml:space="preserve">
+    <value>- Bereitstellung der App (Konto, Vereinsmitgliedschaft, Buchungen, Veranstaltungen, E-Mails wie Bestätigungen und Buchungsbenachrichtigungen): Art. 6 Abs. 1 lit. b DSGVO (Erfüllung des Nutzungsvertrags).
+- Sicherheit der App, Schutz vor Missbrauch und Fehlerbehebung (Server-Logs, Anmeldeschutz): Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und funktionierenden Dienst).
+- Freiwillige Angaben wie deine Adresse oder dein Profilbild: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung). Du kannst sie jederzeit in deinem Profil entfernen.</value>
+  </data>
+  <data name="Privacy_Recipients_Title" xml:space="preserve">
+    <value>4. Wer deine Daten sieht</value>
+  </data>
+  <data name="Privacy_Recipients_Body" xml:space="preserve">
+    <value>- Dein Verein: Die Administrator*innen und Funktionär*innen deines Vereins sehen deine Mitgliedsdaten (z. B. Name, Kontaktdaten, Geburtsdatum, Buchungen), um den Verein zu organisieren. Andere Mitglieder sehen deinen Namen, dein Profilbild und dein Abzeichen im Buchungsplan, in der Rangliste (du kannst dich abmelden) und in deiner Trophäensammlung (du entscheidest, ob sie öffentlich ist). Wie dein Verein deine Daten verwendet, erfährst du auch direkt bei deinem Verein.
+- Dienstleister, die in unserem Auftrag auf Basis eines Auftragsverarbeitungsvertrags Daten verarbeiten: Hosting der App und der Datenbank ({0}) und Versand der E-Mails ({1}).
+- Push-Benachrichtigungen werden, wenn du sie einschaltest, über den Push-Dienst deines Browser- bzw. Geräteherstellers zugestellt (Apple, Google, Mozilla oder Microsoft). Der Inhalt ist für dein Gerät verschlüsselt, der Push-Dienst kann ihn nicht lesen.
+- Darüber hinaus geben wir deine Daten nicht weiter, außer wir sind gesetzlich dazu verpflichtet.</value>
+  </data>
+  <data name="Privacy_Children_Title" xml:space="preserve">
+    <value>5. Kinder</value>
+  </data>
+  <data name="Privacy_Children_Body" xml:space="preserve">
+    <value>Profile von Kindern werden von ihren Eltern angelegt und verwaltet, die für die eingetragenen Daten verantwortlich sind. Kinder unter 14 Jahren sollen kein eigenes Konto anlegen.</value>
+  </data>
+  <data name="Privacy_Cookies_Title" xml:space="preserve">
+    <value>6. Cookies und lokaler Speicher</value>
+  </data>
+  <data name="Privacy_Cookies_Body" xml:space="preserve">
+    <value>Clubnetz verwendet nur ein technisch notwendiges Cookie, das dich angemeldet hält, und speichert Anzeigeeinstellungen (z. B. den dunklen Modus oder den gewählten Verein) im lokalen Speicher deines Browsers. Es gibt keine Analyse-, Tracking- oder Werbe-Cookies, daher ist kein Cookie-Banner nötig.</value>
+  </data>
+  <data name="Privacy_Retention_Title" xml:space="preserve">
+    <value>7. Wie lange wir deine Daten speichern</value>
+  </data>
+  <data name="Privacy_Retention_Body" xml:space="preserve">
+    <value>Wir speichern deine Daten, solange du ein Konto hast. Wenn du einen Verein verlässt, wird deine Mitgliedschaft in diesem Verein gelöscht. Wenn du dein Konto löschst, werden alle deine personenbezogenen Daten sofort gelöscht; aus Sicherungskopien verschwinden sie, sobald diese turnusmäßig überschrieben werden. Server-Logs werden nur kurz aufbewahrt.</value>
+  </data>
+  <data name="Privacy_Rights_Title" xml:space="preserve">
+    <value>8. Deine Rechte</value>
+  </data>
+  <data name="Privacy_Rights_Body" xml:space="preserve">
+    <value>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch gegen die Verarbeitung deiner Daten und kannst eine Einwilligung jederzeit widerrufen. Das meiste kannst du selbst in deinem Profil erledigen: Daten ändern, alle deine Daten als Datei herunterladen, einen Verein verlassen oder dein Konto löschen. Für alles andere schreib uns an {0}.</value>
+  </data>
+  <data name="Privacy_Complaint_Title" xml:space="preserve">
+    <value>9. Beschwerderecht</value>
+  </data>
+  <data name="Privacy_Complaint_Body" xml:space="preserve">
+    <value>Wenn du der Meinung bist, dass die Verarbeitung deiner Daten gegen das Datenschutzrecht verstößt, kannst du dich bei einer Aufsichtsbehörde beschweren, in Österreich bei der Datenschutzbehörde (Barichgasse 40-42, 1030 Wien, www.dsb.gv.at), oder bei der Behörde des Landes, in dem du lebst.</value>
+  </data>
+</root>

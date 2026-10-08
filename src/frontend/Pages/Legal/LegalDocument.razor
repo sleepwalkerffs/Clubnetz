@@ -1,0 +1,48 @@
+@using Bookennis.Client.Localization.Pages.Legal
+@using Bookennis.Client.Services.Legal
+
+@* Frame of the legal pages (imprint, privacy policy): back button, title, operator hint and the sections. Readable line length on desktop. *@
+<article class="legal-document">
+    <MudButton Variant="Variant.Text"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.ArrowBack"
+               Class="legal-document__back"
+               OnClick="GoBack">
+        @Locale["Back"]
+    </MudButton>
+
+    <header class="legal-document__header">
+        <span class="legal-document__emoji" aria-hidden="true">@Emoji</span>
+        <h1 class="legal-document__title">@Title</h1>
+        <p class="legal-document__updated">@string.Format(Locale["LastUpdated"], LastUpdated.ToString("d"))</p>
+    </header>
+
+    @if (!Settings.IsConfigured)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-4">@Locale["NotConfigured"]</MudAlert>
+    }
+
+    <div class="legal-document__body">
+        @ChildContent
+    </div>
+</article>
+
+@code {
+    /// <summary>Date of the last change of the texts. Update it when the legal texts change.</summary>
+    public static readonly DateOnly LastUpdated = new(2026, 10, 2);
+
+    [Inject] private IStringLocalizer<LegalLocale> Locale { get; set; } = null!;
+    [Inject] private LegalSettings Settings { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+
+    [Parameter, EditorRequired] public string Title { get; set; } = null!;
+    [Parameter, EditorRequired] public string Emoji { get; set; } = null!;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private async Task GoBack()
+    {
+        if (!await JsRuntime.InvokeAsync<bool>("App.goBack"))
+            Navigation.NavigateTo("/");
+    }
+}

@@ -1,0 +1,534 @@
+@page "/clubs/{ClubId:int}/booking/{BookingEntryId:int}"
+@using Bookennis.Client.Components.Booking
+@using Bookennis.Client.Components.Booking.Dialogs
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Components.Booking
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.Store.Bookings
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Family
+@using Bookennis.Client.Services.Store.Members
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Booking
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Shared
+@using System.Globalization
+
+@if (booking is null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else
+{
+    var modeColor = BookingColors.ToHex(booking.PlayMode.Color);
+    var gracePeriodPassed = booking.Interval.From < DateTimeOffset.Now.AddMinutes(-(ClubStore.ClubDetails?.BookingGracePeriodInMinutes ?? 0));
+
+    <PageTitle>@Locale["BookingDetails"]</PageTitle>
+
+    <div class="booking-detail">
+        <div>
+            <MudButton Href="@CalendarUrl" Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack">
+                @Locale["BackToCalendar"]
+            </MudButton>
+        </div>
+
+        <div class="detail-hero" style="--mode-color: @modeColor">
+            <div class="detail-hero__date">
+                <span class="detail-hero__weekday">@booking.Interval.From.ToString("ddd", CultureInfo.CurrentCulture)</span>
+                <span class="detail-hero__day">@booking.Interval.From.Day</span>
+                <span class="detail-hero__month">@booking.Interval.From.ToString("MMM yyyy", CultureInfo.CurrentCulture)</span>
+            </div>
+
+            <div class="detail-hero__text">
+                <div class="detail-hero__eyebrow">@RelativeLabel</div>
+                <div class="detail-hero__time">
+                    @booking.Interval.From.ToString("HH:mm") – @booking.Interval.To.ToString("HH:mm")
+                    <span class="detail-hero__duration">@FormatDuration(booking.Interval.To - booking.Interval.From)</span>
+                </div>
+                <div class="detail-hero__chips">
+                    <span class="detail-chip">📍 @GetCourtName(booking.CourtId)</span>
+                    <span class="detail-chip detail-chip--mode">@booking.PlayMode.Name</span>
+                    @if (booking.RecurringBookingSeriesId is not null)
+                    {
+                        <span class="detail-chip"><MudIcon Icon="@Icons.Material.Filled.Repeat" Size="Size.Small" /> @Locale["RecurringBookingIndicator"]</span>
+                    }
+                </div>
+            </div>
+
+            @if (!isEditing && (userIsAllowedToEdit || userIsAllowedToDelete))
+            {
+                <div class="detail-hero__actions">
+                    @if (userIsAllowedToEdit)
+                    {
+                        <LoadButton Icon="@Icons.Material.Filled.Edit" Variant="Variant.Filled" Color="Color.Primary" FullWidth="false"
+                                    Loading="@processing" OnClick="@StartEdit" Disabled="@(!HasElevatedRole && gracePeriodPassed)">
+                            @Locale["EditBooking"]
+                        </LoadButton>
+                    }
+                    @if (userIsAllowedToDelete)
+                    {
+                        <LoadButton Icon="@Icons.Material.Filled.Delete" Variant="Variant.Outlined" Color="Color.Error" FullWidth="false"
+                                    Loading="@processing" OnClick="@DeleteBooking" Disabled="@gracePeriodPassed">
+                            @SharedLocale["Delete"]
+                        </LoadButton>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (isEditing)
+        {
+            <SectionCard Emoji="✏️" Title="@Locale["EditBooking"]"
+                         Subtitle="@(editRecurringScope == RecurringEditScope.ThisAndFollowing ? Locale["ThisAndFollowing"].Value : editRecurringScope == RecurringEditScope.Single ? Locale["ThisOccurrenceOnly"].Value : null)">
+                <div class="detail-edit">
+                    @if (EditAllowedPlayModes.Count > 1)
+                    {
+                        <ChoiceChips TItem="PlayModeDto" Label="@Locale["PlayMode"]" Items="@EditAllowedPlayModes" Value="@editPlayMode"
+                                     ValueChanged="@(playMode => editPlayMode = playMode)" TextFunc="@(playMode => playMode.Name)"
+                                     ColorFunc="@(playMode => BookingColors.ToHex(playMode.Color))" />
+                    }
+                    <ChoiceChips TItem="CourtResult" Label="@Locale["Court"]" Items="@ClubStore.Courts" Value="@editCourt"
+                                 ValueChanged="@(court => editCourt = court)" TextFunc="@(court => court.Name)" />
+
+                    <div class="detail-edit__times">
+                        <MudDatePicker @bind-Date="editDate" Variant="Variant.Outlined" Label=@Locale["Date"] DateFormat="dd.MM.yyyy" />
+                        <MudTimePicker @bind-Time="editStartTime" Variant="Variant.Outlined" Label=@Locale["StartTime"] MinuteSelectionStep="30" />
+                        @if (editPlayMode?.FixedDuration is null)
+                        {
+                            <MudTimePicker @bind-Time="editEndTime" Variant="Variant.Outlined" Label=@Locale["EndTime"] MinuteSelectionStep="30" />
+                        }
+                    </div>
+
+                    @if ((editPlayMode?.FixedPlayerCount.HasValue ?? false) || ChildIsParticipantInBooking)
+                    {
+                        <PlayerSelection @ref="PlayerSelectionComponent" AvailablePlayers="@ClubStore.ClubPlayers" MaxPlayers="@(editPlayMode?.FixedPlayerCount ?? 1)" FixedPlayer="@EditFixedPlayer" FixedPlayerAlternative="@EditFixedPlayerAlternatives" InitialPlayers="@EditInitialPlayers" />
+                    }
+                    @if (editPlayMode?.CommentAllowed ?? false)
+                    {
+                        <MudTextField @bind-Value="editComment" Variant="Variant.Outlined" Label="@Locale["Comment"]" Lines="2" AutoGrow="true" />
+                    }
+
+                    <div class="d-flex flex-wrap gap-2 justify-end">
+                        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="@CancelEdit" Disabled="@processing">@SharedLocale["Cancel"]</MudButton>
+                        <LoadButton Icon="@Icons.Material.Filled.Save" Variant="Variant.Filled" Color="Color.Primary" FullWidth="false"
+                                    Loading="@processing" OnClick="@SaveEdit">
+                            @SharedLocale["Save"]
+                        </LoadButton>
+                    </div>
+                </div>
+            </SectionCard>
+        }
+        else
+        {
+            <MudGrid Spacing="3">
+                <MudItem xs="12" md="@(string.IsNullOrWhiteSpace(booking.Comment) ? 12 : 8)">
+                    <SectionCard Emoji="👥" Title="@Locale["Players"]" Subtitle="@string.Format(Locale["PlayersCount"], booking.Players.Count)">
+                        <div class="detail-players">
+                            @foreach (var player in booking.Players)
+                            {
+                                var clickable = !player.IsGuest && !player.IsAtpPlayer;
+                                <div class="detail-player @(clickable ? "detail-player--clickable" : null)"
+                                     role="@(clickable ? "link" : null)" tabindex="@(clickable ? "0" : null)"
+                                     @onclick="() => NavigateToMemberProfile(player)"
+                                     @onkeydown="e => OnPlayerKeyDown(e, player)">
+                                    <UserAvatar FirstName="@player.FirstName" LastName="@player.LastName" ProfilePictureUrl="@player.ProfilePictureUrl"
+                                                BadgeImageUrl="@player.DisplayBadgeImageUrl" BadgeLevel="@player.DisplayBadgeLevel"
+                                                Color="Color.Secondary" Size="Size.Large" />
+                                    <div class="detail-player__name">@player.FirstName @player.LastName</div>
+                                    <div class="detail-player__tags">
+                                        @if (player.MemberId == ProfileStore.MemberId)
+                                        {
+                                            <span class="detail-player__tag detail-player__tag--you">@Locale["You"]</span>
+                                        }
+                                        @if (player.IsGuest)
+                                        {
+                                            <span class="detail-player__tag">@Locale["Guest"]</span>
+                                        }
+                                        @if (player.IsAtpPlayer)
+                                        {
+                                            <span class="detail-player__tag detail-player__tag--atp">ATP</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </SectionCard>
+                </MudItem>
+
+                @if (!string.IsNullOrWhiteSpace(booking.Comment))
+                {
+                    <MudItem xs="12" md="4">
+                        <SectionCard Emoji="💬" Title="@Locale["Comment"]">
+                            <div class="detail-comment">@booking.Comment</div>
+                        </SectionCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </div>
+}
+
+@code {
+    [Inject]
+    private IBookingStore BookingStore { get; set; } = null!;
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    [Inject]
+    private IClubStore ClubStore { get; set; } = null!;
+    [Inject]
+    private IClubProfileStore ProfileStore { get; set; } = null!;
+    [Inject]
+    private IFamilyStore FamilyStore { get; set; } = null!;
+    [Inject]
+    private IMembersStore MembersStore { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavManager { get; set; } = null!;
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BookingSharedLocale> Locale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [Parameter]
+    public int ClubId { get; set; }
+    [Parameter]
+    public int BookingEntryId { get; set; }
+
+    private BookingResult? booking;
+    private bool processing;
+    private bool isEditing;
+
+    // Edit state
+    private DateTime? editDate;
+    private TimeSpan? editStartTime;
+    private TimeSpan? editEndTime;
+    private PlayModeDto? editPlayMode;
+    private CourtResult? editCourt;
+    private string? editComment;
+    private PlayerSelection? PlayerSelectionComponent;
+    private RecurringEditScope? editRecurringScope;
+
+    private PlayerResult? FixedPlayer => ClubStore.ClubPlayers.SingleOrDefault(p => p.MemberId == ProfileStore.MemberId);
+
+    private PlayerResult? EditFixedPlayer =>
+        IsParticipantInBooking ? FixedPlayer : ChildParticipant;
+
+    private List<PlayerResult> EditFixedPlayerAlternatives =>
+        IsParticipantInBooking ? FixedPlayerAlternatives
+        : ChildIsParticipantInBooking ? EligibleChildrenForEdit
+        : [];
+
+    private PlayerResult? ChildParticipant =>
+        MemberChildren.FirstOrDefault(c => booking?.Players.Any(p => p.MemberId == c.MemberId) ?? false);
+
+    private List<PlayerResult> EligibleChildrenForEdit =>
+        MemberChildren.Where(c => booking?.Players.Any(p => p.MemberId == c.MemberId) ?? false).ToList();
+
+    private List<PlayerResult> EditInitialPlayers
+    {
+        get
+        {
+            if (booking is null) return [];
+            var fixedId = EditFixedPlayer?.MemberId;
+            return booking.Players
+                .Where(p => p.MemberId != fixedId)
+                .Select(p => ClubStore.ClubPlayers.SingleOrDefault(cp => cp.MemberId == p.MemberId))
+                .Where(p => p is not null)
+                .ToList()!;
+        }
+    }
+
+    private List<PlayerResult> MemberChildren => FamilyStore.Family?.Children.ConvertAll(child => new PlayerResult(child.MemberId, child.FirstName, child.LastName, false)) ?? [];
+    private List<PlayerResult> FixedPlayerAlternatives => FixedPlayer is null ? [] : [.. MemberChildren, FixedPlayer];
+
+    private static readonly MemberRole[] EditRoles =
+    [
+        MemberRole.Maintainer,
+        MemberRole.Admin,
+        MemberRole.SportsDirector,
+        MemberRole.YouthSportsDirector,
+        MemberRole.Trainer,
+    ];
+
+    private bool HasElevatedRole => ProfileStore.Roles.Any(r => EditRoles.Contains(r));
+
+    private List<PlayModeDto> AllowedPlayModes =>
+        ClubStore.PlayModes.Where(mode => mode.AllowedRoles.Any(ProfileStore.Roles.Contains)).ToList();
+
+    private List<PlayModeDto> EditAllowedPlayModes =>
+        editRecurringScope == RecurringEditScope.ThisAndFollowing
+            ? AllowedPlayModes.Where(pm => pm.AllowRecurring).ToList()
+            : AllowedPlayModes;
+
+    private bool userIsAllowedToEdit
+        => booking is not null
+        && (IsParticipantInBooking
+            || ChildIsParticipantInBooking
+            || HasElevatedRole);
+
+    private bool userIsAllowedToDelete
+        => booking is not null
+        && (IsParticipantInBooking
+            || ChildIsParticipantInBooking
+            || ProfileStore.Roles.Contains(MemberRole.Admin));
+
+    private bool IsParticipantInBooking =>
+        booking?.Players.Any(player => player.MemberId == ProfileStore.MemberId) ?? false;
+
+    private bool ChildIsParticipantInBooking =>
+        FamilyStore.Family?.Children.Any(child => booking?.Players.Any(player => player.MemberId == child.MemberId) ?? false) ?? false;
+
+    private async Task StartEdit()
+    {
+        if (booking is null) return;
+
+        if (booking.RecurringBookingSeriesId is not null)
+        {
+            var parameters = new DialogParameters<RecurringEditScopeDialog>();
+            var dialog = await DialogService.ShowAsync<RecurringEditScopeDialog>(Locale["EditBooking"], parameters);
+            var dialogResult = await dialog.Result;
+
+            if (dialogResult is null || dialogResult.Canceled) return;
+
+            editRecurringScope = (RecurringEditScope)dialogResult.Data!;
+        }
+        else
+        {
+            editRecurringScope = null;
+        }
+
+        editDate = booking.Interval.From.DateTime.Date;
+        editStartTime = booking.Interval.From.TimeOfDay;
+        editEndTime = booking.Interval.To.TimeOfDay;
+        editPlayMode = ClubStore.PlayModes.FirstOrDefault(pm => pm.Id == booking.PlayMode.Id);
+        editCourt = ClubStore.Courts.FirstOrDefault(c => c.CourtId == booking.CourtId);
+        editComment = booking.Comment;
+        isEditing = true;
+    }
+
+    private void CancelEdit()
+    {
+        isEditing = false;
+    }
+
+    private async Task SaveEdit()
+    {
+        if (booking is null || editDate is null) return;
+
+        processing = true;
+        try
+        {
+            var from = editDate.Value.Date.Add(editStartTime ?? TimeSpan.Zero);
+            var to = editPlayMode?.FixedDuration is not null
+                ? from.Add(editPlayMode.FixedDuration.Value)
+                : editDate.Value.Date.Add(editEndTime ?? TimeSpan.Zero);
+
+            var players = (editPlayMode?.FixedPlayerCount.HasValue == true || ChildIsParticipantInBooking) && PlayerSelectionComponent is not null
+                ? PlayerSelectionComponent.SelectedPlayers.ConvertAll(p => p.MemberId)
+                : booking.Players.Select(p => p.MemberId).ToList();
+
+            if (editRecurringScope is not null)
+            {
+                var recurringModel = new EditRecurringBookingModel(
+                    booking.BookingEntryId,
+                    editCourt?.CourtId ?? booking.CourtId,
+                    from,
+                    to,
+                    TimeZoneInfo.Local.Id,
+                    editPlayMode?.Id ?? booking.PlayMode.Id,
+                    players,
+                    editRecurringScope.Value,
+                    RecurrenceIntervalWeeks: null,
+                    EndDate: null,
+                    editComment);
+
+                var recurringResponse = await BookingStore.EditRecurringBooking(booking.BookingEntryId, recurringModel);
+
+                if (!recurringResponse.Success)
+                {
+                    Snackbar.ShowErrorDetails(recurringResponse, BackendLocale);
+                    return;
+                }
+            }
+            else
+            {
+                var model = new EditBookingModel(
+                    booking.BookingEntryId,
+                    editCourt?.CourtId ?? booking.CourtId,
+                    from,
+                    to,
+                    TimeZoneInfo.Local.Id,
+                    editPlayMode?.Id ?? booking.PlayMode.Id,
+                    players,
+                    editComment);
+
+                var response = await BookingStore.EditBooking(booking.BookingEntryId, model);
+
+                if (!response.Success)
+                {
+                    Snackbar.ShowErrorDetails(response, BackendLocale);
+                    return;
+                }
+            }
+
+            isEditing = false;
+            Snackbar.Add(Locale["BookingSaved"], Severity.Success);
+            await BookingStore.LoadBooking(BookingEntryId);
+            booking = BookingStore.Booking;
+        }
+        finally
+        {
+            processing = false;
+        }
+    }
+
+    private async Task DeleteBooking()
+    {
+        if (booking is null)
+            return;
+
+        if (booking.RecurringBookingSeriesId is not null)
+        {
+            await DeleteRecurringBooking();
+            return;
+        }
+
+        bool result = (await DialogService.ShowMessageBox(
+            SharedLocale["Delete"],
+            Locale["DeleteBooking"],
+            yesText: SharedLocale["Delete"], cancelText: SharedLocale["Cancel"])) ?? false;
+
+        if (!result)
+            return;
+
+        processing = true;
+        try
+        {
+            var request = await BookingStore.DeleteBooking(booking.BookingEntryId);
+            if (request.Success)
+            {
+                Snackbar.Add(Locale["BookingDeleted"], Severity.Success);
+                NavManager.NavigateTo(CalendarUrl);
+                return;
+            }
+            Snackbar.ShowErrorDetails(request, BackendLocale);
+        }
+        finally
+        {
+            processing = false;
+        }
+    }
+
+    private async Task DeleteRecurringBooking()
+    {
+        if (booking is null) return;
+
+        var parameters = new DialogParameters<RecurringDeleteScopeDialog>();
+        var dialog = await DialogService.ShowAsync<RecurringDeleteScopeDialog>(Locale["DeleteBooking"], parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is null || dialogResult.Canceled) return;
+
+        var scope = (RecurringDeleteScope)dialogResult.Data!;
+
+        processing = true;
+        try
+        {
+            var model = new DeleteRecurringBookingModel(booking.BookingEntryId, scope);
+            var request = await BookingStore.DeleteRecurringBooking(booking.BookingEntryId, model);
+            if (request.Success)
+            {
+                Snackbar.Add(Locale["BookingDeleted"], Severity.Success);
+                NavManager.NavigateTo(CalendarUrl);
+                return;
+            }
+            Snackbar.ShowErrorDetails(request, BackendLocale);
+        }
+        finally
+        {
+            processing = false;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // The page can be opened directly (e.g. from My Club), so load what the edit form needs
+        var loadMember = MembersStore.LoadedMemberId(ProfileStore.MemberId) ? Task.CompletedTask : MembersStore.LoadMember(ProfileStore.MemberId);
+        await Task.WhenAll(
+            ClubStore.Courts.Count == 0 ? ClubStore.LoadCourts() : Task.CompletedTask,
+            ClubStore.PlayModes.Count == 0 ? ClubStore.LoadPlayModes() : Task.CompletedTask,
+            ClubStore.ClubPlayers.Count == 0 ? ClubStore.LoadPlayers() : Task.CompletedTask,
+            loadMember);
+
+        if (MembersStore.MemberDetail?.FamilyId is { } familyId && !FamilyStore.LoadedForFamilyId(familyId))
+            await FamilyStore.LoadFamily(familyId);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await BookingStore.LoadBooking(BookingEntryId);
+        booking = BookingStore.Booking;
+
+        await base.OnParametersSetAsync();
+    }
+
+    private string CalendarUrl
+    {
+        get
+        {
+            var date = DateOnly.FromDateTime((booking?.Interval.From ?? DateTimeOffset.Now).DateTime);
+            var start = date.ToString(CultureInfo.InvariantCulture);
+            return $"/clubs/{ClubId}/booking?Start={start}&End={date.AddDays(6).ToString(CultureInfo.InvariantCulture)}&Day={start}";
+        }
+    }
+
+    private string RelativeLabel
+    {
+        get
+        {
+            if (booking is null)
+                return string.Empty;
+
+            var now = DateTimeOffset.Now;
+            if (booking.Interval.From <= now && now < booking.Interval.To)
+                return Locale["NowPlaying"];
+
+            var days = DateOnly.FromDateTime(booking.Interval.From.DateTime).DayNumber - DateOnly.FromDateTime(now.DateTime).DayNumber;
+            return days switch
+            {
+                0 => Locale["Today"],
+                1 => Locale["Tomorrow"],
+                -1 => Locale["Yesterday"],
+                > 1 => string.Format(Locale["InDays"], days),
+                _ => string.Format(Locale["DaysAgo"], -days),
+            };
+        }
+    }
+
+    private string FormatDuration(TimeSpan duration)
+        => duration.TotalMinutes < 60
+            ? string.Format(Locale["DurationMinutes"], (int)duration.TotalMinutes)
+            : string.Format(Locale["DurationHours"], duration.TotalHours.ToString("0.#", CultureInfo.CurrentCulture));
+
+    private void OnPlayerKeyDown(KeyboardEventArgs e, PlayerResult player)
+    {
+        if (e.Key is "Enter" or " ")
+            NavigateToMemberProfile(player);
+    }
+
+    private void NavigateToMemberProfile(PlayerResult player)
+    {
+        if (!player.IsGuest && !player.IsAtpPlayer)
+            NavManager.NavigateTo($"/clubs/{ClubId}/members/{player.MemberId}/profile");
+    }
+
+    private string? GetCourtName(int? courtId)
+        => ClubStore.Courts.FirstOrDefault(court => court.CourtId == courtId)?.Name;
+}

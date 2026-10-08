@@ -1,0 +1,136 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubSettings
+@using Bookennis.Client.Pages.ClubShell.Club.Dialogs
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+
+@implements IDisposable
+
+<SectionCard Emoji="🗓️" Title="@L["SeasonsTitle"]" Subtitle="@L["SeasonsSubtitle"]">
+    <Actions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="Add">@L["Add"]</MudButton>
+    </Actions>
+    <ChildContent>
+        @if (Seasons.Count == 0)
+        {
+            <div class="seasons__empty">
+                <div class="seasons__empty-emoji" aria-hidden="true">🗓️</div>
+                <div>@L["NoSeasons"]</div>
+            </div>
+        }
+        else
+        {
+            <ol class="seasons">
+                @for (var i = 0; i < Seasons.Count; i++)
+                {
+                    var season = Seasons[i];
+                    var older = i + 1 < Seasons.Count ? Seasons[i + 1] : null;
+                    var state = StateOf(season);
+                    var length = season.EndDate.DayNumber - season.StartDate.DayNumber + 1;
+
+                    <li class="season season--@state">
+                        <span class="season__marker" aria-hidden="true"></span>
+                        <div class="season__card">
+                            <div class="season__head">
+                                <span class="season__label">@MemberAdminHelpers.SeasonLabel(season)</span>
+                                <span class="season__state season__state--@state">@L[$"SeasonState_{state}"]</span>
+                                <span class="season__actions">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@SharedLocale["Edit"]" OnClick="() => Edit(season)" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@SharedLocale["Delete"]" OnClick="() => Delete(season)" />
+                                </span>
+                            </div>
+                            <div class="season__dates">
+                                @season.StartDate.ToString("ddd, d. MMM yyyy", CultureInfo.CurrentCulture) → @season.EndDate.ToString("ddd, d. MMM yyyy", CultureInfo.CurrentCulture)
+                            </div>
+                            <div class="season__meta">
+                                <span>📏 @string.Format(L["SeasonLength"], Math.Round(length / 7.0), length)</span>
+                                @if (state == "active")
+                                {
+                                    var elapsed = Today.DayNumber - season.StartDate.DayNumber + 1;
+                                    <span>⏳ @string.Format(L["DaysLeft"], season.EndDate.DayNumber - Today.DayNumber)</span>
+                                    <div class="season__progress" title="@string.Format(L["DayOf"], elapsed, length)">
+                                        <span style="width: @((elapsed * 100.0 / length).ToString("0.#", CultureInfo.InvariantCulture))%"></span>
+                                    </div>
+                                }
+                                else if (state == "upcoming")
+                                {
+                                    <span>🚀 @string.Format(L["StartsIn"], season.StartDate.DayNumber - Today.DayNumber)</span>
+                                }
+                            </div>
+                        </div>
+                    </li>
+
+                    @if (older is not null)
+                    {
+                        var gap = season.StartDate.DayNumber - older.EndDate.DayNumber - 1;
+                        @if (gap < 0)
+                        {
+                            <li class="season-gap season-gap--overlap">⚠️ @string.Format(L["SeasonsOverlap"], -gap)</li>
+                        }
+                        else if (gap > 0)
+                        {
+                            <li class="season-gap">💤 @string.Format(L["SeasonBreak"], gap)</li>
+                        }
+                    }
+                }
+            </ol>
+        }
+    </ChildContent>
+</SectionCard>
+
+@code {
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    private List<SeasonResult> Seasons => ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList();
+
+    protected override void OnInitialized() => ClubStore.OnSeasonsChanged += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private static string StateOf(SeasonResult season)
+        => season.StartDate > Today ? "upcoming" : season.EndDate < Today ? "past" : "active";
+
+    private async Task Add()
+    {
+        var dialog = await DialogService.ShowAsync<EditSeasonDialog>(L["AddSeason"], new DialogParameters<EditSeasonDialog>(),
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+        await dialog.Result;
+    }
+
+    private async Task Edit(SeasonResult season)
+    {
+        var parameters = new DialogParameters<EditSeasonDialog> { { d => d.Season, season } };
+        var dialog = await DialogService.ShowAsync<EditSeasonDialog>(string.Format(L["EditSeasonTitle"], MemberAdminHelpers.SeasonLabel(season)), parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+        await dialog.Result;
+    }
+
+    private async Task Delete(SeasonResult season)
+    {
+        var confirmed = await DialogService.ShowMessageBox(
+            SharedLocale["Delete"],
+            string.Format(L["DeleteSeasonConfirmation"], MemberAdminHelpers.SeasonLabel(season)),
+            yesText: SharedLocale["Delete"],
+            cancelText: SharedLocale["Cancel"]);
+
+        if (confirmed != true)
+            return;
+
+        var response = await ClubStore.DeleteSeason(season.Id);
+        if (!response.Success)
+            Snackbar.ShowErrorDetails(response, BackendLocale);
+    }
+
+    public void Dispose() => ClubStore.OnSeasonsChanged -= OnChanged;
+}

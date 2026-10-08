@@ -1,0 +1,61 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Services.Store.Profile
+@using Bookennis.Shared.Controller.Profile
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption=@SharedLocale["Join"] CancelFunc="Cancel" CancelCaption=@SharedLocale["Cancel"] CanSubmit="@(selectedClubId.HasValue)" Loading="@loading">
+    @if (clubs is null)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (clubs.Count == 0)
+    {
+        <MudText>@SharedLocale["NoClubsAvailable"]</MudText>
+    }
+    else
+    {
+        <MudSelect T="int?" Label=@SharedLocale["SelectClub"] Variant="Variant.Outlined" @bind-Value="selectedClubId">
+            @foreach (var club in clubs)
+            {
+                <MudSelectItem T="int?" Value="@club.Id">@club.Name</MudSelectItem>
+            }
+        </MudSelect>
+    }
+</BaseDialog>
+
+@code {
+    [Inject]
+    private IProfileStore ProfileStore { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private List<AvailableClubDto>? clubs;
+    private int? selectedClubId;
+    private bool loading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await ProfileStore.GetAvailableClubs();
+        if (result is { Success: true, Dto: not null })
+            clubs = result.Dto.Clubs;
+        else
+            clubs = [];
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (selectedClubId is null)
+            return null;
+
+        loading = true;
+
+        await ProfileStore.BecomeClubMember(selectedClubId.Value);
+
+        loading = false;
+
+        return DialogResult.Ok(selectedClubId.Value);
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+}

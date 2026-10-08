@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "bookennis-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/backend/Bookennis.Api/Bookennis.Api.csproj"],
+      "port": 5000,
+      "url": "https://localhost:5000"
+    },
+    {
+      "name": "bookennis-api-http",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/backend/Bookennis.Api/Bookennis.Api.csproj", "--urls", "http://localhost:5080"],
+      "port": 5080,
+      "url": "http://localhost:5080"
+    }
+  ]
+}

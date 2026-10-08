@@ -1,0 +1,87 @@
+@page "/clubs/{ClubId:int}/guests"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Components.Shared.Tables
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubShell
+@using Bookennis.Client.Pages.ClubShell.Guests.Dialogs
+@using Bookennis.Client.Services.Store.Guests
+@using Bookennis.Shared.Controller.Guests
+
+@implements IDisposable
+
+<div>
+    <PageTitle>@SharedLocale["Guests"]</PageTitle>
+    @if (loaded)
+    {
+        <InputGroup Header="@SharedLocale["Guests"]" Elevation="0" Outlined="true">
+            <HeaderAction>
+                <LoadButton Color="Color.Primary" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Add" FullWidth=false OnClick="OpenAddGuestDialog">@ClubShellLocale["AddGuest"]</LoadButton>
+            </HeaderAction>
+            <Content>
+                <MudTable Items="@GuestStore.GuestCards" T="GuestCardDto" Class="mt-3" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>@SharedLocale["Email"]</MudTh>
+                        <MudTh>@ClubShellLocale["PurchasedBookings"]</MudTh>
+                        <MudTh Style="width: 80px;">@SharedLocale["Delete"]</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>
+                            <RowContent>
+                                <Content>@context.Email</Content>
+                                <Label>@SharedLocale["Email"]</Label>
+                            </RowContent>
+                        </MudTd>
+                        <MudTd>
+                            <RowContent>
+                                <Content><MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Primary">@context.PurchasedBookings</MudChip></Content>
+                                <Label>@ClubShellLocale["PurchasedBookings"]</Label>
+                            </RowContent>
+                        </MudTd>
+                        <MudTd>
+                            <MudIconButton Color="Color.Error"
+                                    Icon="@Icons.Material.Filled.Delete"
+                                    Size="Size.Small"
+                                    OnClick="@(() => GuestStore.DeleteGuest(context.Id))" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </Content>
+        </InputGroup>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int ClubId { get; set; }
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<ClubShellLocale> ClubShellLocale { get; set; } = null!;
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+
+    [Inject]
+    private IGuestStore GuestStore { get; set; } = null!;
+
+    private bool loaded = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await GuestStore.WaitUntilLoaded() || !GuestStore.GuestCardsLoaded)
+            await GuestStore.LoadGuests();
+
+        GuestStore.OnGuestsChanged += StateHasChanged;
+        loaded = true;
+    }
+
+    private async Task OpenAddGuestDialog()
+    {
+        await DialogService.ShowAsync<AddGuest>(@ClubShellLocale["AddGuest"]);
+    }
+
+    public void Dispose()
+    {
+        GuestStore.OnGuestsChanged -= StateHasChanged;
+    }
+}

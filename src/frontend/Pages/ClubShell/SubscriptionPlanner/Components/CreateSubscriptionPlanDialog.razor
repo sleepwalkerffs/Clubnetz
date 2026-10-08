@@ -1,0 +1,76 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.SubscriptionPlanner
+@using Bookennis.Client.Services.Store.SubscriptionPlans
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.SubscriptionPlans
+
+<BaseDialog Title="@L["NewPlan"]" CanSubmit="@CanSubmit" Loading="@Store.IsSaving" SubmitFunc="Submit" SubmitCaption="@L["Create"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]">
+    <div class="mud-width-full d-flex flex-column gap-3">
+        <MudTextField T="string" Variant="Variant.Outlined" Label="@L["PlanName"]" @bind-Value="name" Immediate="true" MaxLength="100" />
+        <MudDatePicker Variant="Variant.Outlined" Label="@L["StartDate"]" @bind-Date="startDate" PickerVariant="PickerVariant.Dialog" />
+        <MudDatePicker Variant="Variant.Outlined" Label="@L["EndDate"]" @bind-Date="endDate" MinDate="@startDate" PickerVariant="PickerVariant.Dialog" />
+        <MudNumericField T="int" Variant="Variant.Outlined" Label="@L["PlayersPerWeek"]" HelperText="@L["PlayersPerWeekHelp"]" @bind-Value="playersPerWeek"
+                         Min="@SubscriptionPlanDraft.MinPlayersPerWeek" Max="@SubscriptionPlanDraft.MaxParticipants" />
+    </div>
+</BaseDialog>
+
+@code {
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Inject]
+    private ISubscriptionPlansStore Store { get; set; } = null!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SubscriptionPlannerLocale> L { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private string name = "";
+    private DateTime? startDate;
+    private DateTime? endDate;
+    private int playersPerWeek = 4;
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(name) && startDate is not null && endDate is not null && startDate <= endDate;
+
+    protected override void OnInitialized()
+    {
+        // Default to the upcoming winter season: October 1st until March 31st
+        var today = DateTime.Today;
+        var year = today.Month >= 4 ? today.Year : today.Year - 1;
+        startDate = new DateTime(year, 10, 1);
+        endDate = new DateTime(year + 1, 3, 31);
+        name = $"{L["Winter"]} {year % 100:00}/{(year + 1) % 100:00}";
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        var result = await Store.CreatePlan(new CreateSubscriptionPlanModel(
+            name.Trim(),
+            DateOnly.FromDateTime(startDate!.Value),
+            DateOnly.FromDateTime(endDate!.Value),
+            playersPerWeek));
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        return DialogResult.Ok(result.Dto);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

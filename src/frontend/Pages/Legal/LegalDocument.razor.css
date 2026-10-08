@@ -1,0 +1,86 @@
+.legal-document {
+    max-width: 760px;
+    margin: 0 auto;
+    color: var(--mud-palette-text-primary);
+}
+
+::deep .legal-document__back {
+    margin-left: -8px;
+    margin-bottom: 8px;
+}
+
+.legal-document__header {
+    margin-bottom: 20px;
+}
+
+.legal-document__emoji {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.legal-document__title {
+    margin: 8px 0 4px;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.legal-document__updated {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.legal-document__body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Sections are rendered by LegalSection / OperatorDetails; styled here because they only appear inside the document */
+::deep .legal-section {
+    padding: 16px 18px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 14px;
+    background: var(--mud-palette-surface);
+}
+
+::deep .legal-section__title {
+    margin: 0 0 8px;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+::deep .legal-section p {
+    margin: 0 0 8px;
+    line-height: 1.6;
+}
+
+::deep .legal-section p:last-child {
+    margin-bottom: 0;
+}
+
+::deep .legal-section ul {
+    margin: 0;
+    padding-left: 20px;
+    line-height: 1.6;
+}
+
+::deep .legal-section li + li {
+    margin-top: 6px;
+}
+
+::deep .legal-address {
+    font-style: normal;
+    line-height: 1.6;
+}
+
+@media (min-width: 600px) {
+    .legal-document__title {
+        font-size: 2rem;
+    }
+
+    ::deep .legal-section {
+        padding: 20px 24px;
+    }
+}

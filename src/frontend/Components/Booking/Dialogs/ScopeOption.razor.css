@@ -1,0 +1,70 @@
+.scope-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-inputs);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.scope-option + .scope-option {
+    margin-top: 8px;
+}
+
+.scope-option:hover,
+.scope-option:focus-visible {
+    border-color: var(--mud-palette-primary);
+    outline: none;
+}
+
+.scope-option--selected {
+    border: 2px solid var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 7%, var(--mud-palette-surface));
+}
+
+.scope-option__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 12%, transparent);
+}
+
+.scope-option__text {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.scope-option__title {
+    font-weight: 700;
+}
+
+.scope-option__description {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.scope-option__radio {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--mud-palette-lines-inputs);
+}
+
+.scope-option--selected .scope-option__radio {
+    border: 5px solid var(--mud-palette-primary);
+}

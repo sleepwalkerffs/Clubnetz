@@ -1,0 +1,56 @@
+/* ===== Navigation Menu Styles ===== */
+
+/* Profile section in drawer */
+.bookennis-nav-profile {
+  background: linear-gradient(135deg, #022C22 0%, #064E3B 100%);
+  border-bottom: 1px solid rgba(110, 231, 183, 0.12);
+}
+
+.bookennis-nav-avatar {
+  background: linear-gradient(135deg, #059669, #10B981) !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.4);
+}
+
+/* Nav links in dark drawer */
+.mud-drawer .mud-navmenu .mud-nav-link {
+  color: var(--mud-palette-drawer-text) !important;
+  border-radius: 10px !important;
+  margin: 2px 0;
+  transition: all 0.15s ease !important;
+}
+
+.mud-drawer .mud-navmenu .mud-nav-link:hover {
+  background-color: rgba(110, 231, 183, 0.1) !important;
+  color: #FFFFFF !important;
+}
+
+.mud-drawer .mud-navmenu .mud-nav-link.active {
+  background-color: rgba(5, 150, 105, 0.2) !important;
+  color: #FFFFFF !important;
+  font-weight: 600;
+}
+
+.mud-drawer .mud-navmenu .mud-nav-link .mud-nav-link-icon {
+  color: var(--mud-palette-drawer-icon) !important;
+  transition: color 0.15s ease !important;
+}
+
+.mud-drawer .mud-navmenu .mud-nav-link:hover .mud-nav-link-icon,
+.mud-drawer .mud-navmenu .mud-nav-link.active .mud-nav-link-icon {
+  color: #A7F3D0 !important;
+}
+
+/* Nav group */
+.mud-drawer .mud-navmenu .mud-nav-group .mud-nav-group-title {
+  color: var(--mud-palette-drawer-text) !important;
+}
+
+.mud-drawer .mud-navmenu .mud-nav-group .mud-nav-group-title:hover {
+  background-color: rgba(110, 231, 183, 0.1) !important;
+}
+
+.mud-drawer .mud-navmenu .mud-collapse-container .mud-nav-link {
+  padding-left: 48px !important;
+}

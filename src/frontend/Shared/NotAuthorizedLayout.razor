@@ -1,0 +1,12 @@
+@using Bookennis.Client.Shared.Redirects
+@inherits LayoutComponentBase
+@layout NoNavigationLayout
+
+<AuthorizeView>
+    <Authorized>
+        <RedirectToHome />
+    </Authorized>
+    <NotAuthorized>
+        @Body
+    </NotAuthorized>
+</AuthorizeView>

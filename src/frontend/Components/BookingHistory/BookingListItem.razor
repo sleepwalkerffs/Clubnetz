@@ -1,0 +1,89 @@
+@using System.Globalization
+@using Bookennis.Client.Utils
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.ClubShell
+@using Bookennis.Client.Services
+@using Bookennis.Shared.Controller.Booking.Shared
+
+<div class="booking-item @(Highlight ? "booking-item--highlight" : null)"
+     style="--mode-color: @BookingColors.ToHex(Booking.PlayMode.Color)"
+     role="button" tabindex="0"
+     @onclick="Open"
+     @onkeydown="OnKeyDown">
+    <div class="booking-item__date">
+        <span class="booking-item__weekday">@Booking.Interval.From.ToString("ddd", CultureInfo.CurrentCulture)</span>
+        <span class="booking-item__day">@Booking.Interval.From.Day</span>
+        @if (ShowMonth)
+        {
+            <span class="booking-item__month">@Booking.Interval.From.ToString("MMM", CultureInfo.CurrentCulture)</span>
+        }
+    </div>
+
+    <div class="booking-item__body">
+        <div class="booking-item__title">
+            @Booking.Interval.From.ToString("HH:mm") – @Booking.Interval.To.ToString("HH:mm") · @CourtName
+        </div>
+        <div class="booking-item__meta">
+            <span class="booking-item__mode">@Booking.PlayMode.Name</span>
+            @if (Booking.RecurringBookingSeriesId is not null)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Repeat" Size="Size.Small" Class="booking-item__recurring" title="@Locale["Recurring"]" />
+            }
+            @if (Tag is not null)
+            {
+                <span class="booking-item__tag">@Tag</span>
+            }
+        </div>
+        @if (OtherPlayers.Count > 0)
+        {
+            <div class="booking-item__players">
+                @string.Join(", ", OtherPlayers.Select(p => $"{p.FirstName} {p.LastName}"))
+            </div>
+        }
+    </div>
+
+    <div class="booking-item__avatars">
+        @foreach (var player in OtherPlayers.Take(3))
+        {
+            <UserAvatar FirstName="@player.FirstName" LastName="@player.LastName" ProfilePictureUrl="@player.ProfilePictureUrl"
+                        Size="Size.Small" Color="@(player.IsGuest ? Color.Default : Color.Secondary)" AvatarClass="booking-item__avatar" />
+        }
+        @if (OtherPlayers.Count > 3)
+        {
+            <span class="booking-item__more">+@(OtherPlayers.Count - 3)</span>
+        }
+    </div>
+
+    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="booking-item__chevron" />
+</div>
+
+@code {
+    [Parameter, EditorRequired] public BookingResult Booking { get; set; } = null!;
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+    [Parameter] public string? CourtName { get; set; }
+
+    /// <summary>Players with this member id (the viewer) are not listed as co-players.</summary>
+    [Parameter] public int? OwnMemberId { get; set; }
+
+    /// <summary>Optional small label next to the play mode, e.g. "Upcoming" or "Tomorrow".</summary>
+    [Parameter] public string? Tag { get; set; }
+
+    /// <summary>Tinted background, used for bookings that still lie in the future.</summary>
+    [Parameter] public bool Highlight { get; set; }
+
+    /// <summary>Shows the month in the date block, for lists that are not grouped by month.</summary>
+    [Parameter] public bool ShowMonth { get; set; }
+
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubShellLocale> Locale { get; set; } = null!;
+
+    private List<PlayerResult> OtherPlayers => Booking.Players.Where(p => p.MemberId != OwnMemberId).ToList();
+
+    private void Open() => NavigationManager.NavigateToBooking(ClubId, Booking.BookingEntryId);
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or " ")
+            Open();
+    }
+}

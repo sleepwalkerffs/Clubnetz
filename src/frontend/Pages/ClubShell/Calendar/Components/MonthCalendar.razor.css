@@ -1,0 +1,144 @@
+.month__header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.month__title {
+    min-width: 150px;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+::deep .month__today {
+    margin-left: auto;
+}
+
+.month__grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.month__weekday {
+    padding: 4px 0;
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.month__day {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    min-width: 0;
+    min-height: 92px;
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.month__day:hover,
+.month__day:focus-visible {
+    border-color: var(--mud-palette-primary);
+    outline: none;
+}
+
+.month__day--other {
+    opacity: 0.45;
+}
+
+.month__day--selected {
+    border-color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 8%, var(--mud-palette-surface));
+}
+
+.month__number {
+    align-self: flex-start;
+    min-width: 24px;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.month__day--today .month__number {
+    color: var(--mud-palette-primary-text);
+    background: var(--mud-palette-primary);
+}
+
+.month__events {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.month__event {
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--event-color);
+    background: color-mix(in srgb, var(--event-color) 14%, transparent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.month__more {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+}
+
+.month__dots {
+    display: none;
+    justify-content: center;
+    gap: 3px;
+}
+
+.month__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--event-color);
+}
+
+@media (max-width: 719px) {
+    .month__grid {
+        gap: 2px;
+    }
+
+    .month__day {
+        min-height: 48px;
+        align-items: center;
+        padding: 4px 2px;
+    }
+
+    .month__number {
+        align-self: center;
+    }
+
+    .month__events {
+        display: none;
+    }
+
+    .month__dots {
+        display: flex;
+    }
+}

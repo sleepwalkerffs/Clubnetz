@@ -1,0 +1,536 @@
+@page "/clubs/{ClubId:int}/news/new"
+@page "/clubs/{ClubId:int}/news/{ClubAnnouncementId:int}/edit"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.News
+@using Bookennis.Client.Pages.ClubShell.News.Components
+@using Bookennis.Client.Services.HttpClients
+@using Bookennis.Client.Services.Store.ClubAnnouncements
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.ClubAnnouncements
+@using Bookennis.Shared.Controller.Shared
+
+@implements IDisposable
+
+<PageTitle>@Locale[IsNew ? "NewAnnouncement" : "EditAnnouncement"]</PageTitle>
+
+<div class="mb-2">
+    <MudButton Href="@BackUrl" Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack">
+        @Locale[IsNew ? "BackToNews" : "BackToAnnouncement"]
+    </MudButton>
+</div>
+
+<PageHeader>
+    <Content>@Locale[IsNew ? "NewAnnouncement" : "EditAnnouncement"]</Content>
+</PageHeader>
+
+@if (!CanManage)
+{
+    <div class="editor-muted">@Locale["NotAllowedToManage"]</div>
+}
+else if (!loaded)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else
+{
+    <div class="editor-view-switch">
+        <ChoiceChips TItem="string" Items="@(["edit", "preview"])" Value="@mobileView" ValueChanged="@(v => mobileView = v)"
+                     TextFunc="@(v => v == "edit" ? SharedLocale["Edit"] : Locale["Preview"])" />
+    </div>
+
+    <div class="editor-layout @($"editor-layout--{mobileView}")">
+        <div class="editor-pane">
+            <SectionCard Emoji="📝" Title="@Locale["ContentTitle"]">
+                <div class="editor-fields">
+                    <MudTextField T="string" @bind-Value="title" Variant="Variant.Outlined" Label="@Locale["TitleLabel"]"
+                                  Placeholder="@Locale["TitlePlaceholder"]" Required="true" MaxLength="@ClubAnnouncementLimits.MaxTitleLength" Immediate="true" />
+
+                    <MudTextField T="string" Value="@body" ValueChanged="OnBodyChanged" Variant="Variant.Outlined" Label="@Locale["BodyLabel"]"
+                                  HelperText="@Locale["BodyHelper"]" Required="true" Lines="10" AutoGrow="true" MaxLines="40" Immediate="true"
+                                  MaxLength="@ClubAnnouncementLimits.MaxBodyLength" />
+
+                    <details class="editor-help">
+                        <summary>@Locale["HelpTitle"]</summary>
+                        <table>
+                            <tbody>
+                                <tr><td>@Locale["HelpBold"]</td><td><code>**text**</code></td></tr>
+                                <tr><td>@Locale["HelpItalic"]</td><td><code>_text_</code></td></tr>
+                                <tr><td>@Locale["HelpHeading"]</td><td><code>### text</code></td></tr>
+                                <tr><td>@Locale["HelpList"]</td><td><code>- text</code></td></tr>
+                                <tr><td>@Locale["HelpLink"]</td><td><code>[text](https://…)</code></td></tr>
+                                <tr><td>@Locale["HelpButton"]</td><td><code>[text](https://…){.btn}</code></td></tr>
+                            </tbody>
+                        </table>
+                        <p>@Locale["HelpLineBreaks"]</p>
+                    </details>
+                </div>
+            </SectionCard>
+
+            <SectionCard Emoji="📌" Title="@Locale["VisibilityTitle"]" Subtitle="@Locale["VisibilitySubtitle"]">
+                <div class="editor-fields">
+                    <div>
+                        <MudSwitch T="bool" @bind-Value="isPinned" Color="Color.Primary" Label="@Locale["PinLabel"]" />
+                        <div class="editor-muted">@Locale["PinHint"]</div>
+                    </div>
+                    <div class="editor-row">
+                        <MudDatePicker @bind-Date="expiresOn" Variant="Variant.Outlined" Label="@Locale["ExpiresOnLabel"]" HelperText="@Locale["ExpiresOnHint"]"
+                                       Clearable="true" MinDate="@DateTime.Today" PickerVariant="PickerVariant.Dialog" />
+                    </div>
+                </div>
+            </SectionCard>
+
+            <SectionCard Emoji="📎" Title="@Locale["Attachments"]" Subtitle="@AttachmentsSubtitle">
+                <Actions>
+                    <label for="news-attachment-input" class="editor-upload @(CanAddAttachment ? null : "editor-upload--disabled")">
+                        <MudIcon Icon="@Icons.Material.Filled.AttachFile" Size="Size.Small" />
+                        <span>@Locale["AddAttachment"]</span>
+                    </label>
+                    <InputFile @key="inputKey" id="news-attachment-input" OnChange="OnFilesSelected" multiple accept="@NewsHelpers.AcceptedFileTypes"
+                               disabled="@(!CanAddAttachment)" style="display:none" />
+                </Actions>
+                <ChildContent>
+                    @if (existingAttachments.Count == 0 && pendingAttachments.Count == 0)
+                    {
+                        <div class="editor-muted">@Locale["NoAttachments"]</div>
+                    }
+                    else
+                    {
+                        <div class="editor-files">
+                            @foreach (var attachment in existingAttachments)
+                            {
+                                <div class="editor-file">
+                                    <MudIcon Icon="@NewsHelpers.FileIcon(attachment.FileName)" Class="editor-file__icon" />
+                                    <span class="editor-file__name">@attachment.FileName</span>
+                                    <span class="editor-file__size">@NewsHelpers.FormatSize(attachment.Size)</span>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Disabled="@isSaving"
+                                                   aria-label="@Locale["RemoveAttachment"]" title="@Locale["RemoveAttachment"]"
+                                                   OnClick="() => RemoveExisting(attachment)" />
+                                </div>
+                            }
+                            @foreach (var attachment in pendingAttachments)
+                            {
+                                <div class="editor-file editor-file--new">
+                                    <MudIcon Icon="@NewsHelpers.FileIcon(attachment.FileName)" Class="editor-file__icon" />
+                                    <span class="editor-file__name">@attachment.FileName</span>
+                                    <span class="editor-file__badge">@Locale["NewAttachment"]</span>
+                                    <span class="editor-file__size">@NewsHelpers.FormatSize(attachment.Content.Length)</span>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Disabled="@isSaving"
+                                                   aria-label="@Locale["RemoveAttachment"]" title="@Locale["RemoveAttachment"]"
+                                                   OnClick="() => pendingAttachments.Remove(attachment)" />
+                                </div>
+                            }
+                        </div>
+                    }
+                    <div class="editor-muted mt-3">
+                        @string.Format(Locale["AttachmentLimits"], ClubAnnouncementLimits.MaxAttachments,
+                            ClubAnnouncementLimits.MaxAttachmentSizeInBytes / (1024 * 1024), ClubAnnouncementLimits.MaxTotalAttachmentSizeInBytes / (1024 * 1024))
+                    </div>
+                </ChildContent>
+            </SectionCard>
+
+            @if (IsNew)
+            {
+                <SectionCard Emoji="✉️" Title="@Locale["EmailTitle"]" Subtitle="@Locale["EmailSubtitle"]">
+                    <MudSwitch T="bool" @bind-Value="sendEmail" Color="Color.Primary" Label="@Locale["AlsoSendAsEmail"]" Disabled="@isSaving" />
+                    @if (sendEmail)
+                    {
+                        <div class="mt-3">
+                            <AudiencePicker @bind-Audience="audience" @bind-Roles="roles" @bind-RecipientCount="recipientCount" Disabled="@isSaving" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="editor-muted">@Locale["EmailLaterHint"]</div>
+                    }
+                </SectionCard>
+            }
+
+            <div class="editor-actions">
+                <MudButton Href="@BackUrl" Variant="Variant.Text" Disabled="@isSaving">@SharedLocale["Cancel"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!CanSave)" OnClick="Save"
+                           StartIcon="@(IsNew && sendEmail ? Icons.Material.Filled.Send : Icons.Material.Filled.Save)">
+                    @if (isSaving)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                    }
+                    @SaveCaption
+                </MudButton>
+            </div>
+        </div>
+
+        <div class="preview-pane">
+            <SectionCard Emoji="👀" Title="@Locale["Preview"]" Subtitle="@Locale["PreviewHint"]">
+                <div class="editor-preview">
+                    <div class="editor-preview__title">@(string.IsNullOrWhiteSpace(title) ? Locale["TitlePlaceholder"] : title)</div>
+                    @if (previewError is not null)
+                    {
+                        <MudAlert Severity="Severity.Warning" Dense="true">@previewError</MudAlert>
+                    }
+                    else if (string.IsNullOrWhiteSpace(body))
+                    {
+                        <div class="editor-muted">@Locale["PreviewEmpty"]</div>
+                    }
+                    else if (previewHtml is not null)
+                    {
+                        <AnnouncementBody Html="@previewHtml" />
+                    }
+                    else
+                    {
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                    }
+                </div>
+            </SectionCard>
+        </div>
+    </div>
+}
+
+@code {
+    private sealed record PendingAttachment(string FileName, byte[] Content);
+
+    /// <summary>More than the limit, so that a selection with some unsupported files still adds the valid ones.</summary>
+    private const int MaxSelectedFiles = 20;
+
+    [Parameter] public int ClubId { get; set; }
+    [Parameter] public int? ClubAnnouncementId { get; set; }
+
+    [Inject] private IClubAnnouncementsStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<NewsLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private readonly List<ClubAnnouncementAttachmentDto> existingAttachments = [];
+    private readonly List<int> removedAttachmentIds = [];
+    private readonly List<PendingAttachment> pendingAttachments = [];
+
+    private bool loaded;
+    private bool isSaving;
+    private string title = "";
+    private string body = "";
+    private bool isPinned;
+    private DateTime? expiresOn;
+    private int inputKey;
+    private string mobileView = "edit";
+
+    private bool sendEmail;
+    private ClubAnnouncementAudience audience = ClubAnnouncementAudience.AllMembers;
+    private IReadOnlyCollection<MemberRole> roles = [];
+    private int? recipientCount;
+
+    private string? previewHtml;
+    private string? previewError;
+    private CancellationTokenSource? previewDebounce;
+
+    private bool IsNew => ClubAnnouncementId is null;
+
+    private bool CanManage => NewsHelpers.CanManage(ClubProfileStore.Roles);
+
+    private string BackUrl => IsNew ? NewsHelpers.NewsUrl(ClubId) : NewsHelpers.AnnouncementUrl(ClubId, ClubAnnouncementId!.Value);
+
+    private int AttachmentCount => existingAttachments.Count + pendingAttachments.Count;
+
+    private long AttachmentSize => existingAttachments.Sum(a => (long)a.Size) + pendingAttachments.Sum(a => (long)a.Content.Length);
+
+    private bool CanAddAttachment => !isSaving && AttachmentCount < ClubAnnouncementLimits.MaxAttachments;
+
+    private string? AttachmentsSubtitle => AttachmentCount == 0
+        ? Locale["AttachmentsSubtitle"]
+        : $"{NewsHelpers.Count(Locale, "AttachmentCount", AttachmentCount)} · {NewsHelpers.FormatSize(AttachmentSize)}";
+
+    private bool CanSave => !isSaving
+                            && !string.IsNullOrWhiteSpace(title)
+                            && !string.IsNullOrWhiteSpace(body)
+                            && (!IsNew || !sendEmail || recipientCount > 0);
+
+    private string SaveCaption => !IsNew
+        ? SharedLocale["Save"]
+        : sendEmail ? Locale["PublishAndSend"] : Locale["Publish"];
+
+    protected override void OnInitialized() => ClubProfileStore.OnClubProfileChanged += StateHasChanged;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loaded = false;
+        existingAttachments.Clear();
+        removedAttachmentIds.Clear();
+        pendingAttachments.Clear();
+
+        if (IsNew)
+        {
+            title = body = "";
+            isPinned = false;
+            expiresOn = null;
+            previewHtml = null;
+            loaded = true;
+            return;
+        }
+
+        await Store.LoadAnnouncement(ClubAnnouncementId!.Value);
+        if (Store.Announcement is { } announcement && announcement.Id == ClubAnnouncementId)
+        {
+            title = announcement.Title;
+            body = announcement.Body;
+            isPinned = announcement.IsPinned;
+            expiresOn = announcement.ExpiresOn?.ToDateTime(TimeOnly.MinValue);
+            existingAttachments.AddRange(announcement.Attachments);
+            previewHtml = announcement.BodyHtml;
+            loaded = true;
+        }
+        else
+        {
+            NavigationManager.NavigateTo(NewsHelpers.NewsUrl(ClubId));
+        }
+    }
+
+    private void OnBodyChanged(string? value)
+    {
+        body = value ?? "";
+        SchedulePreview();
+    }
+
+    private void SchedulePreview()
+    {
+        previewDebounce?.Cancel();
+        previewDebounce?.Dispose();
+        previewDebounce = new CancellationTokenSource();
+        _ = UpdatePreview(previewDebounce.Token);
+    }
+
+    private async Task UpdatePreview(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(400), cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            previewHtml = null;
+            previewError = null;
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        var response = await Store.Preview(body);
+        if (response is null || cancellationToken.IsCancellationRequested)
+            return;
+
+        if (response is { Success: true, Dto: not null })
+        {
+            previewHtml = response.Dto.Html;
+            previewError = null;
+        }
+        else
+        {
+            previewError = response.ErrorCodeResponse?.ErrorCode is { } code ? BackendLocale[code] : Locale["PreviewFailed"];
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void RemoveExisting(ClubAnnouncementAttachmentDto attachment)
+    {
+        existingAttachments.Remove(attachment);
+        removedAttachmentIds.Add(attachment.Id);
+    }
+
+    private async Task OnFilesSelected(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            await AddFiles(e);
+        }
+        finally
+        {
+            // Re-creates the input, so the same file can be selected again after it was removed.
+            // Only after the files were read: the browser files are gone once the input is re-created.
+            inputKey++;
+        }
+    }
+
+    private async Task AddFiles(InputFileChangeEventArgs e)
+    {
+        IReadOnlyList<IBrowserFile> files;
+        try
+        {
+            files = e.GetMultipleFiles(MaxSelectedFiles);
+        }
+        catch (InvalidOperationException)
+        {
+            Snackbar.Add(string.Format(Locale["TooManyAttachments"], ClubAnnouncementLimits.MaxAttachments), Severity.Warning);
+            return;
+        }
+
+        foreach (var file in files)
+        {
+            if (!NewsHelpers.IsAllowedFile(file.Name))
+            {
+                Snackbar.Add(string.Format(Locale["FileTypeNotAllowed"], file.Name), Severity.Warning);
+                continue;
+            }
+
+            if (file.Size == 0)
+            {
+                Snackbar.Add(string.Format(Locale["FileEmpty"], file.Name), Severity.Warning);
+                continue;
+            }
+
+            if (file.Size > ClubAnnouncementLimits.MaxAttachmentSizeInBytes)
+            {
+                Snackbar.Add(string.Format(Locale["FileTooLarge"], file.Name, ClubAnnouncementLimits.MaxAttachmentSizeInBytes / (1024 * 1024)), Severity.Warning);
+                continue;
+            }
+
+            if (AttachmentCount >= ClubAnnouncementLimits.MaxAttachments)
+            {
+                Snackbar.Add(string.Format(Locale["TooManyAttachments"], ClubAnnouncementLimits.MaxAttachments), Severity.Warning);
+                break;
+            }
+
+            if (AttachmentSize + file.Size > ClubAnnouncementLimits.MaxTotalAttachmentSizeInBytes)
+            {
+                Snackbar.Add(string.Format(Locale["FilesTooLarge"], ClubAnnouncementLimits.MaxTotalAttachmentSizeInBytes / (1024 * 1024)), Severity.Warning);
+                break;
+            }
+
+            try
+            {
+                await using var stream = file.OpenReadStream(ClubAnnouncementLimits.MaxAttachmentSizeInBytes);
+                using var buffer = new MemoryStream();
+                await stream.CopyToAsync(buffer);
+                pendingAttachments.Add(new PendingAttachment(file.Name, buffer.ToArray()));
+            }
+            catch (Exception exception) when (exception is IOException or JSException)
+            {
+                Snackbar.Add(string.Format(Locale["FileReadFailed"], file.Name), Severity.Warning);
+            }
+        }
+    }
+
+    private async Task Save()
+    {
+        if (!CanSave)
+            return;
+
+        isSaving = true;
+        try
+        {
+            var model = new SaveClubAnnouncementModel
+            {
+                Title = title,
+                Body = body,
+                IsPinned = isPinned,
+                ExpiresOn = expiresOn is { } date ? DateOnly.FromDateTime(date) : null,
+            };
+
+            int id;
+            if (IsNew)
+            {
+                var created = await Store.CreateAnnouncement(model);
+                if (!created.Success)
+                {
+                    Snackbar.ShowErrorDetails(created, BackendLocale);
+                    return;
+                }
+
+                id = created.Dto;
+            }
+            else
+            {
+                id = ClubAnnouncementId!.Value;
+                var updated = await Store.UpdateAnnouncement(id, model);
+                if (!updated.Success)
+                {
+                    Snackbar.ShowErrorDetails(updated, BackendLocale);
+                    return;
+                }
+            }
+
+            if (!await SaveAttachments(id))
+            {
+                // The announcement itself is saved: continue in its editor instead of creating it a second time
+                if (IsNew)
+                {
+                    Snackbar.Add(Locale["PublishedWithoutAttachments"], Severity.Warning);
+                    NavigationManager.NavigateTo($"{NewsHelpers.AnnouncementUrl(ClubId, id)}/edit");
+                }
+
+                return;
+            }
+
+            if (IsNew && sendEmail)
+            {
+                var sent = await Store.SendEmail(id, new SendClubAnnouncementEmailModel { Audience = audience, Roles = [.. roles] });
+                if (sent.Success)
+                {
+                    Snackbar.Add(NewsHelpers.Count(Locale, "PublishedAndQueued", Store.Announcement?.EmailRecipientCount ?? recipientCount ?? 0), Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add(Locale["PublishedButNotSent"], Severity.Warning);
+                    Snackbar.ShowErrorDetails(sent, BackendLocale);
+                }
+            }
+            else
+            {
+                Snackbar.Add(Locale[IsNew ? "AnnouncementPublished" : "AnnouncementSaved"], Severity.Success);
+            }
+
+            NavigationManager.NavigateTo(NewsHelpers.AnnouncementUrl(ClubId, id));
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    /// <summary>Removes and uploads the attachments that were changed in the editor. Stops at the first failure.</summary>
+    private async Task<bool> SaveAttachments(int id)
+    {
+        foreach (var attachmentId in removedAttachmentIds.ToList())
+        {
+            var removed = await Store.RemoveAttachment(id, attachmentId);
+            if (!removed.Success)
+                return Failed(removed);
+
+            removedAttachmentIds.Remove(attachmentId);
+        }
+
+        foreach (var attachment in pendingAttachments.ToList())
+        {
+            var added = await Store.AddAttachment(id, attachment.Content, attachment.FileName);
+            if (!added.Success)
+                return Failed(added);
+
+            pendingAttachments.Remove(attachment);
+            if (Store.Announcement is { } announcement && announcement.Id == id)
+            {
+                existingAttachments.Clear();
+                existingAttachments.AddRange(announcement.Attachments);
+            }
+        }
+
+        return true;
+    }
+
+    private bool Failed(HttpResult result)
+    {
+        Snackbar.ShowErrorDetails(result, BackendLocale);
+        return false;
+    }
+
+    public void Dispose()
+    {
+        ClubProfileStore.OnClubProfileChanged -= StateHasChanged;
+        previewDebounce?.Cancel();
+        previewDebounce?.Dispose();
+    }
+}

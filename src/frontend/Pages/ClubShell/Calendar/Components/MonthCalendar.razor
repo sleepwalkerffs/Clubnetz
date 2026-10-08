@@ -1,0 +1,128 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.Calendar
+@using Bookennis.Shared.Controller.ClubEvents
+
+<div class="month">
+    <div class="month__header">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small" aria-label="@Locale["PreviousMonth"]"
+                       OnClick="() => ChangeMonth(-1)" />
+        <div class="month__title">@Month.ToString("MMMM yyyy", CultureInfo.CurrentCulture)</div>
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" aria-label="@Locale["NextMonth"]"
+                       OnClick="() => ChangeMonth(1)" />
+        @if (!IsCurrentMonth)
+        {
+            <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" OnClick="GoToToday" Class="month__today">
+                @Locale["Today"]
+            </MudButton>
+        }
+    </div>
+
+    <div class="month__grid" role="grid">
+        @foreach (var weekday in Weekdays)
+        {
+            <div class="month__weekday" role="columnheader">@weekday</div>
+        }
+
+        @foreach (var day in Days)
+        {
+            var events = EventsOn(day);
+            var isOtherMonth = day.Month != Month.Month;
+            var isToday = day == Today;
+            var isSelected = day == SelectedDay;
+            <button type="button" role="gridcell"
+                    class="month__day @(isOtherMonth ? "month__day--other" : null) @(isToday ? "month__day--today" : null) @(isSelected ? "month__day--selected" : null)"
+                    aria-pressed="@(isSelected ? "true" : "false")"
+                    aria-label="@($"{day.ToString("D", CultureInfo.CurrentCulture)}, {events.Count}")"
+                    @onclick="() => SelectDay(day)">
+                <span class="month__number">@day.Day</span>
+
+                @* Desktop: event titles, phones: dots *@
+                <span class="month__events">
+                    @foreach (var clubEvent in events.Take(MaxTitles))
+                    {
+                        <span class="month__event" style="--event-color: @ClubEventHelpers.Color(clubEvent.Category)">
+                            @ClubEventHelpers.Emoji(clubEvent.Category) @clubEvent.Title
+                        </span>
+                    }
+                    @if (events.Count > MaxTitles)
+                    {
+                        <span class="month__more">+@(events.Count - MaxTitles)</span>
+                    }
+                </span>
+                <span class="month__dots" aria-hidden="true">
+                    @foreach (var clubEvent in events.Take(3))
+                    {
+                        <span class="month__dot" style="--event-color: @ClubEventHelpers.Color(clubEvent.Category)"></span>
+                    }
+                </span>
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    private const int MaxTitles = 2;
+
+    /// <summary>First day of the shown month.</summary>
+    [Parameter, EditorRequired] public DateOnly Month { get; set; }
+    [Parameter] public EventCallback<DateOnly> MonthChanged { get; set; }
+    [Parameter] public DateOnly? SelectedDay { get; set; }
+    [Parameter] public EventCallback<DateOnly?> SelectedDayChanged { get; set; }
+    [Parameter] public IReadOnlyList<ClubEventSummaryDto> Events { get; set; } = [];
+
+    [Inject] private IStringLocalizer<CalendarLocale> Locale { get; set; } = null!;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    private bool IsCurrentMonth => Month.Year == Today.Year && Month.Month == Today.Month;
+
+    /// <summary>The weeks shown for a month (Monday first), also used to load the events of the visible range.</summary>
+    public static (DateOnly From, DateOnly To) GetVisibleRange(DateOnly month)
+    {
+        var first = new DateOnly(month.Year, month.Month, 1);
+        var from = first.AddDays(-(((int)first.DayOfWeek + 6) % 7));
+        var last = first.AddMonths(1).AddDays(-1);
+        var to = last.AddDays((7 - (int)last.DayOfWeek) % 7);
+        return (from, to);
+    }
+
+    private static IEnumerable<string> Weekdays
+        => Enumerable.Range(0, 7).Select(i => CultureInfo.CurrentCulture.DateTimeFormat.AbbreviatedDayNames[(i + 1) % 7]);
+
+    private IEnumerable<DateOnly> Days
+    {
+        get
+        {
+            var (from, to) = GetVisibleRange(Month);
+            for (var day = from; day <= to; day = day.AddDays(1))
+                yield return day;
+        }
+    }
+
+    private List<ClubEventSummaryDto> EventsOn(DateOnly day) => Events.Where(e => e.StartDate <= day && e.LastDate >= day).ToList();
+
+    private async Task ChangeMonth(int months)
+    {
+        Month = Month.AddMonths(months);
+        await MonthChanged.InvokeAsync(Month);
+    }
+
+    private async Task GoToToday()
+    {
+        Month = new DateOnly(Today.Year, Today.Month, 1);
+        await MonthChanged.InvokeAsync(Month);
+        await SelectDay(Today);
+    }
+
+    private async Task SelectDay(DateOnly day)
+    {
+        SelectedDay = day;
+        await SelectedDayChanged.InvokeAsync(day);
+
+        if (day.Month != Month.Month)
+        {
+            Month = new DateOnly(day.Year, day.Month, 1);
+            await MonthChanged.InvokeAsync(Month);
+        }
+    }
+}

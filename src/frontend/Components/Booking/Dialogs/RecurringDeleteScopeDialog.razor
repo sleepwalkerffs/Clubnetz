@@ -1,0 +1,37 @@
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Components.Booking
+@using Bookennis.Shared.Controller.Booking
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Locale["DeleteRecurringBooking"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Class="mb-4 mud-text-secondary">@Locale["DeleteRecurringBookingQuestion"]</MudText>
+        <div role="radiogroup">
+            <ScopeOption Icon="@Icons.Material.Filled.EventNote" Title="@Locale["ThisOccurrenceOnly"]" Description="@Locale["ThisOccurrenceOnlyDescription"]"
+                         Selected="@(selectedScope == RecurringDeleteScope.Single)" OnSelect="@(() => selectedScope = RecurringDeleteScope.Single)" />
+            <ScopeOption Icon="@Icons.Material.Filled.EventRepeat" Title="@Locale["ThisAndFollowing"]" Description="@Locale["ThisAndFollowingDescription"]"
+                         Selected="@(selectedScope == RecurringDeleteScope.ThisAndFollowing)" OnSelect="@(() => selectedScope = RecurringDeleteScope.ThisAndFollowing)" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@SharedLocale["Cancel"]</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">@SharedLocale["Delete"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<BookingSharedLocale> Locale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private RecurringDeleteScope selectedScope = RecurringDeleteScope.Single;
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(selectedScope));
+    private void Cancel() => MudDialog.Cancel();
+}

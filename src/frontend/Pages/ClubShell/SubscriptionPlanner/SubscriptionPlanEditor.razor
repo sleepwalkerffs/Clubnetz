@@ -1,0 +1,235 @@
+@page "/clubs/{ClubId:int}/subscription-planner/{PlanId:int}"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.SubscriptionPlanner
+@using Bookennis.Client.Pages.ClubShell.SubscriptionPlanner.Components
+@using Bookennis.Client.Services.Store.SubscriptionPlans
+@using Bookennis.Client.Utils
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor.Services
+
+@attribute [Authorize]
+
+@implements IAsyncDisposable
+
+<PageTitle>@L["SubscriptionPlanner"]</PageTitle>
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" ConfirmExternalNavigation="@IsDirty" />
+
+<div class="d-flex align-center gap-1">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="@($"/clubs/{ClubId}/subscription-planner")" aria-label="@L["BackToPlans"]" Class="mb-4" />
+    <PageHeader>
+        <Content>@(draft?.Name ?? L["SubscriptionPlanner"])</Content>
+    </PageHeader>
+</div>
+
+@if (draft is null || Store.Plan is null)
+{
+    @if (loadFailed)
+    {
+        <MudAlert Severity="Severity.Error">@L["PlanNotFound"]</MudAlert>
+    }
+    else
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+}
+else
+{
+    <MudStepper ActiveIndex="activeIndex"
+                ActiveIndexChanged="@(index => activeIndex = index)"
+                NonLinear="true"
+                Vertical="@isMobile"
+                ShowResetButton="false"
+                OnPreviewInteraction="OnPreviewInteraction">
+        <ChildContent>
+            <MudStep Title="@L["StepBasics"]" Completed="@draft.HasValidBasics">
+                <BasicsStep Draft="draft" OnChanged="StateHasChanged" />
+            </MudStep>
+            <MudStep Title="@L["StepParticipants"]" SecondaryText="@(isMobile ? null : string.Format(L["ParticipantsCount"], draft.Participants.Count))" Completed="@draft.HasEnoughParticipants">
+                <ParticipantsStep Draft="draft" OnChanged="StateHasChanged" />
+            </MudStep>
+            <MudStep Title="@L["StepBlockedWeeks"]" Completed="@(activeIndex > 2 || Store.Plan.HasSchedule)">
+                <BlockedWeeksStep Draft="draft" OnChanged="StateHasChanged" />
+            </MudStep>
+            <MudStep Title="@L["StepAvailability"]" Completed="@(activeIndex > 3 || Store.Plan.HasSchedule)">
+                <AvailabilityStep Draft="draft" OnChanged="StateHasChanged" />
+            </MudStep>
+            <MudStep Title="@L["StepSchedule"]" Completed="@Store.Plan.HasSchedule">
+                <ScheduleStep Plan="Store.Plan" />
+            </MudStep>
+        </ChildContent>
+        <ActionContent>
+            <div class="d-flex align-center gap-2 mud-width-full mt-4">
+                @if (activeIndex > 0)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ChevronLeft" Disabled="@Store.IsSaving" OnClick="@(() => GoTo(activeIndex - 1))">
+                        @L["Back"]
+                    </MudButton>
+                }
+                <MudSpacer />
+                @if (Store.IsSaving)
+                {
+                    <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+                }
+                @if (activeIndex < LastStepIndex)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ChevronRight" Disabled="@(Store.IsSaving || !draft.HasValidBasics)" OnClick="@(() => GoTo(activeIndex + 1))">
+                        @(activeIndex == LastStepIndex - 1 ? L["ToSchedule"] : L["Next"])
+                    </MudButton>
+                }
+            </div>
+        </ActionContent>
+    </MudStepper>
+}
+
+@code {
+    private const int LastStepIndex = 4;
+
+    [Parameter]
+    public int ClubId { get; set; }
+
+    [Parameter]
+    public int PlanId { get; set; }
+
+    [Inject]
+    private ISubscriptionPlansStore Store { get; set; } = null!;
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+
+    [Inject]
+    private IBrowserViewportService ViewportService { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SubscriptionPlannerLocale> L { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private readonly Guid viewportSubscriptionId = Guid.NewGuid();
+    private SubscriptionPlanDraft? draft;
+    private string savedStateKey = "";
+    private string savedScheduleInputsKey = "";
+    private int activeIndex;
+    private bool isMobile;
+    private bool loadFailed;
+    private int? loadedPlanId;
+
+    private bool IsDirty => draft is not null && draft.GetStateKey() != savedStateKey;
+
+    protected override void OnInitialized() => Store.OnPlanChanged += OnPlanChanged;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (loadedPlanId == PlanId)
+            return;
+
+        loadedPlanId = PlanId;
+        draft = null;
+        loadFailed = false;
+
+        await Store.LoadPlan(PlanId);
+        if (Store.Plan?.Id != PlanId)
+        {
+            loadFailed = true;
+            return;
+        }
+
+        ResetDraft();
+        activeIndex = Store.Plan.HasSchedule ? LastStepIndex : Store.Plan.Participants.Count < Store.Plan.PlayersPerWeek ? 1 : 0;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ViewportService.SubscribeAsync(viewportSubscriptionId, args =>
+            {
+                isMobile = args.Breakpoint <= Breakpoint.Xs;
+                StateHasChanged();
+            }, new ResizeOptions { ReportRate = 250, NotifyOnBreakpointOnly = true }, fireImmediately: true);
+        }
+    }
+
+    private void OnPlanChanged() => InvokeAsync(StateHasChanged);
+
+    private void ResetDraft()
+    {
+        draft = SubscriptionPlanDraft.FromDto(Store.Plan!);
+        savedStateKey = draft.GetStateKey();
+        savedScheduleInputsKey = draft.GetScheduleInputsKey();
+    }
+
+    private async Task GoTo(int index)
+    {
+        if (await SaveIfNeeded())
+            activeIndex = Math.Clamp(index, 0, LastStepIndex);
+    }
+
+    private async Task OnPreviewInteraction(StepperInteractionEventArgs args)
+    {
+        if (args.Action is StepAction.Activate or StepAction.Complete && !await SaveIfNeeded())
+            args.Cancel = true;
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        if (!await SaveIfNeeded())
+            context.PreventNavigation();
+    }
+
+    /// <summary>Saves the planning inputs. Returns false if the user has to stay on the current step.</summary>
+    private async Task<bool> SaveIfNeeded()
+    {
+        if (draft is null || !IsDirty)
+            return true;
+
+        if (!draft.HasValidBasics)
+        {
+            Snackbar.Add(L["FixBasicsFirst"], Severity.Warning);
+            return false;
+        }
+
+        if (Store.Plan?.HasSchedule == true && draft.GetScheduleInputsKey() != savedScheduleInputsKey)
+        {
+            var confirmed = await DialogService.ShowMessageBox(
+                L["ScheduleWillBeCleared"],
+                L["ScheduleWillBeClearedText"],
+                yesText: SharedLocale["Save"],
+                noText: L["DiscardChanges"],
+                cancelText: SharedLocale["Cancel"]);
+
+            if (confirmed is null)
+                return false;
+
+            if (confirmed == false)
+            {
+                ResetDraft();
+                return true;
+            }
+        }
+
+        var result = await Store.UpdatePlan(PlanId, draft.ToModel());
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return false;
+        }
+
+        ResetDraft();
+        return true;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Store.OnPlanChanged -= OnPlanChanged;
+        await ViewportService.UnsubscribeAsync(viewportSubscriptionId);
+    }
+}

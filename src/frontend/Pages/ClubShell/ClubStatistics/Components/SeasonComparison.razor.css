@@ -1,0 +1,87 @@
+.season-compare__empty {
+    padding: 24px 8px;
+    text-align: center;
+    color: var(--mud-palette-text-secondary);
+}
+
+.season-compare__chart {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    height: 240px;
+    margin-top: 16px;
+    overflow-x: auto;
+    padding-top: 4px;
+}
+
+.season-compare__column {
+    flex: 1 0 56px;
+    max-width: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.season-compare__value {
+    font-size: 0.9rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.season-compare__delta {
+    height: 16px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+}
+
+.season-compare__delta--up {
+    color: var(--bk-dark-green, #059669);
+}
+
+.season-compare__delta--down {
+    color: var(--bk-dark-red, #DC2626);
+}
+
+.season-compare__track {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    border-radius: 12px 12px 4px 4px;
+    background: var(--mud-palette-background-gray);
+}
+
+.season-compare__fill {
+    width: 100%;
+    border-radius: 12px 12px 4px 4px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--metric-color) 45%, #FFFFFF), var(--metric-color));
+    transition: height 0.6s ease;
+}
+
+.season-compare__fill--best {
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--metric-color) 40%, transparent);
+}
+
+.season-compare__fill--current {
+    background: repeating-linear-gradient(135deg, var(--metric-color) 0 8px, color-mix(in srgb, var(--metric-color) 70%, #FFFFFF) 8px 16px);
+}
+
+.season-compare__label {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.season-compare__live {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--bk-dark-red, #DC2626);
+}
+
+.season-compare__note {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}

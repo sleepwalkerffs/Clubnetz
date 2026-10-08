@@ -1,0 +1,66 @@
+@inherits LayoutComponentBase
+@layout AuthorizedLayout
+@attribute [Authorize]
+
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Profile
+@using Microsoft.AspNetCore.Authorization
+
+@if (isClubLoaded)
+{
+    @Body
+}
+
+@code {
+    private bool isClubLoaded;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Inject]
+    private IProfileStore ProfileStore { get; set; } = null!;
+
+    [Inject]
+    private IClubProfileStore ClubProfileStore { get; set; } = null!;
+
+    [Inject]
+    private IClubStore ClubStore { get; set; } = null!;
+
+    [Inject]
+    private ITenantProvider TenantProvider { get; set; } = null!;
+
+    [CascadingParameter]
+    RouteData? RouteData { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await ProfileStore.WaitUntilLoaded() || !ProfileStore.IsProfileLoaded)
+            await ProfileStore.LoadProfileAsync();
+
+        // Not signed in: the 401 already redirects to the login, which returns to this page afterwards
+        if (!ProfileStore.IsProfileLoaded)
+            return;
+
+        var selectedClubId = ProfileStore.FavoriteClubId;
+
+        if (RouteData != null && RouteData.RouteValues.TryGetValue("ClubId", out var clubIdObj) && clubIdObj is int clubId)
+            selectedClubId = clubId;
+
+        if (!ProfileStore.IsClubAssigned(selectedClubId))
+        {
+            NavigationManager.NavigateToAccessDenied();
+            return;
+        }
+
+        TenantProvider.SetCurrentClub(selectedClubId);
+
+        if (!await ClubProfileStore.WaitUntilLoaded() || !ClubProfileStore.IsClubProfileLoaded || ClubProfileStore.SelectedClubId != selectedClubId)
+            await ClubProfileStore.LoadClubProfile(selectedClubId);
+
+
+        await ClubStore.LoadClubDetails();
+        isClubLoaded = true;
+    }
+}

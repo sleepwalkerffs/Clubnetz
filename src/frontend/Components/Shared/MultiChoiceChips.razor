@@ -1,0 +1,55 @@
+@typeparam TItem
+
+<div class="choice-chips" role="group" aria-label="@Label">
+    @if (Label is not null)
+    {
+        <div class="choice-chips__label">@Label</div>
+    }
+    <div class="choice-chips__items">
+        @foreach (var item in Items)
+        {
+            var selected = Values.Contains(item);
+            var color = ColorFunc?.Invoke(item);
+            <button type="button"
+                    class="choice-chip @(selected ? "choice-chip--selected" : null) @(Dense ? "choice-chip--dense" : null)"
+                    style="@(color is null ? null : $"--chip-color: {color}")"
+                    aria-pressed="@(selected ? "true" : "false")"
+                    disabled="@Disabled"
+                    @onclick="() => Toggle(item)">
+                @if (selected)
+                {
+                    <span class="choice-chip__check" aria-hidden="true">✓</span>
+                }
+                else if (color is not null)
+                {
+                    <span class="choice-chip__dot"></span>
+                }
+                @TextFunc(item)
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IEnumerable<TItem> Items { get; set; } = [];
+    [Parameter, EditorRequired] public Func<TItem, string> TextFunc { get; set; } = null!;
+    [Parameter] public IReadOnlyCollection<TItem> Values { get; set; } = [];
+    [Parameter] public EventCallback<IReadOnlyCollection<TItem>> ValuesChanged { get; set; }
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool Dense { get; set; }
+
+    /// <summary>Optional accent color (CSS value) per item, used when selected.</summary>
+    [Parameter] public Func<TItem, string?>? ColorFunc { get; set; }
+
+    private async Task Toggle(TItem item)
+    {
+        // Keep the order of the items
+        var values = Values.Contains(item)
+            ? Items.Where(i => Values.Contains(i) && !EqualityComparer<TItem>.Default.Equals(i, item)).ToList()
+            : Items.Where(i => Values.Contains(i) || EqualityComparer<TItem>.Default.Equals(i, item)).ToList();
+
+        Values = values;
+        await ValuesChanged.InvokeAsync(values);
+    }
+}

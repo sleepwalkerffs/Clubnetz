@@ -1,0 +1,110 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.ClubStatistics
+@using Bookennis.Shared.Controller.Statistics
+
+<div class="season-compare">
+    <ChoiceChips TItem="Metric" Items="@Metrics" Value="@metric" ValueChanged="@(m => metric = m)" TextFunc="@MetricName" ColorFunc="@MetricColor" />
+
+    @{
+        var seasons = Seasons.Where(s => s.State != SeasonState.Upcoming).ToList();
+        var values = seasons.Select(Value).ToList();
+        var max = values.Count > 0 ? values.Max() : 0;
+    }
+
+    @if (seasons.Count == 0)
+    {
+        <div class="season-compare__empty">@L["NoSeasons"]</div>
+    }
+    else
+    {
+        <div class="season-compare__chart" style="--metric-color: @MetricColor(metric)">
+            @for (var i = 0; i < seasons.Count; i++)
+            {
+                var season = seasons[i];
+                var value = values[i];
+                var isBest = value == max && max > 0;
+                double? delta = i > 0 && values[i - 1] > 0 ? (value - values[i - 1]) / values[i - 1] * 100 : null;
+                var height = max > 0 ? Math.Max(value / max * 100, value > 0 ? 3 : 0) : 0;
+
+                <div class="season-compare__column">
+                    <div class="season-compare__value">@(isBest ? "👑 " : "")@Format(value)</div>
+                    @if (delta is { } d)
+                    {
+                        <div class="season-compare__delta @(d >= 0 ? "season-compare__delta--up" : "season-compare__delta--down")">
+                            @(d >= 0 ? "▲" : "▼") @Math.Abs(d).ToString("0", CultureInfo.CurrentCulture)%
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="season-compare__delta"></div>
+                    }
+                    <div class="season-compare__track">
+                        <div class="season-compare__fill @(season.State == SeasonState.Current ? "season-compare__fill--current" : null) @(isBest ? "season-compare__fill--best" : null)"
+                             style="height: @height.ToString("0.#", CultureInfo.InvariantCulture)%"></div>
+                    </div>
+                    <div class="season-compare__label">@season.SeasonLabel</div>
+                    @if (season.State == SeasonState.Current)
+                    {
+                        <div class="season-compare__live">● @L["Live"]</div>
+                    }
+                </div>
+            }
+        </div>
+        @if (seasons.Any(s => s.State == SeasonState.Current))
+        {
+            <div class="season-compare__note">@L["CurrentSeasonNote"]</div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<ClubSeasonSummary> Seasons { get; set; } = [];
+
+    [Inject] private IStringLocalizer<ClubStatisticsLocale> L { get; set; } = null!;
+
+    private enum Metric
+    {
+        Hours,
+        Bookings,
+        Members,
+        ActivePlayers,
+        ActivationRate,
+        Occupancy,
+    }
+
+    private static readonly Metric[] Metrics = Enum.GetValues<Metric>();
+
+    private Metric metric = Metric.Hours;
+
+    private double Value(ClubSeasonSummary season) => metric switch
+    {
+        Metric.Hours => season.Hours,
+        Metric.Bookings => season.Bookings,
+        Metric.Members => season.EnrolledMembers,
+        Metric.ActivePlayers => season.ActivePlayers,
+        Metric.ActivationRate => season.ActivationRate,
+        Metric.Occupancy => season.OccupancyPercentage,
+        _ => 0,
+    };
+
+    private string Format(double value) => metric switch
+    {
+        Metric.Hours => value.ToString("0", CultureInfo.CurrentCulture) + " h",
+        Metric.ActivationRate or Metric.Occupancy => value.ToString("0.#", CultureInfo.CurrentCulture) + "%",
+        _ => value.ToString("0", CultureInfo.CurrentCulture),
+    };
+
+    private string MetricName(Metric value) => L[$"Metric{value}"];
+
+    private static string? MetricColor(Metric value) => value switch
+    {
+        Metric.Hours => "#059669",
+        Metric.Bookings => "#F97316",
+        Metric.Members => "#6366F1",
+        Metric.ActivePlayers => "#0EA5E9",
+        Metric.ActivationRate => "#D946EF",
+        Metric.Occupancy => "#D97706",
+        _ => null,
+    };
+}

@@ -1,0 +1,111 @@
+.snapshot {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.snapshot__persona {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, color-mix(in srgb, #6366F1 14%, transparent), color-mix(in srgb, #059669 14%, transparent));
+}
+
+.snapshot__persona-emoji {
+    flex-shrink: 0;
+    font-size: 2.4rem;
+    line-height: 1;
+}
+
+.snapshot__persona-text {
+    min-width: 0;
+}
+
+.snapshot__caption {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.snapshot__persona-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.snapshot__persona-description {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.snapshot__facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.fact {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.fact__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    background: var(--mud-palette-background-gray);
+}
+
+.fact__text {
+    min-width: 0;
+}
+
+.fact__label {
+    font-size: 0.72rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.fact__value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fact__hint {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--mud-palette-primary);
+}
+
+.snapshot__comparison-text {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+.snapshot__comparison-track {
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--mud-palette-background-gray);
+}
+
+.snapshot__comparison-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #059669, #84CC16);
+    transition: width 0.6s ease;
+}

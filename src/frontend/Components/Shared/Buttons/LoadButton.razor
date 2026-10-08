@@ -1,0 +1,55 @@
+<MudButton StartIcon="@(Loading || Icon == null ? "" : Icon)"
+           Variant="@Variant"
+           FullWidth="@FullWidth"
+           Disabled="@(Loading || Disabled)"
+           Color="@Color"
+           Size="@Size"
+           OnClick="@(() => OnClicked())"
+           ButtonType="@ButtonType"
+           Class="@Class">
+    @if (Loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+    }
+    else
+    {
+        @ChildContent
+    }
+</MudButton>
+
+@code {
+    [Parameter]
+    public Variant Variant { get; set; }
+
+    [Parameter]
+    public Color Color { get; set; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public Size Size { get; set; } = Size.Medium;
+
+    [Parameter]
+    public bool Loading { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public string? Icon { get; set; }
+
+    [Parameter]
+    public bool FullWidth { get; set; } = true;
+
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    [Parameter]
+    public ButtonType ButtonType { get; set; } = ButtonType.Button;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    public async Task OnClicked() => await OnClick.InvokeAsync();
+}

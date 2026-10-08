@@ -1,0 +1,36 @@
+.quota-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 16px;
+}
+
+.quota {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.quota__ring {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quota__ring-text {
+    position: absolute;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.quota__name {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.quota__remaining {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}

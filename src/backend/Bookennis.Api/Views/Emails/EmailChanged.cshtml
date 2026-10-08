@@ -1,0 +1,19 @@
+@using Texts = Bookennis.Api.Resources.Localization.View_Emails_EmailChanged;
+@using Bookennis.Api.Business.Admin;
+@model EmailChangedViewModel
+
+@{
+    <div class="email-wrapper">
+        <div class="email-container">
+            <div class="email-header">
+                <h1>@Texts.Title</h1>
+            </div>
+            <div class="email-body">
+                <p>@string.Format(Texts.Greeting, Model.FirstName, Model.LastName)</p>
+                <p>@string.Format(Texts.Description, Model.NewEmail)</p>
+                <p>@Texts.NotYou</p>
+                <a class="btn" href="@Model.ForgotPasswordUrl">@Texts.Link</a>
+            </div>
+        </div>
+    </div>
+}

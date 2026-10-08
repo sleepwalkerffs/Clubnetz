@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Statistics" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="AllTime" xml:space="preserve">
+    <value>All Time</value>
+  </data>
+  <data name="Season" xml:space="preserve">
+    <value>Season</value>
+  </data>
+  <data name="CourtUsage" xml:space="preserve">
+    <value>Your courts</value>
+  </data>
+  <data name="PlayModeUsage" xml:space="preserve">
+    <value>Play modes</value>
+  </data>
+  <data name="AverageOpponentAge" xml:space="preserve">
+    <value>Avg. partner age</value>
+  </data>
+  <data name="NotActivatedForSeason" xml:space="preserve">
+    <value>You are not activated for this season.</value>
+  </data>
+  <data name="NoPlayingDataTitle" xml:space="preserve">
+    <value>No matches yet</value>
+  </data>
+  <data name="NoPlayingData" xml:space="preserve">
+    <value>Book a court and your statistics will show up here.</value>
+  </data>
+  <data name="Years" xml:space="preserve">
+    <value>yrs</value>
+  </data>
+  <data name="PlayModeQuotas" xml:space="preserve">
+    <value>Booking limits</value>
+  </data>
+  <data name="QuotaRemaining" xml:space="preserve">
+    <value>{0} left</value>
+  </data>
+  <data name="Match" xml:space="preserve">
+    <value>match</value>
+  </data>
+  <data name="Matches" xml:space="preserve">
+    <value>matches</value>
+  </data>
+  <data name="MatchesCount" xml:space="preserve">
+    <value>{0} matches</value>
+  </data>
+  <data name="HoursOnCourtSentence" xml:space="preserve">
+    <value>{0} hours on court</value>
+  </data>
+  <data name="TrendVs" xml:space="preserve">
+    <value>{0}% vs. {1}</value>
+  </data>
+  <data name="CurrentStreakChip" xml:space="preserve">
+    <value>{0} weeks in a row</value>
+  </data>
+  <data name="PlayingSince" xml:space="preserve">
+    <value>Playing since {0}</value>
+  </data>
+  <data name="SeasonsPlayedChip" xml:space="preserve">
+    <value>{0} seasons</value>
+  </data>
+  <data name="AllTimeHeroTitle" xml:space="preserve">
+    <value>Your tennis career</value>
+  </data>
+  <data name="SeasonHeroTitle" xml:space="preserve">
+    <value>Your season {0}</value>
+  </data>
+  <data name="YourPlayStyle" xml:space="preserve">
+    <value>Your play style</value>
+  </data>
+  <data name="PlayerType_EarlyBird" xml:space="preserve">
+    <value>Early Bird</value>
+  </data>
+  <data name="PlayerType_EarlyBird_Description" xml:space="preserve">
+    <value>Most of your matches start before noon.</value>
+  </data>
+  <data name="PlayerType_AfternoonAce" xml:space="preserve">
+    <value>Afternoon Ace</value>
+  </data>
+  <data name="PlayerType_AfternoonAce_Description" xml:space="preserve">
+    <value>You love playing between 12:00 and 17:00.</value>
+  </data>
+  <data name="PlayerType_NightOwl" xml:space="preserve">
+    <value>Night Owl</value>
+  </data>
+  <data name="PlayerType_NightOwl_Description" xml:space="preserve">
+    <value>Most of your matches start after 17:00.</value>
+  </data>
+  <data name="PlayerType_WeekendWarrior" xml:space="preserve">
+    <value>Weekend Warrior</value>
+  </data>
+  <data name="PlayerType_WeekendWarrior_Description" xml:space="preserve">
+    <value>The weekend belongs to tennis.</value>
+  </data>
+  <data name="PlayerType_AllRounder" xml:space="preserve">
+    <value>All-Rounder</value>
+  </data>
+  <data name="PlayerType_AllRounder_Description" xml:space="preserve">
+    <value>Morning, noon or night – you are always ready to play.</value>
+  </data>
+  <data name="DifferentPartners" xml:space="preserve">
+    <value>Different partners</value>
+  </data>
+  <data name="LongestStreak" xml:space="preserve">
+    <value>Longest streak</value>
+  </data>
+  <data name="WeeksUnit" xml:space="preserve">
+    <value>wks</value>
+  </data>
+  <data name="FavouriteCourt" xml:space="preserve">
+    <value>Favourite court</value>
+  </data>
+  <data name="ActivityCalendar" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="ActivityCalendarSubtitle" xml:space="preserve">
+    <value>Every square is a day of the season</value>
+  </data>
+  <data name="LastTwelveMonths" xml:space="preserve">
+    <value>The last 12 months</value>
+  </data>
+  <data name="PlayedOnDays" xml:space="preserve">
+    <value>Played on {0} of {1} days</value>
+  </data>
+  <data name="Less" xml:space="preserve">
+    <value>Less</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="WhenYouPlay" xml:space="preserve">
+    <value>When you play</value>
+  </data>
+  <data name="WhenYouPlaySubtitle" xml:space="preserve">
+    <value>Your weekly and daily rhythm</value>
+  </data>
+  <data name="FavouriteDaySentence" xml:space="preserve">
+    <value>Your favourite day is {0}, preferably at {1}.</value>
+  </data>
+  <data name="ByWeekday" xml:space="preserve">
+    <value>By weekday</value>
+  </data>
+  <data name="ByTimeOfDay" xml:space="preserve">
+    <value>By time of day</value>
+  </data>
+  <data name="Morning" xml:space="preserve">
+    <value>Morning</value>
+  </data>
+  <data name="Afternoon" xml:space="preserve">
+    <value>Afternoon</value>
+  </data>
+  <data name="Evening" xml:space="preserve">
+    <value>Evening</value>
+  </data>
+  <data name="YouVsClub" xml:space="preserve">
+    <value>You vs. the club</value>
+  </data>
+  <data name="YouVsClubSubtitle" xml:space="preserve">
+    <value>Matches this season</value>
+  </data>
+  <data name="BetterThanSentence" xml:space="preserve">
+    <value>You played more matches than {0} of the other {1} members.</value>
+  </data>
+  <data name="You" xml:space="preserve">
+    <value>You</value>
+  </data>
+  <data name="ClubAverage" xml:space="preserve">
+    <value>Club average</value>
+  </data>
+  <data name="PersonalRecords" xml:space="preserve">
+    <value>Personal records</value>
+  </data>
+  <data name="BestWeek" xml:space="preserve">
+    <value>Best week</value>
+  </data>
+  <data name="WeekOf" xml:space="preserve">
+    <value>Week of {0}</value>
+  </data>
+  <data name="BusiestMonth" xml:space="preserve">
+    <value>Busiest month</value>
+  </data>
+  <data name="WeeksCount" xml:space="preserve">
+    <value>{0} weeks</value>
+  </data>
+  <data name="WeeksInARow" xml:space="preserve">
+    <value>in a row with at least one match</value>
+  </data>
+  <data name="LongestBreak" xml:space="preserve">
+    <value>Longest break</value>
+  </data>
+  <data name="DaysCount" xml:space="preserve">
+    <value>{0} days</value>
+  </data>
+  <data name="BetweenTwoMatches" xml:space="preserve">
+    <value>between two matches</value>
+  </data>
+  <data name="FirstMatch" xml:space="preserve">
+    <value>First match</value>
+  </data>
+  <data name="LastMatch" xml:space="preserve">
+    <value>Last match</value>
+  </data>
+  <data name="DreamTeam" xml:space="preserve">
+    <value>Your dream team</value>
+  </data>
+  <data name="DreamTeamSubtitle" xml:space="preserve">
+    <value>{0} different partners</value>
+  </data>
+  <data name="ShowAllPartners" xml:space="preserve">
+    <value>Show all {0} partners</value>
+  </data>
+  <data name="ShowLess" xml:space="preserve">
+    <value>Show less</value>
+  </data>
+  <data name="SeasonTrend" xml:space="preserve">
+    <value>Season by season</value>
+  </data>
+  <data name="SeasonTrendSubtitle" xml:space="preserve">
+    <value>Matches and hours per season</value>
+  </data>
+</root>

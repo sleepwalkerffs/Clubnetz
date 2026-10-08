@@ -1,0 +1,101 @@
+@using Bookennis.Client.Components.Shared.Buttons
+@using MudBlazor.Services;
+@implements IAsyncDisposable
+
+@* MudDialog has to be the root element, a wrapper would break the dialog layout (the content could not scroll) *@
+<MudDialog>
+    <DialogContent>
+        @ChildContent
+    </DialogContent>
+    <DialogActions>
+        <LoadButton Variant="Variant.Filled"
+                    Color="@SubmitColor"
+                    OnClick=@Submit
+                    Disabled="@(!CanSubmit)"
+                    Loading="@Loading"
+                    FullWidth="@(MudDialog.Options.FullScreen == true)">
+            @SubmitCaption
+        </LoadButton>
+        <MudButton Variant="Variant.Outlined"
+                    Color="Color.Secondary"
+                    OnClick=@Cancel
+                    Disabled="@Loading"
+                    FullWidth="@(MudDialog.Options.FullScreen == true)">
+            @CancelCaption
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter]
+    public required string Title { get; set; }
+
+    [Parameter]
+    public required string SubmitCaption { get; set; }
+
+    [Parameter]
+    public required string CancelCaption { get; set; }
+
+    [Parameter]
+    public bool CanSubmit { get; set; } = true;
+
+    /// <summary>E.g. <see cref="Color.Error"/> for destructive actions.</summary>
+    [Parameter]
+    public Color SubmitColor { get; set; } = Color.Primary;
+
+    [Parameter]
+    public required bool Loading { get; set; }
+
+    [Parameter]
+    public bool AllowFullScreen { get; set; } = true;
+
+    [Inject]
+    public required IBrowserViewportService BreakpointListener { get; set; }
+
+    [CascadingParameter]
+    public virtual required IMudDialogInstance MudDialog { get; set; }
+
+    private Guid subscriptionId = Guid.NewGuid();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await BreakpointListener.SubscribeAsync(subscriptionId, async breakpoint =>
+            {
+                await MudDialog.SetOptionsAsync(MudDialog.Options with { FullScreen = AllowFullScreen && breakpoint.Breakpoint <= Breakpoint.Xs });
+                StateHasChanged();
+            },
+            new ResizeOptions { ReportRate = 250, NotifyOnBreakpointOnly = true });
+
+            StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private Task Submit() => HandleClosing(SubmitFunc);
+
+    private Task Cancel() => HandleClosing(CancelFunc);
+
+    private async Task HandleClosing(Func<Task<DialogResult?>>? func)
+    {
+        if (func is null)
+            return;
+
+        var result = await func.Invoke();
+        if (result is not null)
+            MudDialog.Close(result);
+    }
+
+    [Parameter]
+    public Func<Task<DialogResult?>>? SubmitFunc { get; set; }
+
+    [Parameter]
+    public Func<Task<DialogResult?>>? CancelFunc { get; set; }
+
+    public async ValueTask DisposeAsync() => await BreakpointListener.UnsubscribeAsync(subscriptionId);
+}

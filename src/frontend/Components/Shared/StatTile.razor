@@ -1,0 +1,32 @@
+<div class="stat-tile">
+    <div class="stat-tile__icon" style="--tile-color: @Color">
+        <MudIcon Icon="@Icon" Style="color: inherit;" />
+    </div>
+    <div class="stat-tile__body">
+        <div class="stat-tile__value">
+            @Value
+            @if (Unit is not null)
+            {
+                <span class="stat-tile__unit">@Unit</span>
+            }
+        </div>
+        <div class="stat-tile__label">@Label</div>
+        @if (Hint is not null)
+        {
+            <div class="stat-tile__hint" style="--tile-color: @Color">@Hint</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Icon { get; set; } = null!;
+    [Parameter, EditorRequired] public string Value { get; set; } = null!;
+    [Parameter, EditorRequired] public string Label { get; set; } = null!;
+    [Parameter] public string? Unit { get; set; }
+
+    /// <summary>Optional small accent line below the label, e.g. a comparison.</summary>
+    [Parameter] public string? Hint { get; set; }
+
+    /// <summary>Accent color as CSS color value.</summary>
+    [Parameter] public string Color { get; set; } = "#059669";
+}

@@ -1,0 +1,51 @@
+@using Bookennis.Client.Localization.Pages.News
+@using Bookennis.Shared.Controller.ClubAnnouncements
+
+<a class="news-item @(Announcement.IsPinned ? "news-item--pinned" : null) @(Announcement.IsExpired ? "news-item--expired" : null)"
+   href="@NewsHelpers.AnnouncementUrl(ClubId, Announcement.Id)">
+    <div class="news-item__icon" aria-hidden="true">@(Announcement.IsPinned ? "📌" : "📣")</div>
+
+    <div class="news-item__body">
+        <div class="news-item__title">@Announcement.Title</div>
+        <div class="news-item__excerpt @(Compact ? "news-item__excerpt--compact" : null)">@Announcement.Excerpt</div>
+        <div class="news-item__meta">
+            <span>@NewsHelpers.FormatPublished(Locale, Announcement.PublishedAt)</span>
+            @if (!Compact && Announcement.CreatedByName is not null)
+            {
+                <span aria-hidden="true">·</span>
+                <span class="news-item__author">@Announcement.CreatedByName</span>
+            }
+            @if (Announcement.IsPinned)
+            {
+                <span class="news-chip news-chip--accent">@Locale["Pinned"]</span>
+            }
+            @if (Announcement.AttachmentCount > 0)
+            {
+                <span class="news-chip" title="@NewsHelpers.Count(Locale, "AttachmentCount", Announcement.AttachmentCount)">📎 @Announcement.AttachmentCount</span>
+            }
+            @if (Announcement.IsExpired)
+            {
+                <span class="news-chip news-chip--warn">@Locale["Expired"]</span>
+            }
+            else if (ShowExpiry && Announcement.ExpiresOn is { } expiresOn)
+            {
+                <span class="news-chip">@string.Format(Locale["VisibleUntil"], NewsHelpers.FormatDate(Locale, expiresOn))</span>
+            }
+        </div>
+    </div>
+
+    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="news-item__chevron" />
+</a>
+
+@code {
+    [Parameter, EditorRequired] public ClubAnnouncementSummaryDto Announcement { get; set; } = null!;
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+
+    /// <summary>One line of text and no author, for the My Club card.</summary>
+    [Parameter] public bool Compact { get; set; }
+
+    /// <summary>Shows until when an announcement is visible, for members who manage the announcements.</summary>
+    [Parameter] public bool ShowExpiry { get; set; }
+
+    [Inject] private IStringLocalizer<NewsLocale> Locale { get; set; } = null!;
+}

@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Title" xml:space="preserve">
+    <value>Platzsperren</value>
+  </data>
+  <data name="Subtitle" xml:space="preserve">
+    <value>Sperre Plätze für ein Turnier, die Platzpflege oder bei Schlechtwetter. Gesperrte Zeiten können nicht gebucht werden.</value>
+  </data>
+  <data name="ActiveChip" xml:space="preserve">
+    <value>{0} gerade aktiv</value>
+  </data>
+  <data name="UpcomingChip" xml:space="preserve">
+    <value>{0} geplant</value>
+  </data>
+  <data name="ListTitle" xml:space="preserve">
+    <value>Sperren</value>
+  </data>
+  <data name="ListSubtitle" xml:space="preserve">
+    <value>Laufende und geplante Sperren</value>
+  </data>
+  <data name="ListSubtitleWithPast" xml:space="preserve">
+    <value>Alle Sperren inklusive vergangener</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Plätze sperren</value>
+  </data>
+  <data name="EmptyTitle" xml:space="preserve">
+    <value>Keine Plätze gesperrt</value>
+  </data>
+  <data name="EmptyText" xml:space="preserve">
+    <value>Sperre einen oder mehrere Plätze für einen Zeitraum, zum Beispiel für die Vereinsmeisterschaft oder das wöchentliche Jugendtraining.</value>
+  </data>
+  <data name="ShowPast" xml:space="preserve">
+    <value>Vergangene Sperren anzeigen</value>
+  </data>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Nur Verwalter, Sportwarte und Admins können Plätze sperren.</value>
+  </data>
+  <data name="StatusNow" xml:space="preserve">
+    <value>Gerade aktiv</value>
+  </data>
+  <data name="StatusOver" xml:space="preserve">
+    <value>Vorbei</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Heute</value>
+  </data>
+  <data name="Tomorrow" xml:space="preserve">
+    <value>Morgen</value>
+  </data>
+  <data name="InDays" xml:space="preserve">
+    <value>In {0} Tagen</value>
+  </data>
+  <data name="AllDay" xml:space="preserve">
+    <value>Ganztägig</value>
+  </data>
+  <data name="AllCourts" xml:space="preserve">
+    <value>Alle Plätze</value>
+  </data>
+  <data name="DateFormat" xml:space="preserve">
+    <value>ddd, d. MMM yyyy</value>
+  </data>
+  <data name="RecurringWeekly" xml:space="preserve">
+    <value>Jeden {0}</value>
+  </data>
+  <data name="RecurringEveryWeeks" xml:space="preserve">
+    <value>Alle {1} Wochen am {0}</value>
+  </data>
+  <data name="RecurringUntil" xml:space="preserve">
+    <value>bis {0} · {1} Termine</value>
+  </data>
+  <data name="DeleteTitle" xml:space="preserve">
+    <value>Sperre aufheben</value>
+  </data>
+  <data name="DeleteConfirm" xml:space="preserve">
+    <value>Die Sperre „{0}“ aufheben? Die Plätze können wieder gebucht werden. Dadurch gelöschte Buchungen werden nicht wiederhergestellt.</value>
+  </data>
+  <data name="Deleted" xml:space="preserve">
+    <value>Die Sperre wurde aufgehoben.</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>Die Plätze sind gesperrt.</value>
+  </data>
+  <data name="NewTitle" xml:space="preserve">
+    <value>Plätze sperren</value>
+  </data>
+  <data name="EditTitle" xml:space="preserve">
+    <value>Sperre bearbeiten</value>
+  </data>
+  <data name="ReasonLabel" xml:space="preserve">
+    <value>Grund</value>
+  </data>
+  <data name="ReasonHint" xml:space="preserve">
+    <value>Wird im Buchungsplan und in der E-Mail an betroffene Spieler*innen angezeigt.</value>
+  </data>
+  <data name="ReasonRequired" xml:space="preserve">
+    <value>Bitte gib einen Grund an.</value>
+  </data>
+  <data name="TemplateTournament" xml:space="preserve">
+    <value>Turnier</value>
+  </data>
+  <data name="TemplateMaintenance" xml:space="preserve">
+    <value>Platzpflege</value>
+  </data>
+  <data name="TemplateWeather" xml:space="preserve">
+    <value>Witterung</value>
+  </data>
+  <data name="TemplateTraining" xml:space="preserve">
+    <value>Training</value>
+  </data>
+  <data name="TemplateEvent" xml:space="preserve">
+    <value>Vereinsveranstaltung</value>
+  </data>
+  <data name="CourtsLabel" xml:space="preserve">
+    <value>Plätze</value>
+  </data>
+  <data name="PeriodLabel" xml:space="preserve">
+    <value>Zeitraum</value>
+  </data>
+  <data name="StartDate" xml:space="preserve">
+    <value>Von</value>
+  </data>
+  <data name="EndDate" xml:space="preserve">
+    <value>Bis</value>
+  </data>
+  <data name="StartTime" xml:space="preserve">
+    <value>Startzeit</value>
+  </data>
+  <data name="EndTime" xml:space="preserve">
+    <value>Endzeit</value>
+  </data>
+  <data name="AllDaySwitch" xml:space="preserve">
+    <value>Ganztägig</value>
+  </data>
+  <data name="RepeatSwitch" xml:space="preserve">
+    <value>Wiederholen</value>
+  </data>
+  <data name="RepeatEveryWeeks" xml:space="preserve">
+    <value>Alle ... Wochen</value>
+  </data>
+  <data name="RepeatUntil" xml:space="preserve">
+    <value>Wiederholen bis</value>
+  </data>
+  <data name="RepeatSummary" xml:space="preserve">
+    <value>{0} Termine, der letzte beginnt am {1}.</value>
+  </data>
+  <data name="ErrorEndBeforeStart" xml:space="preserve">
+    <value>Das Ende muss nach dem Beginn liegen.</value>
+  </data>
+  <data name="ErrorNoCourt" xml:space="preserve">
+    <value>Wähle mindestens einen Platz aus.</value>
+  </data>
+  <data name="ErrorRepeatUntil" xml:space="preserve">
+    <value>Wähle für die Wiederholung ein Enddatum nach dem Beginn.</value>
+  </data>
+  <data name="ErrorRepeatOverlap" xml:space="preserve">
+    <value>Die Sperre muss kürzer als das Wiederholungsintervall sein.</value>
+  </data>
+  <data name="ConflictsTitle" xml:space="preserve">
+    <value>{0} Buchungen liegen in der gesperrten Zeit</value>
+  </data>
+  <data name="ConflictsTitleOne" xml:space="preserve">
+    <value>1 Buchung liegt in der gesperrten Zeit</value>
+  </data>
+  <data name="ConflictsText" xml:space="preserve">
+    <value>Wenn du fortfährst, werden diese Buchungen gelöscht und die Spieler*innen per E-Mail mit dem Grund informiert.</value>
+  </data>
+  <data name="ConflictsMore" xml:space="preserve">
+    <value>und {0} weitere</value>
+  </data>
+  <data name="SubmitCreate" xml:space="preserve">
+    <value>Plätze sperren</value>
+  </data>
+  <data name="SubmitConfirm" xml:space="preserve">
+    <value>{0} Buchungen löschen und sperren</value>
+  </data>
+  <data name="SubmitConfirmOne" xml:space="preserve">
+    <value>1 Buchung löschen und sperren</value>
+  </data>
+</root>

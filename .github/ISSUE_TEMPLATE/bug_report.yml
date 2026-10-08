@@ -1,0 +1,52 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please don't include personal data of club members, also not in screenshots.
+        Security problems must be reported privately, see the security policy.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click on ...
+        3. See the error
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Booking
+        - Members, seasons and guests
+        - Calendar and events
+        - News and emails
+        - Notifications
+        - Statistics and badges
+        - Account and login
+        - Self-hosting and setup
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: e.g. iPhone 15, installed app / Windows 11, Firefox
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else?
+      description: Screenshots, error messages or logs (without personal data).

@@ -1,0 +1,160 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.ClubStatistics
+@using Bookennis.Shared.Controller.Statistics
+
+<div class="heatmap">
+    <div class="heatmap__toolbar">
+        <ChoiceChips TItem="HeatmapView" Items="@Views" Value="@view" ValueChanged="@(v => { view = v; selected = null; })"
+                     TextFunc="@(v => v == HeatmapView.Courts ? L["ViewCourts"] : L["ViewWeekdays"])" />
+        <div class="heatmap__summary">
+            <span class="heatmap__summary-value">@Percent(Occupancy.OverallPercentage)</span>
+            <span class="heatmap__summary-label">@L["OverallOccupancy"]</span>
+            @if (Occupancy.PrimeTimePercentage is { } prime)
+            {
+                <span class="heatmap__summary-value heatmap__summary-value--prime">⚡ @Percent(prime)</span>
+                <span class="heatmap__summary-label">@L["PrimeTime"]</span>
+            }
+        </div>
+    </div>
+
+    @if (Occupancy.Days == 0)
+    {
+        <div class="heatmap__empty">@L["NoDaysYet"]</div>
+    }
+    else
+    {
+        var rows = Rows;
+        var hours = rows.FirstOrDefault()?.Hours.Select(h => h.Hour).ToList() ?? [];
+
+        <div class="heatmap__scroll">
+            <div class="heatmap__grid" style="grid-template-columns: minmax(84px, max-content) repeat(@hours.Count, minmax(34px, 1fr)) minmax(48px, max-content);">
+                <div class="heatmap__corner"></div>
+                @foreach (var hour in hours)
+                {
+                    <div class="heatmap__hour @(IsPrimeHour(hour) ? "heatmap__hour--prime" : null)">@hour</div>
+                }
+                <div class="heatmap__hour heatmap__hour--avg">Ø</div>
+
+                @foreach (var row in rows)
+                {
+                    <div class="heatmap__row-label" title="@row.Label">@row.Label</div>
+                    @foreach (var cell in row.Hours)
+                    {
+                        var isSelected = selected is { } s && s.Row == row.Label && s.Hour == cell.Hour;
+                        <button type="button" class="heatmap__cell @(isSelected ? "heatmap__cell--selected" : null) @(cell.OccupancyPercentage >= 50 ? "heatmap__cell--dark" : null)"
+                                style="--heat: @Heat(cell.OccupancyPercentage)"
+                                title="@CellTitle(row.Label, cell)"
+                                @onclick="() => selected = (row.Label, cell.Hour, cell)">
+                            @(cell.OccupancyPercentage >= 1 ? Math.Round(cell.OccupancyPercentage).ToString(CultureInfo.CurrentCulture) : "")
+                        </button>
+                    }
+                    <div class="heatmap__row-avg">@Percent(row.Average)</div>
+                }
+
+                <div class="heatmap__row-label heatmap__row-label--avg">Ø</div>
+                @foreach (var hour in hours)
+                {
+                    var average = rows.Average(r => r.Hours.First(h => h.Hour == hour).OccupancyPercentage);
+                    <div class="heatmap__col-avg" style="--bar: @Heat(average)">
+                        <span class="heatmap__col-avg-bar"></span>
+                    </div>
+                }
+                <div></div>
+            </div>
+        </div>
+
+        <div class="heatmap__footer">
+            <div class="heatmap__legend">
+                <span>0%</span>
+                <span class="heatmap__legend-scale"></span>
+                <span>100%</span>
+                @if (PrimeTime is not null)
+                {
+                    <span class="heatmap__legend-prime">⚡ @L["PrimeTimeLegend"]</span>
+                }
+            </div>
+            <div class="heatmap__detail">
+                @if (selected is { } sel)
+                {
+                    <strong>@sel.Row · @($"{sel.Hour:00}:00–{sel.Hour + 1:00}:00")</strong>
+                    <span>@string.Format(L["CellDetail"], Percent(sel.Cell.OccupancyPercentage), sel.Cell.BookedHours.ToString("0.#", CultureInfo.CurrentCulture))</span>
+                }
+                else
+                {
+                    <span>@string.Format(L["HeatmapBasis"], Occupancy.Days)</span>
+                }
+            </div>
+        </div>
+
+        @if (BestAndWorst is { } extremes)
+        {
+            <div class="heatmap__insights">
+                <div class="heatmap__insight heatmap__insight--hot">
+                    <span aria-hidden="true">🔥</span>
+                    <span>@string.Format(L["HottestSlot"], extremes.Hot.Row, $"{extremes.Hot.Hour:00}:00", Percent(extremes.Hot.Value))</span>
+                </div>
+                <div class="heatmap__insight heatmap__insight--cold">
+                    <span aria-hidden="true">🧊</span>
+                    <span>@string.Format(L["QuietestSlot"], extremes.Cold.Row, $"{extremes.Cold.Hour:00}:00", Percent(extremes.Cold.Value))</span>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ClubOccupancyResult Occupancy { get; set; } = null!;
+    [Parameter] public ClubPrimeTimeInfo? PrimeTime { get; set; }
+
+    [Inject] private IStringLocalizer<ClubStatisticsLocale> L { get; set; } = null!;
+
+    private enum HeatmapView
+    {
+        Courts,
+        Weekdays,
+    }
+
+    private static readonly HeatmapView[] Views = [HeatmapView.Courts, HeatmapView.Weekdays];
+
+    private sealed record HeatmapRow(string Label, double Average, List<HeatmapHourResult> Hours);
+
+    private HeatmapView view = HeatmapView.Courts;
+    private (string Row, int Hour, HeatmapHourResult Cell)? selected;
+
+    private List<HeatmapRow> Rows => view == HeatmapView.Courts
+        ? Occupancy.CourtHeatmaps
+            .OrderBy(c => c.CourtSortOrder)
+            .Select(c => new HeatmapRow(c.CourtName, c.OccupancyPercentage, c.Hours))
+            .ToList()
+        : Occupancy.WeekdayHeatmaps
+            .Select(w => new HeatmapRow(CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(w.DayOfWeek), w.OccupancyPercentage, w.Hours))
+            .ToList();
+
+    private ((string Row, int Hour, double Value) Hot, (string Row, int Hour, double Value) Cold)? BestAndWorst
+    {
+        get
+        {
+            var cells = Rows
+                .SelectMany(r => r.Hours.Select(h => (r.Label, h.Hour, h.OccupancyPercentage)))
+                .ToList();
+            if (cells.Count == 0 || cells.All(c => c.OccupancyPercentage <= 0))
+                return null;
+
+            var hot = cells.MaxBy(c => c.OccupancyPercentage);
+            var cold = cells.MinBy(c => c.OccupancyPercentage);
+            return ((hot.Label, hot.Hour, hot.OccupancyPercentage), (cold.Label, cold.Hour, cold.OccupancyPercentage));
+        }
+    }
+
+    private bool IsPrimeHour(int hour) => PrimeTime is not null && hour >= PrimeTime.FromHour && hour < PrimeTime.ToHour;
+
+    // Square root scale so that low occupancies are still distinguishable
+    private static string Heat(double percentage)
+        => percentage <= 0 ? "0%" : (Math.Sqrt(Math.Min(percentage, 100) / 100) * 88 + 8).ToString("0", CultureInfo.InvariantCulture) + "%";
+
+    private static string Percent(double value) => value.ToString("0.#", CultureInfo.CurrentCulture) + " %";
+
+    private string CellTitle(string row, HeatmapHourResult cell)
+        => $"{row} · {cell.Hour:00}:00 – {Percent(cell.OccupancyPercentage)} ({cell.BookedHours.ToString("0.#", CultureInfo.CurrentCulture)} h)";
+}

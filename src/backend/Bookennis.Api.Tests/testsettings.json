@@ -1,0 +1,5 @@
+{
+  "ConnectionStrings": {
+    "Npgsql": "Host=127.0.0.1;Port=5432;Database=bookennis_test;Username=postgres;Password=developer;Include Error Detail=true"
+  }
+}

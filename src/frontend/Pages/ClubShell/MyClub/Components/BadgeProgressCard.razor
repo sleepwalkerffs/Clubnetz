@@ -1,0 +1,163 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.MyClub
+@using Bookennis.Client.Pages.ClubShell.MyClub.Dialogs
+@using Bookennis.Client.Services.Store.Badges
+
+@implements IDisposable
+
+@if (BadgesStore.BadgeProgress is not null)
+{
+    var progress = BadgesStore.BadgeProgress;
+    var hasNext = progress.NextBadgeMatchesRequired.HasValue;
+    var allEarned = !hasNext && progress.CurrentBadgeName is not null;
+    var progressValue = hasNext && progress.NextBadgeMatchesRequired!.Value > 0
+        ? Math.Min((double)progress.MatchCount / progress.NextBadgeMatchesRequired.Value * 100, 100)
+        : (allEarned ? 100.0 : 0.0);
+    var matchesToGo = hasNext ? Math.Max(progress.NextBadgeMatchesRequired!.Value - progress.MatchCount, 0) : 0;
+    var subtitle = hasNext
+        ? string.Format(MyClubLocale["MatchesToNextBadge"], matchesToGo, progress.NextBadgeName)
+        : allEarned ? Locale["AllBadgesEarned"].Value : null;
+
+    <SectionCard Emoji="🏅" Title="@Locale["BadgeProgress"]" Subtitle="@subtitle">
+        <Actions>
+            <MudTooltip Text="@Locale["BadgeSettings"]">
+                <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="OpenBadgeSettingsDialog" aria-label="@Locale["BadgeSettings"]" />
+            </MudTooltip>
+        </Actions>
+        <ChildContent>
+            <div class="badge-track">
+                <div class="badge-track__badge">
+                    <div class="badge-track__glow @(progress.CurrentBadgeName is null ? "badge-track__glow--none" : null)">
+                        <BadgeIcon ImageUrl="@progress.CurrentBadgeImageUrl" Level="@(progress.CurrentBadgeLevel ?? 0)" Size="Size.Large" ExtraStyle="width: 64px; height: 64px;" />
+                    </div>
+                    <div class="badge-track__name">@(progress.CurrentBadgeName ?? Locale["NoBadgeYet"])</div>
+                </div>
+
+                <div class="badge-track__progress">
+                    <div class="badge-track__count">
+                        <span class="badge-track__count-value">@progress.MatchCount</span>
+                        @if (hasNext)
+                        {
+                            <span class="badge-track__count-target">/ @progress.NextBadgeMatchesRequired</span>
+                        }
+                        <span class="badge-track__count-unit">@MyClubLocale["Matches"]</span>
+                    </div>
+                    <div class="badge-track__bar">
+                        <div class="badge-track__fill @(allEarned ? "badge-track__fill--done" : null)"
+                             style="width: @progressValue.ToString("0.#", CultureInfo.InvariantCulture)%"></div>
+                    </div>
+                    @if (allEarned)
+                    {
+                        <div class="badge-track__caption badge-track__caption--done">🏆 @Locale["AllBadgesEarned"]</div>
+                    }
+                    else if (hasNext)
+                    {
+                        <div class="badge-track__caption">@string.Format(MyClubLocale["PercentReached"], (int)progressValue)</div>
+                    }
+                </div>
+
+                @if (hasNext)
+                {
+                    <div class="badge-track__badge badge-track__badge--next">
+                        <BadgeIcon ImageUrl="@progress.NextBadgeImageUrl" Level="@(progress.NextBadgeLevel ?? 0)" Size="Size.Large" ExtraStyle="width: 64px; height: 64px;" />
+                        <div class="badge-track__name">@progress.NextBadgeName</div>
+                    </div>
+                }
+            </div>
+
+            @if (progress.EarnedBadges.Count > 0 || progress.OneTimeBadges.Count > 0)
+            {
+                <div class="badge-collection">
+                    <div class="badge-collection__label">@MyClubLocale["CollectedThisSeason"]</div>
+                    <div class="badge-collection__items">
+                        @foreach (var badge in progress.EarnedBadges.OrderBy(b => b.Level))
+                        {
+                            <MudTooltip Text="@badge.Name">
+                                <BadgeIcon ImageUrl="@badge.ImageUrl" Level="@badge.Level" Alt="@badge.Name" Size="Size.Medium" />
+                            </MudTooltip>
+                        }
+                        @foreach (var badge in progress.OneTimeBadges)
+                        {
+                            <MudTooltip Text="@badge.Name">
+                                <BadgeIcon ImageUrl="@badge.ImageUrl" Level="null" Alt="@badge.Name" Size="Size.Medium" />
+                            </MudTooltip>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="d-flex justify-end mt-3">
+                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.EmojiEvents" EndIcon="@Icons.Material.Filled.ChevronRight"
+                           OnClick="OpenTrophyCase">
+                    @Locale["TrophyCase"]
+                </MudButton>
+            </div>
+        </ChildContent>
+    </SectionCard>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public int MemberId { get; set; }
+
+    [Parameter, EditorRequired]
+    public int ClubId { get; set; }
+
+    [Inject]
+    private IBadgesStore BadgesStore { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> Locale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<MyClubLocale> MyClubLocale { get; set; } = null!;
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        BadgesStore.OnBadgeProgressChanged += StateHasChanged;
+        if (MemberId > 0)
+            await BadgesStore.LoadBadgeProgress(MemberId);
+    }
+
+    public void Dispose()
+    {
+        BadgesStore.OnBadgeProgressChanged -= StateHasChanged;
+    }
+
+    private async Task OpenBadgeSettingsDialog()
+    {
+        if (BadgesStore.BadgeProgress is null)
+            return;
+
+        // Load all earned badges across all seasons so the user can pick any of them
+        var allBadges = await BadgesStore.LoadMemberBadges(MemberId);
+        if (allBadges is null)
+            return;
+
+        var parameters = new DialogParameters<BadgeSettingsDialog>();
+        parameters.Add(dialog => dialog.MemberId, MemberId);
+        parameters.Add(dialog => dialog.EarnedBadges, allBadges.Badges);
+        parameters.Add(dialog => dialog.OneTimeBadges, allBadges.OneTimeBadges);
+        parameters.Add(dialog => dialog.CurrentDisplayBadgeId, BadgesStore.BadgeProgress!.DisplayBadgeId);
+        parameters.Add(dialog => dialog.CurrentDisplayOneTimeBadgeId, BadgesStore.BadgeProgress!.DisplayOneTimeBadgeId);
+        parameters.Add(dialog => dialog.TrophyCasePublic, BadgesStore.BadgeProgress!.TrophyCasePublic);
+
+        var dialog = await DialogService.ShowAsync<BadgeSettingsDialog>(Locale["BadgeSettings"], parameters, new DialogOptions { FullScreen = false });
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+            await BadgesStore.LoadBadgeProgress(MemberId);
+    }
+
+    private void OpenTrophyCase()
+        => NavigationManager.NavigateTo($"/clubs/{ClubId}/members/{MemberId}/trophy-case");
+}

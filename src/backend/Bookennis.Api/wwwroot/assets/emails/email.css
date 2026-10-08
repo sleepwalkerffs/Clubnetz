@@ -1,0 +1,148 @@
+/* Bookennis Email Styles — matching FE Corporate Identity */
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #F8FBF9;
+    font-family: Inter, Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #0F172A;
+    -webkit-text-size-adjust: 100%;
+}
+
+.email-wrapper {
+    width: 100%;
+    background-color: #F8FBF9;
+    padding: 40px 0;
+}
+
+.email-container {
+    max-width: 560px;
+    margin: 0 auto;
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    border: 1px solid #E2E8F0;
+    overflow: hidden;
+}
+
+.email-header {
+    background-color: #064E3B;
+    padding: 24px 32px;
+    text-align: center;
+}
+
+.email-header h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    color: #FFFFFF;
+}
+
+.email-body {
+    padding: 32px;
+}
+
+.email-body p {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #0F172A;
+}
+
+.email-body p.text-secondary {
+    color: #475569;
+    font-size: 13px;
+}
+
+.email-body a.btn {
+    display: inline-block;
+    background-color: #059669;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    letter-spacing: -0.006em;
+    text-align: center;
+    margin: 8px 0 16px 0;
+}
+
+.email-body a.btn:hover {
+    background-color: #047857;
+}
+
+.email-footer {
+    padding: 20px 32px;
+    border-top: 1px solid #E2E8F0;
+    text-align: center;
+}
+
+.email-footer p {
+    margin: 0;
+    font-size: 13px;
+    color: #94A3B8;
+    line-height: 1.5;
+}
+
+/* Elements produced by the Markdown of club email templates */
+
+.email-body h1,
+.email-body h2,
+.email-body h3,
+.email-body h4 {
+    margin: 24px 0 12px 0;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #0F172A;
+}
+
+.email-body h1 { font-size: 20px; }
+.email-body h2 { font-size: 18px; }
+.email-body h3 { font-size: 16px; }
+.email-body h4 { font-size: 14px; }
+
+.email-body ul,
+.email-body ol {
+    margin: 0 0 16px 0;
+    padding-left: 20px;
+}
+
+.email-body li {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #0F172A;
+}
+
+.email-body a {
+    color: #047857;
+}
+
+.email-body blockquote {
+    margin: 0 0 16px 0;
+    padding: 8px 16px;
+    border-left: 3px solid #059669;
+    color: #475569;
+}
+
+.email-body hr {
+    border: none;
+    border-top: 1px solid #E2E8F0;
+    margin: 24px 0;
+}
+
+.email-body img {
+    max-width: 100%;
+}
+
+.email-body img.badge-image {
+    display: block;
+    margin: 0 auto 16px auto;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+}

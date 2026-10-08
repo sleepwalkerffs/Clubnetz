@@ -1,0 +1,504 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ClubStatistics" xml:space="preserve">
+    <value>Vereinsstatistik</value>
+  </data>
+  <data name="AllTime" xml:space="preserve">
+    <value>Gesamt</value>
+  </data>
+  <data name="CourtOccupancy" xml:space="preserve">
+    <value>Platzauslastung</value>
+  </data>
+  <data name="MemberDemographics" xml:space="preserve">
+    <value>Mitglieder</value>
+  </data>
+  <data name="Kids" xml:space="preserve">
+    <value>Kinder</value>
+  </data>
+  <data name="Teenagers" xml:space="preserve">
+    <value>Jugendliche</value>
+  </data>
+  <data name="Adults" xml:space="preserve">
+    <value>Erwachsene</value>
+  </data>
+  <data name="Seniors" xml:space="preserve">
+    <value>Senioren</value>
+  </data>
+  <data name="PlayModeUsage" xml:space="preserve">
+    <value>Spielmodi</value>
+  </data>
+  <data name="Male" xml:space="preserve">
+    <value>Männlich</value>
+  </data>
+  <data name="Female" xml:space="preserve">
+    <value>Weiblich</value>
+  </data>
+  <data name="SeasonChip" xml:space="preserve">
+    <value>Saison {0}</value>
+  </data>
+  <data name="SeasonTitle" xml:space="preserve">
+    <value>Saison {0}</value>
+  </data>
+  <data name="DayOfSeason" xml:space="preserve">
+    <value>Tag {0} von {1}</value>
+  </data>
+  <data name="DaysLeft" xml:space="preserve">
+    <value>noch {0} Tage</value>
+  </data>
+  <data name="Upcoming" xml:space="preserve">
+    <value>Noch nicht gestartet</value>
+  </data>
+  <data name="Finished" xml:space="preserve">
+    <value>Abgeschlossen</value>
+  </data>
+  <data name="EnrolledChip" xml:space="preserve">
+    <value>{0} Mitglieder</value>
+  </data>
+  <data name="UpcomingChip" xml:space="preserve">
+    <value>{0} kommende Buchungen</value>
+  </data>
+  <data name="SeasonProgress" xml:space="preserve">
+    <value>Saisonfortschritt</value>
+  </data>
+  <data name="PaceCaption" xml:space="preserve">
+    <value>Stunden vs. {0} zum selben Zeitpunkt</value>
+  </data>
+  <data name="PaceText" xml:space="preserve">
+    <value>{0} h diese Saison vs. {1} h</value>
+  </data>
+  <data name="DataUntil" xml:space="preserve">
+    <value>Gezählt bis heute ({0})</value>
+  </data>
+  <data name="PlayedHours" xml:space="preserve">
+    <value>Gespielte Stunden</value>
+  </data>
+  <data name="Bookings" xml:space="preserve">
+    <value>Buchungen</value>
+  </data>
+  <data name="RecurringHint" xml:space="preserve">
+    <value>{0} aus Serien</value>
+  </data>
+  <data name="ActivePlayers" xml:space="preserve">
+    <value>Aktive Spieler</value>
+  </data>
+  <data name="ActivationHint" xml:space="preserve">
+    <value>{0}% der Mitglieder spielten</value>
+  </data>
+  <data name="Occupancy" xml:space="preserve">
+    <value>Auslastung</value>
+  </data>
+  <data name="PrimeTimeHint" xml:space="preserve">
+    <value>Primetime {0}</value>
+  </data>
+  <data name="PlayersPerBooking" xml:space="preserve">
+    <value>Spieler pro Buchung</value>
+  </data>
+  <data name="GuestsHint" xml:space="preserve">
+    <value>+ {0} Gäste</value>
+  </data>
+  <data name="BusiestDay" xml:space="preserve">
+    <value>Stärkster Tag</value>
+  </data>
+  <data name="CourtOccupancySubtitle" xml:space="preserve">
+    <value>Anteil jeder Stunde, in der die Plätze gebucht waren – Zelle antippen für Details</value>
+  </data>
+  <data name="CourtOccupancyAllTimeSubtitle" xml:space="preserve">
+    <value>Über alle Saisonen, bis heute</value>
+  </data>
+  <data name="WeeklyTrend" xml:space="preserve">
+    <value>Wochenverlauf</value>
+  </data>
+  <data name="WeeklyTrendSubtitle" xml:space="preserve">
+    <value>Gespielte Stunden pro Woche im Vergleich zur Vorsaison</value>
+  </data>
+  <data name="Weekdays" xml:space="preserve">
+    <value>Wochentage</value>
+  </data>
+  <data name="WeekdaysSubtitle" xml:space="preserve">
+    <value>Gespielte Stunden pro Wochentag</value>
+  </data>
+  <data name="MemberDemographicsSubtitle" xml:space="preserve">
+    <value>Altersgruppen und Geschlecht der eingeschriebenen Mitglieder</value>
+  </data>
+  <data name="MemberActivity" xml:space="preserve">
+    <value>Mitgliederaktivität</value>
+  </data>
+  <data name="MemberActivitySubtitle" xml:space="preserve">
+    <value>Wer wirklich spielt – und wer nicht</value>
+  </data>
+  <data name="TopPlayers" xml:space="preserve">
+    <value>Aktivste Spieler</value>
+  </data>
+  <data name="TopPlayersAllTime" xml:space="preserve">
+    <value>Aktivste Spieler aller Zeiten</value>
+  </data>
+  <data name="TopPlayersSubtitle" xml:space="preserve">
+    <value>Nach Stunden am Platz</value>
+  </data>
+  <data name="PlayModeUsageSubtitle" xml:space="preserve">
+    <value>Stunden pro Spielmodus</value>
+  </data>
+  <data name="BookingBehavior" xml:space="preserve">
+    <value>Buchungsverhalten</value>
+  </data>
+  <data name="BookingBehaviorSubtitle" xml:space="preserve">
+    <value>Wann und wie gebucht wird</value>
+  </data>
+  <data name="DayQuality" xml:space="preserve">
+    <value>Tagesauslastung</value>
+  </data>
+  <data name="DayQualitySubtitle" xml:space="preserve">
+    <value>Wie viel an den bisherigen {0} Tagen gespielt wurde</value>
+  </data>
+  <data name="SinceSubtitle" xml:space="preserve">
+    <value>Seit {0}</value>
+  </data>
+  <data name="SeasonsChip" xml:space="preserve">
+    <value>{0} Saisonen</value>
+  </data>
+  <data name="MembersEverChip" xml:space="preserve">
+    <value>{0} Mitglieder insgesamt</value>
+  </data>
+  <data name="BestSeasonChip" xml:space="preserve">
+    <value>Beste Saison: {0}</value>
+  </data>
+  <data name="TotalHoursOnCourt" xml:space="preserve">
+    <value>Stunden am Platz</value>
+  </data>
+  <data name="TotalHoursText" xml:space="preserve">
+    <value>Das sind {0} Tage Tennis am Stück</value>
+  </data>
+  <data name="DistinctPlayers" xml:space="preserve">
+    <value>Verschiedene Spieler</value>
+  </data>
+  <data name="MembersEver" xml:space="preserve">
+    <value>Mitglieder insgesamt</value>
+  </data>
+  <data name="SeasonComparison" xml:space="preserve">
+    <value>Saisonvergleich</value>
+  </data>
+  <data name="SeasonComparisonSubtitle" xml:space="preserve">
+    <value>Wähle eine Kennzahl für den Vergleich</value>
+  </data>
+  <data name="Retention" xml:space="preserve">
+    <value>Mitgliederbindung</value>
+  </data>
+  <data name="RetentionSubtitle" xml:space="preserve">
+    <value>Wiederkehrende, neue und abgesprungene Mitglieder pro Saison</value>
+  </data>
+  <data name="DemographicsOverSeasons" xml:space="preserve">
+    <value>Altersstruktur</value>
+  </data>
+  <data name="DemographicsOverSeasonsSubtitle" xml:space="preserve">
+    <value>Altersgruppen der Mitglieder pro Saison</value>
+  </data>
+  <data name="LeadTime" xml:space="preserve">
+    <value>Vorlaufzeit</value>
+  </data>
+  <data name="Activated" xml:space="preserve">
+    <value>gespielt</value>
+  </data>
+  <data name="OfEnrolledPlayed" xml:space="preserve">
+    <value>von {0} Mitgliedern spielten mindestens einmal</value>
+  </data>
+  <data name="Returning" xml:space="preserve">
+    <value>Wiederkehrend</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>Neu</value>
+  </data>
+  <data name="Lapsed" xml:space="preserve">
+    <value>Abgesprungen</value>
+  </data>
+  <data name="LapsedLink" xml:space="preserve">
+    <value>aus der Vorsaison nicht mehr dabei</value>
+  </data>
+  <data name="BookingsPerMember" xml:space="preserve">
+    <value>Buchungen pro Mitglied</value>
+  </data>
+  <data name="InactiveMembersLink" xml:space="preserve">
+    <value>Die {0} Mitglieder ohne Buchung anzeigen</value>
+  </data>
+  <data name="PrimeTimeShare" xml:space="preserve">
+    <value>der Stunden in der Primetime</value>
+  </data>
+  <data name="RecurringShare" xml:space="preserve">
+    <value>der Buchungen aus Serien</value>
+  </data>
+  <data name="NoDaysYet" xml:space="preserve">
+    <value>Die Saison hat noch nicht begonnen.</value>
+  </data>
+  <data name="DaysEmpty" xml:space="preserve">
+    <value>Tage ohne Buchung</value>
+  </data>
+  <data name="DaysUnder3" xml:space="preserve">
+    <value>Tage unter 3 h</value>
+  </data>
+  <data name="Days3To5" xml:space="preserve">
+    <value>Tage mit 3–5 h</value>
+  </data>
+  <data name="Days5To10" xml:space="preserve">
+    <value>Tage mit 5–10 h</value>
+  </data>
+  <data name="DaysOver10" xml:space="preserve">
+    <value>Tage mit 10 h und mehr</value>
+  </data>
+  <data name="AverageHoursPerDay" xml:space="preserve">
+    <value>Stunden pro Tag</value>
+  </data>
+  <data name="LeadTime_LessThanADay" xml:space="preserve">
+    <value>Weniger als ein Tag</value>
+  </data>
+  <data name="LeadTime_OneToTwoDays" xml:space="preserve">
+    <value>1–2 Tage</value>
+  </data>
+  <data name="LeadTime_ThreeToSevenDays" xml:space="preserve">
+    <value>3–7 Tage</value>
+  </data>
+  <data name="LeadTime_MoreThanAWeek" xml:space="preserve">
+    <value>Mehr als eine Woche</value>
+  </data>
+  <data name="Activity_None" xml:space="preserve">
+    <value>Keine Buchung</value>
+  </data>
+  <data name="Activity_One" xml:space="preserve">
+    <value>1 Buchung</value>
+  </data>
+  <data name="Activity_TwoToFive" xml:space="preserve">
+    <value>2–5 Buchungen</value>
+  </data>
+  <data name="Activity_SixToTen" xml:space="preserve">
+    <value>6–10 Buchungen</value>
+  </data>
+  <data name="Activity_ElevenToTwenty" xml:space="preserve">
+    <value>11–20 Buchungen</value>
+  </data>
+  <data name="Activity_MoreThanTwenty" xml:space="preserve">
+    <value>Mehr als 20</value>
+  </data>
+  <data name="NoBookings" xml:space="preserve">
+    <value>Noch keine Buchungen.</value>
+  </data>
+  <data name="NoMembers" xml:space="preserve">
+    <value>Keine Mitglieder eingeschrieben.</value>
+  </data>
+  <data name="NoPlayers" xml:space="preserve">
+    <value>Es hat noch niemand gespielt.</value>
+  </data>
+  <data name="NoSeasons" xml:space="preserve">
+    <value>Noch keine Saisonen.</value>
+  </data>
+  <data name="ViewCourts" xml:space="preserve">
+    <value>Plätze</value>
+  </data>
+  <data name="ViewWeekdays" xml:space="preserve">
+    <value>Wochentage</value>
+  </data>
+  <data name="OverallOccupancy" xml:space="preserve">
+    <value>gesamt</value>
+  </data>
+  <data name="PrimeTime" xml:space="preserve">
+    <value>Primetime</value>
+  </data>
+  <data name="PrimeTimeLegend" xml:space="preserve">
+    <value>Primetime-Stunden</value>
+  </data>
+  <data name="CellDetail" xml:space="preserve">
+    <value>{0} belegt · {1} h gebucht</value>
+  </data>
+  <data name="HeatmapBasis" xml:space="preserve">
+    <value>Basierend auf {0} Tagen</value>
+  </data>
+  <data name="HottestSlot" xml:space="preserve">
+    <value>Am begehrtesten: {0} um {1} ({2})</value>
+  </data>
+  <data name="QuietestSlot" xml:space="preserve">
+    <value>Am ruhigsten: {0} um {1} ({2})</value>
+  </data>
+  <data name="MembersTotal" xml:space="preserve">
+    <value>{0} Mitglieder</value>
+  </data>
+  <data name="AverageAge" xml:space="preserve">
+    <value>Durchschnittsalter {0}</value>
+  </data>
+  <data name="YouthShare" xml:space="preserve">
+    <value>{0}% Jugend</value>
+  </data>
+  <data name="YearsShort" xml:space="preserve">
+    <value>J.</value>
+  </data>
+  <data name="Live" xml:space="preserve">
+    <value>live</value>
+  </data>
+  <data name="CurrentSeasonNote" xml:space="preserve">
+    <value>Die laufende Saison wird bis heute gezählt.</value>
+  </data>
+  <data name="MetricHours" xml:space="preserve">
+    <value>Stunden</value>
+  </data>
+  <data name="MetricBookings" xml:space="preserve">
+    <value>Buchungen</value>
+  </data>
+  <data name="MetricMembers" xml:space="preserve">
+    <value>Mitglieder</value>
+  </data>
+  <data name="MetricActivePlayers" xml:space="preserve">
+    <value>Aktive Spieler</value>
+  </data>
+  <data name="MetricActivationRate" xml:space="preserve">
+    <value>Aktivierung</value>
+  </data>
+  <data name="MetricOccupancy" xml:space="preserve">
+    <value>Auslastung</value>
+  </data>
+  <data name="ShowLapsedMembers" xml:space="preserve">
+    <value>Die {0} abgesprungenen Mitglieder anzeigen</value>
+  </data>
+  <data name="RetentionRate" xml:space="preserve">
+    <value>{0}% geblieben</value>
+  </data>
+  <data name="LapsedHint" xml:space="preserve">
+    <value>Tippe auf einen roten Balken, um die abgesprungenen Mitglieder zu öffnen und ihre E-Mails zu kopieren.</value>
+  </data>
+  <data name="Week" xml:space="preserve">
+    <value>Woche</value>
+  </data>
+  <data name="BestWeek" xml:space="preserve">
+    <value>Beste Woche ({0})</value>
+  </data>
+  <data name="MostPlayersInAWeek" xml:space="preserve">
+    <value>Meiste Spieler in einer Woche</value>
+  </data>
+  <data name="WeeksWithoutBookings" xml:space="preserve">
+    <value>Wochen ohne Buchung</value>
+  </data>
+  <data name="MatchesCount" xml:space="preserve">
+    <value>{0} Matches</value>
+  </data>
+  <data name="AllBookings" xml:space="preserve">
+    <value>Alle Buchungen</value>
+  </data>
+  <data name="MatchesOnly" xml:space="preserve">
+    <value>Nur Matches</value>
+  </data>
+  <data name="MatchesOnlyHint" xml:space="preserve">
+    <value>Nur Spielmodi, die als Match zählen (Buchungslimit, Abzeichen, Rangliste)</value>
+  </data>
+</root>

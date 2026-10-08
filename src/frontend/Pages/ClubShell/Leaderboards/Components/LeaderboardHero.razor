@@ -1,0 +1,99 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Leaderboards
+@using Bookennis.Shared.Controller.Leaderboards
+
+<div class="lb-hero">
+    <div class="lb-hero__content">
+        <div class="lb-hero__eyebrow">@Title</div>
+
+        @if (IsOptedOut)
+        {
+            <div class="lb-hero__state">
+                <span class="lb-hero__state-emoji" aria-hidden="true">🙈</span>
+                <div>
+                    <div class="lb-hero__state-title">@Locale["HiddenTitle"]</div>
+                    <div class="lb-hero__state-text">@Locale["OptedOutInfo"]</div>
+                </div>
+            </div>
+        }
+        else if (Data.CurrentMemberEntry is { } me)
+        {
+            <div class="lb-hero__rank">
+                <span class="lb-hero__rank-number">#@me.Rank</span>
+                <span class="lb-hero__rank-of">@string.Format(Locale["OfPlayers"], Data.TotalPlayers)</span>
+            </div>
+            <div class="lb-hero__sub">
+                @string.Format(Locale[me.Matches == 1 ? "HoursAndOneMatch" : "HoursAndMatches"], me.TotalHours.ToString("0.#", CultureInfo.CurrentCulture), me.Matches)
+            </div>
+
+            <div class="lb-hero__chips">
+                @if (me.RankChange is null)
+                {
+                    <span class="lb-chip lb-chip--new">✨ @Locale["NewThisWeek"]</span>
+                }
+                else if (me.RankChange > 0)
+                {
+                    <span class="lb-chip lb-chip--up">▲ @string.Format(Locale["MovedUp"], me.RankChange)</span>
+                }
+                else if (me.RankChange < 0)
+                {
+                    <span class="lb-chip lb-chip--down">▼ @string.Format(Locale["MovedDown"], -me.RankChange)</span>
+                }
+                else
+                {
+                    <span class="lb-chip">➖ @Locale["NoMovement"]</span>
+                }
+
+                @if (me.Rank == 1)
+                {
+                    <span class="lb-chip lb-chip--gold">👑 @Locale["NumberOne"]</span>
+                }
+                else if (Data.HoursToNextRank is { } gap)
+                {
+                    <span class="lb-chip">🎯 @(gap <= 0 ? string.Format(Locale["TiedWithNext"], me.Rank - 1) : string.Format(Locale["HoursToNext"], gap.ToString("0.#", CultureInfo.CurrentCulture), me.Rank - 1))</span>
+                }
+            </div>
+
+            @if (me.Rank > 1 && Data.HoursToNextRank is { } hoursToNext)
+            {
+                var progress = me.TotalHours + hoursToNext > 0 ? me.TotalHours / (me.TotalHours + hoursToNext) * 100 : 100;
+                <div class="lb-hero__progress" aria-hidden="true">
+                    <div class="lb-hero__progress-fill" style="width: @progress.ToString("0.#", CultureInfo.InvariantCulture)%"></div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="lb-hero__state">
+                <span class="lb-hero__state-emoji" aria-hidden="true">🎾</span>
+                <div>
+                    <div class="lb-hero__state-title">@Locale["NotRankedTitle"]</div>
+                    <div class="lb-hero__state-text">@Locale["NotRankedText"]</div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (Data.Entries.FirstOrDefault() is { } leader)
+    {
+        <div class="lb-hero__leader">
+            <div class="lb-hero__leader-caption">👑 @Locale["Leader"]</div>
+            <UserAvatar FirstName="@leader.FirstName" LastName="@leader.LastName" ProfilePictureUrl="@leader.ProfilePictureUrl"
+                        BadgeImageUrl="@leader.DisplayBadgeImageUrl" BadgeLevel="@leader.DisplayBadgeLevel"
+                        Size="Size.Large" AvatarClass="lb-hero__leader-avatar" />
+            <div>
+                <div class="lb-hero__leader-name">@leader.FirstName @leader.LastName</div>
+                <div class="lb-hero__leader-hours">👑 @leader.TotalHours.ToString("0.#", CultureInfo.CurrentCulture) @Locale["HoursUnit"]</div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public LeaderboardData Data { get; set; } = null!;
+    [Parameter, EditorRequired] public string Title { get; set; } = null!;
+    [Parameter] public bool IsOptedOut { get; set; }
+
+    [Inject] private IStringLocalizer<LeaderboardLocale> Locale { get; set; } = null!;
+}

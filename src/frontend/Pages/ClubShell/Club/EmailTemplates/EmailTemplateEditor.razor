@@ -1,0 +1,389 @@
+@page "/clubs/{ClubId:int}/email-templates/{Type}"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubEmailTemplates
+@using Bookennis.Client.Services.HttpClients
+@using Bookennis.Client.Services.Store.ClubEmailTemplates
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.ClubEmailTemplates
+@using Bookennis.Shared.Controller.Shared
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+<PageTitle>@TypeName</PageTitle>
+
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" ConfirmExternalNavigation="@HasChanges" />
+
+<div class="editor-page">
+    <div class="editor-top">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack" Href="@($"/clubs/{ClubId}/email-templates")">@L["Back"]</MudButton>
+    </div>
+
+    <AdminHero Emoji="@(emailType is { } t ? EmailTypeInfo.Emoji(t) : "✉️")" Eyebrow="@L["Title"]" Title="@TypeName"
+               Subtitle="@(emailType is { } type ? L[EmailTypeInfo.DescriptionKey(type)].Value : null)">
+        <Chips>
+            @foreach (var dto in Languages)
+            {
+                <span class="hero-chip">@LanguageName(dto.Language): @(IsCustom(dto.Language) ? L["CustomizedText"] : L["DefaultText"])</span>
+            }
+            @if (HasChanges)
+            {
+                <span class="hero-chip">✏️ @L["UnsavedChanges"]</span>
+            }
+        </Chips>
+    </AdminHero>
+
+    @if (Store.Template is null || emailType is null)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+    }
+    else
+    {
+        <div class="editor-view-switch">
+            <ChoiceChips TItem="string" Items="@(["edit", "preview"])" Value="@mobileView" ValueChanged="@(v => mobileView = v)"
+                         TextFunc="@(v => v == "edit" ? SharedLocale["Edit"] : L["Preview"])" />
+        </div>
+
+        <div class="editor-layout @($"editor-layout--{mobileView}")">
+            <div class="editor-pane">
+                <SectionCard Emoji="✏️" Title="@L["ContentTitle"]">
+                    <Actions>
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" AriaLabel="@L["MoreActions"]" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                            <MudMenuItem Icon="@Icons.Material.Filled.Send" OnClick="SendTest" Disabled="@Store.IsSaving">@L["SendTest"]</MudMenuItem>
+                            <MudMenuItem Icon="@Icons.Material.Filled.RestartAlt" OnClick="ResetAll" Disabled="@(Store.IsSaving || !Languages.Any(l => l.IsCustomized))">@L["ResetAll"]</MudMenuItem>
+                        </MudMenu>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save"
+                                   OnClick="Save" Disabled="@(Store.IsSaving || !HasChanges)">@SharedLocale["Save"]</MudButton>
+                    </Actions>
+                    <ChildContent>
+                        <div class="editor-form">
+                            <div class="editor-language">
+                                <ChoiceChips TItem="Language" Items="@(Languages.Select(l => l.Language))" Value="@language" ValueChanged="SelectLanguage"
+                                             TextFunc="LanguageName" ColorFunc="@(l => IsCustom(l) ? "#059669" : null)" />
+                                @if (!IsDefault(language))
+                                {
+                                    <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.Undo" OnClick="UseDefaultText">@L["UseDefaultText"]</MudButton>
+                                }
+                            </div>
+                            <div class="editor-hint">@L["LanguageInfo"]</div>
+
+                            <div @ref="subjectContainer" @onfocusin="() => lastFocusedField = Field.Subject">
+                                <MudTextField T="string" Value="@CurrentDraft.Subject" ValueChanged="OnSubjectChanged" Label="@L["Subject"]" Variant="Variant.Outlined"
+                                              Immediate="true" MaxLength="200" />
+                            </div>
+
+                            <div @ref="bodyContainer" @onfocusin="() => lastFocusedField = Field.Body" class="editor-body">
+                                <MudTextField T="string" Value="@CurrentDraft.Body" ValueChanged="OnBodyChanged" Label="@L["Body"]" HelperText="@L["BodyHelper"]"
+                                              Variant="Variant.Outlined" Lines="14" AutoGrow="true" MaxLines="40" Immediate="true" MaxLength="20000" />
+                            </div>
+
+                            <div class="editor-variables">
+                                <div class="editor-variables__title">@L["VariablesTitle"]</div>
+                                <div class="editor-variables__text">@L["VariablesText"]</div>
+                                <div class="editor-variables__list">
+                                    @foreach (var variable in CurrentLanguage.Variables)
+                                    {
+                                        <button type="button" class="variable-chip" @onclick="() => InsertVariable(variable.Name)"
+                                                title="@string.Format(L["VariableExample"], string.IsNullOrEmpty(variable.SampleValue) ? L["VariableEmpty"] : variable.SampleValue)">
+                                            <code>@($"{{{{ {variable.Name} }}}}")</code>
+                                            <span>@L[$"Variable_{variable.Name}"]</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            <details class="editor-help">
+                                <summary>@L["HelpTitle"]</summary>
+                                <table>
+                                    <tbody>
+                                        <tr><td>@L["HelpBold"]</td><td><code>**text**</code></td></tr>
+                                        <tr><td>@L["HelpItalic"]</td><td><code>_text_</code></td></tr>
+                                        <tr><td>@L["HelpHeading"]</td><td><code>### text</code></td></tr>
+                                        <tr><td>@L["HelpList"]</td><td><code>- text</code></td></tr>
+                                        <tr><td>@L["HelpLink"]</td><td><code>[text](https://…)</code></td></tr>
+                                        <tr><td>@L["HelpButton"]</td><td><code>[text](https://…){.btn}</code></td></tr>
+                                        <tr><td>@L["HelpImage"]</td><td><code>![text](https://…)</code></td></tr>
+                                        <tr><td>@L["HelpCondition"]</td><td><code>{% if club.website_url %}…{% endif %}</code></td></tr>
+                                    </tbody>
+                                </table>
+                                <p>@L["HelpLineBreaks"]</p>
+                            </details>
+                        </div>
+                    </ChildContent>
+                </SectionCard>
+            </div>
+
+            <div class="preview-pane">
+                <SectionCard Emoji="👀" Title="@L["Preview"]" Subtitle="@L["PreviewHint"]">
+                    <Actions>
+                        @if (Store.IsLoading)
+                        {
+                            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" />
+                        }
+                    </Actions>
+                    <ChildContent>
+                        @if (previewError is not null)
+                        {
+                            <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@previewError</MudAlert>
+                        }
+                        @if (preview is not null)
+                        {
+                            <div class="email-preview">
+                                <div class="email-preview__subject">
+                                    <span class="email-preview__subject-label">@L["PreviewSubject"]</span>
+                                    <span class="email-preview__subject-text">@preview.Subject</span>
+                                </div>
+                                <div class="email-preview__mail">
+                                    <div class="email-preview__header">@preview.Subject</div>
+                                    @* Sanitized by the backend (ClubEmailRenderer) *@
+                                    <div class="email-preview__body">@((MarkupString)preview.Html)</div>
+                                </div>
+                            </div>
+                        }
+                    </ChildContent>
+                </SectionCard>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+    [Parameter] public string Type { get; set; } = null!;
+
+    [Inject] private IClubEmailTemplatesStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubEmailTemplatesLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
+    private enum Field { Subject, Body }
+
+    private sealed record TemplateDraft(string Subject, string Body);
+
+    private readonly Dictionary<Language, TemplateDraft> drafts = new();
+    private ClubEmailType? emailType;
+    private Language language = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de" ? Language.German : Language.English;
+    private string mobileView = "edit";
+    private Field lastFocusedField = Field.Body;
+    private ElementReference subjectContainer;
+    private ElementReference bodyContainer;
+    private PreviewClubEmailTemplateResult? preview;
+    private string? previewError;
+    private CancellationTokenSource? previewDebounce;
+
+    private IReadOnlyList<ClubEmailTemplateLanguageDto> Languages => Store.Template?.Languages ?? [];
+    private ClubEmailTemplateLanguageDto CurrentLanguage => Languages.First(l => l.Language == language);
+    private TemplateDraft CurrentDraft => drafts.TryGetValue(language, out var draft) ? draft : new TemplateDraft(string.Empty, string.Empty);
+    private string TypeName => emailType is { } type ? L[EmailTypeInfo.NameKey(type)] : L["Title"];
+
+    private bool HasChanges => Languages.Any(l => drafts.TryGetValue(l.Language, out var draft) && (draft.Subject != l.Subject || draft.Body != l.Body));
+
+    protected override void OnInitialized() => Store.OnTemplateChanged += OnChanged;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Enum.TryParse<ClubEmailType>(Type, ignoreCase: true, out var type))
+        {
+            NavigationManager.NavigateTo($"/clubs/{ClubId}/email-templates");
+            return;
+        }
+
+        emailType = type;
+        await Store.LoadTemplate(type);
+        ResetDrafts();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private void ResetDrafts()
+    {
+        if (Store.Template is not { } template || template.Type != emailType)
+            return;
+
+        drafts.Clear();
+        foreach (var dto in template.Languages)
+            drafts[dto.Language] = new TemplateDraft(dto.Subject, dto.Body);
+
+        if (template.Languages.All(l => l.Language != language))
+            language = template.Languages.First().Language;
+
+        SchedulePreview(immediately: true);
+    }
+
+    private string LanguageName(Language value) => value == Language.German ? SharedLocale["German"] : SharedLocale["English"];
+
+    private bool IsDefault(Language value)
+        => drafts.TryGetValue(value, out var draft)
+           && Languages.FirstOrDefault(l => l.Language == value) is { } dto
+           && draft.Subject == dto.DefaultSubject && draft.Body == dto.DefaultBody;
+
+    /// <summary>A language is saved as customized if its text differs from the default.</summary>
+    private bool IsCustom(Language value) => drafts.ContainsKey(value) && !IsDefault(value);
+
+    private void SelectLanguage(Language value)
+    {
+        language = value;
+        SchedulePreview(immediately: true);
+    }
+
+    private void OnSubjectChanged(string? value)
+    {
+        drafts[language] = CurrentDraft with { Subject = value ?? string.Empty };
+        SchedulePreview();
+    }
+
+    private void OnBodyChanged(string? value)
+    {
+        drafts[language] = CurrentDraft with { Body = value ?? string.Empty };
+        SchedulePreview();
+    }
+
+    private void UseDefaultText()
+    {
+        drafts[language] = new TemplateDraft(CurrentLanguage.DefaultSubject, CurrentLanguage.DefaultBody);
+        SchedulePreview(immediately: true);
+    }
+
+    private async Task InsertVariable(string name)
+    {
+        var text = $"{{{{ {name} }}}}";
+        var container = lastFocusedField == Field.Subject ? subjectContainer : bodyContainer;
+        var value = await JSRuntime.InvokeAsync<string?>("App.insertAtCursor", container, text);
+
+        if (lastFocusedField == Field.Subject)
+            OnSubjectChanged(value ?? CurrentDraft.Subject + text);
+        else
+            OnBodyChanged(value ?? CurrentDraft.Body + text);
+    }
+
+    private void SchedulePreview(bool immediately = false)
+    {
+        previewDebounce?.Cancel();
+        previewDebounce?.Dispose();
+        previewDebounce = new CancellationTokenSource();
+        _ = UpdatePreview(immediately ? TimeSpan.Zero : TimeSpan.FromMilliseconds(400), previewDebounce.Token);
+    }
+
+    private async Task UpdatePreview(TimeSpan delay, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (delay > TimeSpan.Zero)
+                await Task.Delay(delay, cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (emailType is not { } type || string.IsNullOrWhiteSpace(CurrentDraft.Subject) || string.IsNullOrWhiteSpace(CurrentDraft.Body))
+            return;
+
+        var previewLanguage = language;
+        var response = await Store.PreviewTemplate(type, new ClubEmailTemplateContentModel { Language = previewLanguage, Subject = CurrentDraft.Subject, Body = CurrentDraft.Body });
+        if (cancellationToken.IsCancellationRequested || previewLanguage != language)
+            return;
+
+        if (response is { Success: true, Dto: not null })
+        {
+            preview = response.Dto;
+            previewError = null;
+        }
+        else if (response.ErrorCodeResponse is not null)
+        {
+            previewError = ErrorText(response);
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string ErrorText(HttpResult response)
+        => response.ErrorCodeResponse is { ErrorCode: { } code } error
+            ? error.ErrorDetail is { } details ? BackendLocale[code, details] : BackendLocale[code]
+            : L["Preview"];
+
+    private async Task Save()
+    {
+        if (emailType is not { } type)
+            return;
+
+        var model = new UpdateClubEmailTemplateModel
+        {
+            Languages = Languages
+                .Where(l => IsCustom(l.Language))
+                .Select(l => new ClubEmailTemplateContentModel { Language = l.Language, Subject = drafts[l.Language].Subject, Body = drafts[l.Language].Body })
+                .ToList()
+        };
+
+        var response = await Store.UpdateTemplate(type, model);
+        if (response.Success)
+        {
+            ResetDrafts();
+            Snackbar.Add(L["Saved"], Severity.Success);
+        }
+        else
+        {
+            Snackbar.ShowErrorDetails(response, BackendLocale);
+        }
+    }
+
+    private async Task ResetAll()
+    {
+        if (emailType is not { } type)
+            return;
+
+        var confirmed = await DialogService.ShowMessageBox(L["ResetAll"], L["ResetConfirmation"], yesText: L["ResetAll"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true)
+            return;
+
+        var response = await Store.ResetTemplate(type);
+        if (response.Success)
+        {
+            ResetDrafts();
+            Snackbar.Add(L["ResetDone"], Severity.Success);
+        }
+        else
+        {
+            Snackbar.ShowErrorDetails(response, BackendLocale);
+        }
+    }
+
+    private async Task SendTest()
+    {
+        if (emailType is not { } type)
+            return;
+
+        var response = await Store.SendTestEmail(type, new ClubEmailTemplateContentModel { Language = language, Subject = CurrentDraft.Subject, Body = CurrentDraft.Body });
+        if (response.Success)
+            Snackbar.Add(L["TestSent"], Severity.Success);
+        else
+            Snackbar.ShowErrorDetails(response, BackendLocale);
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        if (!HasChanges)
+            return;
+
+        var leave = await DialogService.ShowMessageBox(L["UnsavedChanges"], L["LeaveConfirmation"], yesText: L["Leave"], cancelText: SharedLocale["Cancel"]);
+        if (leave != true)
+            context.PreventNavigation();
+    }
+
+    public void Dispose()
+    {
+        Store.OnTemplateChanged -= OnChanged;
+        previewDebounce?.Cancel();
+        previewDebounce?.Dispose();
+    }
+}

@@ -1,0 +1,133 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.MyClub
+@using Bookennis.Client.Services
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Members
+@using Bookennis.Shared.Controller.Shared
+
+<div class="myclub-hero">
+    <div class="myclub-hero__court" aria-hidden="true"></div>
+
+    <div class="myclub-hero__profile">
+        <UserAvatar FirstName="@Member.FirstName" LastName="@Member.LastName" ProfilePictureUrl="@ProfilePictureUrl"
+                    BadgeImageUrl="@BadgeImageUrl" BadgeLevel="@BadgeLevel" Size="Size.Large"
+                    Color="Color.Secondary" AvatarClass="myclub-hero__avatar" Class="myclub-hero__avatar-wrapper" />
+
+        <div class="myclub-hero__text">
+            <div class="myclub-hero__eyebrow">@ClubName</div>
+            <div class="myclub-hero__greeting">@string.Format(Locale[GreetingKey], Member.FirstName) 👋</div>
+            <div class="myclub-hero__tagline">@Tagline</div>
+
+            <div class="myclub-hero__chips">
+                @if (IsGuest)
+                {
+                    <span class="hero-chip">🎟️ @SharedLocale["Role_Guest"]</span>
+                }
+                else if (ActiveSeasonYear is not null)
+                {
+                    <span class="hero-chip @(IsEnrolled ? "hero-chip--ok" : "hero-chip--warn")">
+                        @(IsEnrolled ? "✅" : "⛔") @string.Format(Locale[IsEnrolled ? "EnrolledChip" : "NotEnrolledChip"], ActiveSeasonYear)
+                    </span>
+                }
+                @foreach (var role in Member.Roles.Where(r => r is not MemberRole.User and not MemberRole.Guest))
+                {
+                    <span class="hero-chip">⭐ @SharedLocale[$"Role_{role}"]</span>
+                }
+                @if (PlayingSince is { } since)
+                {
+                    <span class="hero-chip">🎾 @string.Format(Locale["PlayingSinceChip"], since.ToString("MMMM yyyy", CultureInfo.CurrentCulture))</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="myclub-hero__next @(NextBooking is not null ? "myclub-hero__next--clickable" : null)"
+         @onclick="OpenNextBooking">
+        <div class="next__caption">@Locale["NextMatch"]</div>
+        @if (NextBooking is { } booking)
+        {
+            var otherPlayers = booking.Players.Where(p => p.MemberId != Member.MemberId).ToList();
+
+            <div class="next__countdown">@MyClubHelpers.Countdown(Locale, booking.Interval.From)</div>
+            <div class="next__when">
+                @booking.Interval.From.ToString("ddd, dd.MM.", CultureInfo.CurrentCulture) · @booking.Interval.From.ToString("HH:mm") – @booking.Interval.To.ToString("HH:mm")
+            </div>
+            <div class="next__where">📍 @CourtName · @booking.PlayMode.Name</div>
+
+            @if (otherPlayers.Count > 0)
+            {
+                <div class="next__players">
+                    <div class="next__avatars">
+                        @foreach (var player in otherPlayers.Take(4))
+                        {
+                            <UserAvatar FirstName="@player.FirstName" LastName="@player.LastName" ProfilePictureUrl="@player.ProfilePictureUrl"
+                                        Size="Size.Small" Color="Color.Secondary" AvatarClass="next__avatar" />
+                        }
+                    </div>
+                    <span class="next__with">@string.Format(Locale["WithPlayers"], string.Join(", ", otherPlayers.Select(p => p.FirstName)))</span>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="next__empty-emoji" aria-hidden="true">🎾</div>
+            <div class="next__empty">@Locale["NoMatchPlanned"]</div>
+            <MudButton Href="@MyClubHelpers.BookingUrl(ClubId)" Variant="Variant.Filled" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.SportsTennis" Class="next__book mt-3">
+                @Locale["BookCourt"]
+            </MudButton>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public MembersDetailResult Member { get; set; } = null!;
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+    [Parameter] public string? ClubName { get; set; }
+    [Parameter] public string? ProfilePictureUrl { get; set; }
+    [Parameter] public string? BadgeImageUrl { get; set; }
+    [Parameter] public int? BadgeLevel { get; set; }
+    [Parameter] public bool IsGuest { get; set; }
+    [Parameter] public int? ActiveSeasonYear { get; set; }
+    [Parameter] public bool IsEnrolled { get; set; }
+    [Parameter] public BookingResult? NextBooking { get; set; }
+    [Parameter] public string? CourtName { get; set; }
+    [Parameter] public DateOnly? PlayingSince { get; set; }
+    [Parameter] public DateOnly? LastMatch { get; set; }
+    [Parameter] public int CurrentWeekStreak { get; set; }
+
+    [Inject] private IStringLocalizer<MyClubLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    private static string GreetingKey => DateTime.Now.Hour switch
+    {
+        >= 5 and < 12 => "GreetingMorning",
+        >= 12 and < 18 => "GreetingAfternoon",
+        _ => "GreetingEvening",
+    };
+
+    private string Tagline
+    {
+        get
+        {
+            if (CurrentWeekStreak >= 2)
+                return string.Format(Locale["TaglineStreak"], CurrentWeekStreak);
+
+            if (NextBooking is null && LastMatch is { } lastMatch && Today.DayNumber - lastMatch.DayNumber >= 14)
+                return string.Format(Locale["TaglineMissYou"], Today.DayNumber - lastMatch.DayNumber);
+
+            return NextBooking is not null ? Locale["TaglineReady"] : Locale["TaglineDefault"];
+        }
+    }
+
+    private void OpenNextBooking()
+    {
+        if (NextBooking is not null)
+            NavigationManager.NavigateToBooking(ClubId, NextBooking.BookingEntryId);
+    }
+}

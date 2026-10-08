@@ -1,0 +1,56 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubStatistics
+@using Bookennis.Shared.Controller.Statistics
+
+@if (Players.Count == 0)
+{
+    <div class="top-players__empty">@L["NoPlayers"]</div>
+}
+else
+{
+    var maxHours = Players[0].Hours;
+    <ol class="top-players">
+        @for (var i = 0; i < Players.Count; i++)
+        {
+            var player = Players[i];
+            var rank = i + 1;
+            <li class="top-player @(player.IsGuest ? null : "top-player--link")" @onclick="() => Open(player)">
+                <span class="top-player__rank top-player__rank--@(rank <= 3 ? rank.ToString() : "n")">@(rank switch { 1 => "🥇", 2 => "🥈", 3 => "🥉", _ => rank.ToString() })</span>
+                <UserAvatar FirstName="@player.FirstName" LastName="@player.LastName" ProfilePictureUrl="@player.ProfilePictureUrl" Size="Size.Small" Color="Color.Secondary" />
+                <div class="top-player__body">
+                    <div class="top-player__name">
+                        @player.FirstName @player.LastName
+                        @if (player.IsGuest)
+                        {
+                            <span class="top-player__guest">@SharedLocale["Role_Guest"]</span>
+                        }
+                    </div>
+                    <div class="top-player__track">
+                        <div class="top-player__fill" style="width: @((maxHours > 0 ? player.Hours / maxHours * 100 : 0).ToString("0.#", CultureInfo.InvariantCulture))%"></div>
+                    </div>
+                </div>
+                <div class="top-player__stats">
+                    <span class="top-player__hours">@player.Hours.ToString("0.#", CultureInfo.CurrentCulture) h</span>
+                    <span class="top-player__bookings">@string.Format(L["MatchesCount"], player.Bookings)</span>
+                </div>
+            </li>
+        }
+    </ol>
+}
+
+@code {
+    [Parameter, EditorRequired] public List<TopPlayerEntry> Players { get; set; } = [];
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+
+    [Inject] private IStringLocalizer<ClubStatisticsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
+    private void Open(TopPlayerEntry player)
+    {
+        if (!player.IsGuest)
+            NavigationManager.NavigateTo($"/clubs/{ClubId}/members/{player.MemberId}");
+    }
+}

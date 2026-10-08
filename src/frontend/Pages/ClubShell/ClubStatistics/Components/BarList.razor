@@ -1,0 +1,48 @@
+@using System.Globalization
+
+<div class="bar-list">
+    @if (Items.Count == 0 || Items.All(i => i.Value <= 0))
+    {
+        <div class="bar-list__empty">@EmptyText</div>
+    }
+    else
+    {
+        var max = Items.Max(i => i.Value);
+        @foreach (var item in Items)
+        {
+            var width = max > 0 ? Math.Max(item.Value / max * 100, item.Value > 0 ? 2 : 0) : 0;
+            <div class="bar-list__row">
+                <div class="bar-list__head">
+                    <span class="bar-list__label">
+                        @if (item.Emoji is not null)
+                        {
+                            <span aria-hidden="true">@item.Emoji</span>
+                        }
+                        @item.Label
+                    </span>
+                    <span class="bar-list__value">
+                        @item.ValueText
+                        @if (item.Hint is not null)
+                        {
+                            <span class="bar-list__hint">@item.Hint</span>
+                        }
+                    </span>
+                </div>
+                <div class="bar-list__track">
+                    <div class="bar-list__fill" style="width: @width.ToString("0.#", CultureInfo.InvariantCulture)%; --bar-color: @(item.Color ?? Color)"></div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    public sealed record BarItem(string Label, double Value, string ValueText, string? Color = null, string? Hint = null, string? Emoji = null);
+
+    [Parameter, EditorRequired] public List<BarItem> Items { get; set; } = [];
+
+    /// <summary>Default bar color (CSS value).</summary>
+    [Parameter] public string Color { get; set; } = "#10B981";
+
+    [Parameter] public string? EmptyText { get; set; }
+}

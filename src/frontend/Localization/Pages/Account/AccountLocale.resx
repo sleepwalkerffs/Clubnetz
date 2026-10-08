@@ -1,0 +1,687 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BirthdayValidation" xml:space="preserve">
+    <value>Birthday is required</value>
+  </data>
+  <data name="ConfirmEmail" xml:space="preserve">
+    <value>Confirm email</value>
+  </data>
+  <data name="ConfirmGuestLoginSuccess" xml:space="preserve">
+    <value>Successfully logged in as guest</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="EmailValidation" xml:space="preserve">
+    <value>Email address must be valid</value>
+  </data>
+  <data name="FirstnameValidation" xml:space="preserve">
+    <value>First name is required</value>
+  </data>
+  <data name="ForgotPassword" xml:space="preserve">
+    <value>Forgot password</value>
+  </data>
+  <data name="GeneralInfo" xml:space="preserve">
+    <value>General information</value>
+  </data>
+  <data name="GuestLogin" xml:space="preserve">
+    <value>Guest login</value>
+  </data>
+  <data name="LastnameValidation" xml:space="preserve">
+    <value>Last name is required</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="MustContainDigit" xml:space="preserve">
+    <value>Must contain at least one digit</value>
+  </data>
+  <data name="MustContainLower" xml:space="preserve">
+    <value>Must contain lower case letter</value>
+  </data>
+  <data name="MustContainSpecial" xml:space="preserve">
+    <value>Must contain a special symbol. Allowed characters: *.!@#$%^&amp;(){}[]:;&lt;&gt;,.?/~`_+-=|\</value>
+  </data>
+  <data name="MustContainUpper" xml:space="preserve">
+    <value>Must contain upper case letter</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Password2Validation" xml:space="preserve">
+    <value>Passwords must match</value>
+  </data>
+  <data name="PasswordLength" xml:space="preserve">
+    <value>Password has to be within 8 and 50 characters</value>
+  </data>
+  <data name="PasswordValidation" xml:space="preserve">
+    <value>Password is required</value>
+  </data>
+  <data name="Profile" xml:space="preserve">
+    <value>Profile</value>
+  </data>
+  <data name="Register" xml:space="preserve">
+    <value>Register</value>
+  </data>
+  <data name="RememberMe" xml:space="preserve">
+    <value>Remember me</value>
+  </data>
+  <data name="RepeatPassword" xml:space="preserve">
+    <value>Repeat password</value>
+  </data>
+  <data name="ResetPassword" xml:space="preserve">
+    <value>Reset Password</value>
+  </data>
+  <data name="SendResetEmail" xml:space="preserve">
+    <value>Send reset link</value>
+  </data>
+  <data name="ConfirmEmailChange" xml:space="preserve">
+    <value>Confirm Email Change</value>
+  </data>
+  <data name="ConfirmEmailChangeProcessing" xml:space="preserve">
+    <value>Processing email change...</value>
+  </data>
+  <data name="ConfirmEmailChangeLinkInvalid" xml:space="preserve">
+    <value>Invalid confirmation link.</value>
+  </data>
+  <data name="ConfirmEmailChangeLinkExpired" xml:space="preserve">
+    <value>The email change link is invalid or has expired.</value>
+  </data>
+  <data name="GoToLogin" xml:space="preserve">
+    <value>Go to Login</value>
+  </data>
+  <data name="Pitch_Headline" xml:space="preserve">
+    <value>Club management &amp; court booking for every club</value>
+  </data>
+  <data name="Pitch_Lead" xml:space="preserve">
+    <value>Clubnetz brings your whole club together: members book courts online, and the board manages members, seasons and guests in one place – on any device.</value>
+  </data>
+  <data name="Pitch_FreeBadge" xml:space="preserve">
+    <value>100% free</value>
+  </data>
+  <data name="Pitch_FreeText" xml:space="preserve">
+    <value>Free to use for clubs and members. No fees, no subscriptions, no hidden costs.</value>
+  </data>
+  <data name="Pitch_Feature_Booking" xml:space="preserve">
+    <value>Online court booking</value>
+  </data>
+  <data name="Pitch_Feature_Booking_Description" xml:space="preserve">
+    <value>Book courts in seconds – including recurring bookings.</value>
+  </data>
+  <data name="Pitch_Feature_Members" xml:space="preserve">
+    <value>Members &amp; seasons</value>
+  </data>
+  <data name="Pitch_Feature_Members_Description" xml:space="preserve">
+    <value>Manage members, families, roles and seasons.</value>
+  </data>
+  <data name="Pitch_Feature_Guests" xml:space="preserve">
+    <value>Guest cards</value>
+  </data>
+  <data name="Pitch_Feature_Guests_Description" xml:space="preserve">
+    <value>Let guests book with a simple link or code.</value>
+  </data>
+  <data name="Pitch_Feature_Statistics" xml:space="preserve">
+    <value>Statistics &amp; leaderboards</value>
+  </data>
+  <data name="Pitch_Feature_Statistics_Description" xml:space="preserve">
+    <value>See how busy your courts are and who plays the most.</value>
+  </data>
+  <data name="Pitch_Feature_Badges" xml:space="preserve">
+    <value>Badges &amp; trophies</value>
+  </data>
+  <data name="Pitch_Feature_Badges_Description" xml:space="preserve">
+    <value>Reward active players with badges every season.</value>
+  </data>
+  <data name="Login_Title" xml:space="preserve">
+    <value>Welcome back</value>
+  </data>
+  <data name="Login_Subtitle" xml:space="preserve">
+    <value>Log in to book courts and see what's happening in your club.</value>
+  </data>
+  <data name="ForgotPasswordLink" xml:space="preserve">
+    <value>Forgot password?</value>
+  </data>
+  <data name="Login_NoAccount" xml:space="preserve">
+    <value>New to Clubnetz?</value>
+  </data>
+  <data name="CreateFreeAccount" xml:space="preserve">
+    <value>Create a free account</value>
+  </data>
+  <data name="Register_Title" xml:space="preserve">
+    <value>Create your free account</value>
+  </data>
+  <data name="Register_Subtitle" xml:space="preserve">
+    <value>It only takes a minute. Afterwards you can join your club and start booking.</value>
+  </data>
+  <data name="Register_AboutYou" xml:space="preserve">
+    <value>About you</value>
+  </data>
+  <data name="Register_LoginDetails" xml:space="preserve">
+    <value>Login details</value>
+  </data>
+  <data name="Register_EmailHelper" xml:space="preserve">
+    <value>We'll send you a link to confirm this address.</value>
+  </data>
+  <data name="Register_AddressHint" xml:space="preserve">
+    <value>Your club may need your address for its member list. You can also add it later in your profile.</value>
+  </data>
+  <data name="Register_FreeHint" xml:space="preserve">
+    <value>Free forever – no credit card required.</value>
+  </data>
+  <data name="Register_HaveAccount" xml:space="preserve">
+    <value>Already have an account?</value>
+  </data>
+  <data name="Register_CheckInbox" xml:space="preserve">
+    <value>We sent a confirmation link to {0}. Click the link in the email to activate your account, then log in.</value>
+  </data>
+  <data name="Optional" xml:space="preserve">
+    <value>optional</value>
+  </data>
+  <data name="CheckInbox_Title" xml:space="preserve">
+    <value>Check your inbox</value>
+  </data>
+  <data name="CheckInbox_Spam" xml:space="preserve">
+    <value>No email after a few minutes? Please check your spam folder.</value>
+  </data>
+  <data name="Requirement_Length" xml:space="preserve">
+    <value>8 to 50 characters</value>
+  </data>
+  <data name="Requirement_Special" xml:space="preserve">
+    <value>Must contain a special character</value>
+  </data>
+  <data name="ForgotPassword_Title" xml:space="preserve">
+    <value>Forgot your password?</value>
+  </data>
+  <data name="ForgotPassword_Subtitle" xml:space="preserve">
+    <value>No problem. Enter the email address of your account and we'll send you a link to choose a new password.</value>
+  </data>
+  <data name="BackToLogin" xml:space="preserve">
+    <value>Back to login</value>
+  </data>
+  <data name="ForgotPassword_CheckInbox" xml:space="preserve">
+    <value>If an account exists for {0}, we just sent it a link to reset the password.</value>
+  </data>
+  <data name="ForgotPassword_Step1" xml:space="preserve">
+    <value>Open the email from Clubnetz.</value>
+  </data>
+  <data name="ForgotPassword_Step2" xml:space="preserve">
+    <value>Click the link – it is valid for 24 hours.</value>
+  </data>
+  <data name="ForgotPassword_Step3" xml:space="preserve">
+    <value>Choose a new password and log in.</value>
+  </data>
+  <data name="Resend" xml:space="preserve">
+    <value>Send the email again</value>
+  </data>
+  <data name="ResendIn" xml:space="preserve">
+    <value>Send again in {0}s</value>
+  </data>
+  <data name="ResendSuccess" xml:space="preserve">
+    <value>We sent the email again.</value>
+  </data>
+  <data name="UseDifferentEmail" xml:space="preserve">
+    <value>Use a different email address</value>
+  </data>
+  <data name="ResetPassword_Title" xml:space="preserve">
+    <value>Choose a new password</value>
+  </data>
+  <data name="ResetPassword_Subtitle" xml:space="preserve">
+    <value>for {0}</value>
+  </data>
+  <data name="ResetPassword_InvalidTitle" xml:space="preserve">
+    <value>This link doesn't work</value>
+  </data>
+  <data name="ResetPassword_InvalidText" xml:space="preserve">
+    <value>The link to reset your password is incomplete. Please use the link from the email or request a new one.</value>
+  </data>
+  <data name="ResetPassword_SuccessTitle" xml:space="preserve">
+    <value>Password changed</value>
+  </data>
+  <data name="ResetPassword_SuccessText" xml:space="preserve">
+    <value>Your new password is set. You can now log in with it.</value>
+  </data>
+  <data name="RequestNewLink" xml:space="preserve">
+    <value>Request a new link</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>New password</value>
+  </data>
+  <data name="RepeatNewPassword" xml:space="preserve">
+    <value>Repeat new password</value>
+  </data>
+  <data name="SaveNewPassword" xml:space="preserve">
+    <value>Save new password</value>
+  </data>
+  <data name="ConfirmEmailProcessing" xml:space="preserve">
+    <value>Confirming your email address...</value>
+  </data>
+  <data name="ConfirmEmail_SuccessTitle" xml:space="preserve">
+    <value>You're all set!</value>
+  </data>
+  <data name="ConfirmEmail_SuccessText" xml:space="preserve">
+    <value>Your email address is confirmed. Log in to join your club and book your first court.</value>
+  </data>
+  <data name="ConfirmEmail_FailedTitle" xml:space="preserve">
+    <value>Confirmation failed</value>
+  </data>
+  <data name="ConfirmEmail_FailedText" xml:space="preserve">
+    <value>The confirmation link is invalid or has expired. If you already confirmed your email, simply log in. Otherwise you can confirm it by resetting your password.</value>
+  </data>
+  <data name="ConfirmEmail_ResetInstead" xml:space="preserve">
+    <value>Reset password</value>
+  </data>
+  <data name="ConfirmEmailChange_SuccessTitle" xml:space="preserve">
+    <value>Email address changed</value>
+  </data>
+  <data name="ConfirmEmailChange_SuccessText" xml:space="preserve">
+    <value>From now on, log in with {0}.</value>
+  </data>
+  <data name="ConfirmEmailChange_FailedTitle" xml:space="preserve">
+    <value>Email address not changed</value>
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="UploadPhoto" xml:space="preserve">
+    <value>Upload photo</value>
+  </data>
+  <data name="CropPhoto" xml:space="preserve">
+    <value>Crop photo</value>
+  </data>
+  <data name="Profile_GeneralInfoSubtitle" xml:space="preserve">
+    <value>How other members see you</value>
+  </data>
+  <data name="Profile_AddressSubtitle" xml:space="preserve">
+    <value>Optional – helps your club keep its member list up to date</value>
+  </data>
+  <data name="Profile_Saved" xml:space="preserve">
+    <value>Your profile has been saved.</value>
+  </data>
+  <data name="Security_Title" xml:space="preserve">
+    <value>Login &amp; security</value>
+  </data>
+  <data name="Security_Subtitle" xml:space="preserve">
+    <value>Your login email and password</value>
+  </data>
+  <data name="Change" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="ChangeEmail" xml:space="preserve">
+    <value>Change email address</value>
+  </data>
+  <data name="ChangeEmail_Description" xml:space="preserve">
+    <value>We'll send a confirmation link to your new address. Your email address only changes after you click it, and we'll let your old address know.</value>
+  </data>
+  <data name="ChangeEmail_PasswordHelper" xml:space="preserve">
+    <value>For your security, please confirm with your password.</value>
+  </data>
+  <data name="ChangeEmail_Pending" xml:space="preserve">
+    <value>Waiting for confirmation: open the link we sent to {0}.</value>
+  </data>
+  <data name="ChangeEmail_Sent" xml:space="preserve">
+    <value>Confirmation link sent to {0}.</value>
+  </data>
+  <data name="CurrentEmail" xml:space="preserve">
+    <value>Current email address</value>
+  </data>
+  <data name="NewEmail" xml:space="preserve">
+    <value>New email address</value>
+  </data>
+  <data name="CurrentPassword" xml:space="preserve">
+    <value>Current password</value>
+  </data>
+  <data name="SendConfirmationLink" xml:space="preserve">
+    <value>Send confirmation link</value>
+  </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="ChangePassword_Success" xml:space="preserve">
+    <value>Your password has been changed.</value>
+  </data>
+  <data name="Register_PrivacyConsent_Before" xml:space="preserve">
+    <value>I have read the</value>
+  </data>
+  <data name="Register_PrivacyConsent_Link" xml:space="preserve">
+    <value>privacy policy</value>
+  </data>
+  <data name="Register_PrivacyConsent_After" xml:space="preserve">
+    <value>and agree to my data being processed as described there.</value>
+  </data>
+  <data name="Register_PrivacyConsent_Validation" xml:space="preserve">
+    <value>Please confirm that you have read the privacy policy.</value>
+  </data>
+  <data name="Data_Title" xml:space="preserve">
+    <value>Your data</value>
+  </data>
+  <data name="Data_Subtitle" xml:space="preserve">
+    <value>See what Clubnetz stores about you</value>
+  </data>
+  <data name="Data_Export" xml:space="preserve">
+    <value>Data export</value>
+  </data>
+  <data name="Data_ExportDescription" xml:space="preserve">
+    <value>All your data as a file (JSON)</value>
+  </data>
+  <data name="Data_Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="Data_Privacy" xml:space="preserve">
+    <value>Privacy policy</value>
+  </data>
+  <data name="Data_PrivacyDescription" xml:space="preserve">
+    <value>How we handle your data</value>
+  </data>
+  <data name="Data_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Danger_Title" xml:space="preserve">
+    <value>Leave &amp; delete</value>
+  </data>
+  <data name="Danger_Subtitle" xml:space="preserve">
+    <value>These actions can't be undone</value>
+  </data>
+  <data name="LeaveClub" xml:space="preserve">
+    <value>Leave club</value>
+  </data>
+  <data name="LeaveClub_Button" xml:space="preserve">
+    <value>Leave</value>
+  </data>
+  <data name="LeaveClub_Confirm" xml:space="preserve">
+    <value>Do you really want to leave {0}? Your membership, your booking history, badges and event registrations in this club will be deleted. Upcoming bookings in which you play alone are cancelled. Memberships of your children are not affected.</value>
+  </data>
+  <data name="LeaveClub_Success" xml:space="preserve">
+    <value>You have left {0}.</value>
+  </data>
+  <data name="DeleteAccount" xml:space="preserve">
+    <value>Delete account</value>
+  </data>
+  <data name="DeleteAccount_Description" xml:space="preserve">
+    <value>Deletes your account and all your data for good</value>
+  </data>
+  <data name="DeleteAccount_Button" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="DeleteAccount_Confirm" xml:space="preserve">
+    <value>Delete for good</value>
+  </data>
+  <data name="DeleteAccount_Warning" xml:space="preserve">
+    <value>Your account will be deleted immediately and can't be restored.</value>
+  </data>
+  <data name="DeleteAccount_Consequence_Data" xml:space="preserve">
+    <value>Your profile, profile picture, subscription plans and all your bookings, badges and event registrations are deleted.</value>
+  </data>
+  <data name="DeleteAccount_Consequence_Clubs" xml:space="preserve">
+    <value>You leave all your clubs. Upcoming bookings in which you play alone are cancelled.</value>
+  </data>
+  <data name="DeleteAccount_Consequence_Children" xml:space="preserve">
+    <value>Children you created are handed over to the other parent, or deleted as well if there is none.</value>
+  </data>
+  <data name="DeleteAccount_ExportHint" xml:space="preserve">
+    <value>Tip: download your data first if you want to keep a copy.</value>
+  </data>
+  <data name="DeleteAccount_Success" xml:space="preserve">
+    <value>Your account has been deleted.</value>
+  </data>
+  <data name="Push_Title" xml:space="preserve">
+    <value>App &amp; notifications</value>
+  </data>
+  <data name="Push_Subtitle" xml:space="preserve">
+    <value>For this device: install Clubnetz like an app and get notified about what matters.</value>
+  </data>
+  <data name="Push_App" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="Push_AppInstalled" xml:space="preserve">
+    <value>Installed on this device</value>
+  </data>
+  <data name="Push_AppInstallHint" xml:space="preserve">
+    <value>Put Clubnetz on your home screen – no app store needed.</value>
+  </data>
+  <data name="Push_AppInstallIos" xml:space="preserve">
+    <value>Open this page in Safari, tap the Share button and choose "Add to Home Screen".</value>
+  </data>
+  <data name="Push_Install" xml:space="preserve">
+    <value>Install</value>
+  </data>
+  <data name="Push_Notifications" xml:space="preserve">
+    <value>Push notifications</value>
+  </data>
+  <data name="Push_State_On" xml:space="preserve">
+    <value>Switched on for this device</value>
+  </data>
+  <data name="Push_State_Off" xml:space="preserve">
+    <value>Booking reminders, new and cancelled bookings, club events and badges.</value>
+  </data>
+  <data name="Push_State_Denied" xml:space="preserve">
+    <value>Blocked in your browser. Allow notifications for this site in the browser settings to switch them on.</value>
+  </data>
+  <data name="Push_State_NeedsInstall" xml:space="preserve">
+    <value>On iPhone and iPad, notifications work once Clubnetz is on your home screen.</value>
+  </data>
+  <data name="Push_State_Unsupported" xml:space="preserve">
+    <value>Not available in this browser.</value>
+  </data>
+  <data name="Push_Enable" xml:space="preserve">
+    <value>Switch on</value>
+  </data>
+  <data name="Push_Disable" xml:space="preserve">
+    <value>Switch off</value>
+  </data>
+  <data name="Push_Test" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Push_Enabled" xml:space="preserve">
+    <value>Push notifications are switched on for this device.</value>
+  </data>
+  <data name="Push_TestSent" xml:space="preserve">
+    <value>Test notification is on its way.</value>
+  </data>
+  <data name="Push_EnableFailed" xml:space="preserve">
+    <value>Push notifications were not switched on. Allow them when your browser asks. If it did not ask, this browser cannot receive them right now.</value>
+  </data>
+  <data name="Push_EnableFailedBrave" xml:space="preserve">
+    <value>Brave blocks push notifications by default. Open brave://settings/privacy, turn on "Use Google services for push messaging", restart Brave and try again.</value>
+  </data>
+  <data name="Notif_Title" xml:space="preserve">
+    <value>Notification settings</value>
+  </data>
+  <data name="Notif_Subtitle" xml:space="preserve">
+    <value>Choose for every notification whether you get it as push notification, as email, both or not at all. Applies to your account on all devices.</value>
+  </data>
+  <data name="Notif_Push" xml:space="preserve">
+    <value>Push</value>
+  </data>
+  <data name="Notif_Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Notif_PushAria" xml:space="preserve">
+    <value>{0}: push notification</value>
+  </data>
+  <data name="Notif_EmailAria" xml:space="preserve">
+    <value>{0}: email</value>
+  </data>
+  <data name="Notif_PushOffHint" xml:space="preserve">
+    <value>Push notifications are switched off on this device. Switch them on above to receive them here.</value>
+  </data>
+  <data name="Notif_AllOn" xml:space="preserve">
+    <value>All on</value>
+  </data>
+  <data name="Notif_AllOff" xml:space="preserve">
+    <value>All off</value>
+  </data>
+  <data name="Notif_Group_Bookings" xml:space="preserve">
+    <value>Bookings</value>
+  </data>
+  <data name="Notif_Group_Events" xml:space="preserve">
+    <value>Club events</value>
+  </data>
+  <data name="Notif_Group_Club" xml:space="preserve">
+    <value>Club</value>
+  </data>
+  <data name="Notif_Type_BookingAdded" xml:space="preserve">
+    <value>New booking</value>
+  </data>
+  <data name="Notif_Hint_BookingAdded" xml:space="preserve">
+    <value>Somebody books a court with you.</value>
+  </data>
+  <data name="Notif_Type_BookingDeleted" xml:space="preserve">
+    <value>Booking cancelled</value>
+  </data>
+  <data name="Notif_Hint_BookingDeleted" xml:space="preserve">
+    <value>One of your bookings is cancelled or removed by the club.</value>
+  </data>
+  <data name="Notif_Type_BookingReminder" xml:space="preserve">
+    <value>Booking reminder</value>
+  </data>
+  <data name="Notif_Hint_BookingReminder" xml:space="preserve">
+    <value>Shortly before your booking starts.</value>
+  </data>
+  <data name="Notif_Type_ClubEventCreated" xml:space="preserve">
+    <value>New event</value>
+  </data>
+  <data name="Notif_Hint_ClubEventCreated" xml:space="preserve">
+    <value>The club adds an event to the calendar.</value>
+  </data>
+  <data name="Notif_Type_ClubEventReminder" xml:space="preserve">
+    <value>Event reminder</value>
+  </data>
+  <data name="Notif_Hint_ClubEventReminder" xml:space="preserve">
+    <value>The day before an event you registered for.</value>
+  </data>
+  <data name="Notif_Type_ClubEventRegistrationDeadline" xml:space="preserve">
+    <value>Registration deadline</value>
+  </data>
+  <data name="Notif_Hint_ClubEventRegistrationDeadline" xml:space="preserve">
+    <value>The day before the registration of an event closes, if you have not registered.</value>
+  </data>
+  <data name="Notif_Type_ClubAnnouncement" xml:space="preserve">
+    <value>Club news</value>
+  </data>
+  <data name="Notif_Hint_ClubAnnouncement" xml:space="preserve">
+    <value>The club publishes news. Emails are only sent for news the club sends out as email.</value>
+  </data>
+  <data name="Notif_Type_BadgeAwarded" xml:space="preserve">
+    <value>New badge</value>
+  </data>
+  <data name="Notif_Hint_BadgeAwarded" xml:space="preserve">
+    <value>You or your child earned a badge.</value>
+  </data>
+</root>

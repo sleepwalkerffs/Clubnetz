@@ -1,0 +1,412 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Eyebrow" xml:space="preserve">
+    <value>Club settings</value>
+  </data>
+  <data name="Subtitle" xml:space="preserve">
+    <value>Opening hours, seasons, courts and play modes of your club</value>
+  </data>
+  <data name="PrimeTimeChip" xml:space="preserve">
+    <value>Prime time {0} – {1}</value>
+  </data>
+  <data name="CourtsChip" xml:space="preserve">
+    <value>{0} courts</value>
+  </data>
+  <data name="ClosedCourtsChip" xml:space="preserve">
+    <value>{0} closed</value>
+  </data>
+  <data name="PlayModesChip" xml:space="preserve">
+    <value>{0} play modes</value>
+  </data>
+  <data name="CurrentSeason" xml:space="preserve">
+    <value>Current season</value>
+  </data>
+  <data name="SeasonName" xml:space="preserve">
+    <value>Season {0}</value>
+  </data>
+  <data name="NoActiveSeason" xml:space="preserve">
+    <value>No active season</value>
+  </data>
+  <data name="NoActiveSeasonHint" xml:space="preserve">
+    <value>Members can only book during a season – add one below.</value>
+  </data>
+  <data name="Sections" xml:space="preserve">
+    <value>Sections</value>
+  </data>
+  <data name="RulesTitle" xml:space="preserve">
+    <value>Opening hours &amp; rules</value>
+  </data>
+  <data name="RulesSubtitle" xml:space="preserve">
+    <value>When courts can be booked and who may play in prime time</value>
+  </data>
+  <data name="PrimeTime" xml:space="preserve">
+    <value>Prime time</value>
+  </data>
+  <data name="TimelineDescription" xml:space="preserve">
+    <value>Opening hours and prime time of a day</value>
+  </data>
+  <data name="OpeningHours" xml:space="preserve">
+    <value>Opening hours</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="GracePeriod" xml:space="preserve">
+    <value>Grace period</value>
+  </data>
+  <data name="GracePeriodHint" xml:space="preserve">
+    <value>How many minutes after the start a booking can still be made or cancelled</value>
+  </data>
+  <data name="Minutes" xml:space="preserve">
+    <value>minutes</value>
+  </data>
+  <data name="Enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Disabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="PrimeTimeHint" xml:space="preserve">
+    <value>The most popular hours can be reserved for adult members</value>
+  </data>
+  <data name="PrimeTimeWeekdays" xml:space="preserve">
+    <value>Weekdays</value>
+  </data>
+  <data name="RestrictChildren" xml:space="preserve">
+    <value>No children in prime time</value>
+  </data>
+  <data name="RestrictChildrenHint" xml:space="preserve">
+    <value>Members younger than {0} cannot book prime time</value>
+  </data>
+  <data name="ChildAgeThreshold" xml:space="preserve">
+    <value>Age limit</value>
+  </data>
+  <data name="Years" xml:space="preserve">
+    <value>years</value>
+  </data>
+  <data name="RestrictGuests" xml:space="preserve">
+    <value>No guests in prime time</value>
+  </data>
+  <data name="RestrictGuestsHint" xml:space="preserve">
+    <value>Guest cards cannot be used during prime time</value>
+  </data>
+  <data name="UnsavedChanges" xml:space="preserve">
+    <value>Unsaved changes</value>
+  </data>
+  <data name="Discard" xml:space="preserve">
+    <value>Discard</value>
+  </data>
+  <data name="InvalidOpeningHours" xml:space="preserve">
+    <value>The opening hours are invalid.</value>
+  </data>
+  <data name="InvalidPrimeTimeHours" xml:space="preserve">
+    <value>The prime time hours are invalid.</value>
+  </data>
+  <data name="PrimeTimeOutsideOpeningHours" xml:space="preserve">
+    <value>The prime time has to be within the opening hours.</value>
+  </data>
+  <data name="RulesSaved" xml:space="preserve">
+    <value>Opening hours and rules saved</value>
+  </data>
+  <data name="CourtsTitle" xml:space="preserve">
+    <value>Courts</value>
+  </data>
+  <data name="CourtsSubtitle" xml:space="preserve">
+    <value>{0} courts – tap a court to rename or close it</value>
+  </data>
+  <data name="NoCourts" xml:space="preserve">
+    <value>This club has no courts yet.</value>
+  </data>
+  <data name="MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="CourtsHint" xml:space="preserve">
+    <value>The order is used on the booking page.</value>
+  </data>
+  <data name="ClosedUntil" xml:space="preserve">
+    <value>Closed until {0}</value>
+  </data>
+  <data name="ClosurePlanned" xml:space="preserve">
+    <value>Closed from {0}</value>
+  </data>
+  <data name="CourtOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="EditCourtTitle" xml:space="preserve">
+    <value>Court {0}</value>
+  </data>
+  <data name="PlayModesTitle" xml:space="preserve">
+    <value>Play modes</value>
+  </data>
+  <data name="PlayModesSubtitle" xml:space="preserve">
+    <value>What members can book and how</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="NoPlayModes" xml:space="preserve">
+    <value>No play modes yet.</value>
+  </data>
+  <data name="PlayersFixed" xml:space="preserve">
+    <value>{0} players</value>
+  </data>
+  <data name="PlayersFlexible" xml:space="preserve">
+    <value>Any number of players</value>
+  </data>
+  <data name="DurationFlexible" xml:space="preserve">
+    <value>Any duration</value>
+  </data>
+  <data name="QuotaFact" xml:space="preserve">
+    <value>max. {0} per season</value>
+  </data>
+  <data name="FlagCharging" xml:space="preserve">
+    <value>Counts as match</value>
+  </data>
+  <data name="FlagRecurring" xml:space="preserve">
+    <value>Recurring</value>
+  </data>
+  <data name="FlagOverbook" xml:space="preserve">
+    <value>Overbooking</value>
+  </data>
+  <data name="FlagComment" xml:space="preserve">
+    <value>Comment</value>
+  </data>
+  <data name="AddPlayMode" xml:space="preserve">
+    <value>New play mode</value>
+  </data>
+  <data name="EditPlayModeTitle" xml:space="preserve">
+    <value>Play mode {0}</value>
+  </data>
+  <data name="DeletePlayModeConfirmation" xml:space="preserve">
+    <value>Do you really want to delete the play mode "{0}"?</value>
+  </data>
+  <data name="PlayModeDeleted" xml:space="preserve">
+    <value>{0} was deleted</value>
+  </data>
+  <data name="PlayModeNamePlaceholder" xml:space="preserve">
+    <value>New play mode</value>
+  </data>
+  <data name="SectionBasics" xml:space="preserve">
+    <value>Name &amp; color</value>
+  </data>
+  <data name="PlayModeNameRequired" xml:space="preserve">
+    <value>A name is required</value>
+  </data>
+  <data name="Color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="CustomColor" xml:space="preserve">
+    <value>Custom color</value>
+  </data>
+  <data name="SectionRules" xml:space="preserve">
+    <value>Rules</value>
+  </data>
+  <data name="HasFixedPlayerCount" xml:space="preserve">
+    <value>Fixed number of players</value>
+  </data>
+  <data name="Players" xml:space="preserve">
+    <value>players</value>
+  </data>
+  <data name="HasFixedDuration" xml:space="preserve">
+    <value>Fixed duration</value>
+  </data>
+  <data name="OtherDuration" xml:space="preserve">
+    <value>Other duration</value>
+  </data>
+  <data name="LimitPerSeason" xml:space="preserve">
+    <value>Limit per season</value>
+  </data>
+  <data name="PerSeason" xml:space="preserve">
+    <value>per season</value>
+  </data>
+  <data name="FlagChargingHint" xml:space="preserve">
+    <value>Counts for the booking limit, badges and the leaderboard</value>
+  </data>
+  <data name="FlagRecurringHint" xml:space="preserve">
+    <value>Members can book weekly series</value>
+  </data>
+  <data name="FlagOverbookHint" xml:space="preserve">
+    <value>May overlap with other bookings</value>
+  </data>
+  <data name="FlagCommentHint" xml:space="preserve">
+    <value>Members can add a comment</value>
+  </data>
+  <data name="SectionAccess" xml:space="preserve">
+    <value>Who may book</value>
+  </data>
+  <data name="AllowedRolesHint" xml:space="preserve">
+    <value>Only members with one of these roles can use this play mode</value>
+  </data>
+  <data name="RoleRequired" xml:space="preserve">
+    <value>Select at least one role.</value>
+  </data>
+  <data name="PlayModeSaved" xml:space="preserve">
+    <value>{0} was saved</value>
+  </data>
+  <data name="SeasonsTitle" xml:space="preserve">
+    <value>Seasons</value>
+  </data>
+  <data name="SeasonsSubtitle" xml:space="preserve">
+    <value>Members book within a season they are enrolled in</value>
+  </data>
+  <data name="NoSeasons" xml:space="preserve">
+    <value>No seasons yet – add the first one.</value>
+  </data>
+  <data name="SeasonState_active" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="SeasonState_past" xml:space="preserve">
+    <value>Finished</value>
+  </data>
+  <data name="SeasonState_upcoming" xml:space="preserve">
+    <value>Upcoming</value>
+  </data>
+  <data name="SeasonLength" xml:space="preserve">
+    <value>{0} weeks · {1} days</value>
+  </data>
+  <data name="DaysLeft" xml:space="preserve">
+    <value>{0} days left</value>
+  </data>
+  <data name="DayOf" xml:space="preserve">
+    <value>Day {0} of {1}</value>
+  </data>
+  <data name="StartsIn" xml:space="preserve">
+    <value>starts in {0} days</value>
+  </data>
+  <data name="SeasonsOverlap" xml:space="preserve">
+    <value>Overlaps by {0} days</value>
+  </data>
+  <data name="SeasonBreak" xml:space="preserve">
+    <value>{0} days break</value>
+  </data>
+  <data name="AddSeason" xml:space="preserve">
+    <value>New season</value>
+  </data>
+  <data name="EditSeasonTitle" xml:space="preserve">
+    <value>Season {0}</value>
+  </data>
+  <data name="DeleteSeasonConfirmation" xml:space="preserve">
+    <value>Do you really want to delete the season {0}? Enrollments and badges of this season are deleted as well.</value>
+  </data>
+  <data name="SuggestNextSeason" xml:space="preserve">
+    <value>Use {0} like last season</value>
+  </data>
+  <data name="SeasonPeriod" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="Weeks" xml:space="preserve">
+    <value>weeks</value>
+  </data>
+  <data name="Days" xml:space="preserve">
+    <value>days</value>
+  </data>
+  <data name="Label" xml:space="preserve">
+    <value>name</value>
+  </data>
+  <data name="OverlapWarning" xml:space="preserve">
+    <value>Overlaps with season {0} ({1} – {2}).</value>
+  </data>
+  <data name="SeasonHint" xml:space="preserve">
+    <value>After creating a season, enroll the members on the members page.</value>
+  </data>
+  <data name="CourtNaming" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CourtName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CourtNameRequired" xml:space="preserve">
+    <value>A name is required</value>
+  </data>
+  <data name="CourtAlias" xml:space="preserve">
+    <value>Short name</value>
+  </data>
+  <data name="CourtAliasRequired" xml:space="preserve">
+    <value>A short name is required</value>
+  </data>
+  <data name="CourtAliasHint" xml:space="preserve">
+    <value>Shown in the booking grid on small screens</value>
+  </data>
+  <data name="CourtClosure" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="CourtClosureHint" xml:space="preserve">
+    <value>During a closure the court cannot be booked, e.g. for maintenance</value>
+  </data>
+  <data name="ClosedFrom" xml:space="preserve">
+    <value>Closed from</value>
+  </data>
+  <data name="ClosedTo" xml:space="preserve">
+    <value>Closed until</value>
+  </data>
+  <data name="ClosureEndBeforeStart" xml:space="preserve">
+    <value>The end has to be after the start.</value>
+  </data>
+  <data name="PlayersFixedOne" xml:space="preserve">
+    <value>{0} player</value>
+  </data>
+</root>

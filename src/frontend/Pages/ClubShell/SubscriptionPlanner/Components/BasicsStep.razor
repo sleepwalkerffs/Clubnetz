@@ -1,0 +1,65 @@
+@using Bookennis.Client.Localization.Pages.SubscriptionPlanner
+
+<div class="d-flex flex-column gap-4" style="max-width: 560px;">
+    <MudTextField T="string"
+                  Variant="Variant.Outlined"
+                  Label="@L["PlanName"]"
+                  Value="@Draft.Name"
+                  ValueChanged="@(v => Change(() => Draft.Name = v))"
+                  Immediate="true"
+                  MaxLength="100"
+                  Required="true" />
+
+    <div class="d-flex flex-wrap gap-4">
+        <MudDatePicker Variant="Variant.Outlined"
+                       Label="@L["StartDate"]"
+                       Date="@Draft.StartDate"
+                       DateChanged="@(v => Change(() => Draft.StartDate = v))"
+                       PickerVariant="PickerVariant.Dialog"
+                       Required="true"
+                       Style="min-width: 200px; flex: 1;" />
+        <MudDatePicker Variant="Variant.Outlined"
+                       Label="@L["EndDate"]"
+                       Date="@Draft.EndDate"
+                       DateChanged="@(v => Change(() => Draft.EndDate = v))"
+                       MinDate="@Draft.StartDate"
+                       PickerVariant="PickerVariant.Dialog"
+                       Required="true"
+                       Style="min-width: 200px; flex: 1;" />
+    </div>
+
+    <MudNumericField T="int"
+                     Variant="Variant.Outlined"
+                     Label="@L["PlayersPerWeek"]"
+                     HelperText="@L["PlayersPerWeekHelp"]"
+                     Value="@Draft.PlayersPerWeek"
+                     ValueChanged="@(v => Change(() => Draft.PlayersPerWeek = v))"
+                     Min="@SubscriptionPlanDraft.MinPlayersPerWeek"
+                     Max="@SubscriptionPlanDraft.MaxParticipants" />
+
+    @if (Draft.StartDate > Draft.EndDate)
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">@L["StartAfterEnd"]</MudAlert>
+    }
+    else if (Draft.Weeks.Count > 0)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">@string.Format(L["WeeksInRange"], Draft.Weeks.Count)</MudAlert>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required SubscriptionPlanDraft Draft { get; set; }
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    [Inject]
+    private IStringLocalizer<SubscriptionPlannerLocale> L { get; set; } = null!;
+
+    private Task Change(Action change)
+    {
+        change();
+        return OnChanged.InvokeAsync();
+    }
+}

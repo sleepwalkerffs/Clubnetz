@@ -1,0 +1,270 @@
+@page "/clubs/{ClubId:int}"
+@page "/clubs/{ClubId:int}/my-club"
+@using System.Globalization
+@using Bookennis.Client.Components.BookingHistory
+@using Bookennis.Client.Components.Family
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.MyClub
+@using Bookennis.Client.Localization.Pages.Statistics
+@using Bookennis.Client.Pages.ClubShell.MyClub.Components
+@using Bookennis.Client.Pages.ClubShell.Statistics.Components
+@using Bookennis.Client.Services.Store.Badges
+@using Bookennis.Client.Services.Store.Bookings
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Leaderboards
+@using Bookennis.Client.Services.Store.Members
+@using Bookennis.Client.Services.Store.Profile
+@using Bookennis.Client.Services.Store.Statistics
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Shared
+@using Bookennis.Shared.Controller.Statistics
+
+@implements IDisposable
+
+<PageTitle>@Locale["MyClub"]</PageTitle>
+
+<PageHeader>
+    <Content>@Locale["MyClub"]</Content>
+</PageHeader>
+
+@if (!isInitialized || MembersStore.MemberDetail is null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else
+{
+    var member = MembersStore.MemberDetail;
+    var seasonStatistics = CurrentSeasonStatistics;
+    var seasonData = seasonStatistics?.Data;
+    var nextBooking = BookingStore.UpcomingBookings.FirstOrDefault();
+
+    <div class="myclub-page">
+        <MudGrid Spacing="3">
+            <MudItem xs="12">
+                <MyClubHero Member="@member"
+                            ClubId="@ClubId"
+                            ClubName="@ClubProfileStore.SelectedClub?.ClubName"
+                            ProfilePictureUrl="@ProfileStore.ProfilePictureUrl"
+                            BadgeImageUrl="@BadgesStore.MyDisplayBadgeImageUrl"
+                            BadgeLevel="@BadgesStore.MyDisplayBadgeLevel"
+                            IsGuest="@IsGuest"
+                            ActiveSeasonYear="@ActiveSeason?.StartDate.Year"
+                            IsEnrolled="@(ActiveSeason is not null && member.AllowedSeasonIds.Contains(ActiveSeason.Id))"
+                            NextBooking="@nextBooking"
+                            CourtName="@(nextBooking is null ? null : GetCourtName(nextBooking.CourtId))"
+                            PlayingSince="@StatisticsStore.Statistics?.AllTime.FirstBooking"
+                            LastMatch="@StatisticsStore.Statistics?.AllTime.LastBooking"
+                            CurrentWeekStreak="@(StatisticsStore.Statistics?.AllTime.CurrentWeekStreak ?? 0)" />
+            </MudItem>
+
+            @if (!IsGuest)
+            {
+                @RenderTiles(seasonStatistics)
+            }
+
+            <MudItem xs="12" md="@(ShowSnapshot ? 7 : 12)">
+                <div class="myclub-stack">
+                    <UpcomingMatches Bookings="@BookingStore.UpcomingBookings" IsLoading="@(BookingStore.IsLoading && BookingStore.UpcomingBookings.Count == 0)"
+                                     ClubId="@ClubId" MemberId="@member.MemberId" GetCourtName="@GetCourtName" />
+
+                    @if (!IsGuest)
+                    {
+                        <LatestNews ClubId="@ClubId" />
+                        <UpcomingEvents ClubId="@ClubId" />
+                    }
+
+                    @if (IsUser)
+                    {
+                        <BadgeProgressCard MemberId="@ClubProfileStore.MemberId" ClubId="@ClubId" />
+                    }
+                </div>
+            </MudItem>
+
+            @if (ShowSnapshot)
+            {
+                <MudItem xs="12" md="5">
+                    <SectionCard Emoji="✨" Title="@Locale["SeasonAtAGlance"]" Subtitle="@SeasonSubtitle">
+                        <Actions>
+                            <MudButton Href="@($"/clubs/{ClubId}/statistics")" Variant="Variant.Text" Size="Size.Small" Color="Color.Primary"
+                                       EndIcon="@Icons.Material.Filled.ChevronRight">
+                                @Locale["AllStatistics"]
+                            </MudButton>
+                        </Actions>
+                        <ChildContent>
+                            @if (seasonData is { TotalBookings: > 0 })
+                            {
+                                <SeasonSnapshot Data="@seasonData" Comparison="@seasonStatistics!.ClubComparison" />
+                            }
+                            else
+                            {
+                                <div class="myclub-empty">
+                                    <div class="myclub-empty__emoji" aria-hidden="true">🌱</div>
+                                    <div class="myclub-empty__title">@Locale["NoMatchesThisSeasonTitle"]</div>
+                                    <div class="myclub-empty__text">@Locale["NoMatchesThisSeason"]</div>
+                                </div>
+                            }
+                        </ChildContent>
+                    </SectionCard>
+                </MudItem>
+            }
+
+            <MudItem xs="12" md="5">
+                <div class="myclub-stack">
+                    @if (seasonStatistics is { PlayModeQuotas.Count: > 0 })
+                    {
+                        <SectionCard Emoji="🎟️" Title="@StatisticsLocale["PlayModeQuotas"]" Subtitle="@SeasonSubtitle">
+                            <PlayModeQuotaRings Quotas="@seasonStatistics.PlayModeQuotas" />
+                        </SectionCard>
+                    }
+
+                    <AccountCard Member="@member" Seasons="@ClubStore.Seasons" />
+
+                    @if (IsUser)
+                    {
+                        <Family FamilyId="@member.FamilyId" MemberId="@member.MemberId" />
+                    }
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" md="7">
+                <BookingHistory MemberId="@member.MemberId" ClubId="@ClubId" />
+            </MudItem>
+        </MudGrid>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int ClubId { get; set; }
+
+    [Inject]
+    private IClubProfileStore ClubProfileStore { get; set; } = null!;
+
+    [Inject]
+    private IMembersStore MembersStore { get; set; } = null!;
+
+    [Inject]
+    private IClubStore ClubStore { get; set; } = null!;
+
+    [Inject]
+    private IBookingStore BookingStore { get; set; } = null!;
+
+    [Inject]
+    private IStatisticsStore StatisticsStore { get; set; } = null!;
+
+    [Inject]
+    private ILeaderboardStore LeaderboardStore { get; set; } = null!;
+
+    [Inject]
+    private IBadgesStore BadgesStore { get; set; } = null!;
+
+    [Inject]
+    private IProfileStore ProfileStore { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<MyClubLocale> Locale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<StatisticsLocale> StatisticsLocale { get; set; } = null!;
+
+    private bool isInitialized;
+
+    private bool IsGuest => ClubProfileStore.Roles.Contains(MemberRole.Guest);
+
+    private bool IsUser => ClubProfileStore.Roles.Contains(MemberRole.User);
+
+    private bool ShowSnapshot => !IsGuest && StatisticsStore.Statistics is not null;
+
+    private SeasonResult? ActiveSeason => ClubStore.Seasons.FirstOrDefault(s => s.IsActive);
+
+    private SeasonStatisticsResult? CurrentSeasonStatistics => ActiveSeason is null
+        ? null
+        : StatisticsStore.Statistics?.SeasonStatistics.FirstOrDefault(s => s.SeasonId == ActiveSeason.Id);
+
+    private string? SeasonSubtitle => ActiveSeason is null ? null : string.Format(Locale["SeasonLabel"], ActiveSeason.StartDate.Year);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        MembersStore.OnMemberChanged += StateHasChanged;
+        BookingStore.OnUpcomingBookingsChanged += StateHasChanged;
+        StatisticsStore.OnStatisticsChanged += StateHasChanged;
+        LeaderboardStore.OnLeaderboardChanged += StateHasChanged;
+        BadgesStore.OnMyDisplayBadgeChanged += StateHasChanged;
+        ProfileStore.OnProfileChanged += StateHasChanged;
+
+        // Seasons and courts are shared with the booking history, load them before the child components render
+        var loadMember = !await MembersStore.WaitUntilLoaded() || !MembersStore.LoadedMemberId(ClubProfileStore.MemberId)
+            ? MembersStore.LoadMember(ClubProfileStore.MemberId)
+            : Task.CompletedTask;
+        await ClubStore.WaitUntilLoaded();
+        await Task.WhenAll(
+            loadMember,
+            ClubStore.Seasons.Count == 0 ? ClubStore.LoadSeasons() : Task.CompletedTask,
+            ClubStore.Courts.Count == 0 ? ClubStore.LoadCourts() : Task.CompletedTask);
+
+        isInitialized = true;
+        StateHasChanged();
+
+        // The dashboard data streams in afterwards, guests have no access to statistics and leaderboards
+        var loadDashboard = new List<Task> { BookingStore.LoadUpcomingBookings() };
+        if (!IsGuest)
+        {
+            loadDashboard.Add(StatisticsStore.LoadStatistics());
+            loadDashboard.Add(LeaderboardStore.LoadLeaderboard());
+        }
+
+        await Task.WhenAll(loadDashboard);
+    }
+
+    private RenderFragment RenderTiles(SeasonStatisticsResult? season) => __builder =>
+    {
+        var data = season?.Data;
+        var loaded = StatisticsStore.Statistics is not null;
+        var rank = ActiveSeason is null
+            ? null
+            : LeaderboardStore.Leaderboard?.SeasonLeaderboards.FirstOrDefault(l => l.SeasonId == ActiveSeason.Id)?.Data.CurrentMemberRank;
+
+        <MudItem xs="6" md="3">
+            <StatTile Icon="@Icons.Material.Filled.SportsTennis" Color="#059669"
+                      Value="@(loaded ? (data?.TotalBookings ?? 0).ToString() : "…")"
+                      Label="@Locale["MatchesThisSeason"]"
+                      Hint="@(season?.ClubComparison is { } comparison ? string.Format(Locale["ClubAverageHint"], comparison.ClubAverageBookings.ToString("0.#", CultureInfo.CurrentCulture)) : null)" />
+        </MudItem>
+        <MudItem xs="6" md="3">
+            <StatTile Icon="@Icons.Material.Filled.Timer" Color="#6366F1"
+                      Value="@(loaded ? (data?.TotalHoursOnCourt ?? 0).ToString("0.#", CultureInfo.CurrentCulture) : "…")"
+                      Unit="@Locale["HoursUnit"]"
+                      Label="@Locale["OnCourt"]"
+                      Hint="@(data is { TotalBookings: > 0 } ? string.Format(Locale["AverageMinutesHint"], (int)Math.Round(data.TotalHoursOnCourt * 60 / data.TotalBookings)) : null)" />
+        </MudItem>
+        <MudItem xs="6" md="3">
+            <StatTile Icon="@Icons.Material.Filled.LocalFireDepartment" Color="#F97316"
+                      Value="@(loaded ? (data?.CurrentWeekStreak ?? 0).ToString() : "…")"
+                      Unit="@Locale["WeeksUnit"]"
+                      Label="@Locale["CurrentStreak"]"
+                      Hint="@(data is { LongestWeekStreak: > 0 } ? string.Format(Locale["BestStreakHint"], data.LongestWeekStreak) : null)" />
+        </MudItem>
+        <MudItem xs="6" md="3">
+            <StatTile Icon="@Icons.Material.Filled.EmojiEvents" Color="#D97706"
+                      Value="@(LeaderboardStore.Leaderboard is null ? "…" : rank is { } r ? $"#{r}" : "–")"
+                      Label="@Locale["LeaderboardRank"]"
+                      Hint="@(rank is 1 ? Locale["RankFirstHint"].Value : rank is <= 3 ? Locale["RankPodiumHint"].Value : null)" />
+        </MudItem>
+    };
+
+    private string GetCourtName(int courtId)
+        => ClubStore.Courts.FirstOrDefault(c => c.CourtId == courtId)?.Name ?? courtId.ToString();
+
+    public void Dispose()
+    {
+        MembersStore.OnMemberChanged -= StateHasChanged;
+        BookingStore.OnUpcomingBookingsChanged -= StateHasChanged;
+        StatisticsStore.OnStatisticsChanged -= StateHasChanged;
+        LeaderboardStore.OnLeaderboardChanged -= StateHasChanged;
+        BadgesStore.OnMyDisplayBadgeChanged -= StateHasChanged;
+        ProfileStore.OnProfileChanged -= StateHasChanged;
+    }
+}

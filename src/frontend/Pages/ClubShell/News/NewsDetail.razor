@@ -1,0 +1,240 @@
+@page "/clubs/{ClubId:int}/news/{ClubAnnouncementId:int}"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.News
+@using Bookennis.Client.Pages.ClubShell.News.Components
+@using Bookennis.Client.Services.Store.ClubAnnouncements
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.ClubAnnouncements
+
+@implements IDisposable
+
+<PageTitle>@(Announcement?.Title ?? Locale["News"])</PageTitle>
+
+<div class="mb-2">
+    <MudButton Href="@NewsHelpers.NewsUrl(ClubId)" Variant="Variant.Text" Size="Size.Small" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.ArrowBack">
+        @Locale["BackToNews"]
+    </MudButton>
+</div>
+
+@if (Announcement is null)
+{
+    @if (notFound)
+    {
+        <div class="news-missing">
+            <div class="news-missing__emoji" aria-hidden="true">🔍</div>
+            <div class="news-missing__title">@Locale["AnnouncementNotFound"]</div>
+        </div>
+    }
+    else
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+}
+else
+{
+    var announcement = Announcement;
+    <div class="news-detail @(CanManage ? "news-detail--manage" : null)">
+        <div class="news-detail__main">
+            <article class="news-article @(announcement.IsPinned ? "news-article--pinned" : null)">
+                @if (announcement.IsPinned || announcement.IsExpired || (CanManage && announcement.ExpiresOn is not null))
+                {
+                    <div class="news-article__chips">
+                        @if (announcement.IsPinned)
+                        {
+                            <span class="news-tag news-tag--accent">📌 @Locale["Pinned"]</span>
+                        }
+                        @if (announcement.IsExpired)
+                        {
+                            <span class="news-tag news-tag--warn">🕰️ @Locale["ExpiredHint"]</span>
+                        }
+                        else if (CanManage && announcement.ExpiresOn is { } expiresOn)
+                        {
+                            <span class="news-tag">⏳ @string.Format(Locale["VisibleUntil"], NewsHelpers.FormatDate(Locale, expiresOn))</span>
+                        }
+                    </div>
+                }
+
+                <h1 class="news-article__title">@announcement.Title</h1>
+                <div class="news-article__meta">
+                    <span>@NewsHelpers.FormatDateTime(Locale, announcement.PublishedAt)</span>
+                    @if (announcement.CreatedByName is not null)
+                    {
+                        <span aria-hidden="true">·</span>
+                        <span>@string.Format(Locale["WrittenBy"], announcement.CreatedByName)</span>
+                    }
+                </div>
+
+                <AnnouncementBody Html="@announcement.BodyHtml" />
+            </article>
+
+            @if (announcement.Attachments.Count > 0)
+            {
+                <SectionCard Emoji="📎" Title="@Locale["Attachments"]" Subtitle="@NewsHelpers.Count(Locale, "AttachmentCount", announcement.Attachments.Count)">
+                    <div class="news-files">
+                        @foreach (var attachment in announcement.Attachments)
+                        {
+                            <button type="button" class="news-file" disabled="@(downloadingId == attachment.Id)" @onclick="() => Download(attachment)"
+                                    title="@string.Format(Locale["DownloadFile"], attachment.FileName)">
+                                <MudIcon Icon="@NewsHelpers.FileIcon(attachment.FileName)" Class="news-file__icon" />
+                                <span class="news-file__text">
+                                    <span class="news-file__name">@attachment.FileName</span>
+                                    <span class="news-file__size">@NewsHelpers.FormatSize(attachment.Size)</span>
+                                </span>
+                                @if (downloadingId == attachment.Id)
+                                {
+                                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Download" Class="news-file__download" />
+                                }
+                            </button>
+                        }
+                    </div>
+                </SectionCard>
+            }
+        </div>
+
+        @if (CanManage)
+        {
+            <div class="news-detail__aside">
+                <SectionCard Emoji="🛠️" Title="@Locale["Manage"]" Subtitle="@Locale["ManageSubtitle"]">
+                    <div class="news-manage">
+                        <div class="news-manage__email">
+                            @if (announcement.EmailSentAt is { } sentAt)
+                            {
+                                <div class="news-manage__status news-manage__status--ok">
+                                    ✅ @string.Format(Locale["EmailSentStatus"], NewsHelpers.FormatDateTime(Locale, sentAt))
+                                </div>
+                                <div class="news-manage__detail">
+                                    @NewsHelpers.Count(Locale, "RecipientCount", announcement.EmailRecipientCount ?? 0)
+                                    @if (announcement.EmailAudience is { } audience)
+                                    {
+                                        <span> · @NewsHelpers.AudienceName(Locale, audience)</span>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="news-manage__status">✉️ @Locale["EmailNotSent"]</div>
+                                <div class="news-manage__detail">@Locale["EmailNotSentHint"]</div>
+                            }
+                        </div>
+
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" FullWidth="true"
+                                   Disabled="@Store.IsSaving" OnClick="SendAsEmail">
+                            @Locale[announcement.EmailSentAt is null ? "SendAsEmail" : "SendAgain"]
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" FullWidth="true"
+                                   Href="@($"{NewsHelpers.AnnouncementUrl(ClubId, announcement.Id)}/edit")">
+                            @SharedLocale["Edit"]
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" FullWidth="true"
+                                   Disabled="@Store.IsSaving" OnClick="Delete">
+                            @SharedLocale["Delete"]
+                        </MudButton>
+                    </div>
+                </SectionCard>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+    [Parameter] public int ClubAnnouncementId { get; set; }
+
+    [Inject] private IClubAnnouncementsStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IStringLocalizer<NewsLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private bool notFound;
+    private int? downloadingId;
+
+    private ClubAnnouncementDto? Announcement => Store.Announcement?.Id == ClubAnnouncementId ? Store.Announcement : null;
+
+    private bool CanManage => NewsHelpers.CanManage(ClubProfileStore.Roles);
+
+    protected override void OnInitialized()
+    {
+        Store.OnAnnouncementChanged += StateHasChanged;
+        ClubProfileStore.OnClubProfileChanged += StateHasChanged;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        notFound = false;
+        await Store.LoadAnnouncement(ClubAnnouncementId);
+        notFound = Store.Announcement?.Id != ClubAnnouncementId;
+    }
+
+    private async Task Download(ClubAnnouncementAttachmentDto attachment)
+    {
+        downloadingId = attachment.Id;
+        try
+        {
+            var result = await Store.DownloadAttachment(ClubAnnouncementId, attachment.Id);
+            if (result is not { Success: true, Dto: not null })
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return;
+            }
+
+            using var streamReference = new DotNetStreamReference(new MemoryStream(result.Dto.Data));
+            await JsRuntime.InvokeVoidAsync("App.downloadFileFromStream", attachment.FileName, streamReference);
+        }
+        finally
+        {
+            downloadingId = null;
+        }
+    }
+
+    private async Task SendAsEmail()
+    {
+        if (Announcement is null)
+            return;
+
+        var parameters = new DialogParameters<SendAnnouncementEmailDialog> { { d => d.Announcement, Announcement } };
+        var dialog = await DialogService.ShowAsync<SendAnnouncementEmailDialog>(Locale["SendAsEmail"], parameters, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: int recipientCount })
+            Snackbar.Add(NewsHelpers.Count(Locale, "EmailQueued", recipientCount), Severity.Success);
+    }
+
+    private async Task Delete()
+    {
+        if (Announcement is null)
+            return;
+
+        var confirmed = await DialogService.ShowMessageBox(Locale["DeleteAnnouncement"], string.Format(Locale["DeleteAnnouncementConfirm"], Announcement.Title),
+            yesText: SharedLocale["Delete"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true)
+            return;
+
+        var result = await Store.DeleteAnnouncement(ClubAnnouncementId);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(Locale["AnnouncementDeleted"], Severity.Success);
+        NavigationManager.NavigateTo(NewsHelpers.NewsUrl(ClubId));
+    }
+
+    public void Dispose()
+    {
+        Store.OnAnnouncementChanged -= StateHasChanged;
+        ClubProfileStore.OnClubProfileChanged -= StateHasChanged;
+    }
+}

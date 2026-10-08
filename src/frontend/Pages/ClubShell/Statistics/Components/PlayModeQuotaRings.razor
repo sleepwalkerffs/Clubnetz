@@ -1,0 +1,24 @@
+@using Bookennis.Client.Localization.Pages.Statistics
+@using Bookennis.Shared.Controller.Statistics
+
+<div class="quota-grid">
+    @foreach (var quota in Quotas)
+    {
+        var pct = quota.MaxBookingsPerSeason > 0 ? (double)quota.UsedBookings / quota.MaxBookingsPerSeason * 100.0 : 0;
+        var color = pct >= 100 ? Color.Error : pct >= 75 ? Color.Warning : Color.Primary;
+        <div class="quota">
+            <div class="quota__ring">
+                <MudProgressCircular Value="@Math.Min(pct, 100)" Color="@color" Size="Size.Large" StrokeWidth="5" />
+                <span class="quota__ring-text">@quota.UsedBookings/@quota.MaxBookingsPerSeason</span>
+            </div>
+            <div class="quota__name">@quota.PlayModeName</div>
+            <div class="quota__remaining">@string.Format(Locale["QuotaRemaining"], Math.Max(quota.MaxBookingsPerSeason - quota.UsedBookings, 0))</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<PlayModeQuotaEntry> Quotas { get; set; } = null!;
+
+    [Inject] private IStringLocalizer<StatisticsLocale> Locale { get; set; } = null!;
+}

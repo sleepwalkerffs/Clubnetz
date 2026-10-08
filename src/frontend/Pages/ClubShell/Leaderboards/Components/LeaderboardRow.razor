@@ -1,0 +1,78 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Leaderboards
+@using Bookennis.Shared.Controller.Leaderboards
+
+<div class="lb-row @(Entry.IsCurrentMember ? "lb-row--me" : null)"
+     role="link" tabindex="0"
+     @onclick="() => OnSelect.InvokeAsync(Entry)"
+     @onkeydown="OnKeyDown">
+    <span class="lb-row__rank">@Entry.Rank</span>
+
+    <span class="lb-row__move @MoveClass" title="@MoveTitle">@MoveText</span>
+
+    <UserAvatar FirstName="@Entry.FirstName" LastName="@Entry.LastName" ProfilePictureUrl="@Entry.ProfilePictureUrl"
+                BadgeImageUrl="@Entry.DisplayBadgeImageUrl" BadgeLevel="@Entry.DisplayBadgeLevel"
+                Size="Size.Medium" Color="Color.Secondary" />
+
+    <div class="lb-row__text">
+        <div class="lb-row__name-line">
+            <span class="lb-row__name">@Entry.FirstName @Entry.LastName</span>
+            @if (Entry.IsCurrentMember)
+            {
+                <span class="lb-row__you">@Locale["You"]</span>
+            }
+        </div>
+        <div class="lb-row__bar" aria-hidden="true">
+            <div class="lb-row__bar-fill" style="width: @BarWidth"></div>
+        </div>
+    </div>
+
+    <div class="lb-row__numbers">
+        <span class="lb-row__hours">@Entry.TotalHours.ToString("0.#", CultureInfo.CurrentCulture) @Locale["HoursUnit"]</span>
+        <span class="lb-row__matches">@(Entry.Matches == 1 ? Locale["OneMatch"] : string.Format(Locale["MatchesCount"], Entry.Matches))</span>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public LeaderboardEntry Entry { get; set; } = null!;
+
+    /// <summary>Hours of the leader, the bars are relative to it.</summary>
+    [Parameter, EditorRequired] public double MaxHours { get; set; }
+
+    [Parameter] public EventCallback<LeaderboardEntry> OnSelect { get; set; }
+
+    [Inject] private IStringLocalizer<LeaderboardLocale> Locale { get; set; } = null!;
+
+    private string BarWidth => $"{(MaxHours > 0 ? Entry.TotalHours / MaxHours * 100 : 0).ToString("0.#", CultureInfo.InvariantCulture)}%";
+
+    private string? MoveClass => Entry.RankChange switch
+    {
+        null => "lb-row__move--new",
+        > 0 => "lb-row__move--up",
+        < 0 => "lb-row__move--down",
+        _ => null,
+    };
+
+    private string MoveText => Entry.RankChange switch
+    {
+        null => Locale["NewEntry"],
+        > 0 and var up => $"▲{up}",
+        < 0 and var down => $"▼{-down}",
+        _ => "–",
+    };
+
+    private string MoveTitle => Entry.RankChange switch
+    {
+        null => Locale["NewThisWeek"],
+        > 0 and var up => string.Format(Locale["MovedUp"], up),
+        < 0 and var down => string.Format(Locale["MovedDown"], -down),
+        _ => Locale["NoMovement"],
+    };
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or " ")
+            await OnSelect.InvokeAsync(Entry);
+    }
+}

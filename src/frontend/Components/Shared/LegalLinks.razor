@@ -1,0 +1,22 @@
+@using Bookennis.Client.Localization.Pages.Legal
+
+@* Links to the imprint and the privacy policy, shown on the account pages and at the bottom of the navigation. *@
+<nav class="@($"legal-links {(OnDarkBackground ? "legal-links--on-dark" : "")} {Class}")" aria-label="@Locale["Imprint"] / @Locale["Privacy"]">
+    <a href="legal/imprint" target="@Target">@Locale["Imprint"]</a>
+    <span aria-hidden="true">·</span>
+    <a href="legal/privacy" target="@Target">@Locale["Privacy"]</a>
+</nav>
+
+@code {
+    [Inject] private IStringLocalizer<LegalLocale> Locale { get; set; } = null!;
+
+    /// <summary>Light text for the dark navigation drawer.</summary>
+    [Parameter] public bool OnDarkBackground { get; set; }
+
+    /// <summary>Opens the pages in a new tab, e.g. from a form that would lose its input when navigating away.</summary>
+    [Parameter] public bool NewTab { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    private string? Target => NewTab ? "_blank" : null;
+}

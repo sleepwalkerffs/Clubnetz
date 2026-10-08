@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Add" xml:space="preserve">
+    <value>Hinzufügen</value>
+  </data>
+  <data name="Birthday" xml:space="preserve">
+    <value>Geburtstag</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>Weiter</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Bearbeiten</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Firstname" xml:space="preserve">
+    <value>Vorname</value>
+  </data>
+  <data name="Gender" xml:space="preserve">
+    <value>Geschlecht</value>
+  </data>
+  <data name="Lastname" xml:space="preserve">
+    <value>Nachname</value>
+  </data>
+  <data name="Member" xml:space="preserve">
+    <value>Mitglied</value>
+  </data>
+  <data name="Members" xml:space="preserve">
+    <value>Mitglieder</value>
+  </data>
+  <data name="Mr" xml:space="preserve">
+    <value>Herr</value>
+  </data>
+  <data name="Mrs" xml:space="preserve">
+    <value>Frau</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>Nichts von beidem</value>
+  </data>
+  <data name="Role" xml:space="preserve">
+    <value>Rolle</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="Select" xml:space="preserve">
+    <value>Auswählen</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="TableRowsPerPage" xml:space="preserve">
+    <value>Zeilen pro Seite</value>
+  </data>
+  <data name="TableInfoFormat" xml:space="preserve">
+    <value>{first_item}-{last_item} von {all_items}</value>
+  </data>
+  <data name="TableSortBy" xml:space="preserve">
+    <value>Sortieren nach</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="BadgeSettings" xml:space="preserve">
+    <value>Badge Einstellungen</value>
+  </data>
+  <data name="DisplayBadge" xml:space="preserve">
+    <value>Angezeigtes Badge</value>
+  </data>
+  <data name="NoBadgeSelected" xml:space="preserve">
+    <value>Keines (kein Badge angezeigt)</value>
+  </data>
+  <data name="TrophyCaseVisibility" xml:space="preserve">
+    <value>Trophäen Sichtbarkeit</value>
+  </data>
+  <data name="TrophyCasePublicLabel" xml:space="preserve">
+    <value>Trophäensammlung für andere Mitglieder sichtbar machen</value>
+  </data>
+  <data name="AddTier" xml:space="preserve">
+    <value>Stufe hinzufügen</value>
+  </data>
+  <data name="DeleteTierConfirmation" xml:space="preserve">
+    <value>Möchten Sie diese Abzeichenstufe wirklich löschen?</value>
+  </data>
+  <data name="CopyBadgeTiers" xml:space="preserve">
+    <value>Von anderer Saison kopieren</value>
+  </data>
+  <data name="CopySourceSeason" xml:space="preserve">
+    <value>Kopieren von Saison</value>
+  </data>
+  <data name="NoTiersForSeason" xml:space="preserve">
+    <value>Für diese Saison sind noch keine Abzeichenstufen konfiguriert.</value>
+  </data>
+  <data name="Tiers" xml:space="preserve">
+    <value>Stufen</value>
+  </data>
+  <data name="OneTimeBadges" xml:space="preserve">
+    <value>Einmalige Abzeichen</value>
+  </data>
+  <data name="AddOneTimeBadge" xml:space="preserve">
+    <value>Abzeichen hinzufügen</value>
+  </data>
+  <data name="CopyOneTimeBadges" xml:space="preserve">
+    <value>Von anderer Saison kopieren</value>
+  </data>
+  <data name="NoOneTimeBadgesForSeason" xml:space="preserve">
+    <value>Für diese Saison sind noch keine einmaligen Abzeichen konfiguriert.</value>
+  </data>
+  <data name="Awardees" xml:space="preserve">
+    <value>Empfänger</value>
+  </data>
+  <data name="AwardBadge" xml:space="preserve">
+    <value>Abzeichen verleihen</value>
+  </data>
+  <data name="DeleteOneTimeBadgeConfirmation" xml:space="preserve">
+    <value>Möchten Sie dieses einmalige Abzeichen wirklich löschen?</value>
+  </data>
+  <data name="Guests" xml:space="preserve">
+    <value>Gäste</value>
+  </data>
+  <data name="Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="Join" xml:space="preserve">
+    <value>Beitreten</value>
+  </data>
+  <data name="SelectClub" xml:space="preserve">
+    <value>Klub auswählen</value>
+  </data>
+  <data name="NoClubsAvailable" xml:space="preserve">
+    <value>Keine Klubs verfügbar.</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Sprache</value>
+  </data>
+  <data name="German" xml:space="preserve">
+    <value>Deutsch</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>Englisch</value>
+  </data>
+  <data name="Street" xml:space="preserve">
+    <value>Straße</value>
+  </data>
+  <data name="City" xml:space="preserve">
+    <value>Stadt</value>
+  </data>
+  <data name="ZipCode" xml:space="preserve">
+    <value>Postleitzahl</value>
+  </data>
+  <data name="Country" xml:space="preserve">
+    <value>Land</value>
+  </data>
+  <data name="Address" xml:space="preserve">
+    <value>Adresse</value>
+  </data>
+  <data name="Austria" xml:space="preserve">
+    <value>Österreich</value>
+  </data>
+  <data name="Germany" xml:space="preserve">
+    <value>Deutschland</value>
+  </data>
+  <data name="Switzerland" xml:space="preserve">
+    <value>Schweiz</value>
+  </data>
+  <data name="Role_User" xml:space="preserve">
+    <value>Benutzer</value>
+  </data>
+  <data name="Role_Maintainer" xml:space="preserve">
+    <value>Verwalter</value>
+  </data>
+  <data name="Role_Admin" xml:space="preserve">
+    <value>Administrator</value>
+  </data>
+  <data name="Role_SportsDirector" xml:space="preserve">
+    <value>Sportwart</value>
+  </data>
+  <data name="Role_YouthSportsDirector" xml:space="preserve">
+    <value>Jugendsportwart</value>
+  </data>
+  <data name="Role_Trainer" xml:space="preserve">
+    <value>Trainer</value>
+  </data>
+  <data name="Role_Guest" xml:space="preserve">
+    <value>Gast</value>
+  </data>
+  <data name="Role_Treasurer" xml:space="preserve">
+    <value>Kassier</value>
+  </data>
+  <data name="ProfileIncomplete" xml:space="preserve">
+    <value>Dein Profil ist fast vollständig – es fehlt nur noch:</value>
+  </data>
+  <data name="ProfileMissing_FirstName" xml:space="preserve">
+    <value>Vorname</value>
+  </data>
+  <data name="ProfileMissing_LastName" xml:space="preserve">
+    <value>Nachname</value>
+  </data>
+  <data name="ProfileMissing_Birthday" xml:space="preserve">
+    <value>Geburtstag</value>
+  </data>
+  <data name="ProfileMissing_ProfilePicture" xml:space="preserve">
+    <value>Profilbild</value>
+  </data>
+  <data name="CompleteProfile" xml:space="preserve">
+    <value>Profil vervollständigen</value>
+  </data>
+  <data name="BadgeProgress" xml:space="preserve">
+    <value>Badge Fortschritt</value>
+  </data>
+  <data name="MatchesPlayed" xml:space="preserve">
+    <value>Gespielte Matches</value>
+  </data>
+  <data name="CurrentBadge" xml:space="preserve">
+    <value>Aktuelles Badge</value>
+  </data>
+  <data name="NextBadge" xml:space="preserve">
+    <value>Nächstes Badge</value>
+  </data>
+  <data name="MatchesNeeded" xml:space="preserve">
+    <value>Matches benötigt</value>
+  </data>
+  <data name="NoBadgeYet" xml:space="preserve">
+    <value>Noch kein Badge</value>
+  </data>
+  <data name="AllBadgesEarned" xml:space="preserve">
+    <value>Alle Badges erreicht!</value>
+  </data>
+  <data name="TrophyCase" xml:space="preserve">
+    <value>Trophäen</value>
+  </data>
+  <data name="MemberProfile" xml:space="preserve">
+    <value>Mitgliederprofil</value>
+  </data>
+  <data name="TrophyCasePrivate" xml:space="preserve">
+    <value>Diese Trophäensammlung ist privat.</value>
+  </data>
+  <data name="TrophyCaseEmpty" xml:space="preserve">
+    <value>Noch keine Trophäen verdient.</value>
+  </data>
+  <data name="EarnedOn" xml:space="preserve">
+    <value>Verdient am</value>
+  </data>
+  <data name="NoBadges" xml:space="preserve">
+    <value>Noch keine Badges verdient</value>
+  </data>
+  <data name="Level" xml:space="preserve">
+    <value>Stufe</value>
+  </data>
+  <data name="BadgeDetails" xml:space="preserve">
+    <value>Badge Details</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="MatchesRequired" xml:space="preserve">
+    <value>Benötigte Matches</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Beschreibung</value>
+  </data>
+  <data name="Image" xml:space="preserve">
+    <value>Bild</value>
+  </data>
+  <data name="UploadImage" xml:space="preserve">
+    <value>Bild hochladen</value>
+  </data>
+  <data name="DontShowAgain" xml:space="preserve">
+    <value>Nicht mehr anzeigen</value>
+  </data>
+  <data name="UpdateAvailable" xml:space="preserve">
+    <value>Eine neue Version ist verfügbar.</value>
+  </data>
+  <data name="UpdateReload" xml:space="preserve">
+    <value>Neu laden</value>
+  </data>
+</root>

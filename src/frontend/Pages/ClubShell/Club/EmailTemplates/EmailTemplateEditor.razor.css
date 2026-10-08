@@ -1,0 +1,284 @@
+.editor-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.editor-top {
+    margin: -8px 0 -8px -8px;
+}
+
+/* Mobile first: one pane at a time, switched with the chips */
+.editor-view-switch {
+    display: block;
+}
+
+.editor-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.editor-layout--edit .preview-pane,
+.editor-layout--preview .editor-pane {
+    display: none;
+}
+
+@media (min-width: 1100px) {
+    .editor-view-switch {
+        display: none;
+    }
+
+    .editor-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .editor-layout--edit .preview-pane,
+    .editor-layout--preview .editor-pane {
+        display: block;
+    }
+
+    .preview-pane {
+        position: sticky;
+        top: 80px;
+    }
+}
+
+.editor-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.editor-language {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.editor-hint {
+    margin-top: -8px;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.editor-body ::deep textarea {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+/* Variables */
+.editor-variables__title {
+    font-weight: 700;
+}
+
+.editor-variables__text {
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.editor-variables__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.variable-chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.variable-chip:hover,
+.variable-chip:focus-visible {
+    border-color: var(--mud-palette-primary);
+    background: var(--mud-palette-background-gray);
+}
+
+.variable-chip code {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--bk-dark-green, #047857);
+    background: none;
+}
+
+.variable-chip span {
+    font-size: 0.72rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* Formatting help */
+.editor-help {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--mud-palette-background-gray);
+    font-size: 0.85rem;
+}
+
+.editor-help summary {
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.editor-help table {
+    width: 100%;
+    margin-top: 8px;
+    border-collapse: collapse;
+}
+
+.editor-help td {
+    padding: 4px 8px 4px 0;
+    vertical-align: top;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.editor-help td:first-child {
+    white-space: nowrap;
+    color: var(--mud-palette-text-secondary);
+}
+
+.editor-help code {
+    font-size: 0.8rem;
+    word-break: break-word;
+}
+
+.editor-help p {
+    margin: 8px 0 0 0;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* Preview: looks like the sent email (same colors as wwwroot/assets/emails/email.css in the API),
+   so it intentionally stays light in dark mode - that is how members see it in their mail client. */
+.email-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.email-preview__subject {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 0.9rem;
+}
+
+.email-preview__subject-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.email-preview__subject-text {
+    font-weight: 700;
+}
+
+.email-preview__mail {
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    color: #0F172A;
+    font-family: Inter, Roboto, Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.email-preview__header {
+    padding: 20px 24px;
+    background: #064E3B;
+    color: #FFFFFF;
+    font-size: 18px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.email-preview__body {
+    padding: 24px;
+    overflow-wrap: anywhere;
+}
+
+.email-preview__body ::deep p {
+    margin: 0 0 16px 0;
+}
+
+.email-preview__body ::deep h1,
+.email-preview__body ::deep h2,
+.email-preview__body ::deep h3,
+.email-preview__body ::deep h4 {
+    margin: 24px 0 12px 0;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #0F172A;
+}
+
+.email-preview__body ::deep h1 { font-size: 20px; }
+.email-preview__body ::deep h2 { font-size: 18px; }
+.email-preview__body ::deep h3 { font-size: 16px; }
+.email-preview__body ::deep h4 { font-size: 14px; }
+
+.email-preview__body ::deep ul,
+.email-preview__body ::deep ol {
+    margin: 0 0 16px 0;
+    padding-left: 20px;
+}
+
+.email-preview__body ::deep ul { list-style: disc; }
+.email-preview__body ::deep ol { list-style: decimal; }
+
+.email-preview__body ::deep a {
+    color: #047857;
+}
+
+.email-preview__body ::deep a.btn {
+    display: inline-block;
+    margin: 8px 0 16px 0;
+    padding: 12px 24px;
+    border-radius: 12px;
+    background: #059669;
+    color: #FFFFFF;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.email-preview__body ::deep blockquote {
+    margin: 0 0 16px 0;
+    padding: 8px 16px;
+    border-left: 3px solid #059669;
+    color: #475569;
+}
+
+.email-preview__body ::deep hr {
+    border: none;
+    border-top: 1px solid #E2E8F0;
+    margin: 24px 0;
+}
+
+.email-preview__body ::deep img {
+    max-width: 100%;
+}
+
+.email-preview__body ::deep img.badge-image {
+    display: block;
+    margin: 0 auto 16px auto;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+}

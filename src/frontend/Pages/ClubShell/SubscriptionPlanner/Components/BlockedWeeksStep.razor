@@ -1,0 +1,36 @@
+@using Bookennis.Client.Localization.Pages.SubscriptionPlanner
+
+<MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">@L["BlockedWeeksHelp"]</MudText>
+
+<div class="d-flex flex-wrap">
+    @foreach (var week in Draft.Weeks)
+    {
+        var monday = week.Monday;
+        <WeekChip Week="week"
+                  Crossed="@Draft.ExcludedWeeks.Contains(monday)"
+                  OnClick="@(() => Toggle(monday))" />
+    }
+</div>
+
+<MudText Typo="Typo.body2" Class="mt-3">
+    @string.Format(L["ActiveWeeksSummary"], Draft.ActiveWeekCount, Draft.Weeks.Count)
+</MudText>
+
+@code {
+    [Parameter, EditorRequired]
+    public required SubscriptionPlanDraft Draft { get; set; }
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    [Inject]
+    private IStringLocalizer<SubscriptionPlannerLocale> L { get; set; } = null!;
+
+    private Task Toggle(DateOnly monday)
+    {
+        if (!Draft.ExcludedWeeks.Remove(monday))
+            Draft.ExcludedWeeks.Add(monday);
+
+        return OnChanged.InvokeAsync();
+    }
+}

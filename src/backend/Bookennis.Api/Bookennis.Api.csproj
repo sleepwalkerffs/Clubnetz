@@ -1,0 +1,129 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CA1873</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Pin transitive deps to patched versions (NU1902/NU1903 vulnerability advisories) -->
+    <PackageReference Include="AngleSharp" />
+    <PackageReference Include="ClosedXML" />
+    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
+    <PackageReference Include="EntityFrameworkCore.Projectables" />
+    <PackageReference Include="Fluid.Core" />
+    <PackageReference Include="Fusonic.Extensions.Email" />
+    <PackageReference Include="HtmlSanitizer" />
+    <PackageReference Include="Lib.Net.Http.WebPush" />
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="Fusonic.Extensions.EntityFrameworkCore" />
+    <PackageReference Include="Fusonic.Extensions.Hangfire" />
+    <PackageReference Include="Fusonic.Extensions.AspNetCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="MimeKit" />
+    <PackageReference Include="MailKit" />
+    <PackageReference Include="Fusonic.Extensions.Common" />
+    <PackageReference Include="Fusonic.Extensions.Mediator" />
+    <PackageReference Include="Hangfire.AspNetCore" />
+    <PackageReference Include="Hangfire.Core" />
+    <PackageReference Include="Hangfire.PostgreSql" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
+    <PackageReference Include="NetEscapades.AspNetCore.SecurityHeaders" />
+    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Exceptions" />
+    <PackageReference Include="Serilog.Exceptions.EntityFrameworkCore" />
+    <PackageReference Include="SimpleInjector" />
+    <PackageReference Include="SimpleInjector.Integration.AspNetCore" />
+    <PackageReference Include="SimpleInjector.Integration.AspNetCore.Mvc" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    <PackageReference Include="OpenTelemetry.Api" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Bookennis.Domain\Bookennis.Domain.csproj" />
+    <ProjectReference Include="..\..\shared\Bookennis.Shared.csproj" />
+    <ProjectReference Include="..\..\frontend\Bookennis.Client.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Resources\Localization\View.Emails.BookingDeleted.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>View.Emails.BookingDeleted.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Resources\Localization\View.Emails.ConfirmEmailChange.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>View.Emails.ConfirmEmailChange.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Resources\Localization\View.Emails.EmailChanged.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>View.Emails.EmailChanged.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Resources\Localization\View.Emails.ForgotPassword.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>View.Emails.ForgotPassword.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Resources\Localization\View.Emails.VerifyUser.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>View.Emails.VerifyUser.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="wwwroot\assets\emails\email.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\EmailTemplates\*.md" WithCulture="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Localization\View.Emails.BookingDeleted.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>View.Emails.BookingDeleted.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Localization\View.Emails.ConfirmEmailChange.de.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Localization\View.Emails.ConfirmEmailChange.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>View.Emails.ConfirmEmailChange.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Localization\View.Emails.EmailChanged.de.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Localization\View.Emails.EmailChanged.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>View.Emails.EmailChanged.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Localization\View.Emails.ForgotPassword.de.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Localization\View.Emails.ForgotPassword.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>View.Emails.ForgotPassword.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Localization\View.Emails.VerifyUser.de.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Localization\View.Emails.VerifyUser.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>View.Emails.VerifyUser.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

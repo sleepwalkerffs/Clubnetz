@@ -1,0 +1,230 @@
+.badge-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.badge-aside__caption {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.badge-aside__value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.badge-aside__text {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.badge-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 28px 12px;
+    border-radius: 16px;
+    border: 2px dashed var(--mud-palette-lines-inputs);
+    text-align: center;
+}
+
+.badge-empty__emoji {
+    font-size: 2.4rem;
+    line-height: 1;
+}
+
+.badge-empty__title {
+    margin-top: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.badge-empty__text {
+    max-width: 420px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.badge-empty__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Tier ladder */
+.ladder {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+    padding: 6px 2px 10px;
+}
+
+.ladder__item {
+    flex: 0 0 170px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ladder__item ::deep .trophy-tile {
+    flex: 1 1 auto;
+}
+
+.ladder__step {
+    flex: 0 0 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding-bottom: 40px;
+}
+
+.ladder__step-line {
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--mud-palette-lines-inputs), #F59E0B);
+}
+
+.ladder__step-text {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--bk-dark-amber, #B45309);
+    white-space: nowrap;
+}
+
+.earned-bar {
+    display: block;
+    width: 80px;
+    height: 6px;
+    margin: 2px 0;
+    border-radius: 3px;
+    background: var(--mud-palette-background-gray);
+    overflow: hidden;
+}
+
+.earned-bar span {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--badge-color);
+}
+
+/* Special awards */
+.specials {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+}
+
+.specials__item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.specials__item ::deep .trophy-tile {
+    flex: 1 1 auto;
+}
+
+::deep .specials__award {
+    border-radius: 10px;
+}
+
+.awardees {
+    display: flex;
+    align-items: center;
+    margin: 2px 0;
+}
+
+.awardees > ::deep div + div {
+    margin-left: -8px;
+}
+
+::deep .awardees__avatar {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 0.7rem !important;
+    border: 2px solid var(--mud-palette-surface);
+}
+
+.awardees__more {
+    margin-left: 4px;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.awardees__none {
+    font-style: italic;
+}
+
+.tile-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 12px;
+    background: var(--mud-palette-background-gray);
+}
+
+.tile-actions__upload {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--mud-palette-action-default);
+    transition: background 0.15s ease;
+}
+
+.tile-actions__upload:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}
+
+@media (max-width: 599px) {
+    .ladder {
+        flex-direction: column;
+        overflow: visible;
+    }
+
+    .ladder__item {
+        flex-basis: auto;
+    }
+
+    .ladder__step {
+        flex-basis: auto;
+        flex-direction: row;
+        padding: 6px 0;
+    }
+
+    .ladder__step-line {
+        width: 3px;
+        height: 20px;
+        background: linear-gradient(180deg, var(--mud-palette-lines-inputs), #F59E0B);
+    }
+
+    .specials {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+}

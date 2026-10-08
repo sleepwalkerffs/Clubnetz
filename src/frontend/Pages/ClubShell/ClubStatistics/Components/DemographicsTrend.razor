@@ -1,0 +1,74 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.ClubStatistics
+@using Bookennis.Shared.Controller.Statistics
+
+@{
+    var seasons = Seasons.Where(s => s.Demographics.TotalMembers > 0).ToList();
+    var max = seasons.Count > 0 ? seasons.Max(s => s.Demographics.TotalMembers) : 0;
+}
+
+@if (seasons.Count == 0)
+{
+    <div class="demo-trend__empty">@L["NoMembers"]</div>
+}
+else
+{
+    <div class="demo-trend">
+        <div class="demo-trend__legend">
+            @foreach (var group in GroupInfos)
+            {
+                <span><i class="demo-trend__dot" style="background: @group.Color"></i>@L[group.Key]</span>
+            }
+        </div>
+
+        @foreach (var season in seasons)
+        {
+            var d = season.Demographics;
+            var counts = new[] { d.MaleKids + d.FemaleKids, d.MaleTeenagers + d.FemaleTeenagers, d.MaleMembers + d.FemaleMembers, d.MaleSeniors + d.FemaleSeniors };
+            var femalePercent = d.TotalFemale * 100.0 / d.TotalMembers;
+
+            <div class="demo-trend__row">
+                <div class="demo-trend__label">@season.SeasonLabel</div>
+                <div class="demo-trend__bar-wrap">
+                    <div class="demo-trend__bar" style="width: @((d.TotalMembers * 100.0 / max).ToString("0.#", CultureInfo.InvariantCulture))%">
+                        @for (var i = 0; i < counts.Length; i++)
+                        {
+                            if (counts[i] == 0)
+                                continue;
+                            var share = counts[i] * 100.0 / d.TotalMembers;
+                            <span class="demo-trend__segment" style="flex: @counts[i]; background: @GroupInfos[i].Color"
+                                  title="@($"{L[GroupInfos[i].Key]}: {counts[i]} ({share:0}%)")">
+                                @(share >= 12 ? counts[i].ToString(CultureInfo.CurrentCulture) : "")
+                            </span>
+                        }
+                    </div>
+                </div>
+                <div class="demo-trend__meta">
+                    <span class="demo-trend__total">@d.TotalMembers</span>
+                    <span class="demo-trend__gender" title="@($"{L["Male"]} {d.TotalMale} · {L["Female"]} {d.TotalFemale}")">
+                        ♀ @femalePercent.ToString("0", CultureInfo.CurrentCulture)%
+                    </span>
+                    @if (d.AverageAge is { } age)
+                    {
+                        <span class="demo-trend__age">Ø @age.ToString("0", CultureInfo.CurrentCulture) @L["YearsShort"]</span>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Seasons, oldest first.</summary>
+    [Parameter, EditorRequired] public List<ClubSeasonSummary> Seasons { get; set; } = [];
+
+    [Inject] private IStringLocalizer<ClubStatisticsLocale> L { get; set; } = null!;
+
+    private static readonly (string Key, string Color)[] GroupInfos =
+    [
+        ("Kids", "#FBBF24"),
+        ("Teenagers", "#34D399"),
+        ("Adults", "#0EA5E9"),
+        ("Seniors", "#6366F1"),
+    ];
+}

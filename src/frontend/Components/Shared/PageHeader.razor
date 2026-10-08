@@ -1,0 +1,12 @@
+<div class="d-flex align-center mb-4">
+    <div class="accent-border-left">
+        <MudText Typo="Typo.h5">
+            @Content
+        </MudText>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? Content { get; set; }
+}

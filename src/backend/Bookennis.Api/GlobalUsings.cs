@@ -1,0 +1,1 @@
+﻿global using Fusonic.Extensions.Mediator;

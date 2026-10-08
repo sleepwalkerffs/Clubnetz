@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="News" xml:space="preserve">
+    <value>News</value>
+  </data>
+  <data name="HeroTitle" xml:space="preserve">
+    <value>Club news</value>
+  </data>
+  <data name="HeroSubtitle" xml:space="preserve">
+    <value>Everything your club wants you to know, in one place.</value>
+  </data>
+  <data name="NewAnnouncement" xml:space="preserve">
+    <value>New announcement</value>
+  </data>
+  <data name="ShowExpired" xml:space="preserve">
+    <value>Show expired</value>
+  </data>
+  <data name="AllNews" xml:space="preserve">
+    <value>Announcements</value>
+  </data>
+  <data name="AnnouncementCount" xml:space="preserve">
+    <value>{0} announcements</value>
+  </data>
+  <data name="AnnouncementCountOne" xml:space="preserve">
+    <value>{0} announcement</value>
+  </data>
+  <data name="NoNews" xml:space="preserve">
+    <value>There is no news at the moment.</value>
+  </data>
+  <data name="NoNewsManager" xml:space="preserve">
+    <value>There is no news yet. Write the first announcement for your members.</value>
+  </data>
+  <data name="Pinned" xml:space="preserve">
+    <value>Pinned</value>
+  </data>
+  <data name="Expired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="VisibleUntil" xml:space="preserve">
+    <value>Visible until {0}</value>
+  </data>
+  <data name="AttachmentCount" xml:space="preserve">
+    <value>{0} attachments</value>
+  </data>
+  <data name="AttachmentCountOne" xml:space="preserve">
+    <value>{0} attachment</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
+  <data name="DateFormat" xml:space="preserve">
+    <value>d MMM yyyy</value>
+  </data>
+  <data name="MyClubNewsSubtitle" xml:space="preserve">
+    <value>The latest from your club</value>
+  </data>
+  <data name="MyClubNewsEmptySubtitle" xml:space="preserve">
+    <value>Nothing new right now</value>
+  </data>
+  <data name="ShowAllNews" xml:space="preserve">
+    <value>All news</value>
+  </data>
+  <data name="BackToNews" xml:space="preserve">
+    <value>Back to the news</value>
+  </data>
+  <data name="AnnouncementNotFound" xml:space="preserve">
+    <value>This announcement does not exist (anymore).</value>
+  </data>
+  <data name="ExpiredHint" xml:space="preserve">
+    <value>Expired - only visible to you</value>
+  </data>
+  <data name="WrittenBy" xml:space="preserve">
+    <value>by {0}</value>
+  </data>
+  <data name="Attachments" xml:space="preserve">
+    <value>Attachments</value>
+  </data>
+  <data name="DownloadFile" xml:space="preserve">
+    <value>Download {0}</value>
+  </data>
+  <data name="Manage" xml:space="preserve">
+    <value>Manage</value>
+  </data>
+  <data name="ManageSubtitle" xml:space="preserve">
+    <value>Only visible to you</value>
+  </data>
+  <data name="EmailSentStatus" xml:space="preserve">
+    <value>Sent as email on {0}</value>
+  </data>
+  <data name="RecipientCount" xml:space="preserve">
+    <value>{0} recipients</value>
+  </data>
+  <data name="RecipientCountOne" xml:space="preserve">
+    <value>{0} recipient</value>
+  </data>
+  <data name="EmailNotSent" xml:space="preserve">
+    <value>Not sent as email yet</value>
+  </data>
+  <data name="EmailNotSentHint" xml:space="preserve">
+    <value>Members see the announcement in the app. You can also send it to them as email.</value>
+  </data>
+  <data name="SendAsEmail" xml:space="preserve">
+    <value>Send as email</value>
+  </data>
+  <data name="SendAgain" xml:space="preserve">
+    <value>Send again</value>
+  </data>
+  <data name="EmailQueued" xml:space="preserve">
+    <value>The announcement is being sent to {0} recipients.</value>
+  </data>
+  <data name="EmailQueuedOne" xml:space="preserve">
+    <value>The announcement is being sent to {0} recipient.</value>
+  </data>
+  <data name="DeleteAnnouncement" xml:space="preserve">
+    <value>Delete announcement</value>
+  </data>
+  <data name="DeleteAnnouncementConfirm" xml:space="preserve">
+    <value>Delete "{0}" including its attachments? This can not be undone.</value>
+  </data>
+  <data name="AnnouncementDeleted" xml:space="preserve">
+    <value>The announcement was deleted.</value>
+  </data>
+  <data name="AudienceLabel" xml:space="preserve">
+    <value>Who should get the email?</value>
+  </data>
+  <data name="Audience_AllMembers" xml:space="preserve">
+    <value>All members</value>
+  </data>
+  <data name="Audience_ActiveSeasonMembers" xml:space="preserve">
+    <value>Current season</value>
+  </data>
+  <data name="Audience_Youth" xml:space="preserve">
+    <value>Youth</value>
+  </data>
+  <data name="Audience_Roles" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="AudienceHint_AllMembers" xml:space="preserve">
+    <value>Every member of the club with an email address.</value>
+  </data>
+  <data name="AudienceHint_ActiveSeasonMembers" xml:space="preserve">
+    <value>Members who are enrolled in the current season.</value>
+  </data>
+  <data name="AudienceHint_Youth" xml:space="preserve">
+    <value>Members under 18. Children without their own email address are reached via their parents.</value>
+  </data>
+  <data name="AudienceHint_Roles" xml:space="preserve">
+    <value>Members with at least one of the selected roles.</value>
+  </data>
+  <data name="RolesLabel" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="SelectRole" xml:space="preserve">
+    <value>Select at least one role.</value>
+  </data>
+  <data name="CountingRecipients" xml:space="preserve">
+    <value>Counting recipients ...</value>
+  </data>
+  <data name="NoRecipients" xml:space="preserve">
+    <value>Nobody in this group can be reached by email.</value>
+  </data>
+  <data name="CountFailed" xml:space="preserve">
+    <value>The recipients could not be counted.</value>
+  </data>
+  <data name="EmailDialogAnnouncement" xml:space="preserve">
+    <value>Announcement</value>
+  </data>
+  <data name="AlreadySentWarning" xml:space="preserve">
+    <value>This announcement was already sent on {0} to {1} recipients. They would get it a second time.</value>
+  </data>
+  <data name="EmailIncludesAttachments" xml:space="preserve">
+    <value>{0} attachments are sent along.</value>
+  </data>
+  <data name="EmailIncludesAttachmentsOne" xml:space="preserve">
+    <value>{0} attachment is sent along.</value>
+  </data>
+  <data name="EmailDialogHint" xml:space="preserve">
+    <value>Every address gets the email only once, even if several members share it. Sending can not be undone.</value>
+  </data>
+  <data name="SendToRecipients" xml:space="preserve">
+    <value>Send to {0} recipients</value>
+  </data>
+  <data name="SendToRecipientsOne" xml:space="preserve">
+    <value>Send to {0} recipient</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="EditAnnouncement" xml:space="preserve">
+    <value>Edit announcement</value>
+  </data>
+  <data name="BackToAnnouncement" xml:space="preserve">
+    <value>Back to the announcement</value>
+  </data>
+  <data name="NotAllowedToManage" xml:space="preserve">
+    <value>You are not allowed to write announcements.</value>
+  </data>
+  <data name="ContentTitle" xml:space="preserve">
+    <value>Content</value>
+  </data>
+  <data name="TitleLabel" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="TitlePlaceholder" xml:space="preserve">
+    <value>e.g. Summer party on July 12</value>
+  </data>
+  <data name="BodyLabel" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="BodyHelper" xml:space="preserve">
+    <value>Supports Markdown formatting</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>Formatting help</value>
+  </data>
+  <data name="HelpBold" xml:space="preserve">
+    <value>Bold</value>
+  </data>
+  <data name="HelpItalic" xml:space="preserve">
+    <value>Italic</value>
+  </data>
+  <data name="HelpHeading" xml:space="preserve">
+    <value>Heading</value>
+  </data>
+  <data name="HelpList" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="HelpLink" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="HelpButton" xml:space="preserve">
+    <value>Button</value>
+  </data>
+  <data name="HelpLineBreaks" xml:space="preserve">
+    <value>A line break starts a new line, an empty line starts a new paragraph. Images can not be embedded in the text - add them as attachments.</value>
+  </data>
+  <data name="VisibilityTitle" xml:space="preserve">
+    <value>Visibility</value>
+  </data>
+  <data name="VisibilitySubtitle" xml:space="preserve">
+    <value>All club members see the announcement, guests do not</value>
+  </data>
+  <data name="PinLabel" xml:space="preserve">
+    <value>Pin to the top</value>
+  </data>
+  <data name="PinHint" xml:space="preserve">
+    <value>Pinned announcements stay above all others, also on My Club.</value>
+  </data>
+  <data name="ExpiresOnLabel" xml:space="preserve">
+    <value>Visible until (optional)</value>
+  </data>
+  <data name="ExpiresOnHint" xml:space="preserve">
+    <value>After this day members no longer see the announcement.</value>
+  </data>
+  <data name="AttachmentsSubtitle" xml:space="preserve">
+    <value>Shown in the app and attached to the email</value>
+  </data>
+  <data name="AddAttachment" xml:space="preserve">
+    <value>Add file</value>
+  </data>
+  <data name="NoAttachments" xml:space="preserve">
+    <value>No attachments yet.</value>
+  </data>
+  <data name="RemoveAttachment" xml:space="preserve">
+    <value>Remove attachment</value>
+  </data>
+  <data name="NewAttachment" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="AttachmentLimits" xml:space="preserve">
+    <value>Up to {0} files, {1} MB per file and {2} MB in total. PDF, images, Office documents, text, CSV and calendar files.</value>
+  </data>
+  <data name="TooManyAttachments" xml:space="preserve">
+    <value>An announcement can have at most {0} attachments.</value>
+  </data>
+  <data name="FileTypeNotAllowed" xml:space="preserve">
+    <value>"{0}" can not be attached, this file type is not supported.</value>
+  </data>
+  <data name="FileEmpty" xml:space="preserve">
+    <value>"{0}" is empty.</value>
+  </data>
+  <data name="FileTooLarge" xml:space="preserve">
+    <value>"{0}" is too large. A file can have at most {1} MB.</value>
+  </data>
+  <data name="FilesTooLarge" xml:space="preserve">
+    <value>The attachments are too large. Together they can have at most {0} MB.</value>
+  </data>
+  <data name="FileReadFailed" xml:space="preserve">
+    <value>"{0}" could not be read.</value>
+  </data>
+  <data name="EmailTitle" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="EmailSubtitle" xml:space="preserve">
+    <value>Optional - members always see the announcement in the app</value>
+  </data>
+  <data name="AlsoSendAsEmail" xml:space="preserve">
+    <value>Also send as email</value>
+  </data>
+  <data name="EmailLaterHint" xml:space="preserve">
+    <value>You can still send the announcement as email later.</value>
+  </data>
+  <data name="Publish" xml:space="preserve">
+    <value>Publish</value>
+  </data>
+  <data name="PublishAndSend" xml:space="preserve">
+    <value>Publish and send</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="PreviewHint" xml:space="preserve">
+    <value>This is how members see the announcement</value>
+  </data>
+  <data name="PreviewEmpty" xml:space="preserve">
+    <value>Start writing to see the preview.</value>
+  </data>
+  <data name="PreviewFailed" xml:space="preserve">
+    <value>The preview could not be created.</value>
+  </data>
+  <data name="AnnouncementPublished" xml:space="preserve">
+    <value>The announcement was published.</value>
+  </data>
+  <data name="AnnouncementSaved" xml:space="preserve">
+    <value>The announcement was saved.</value>
+  </data>
+  <data name="PublishedAndQueued" xml:space="preserve">
+    <value>Published. The email is being sent to {0} recipients.</value>
+  </data>
+  <data name="PublishedAndQueuedOne" xml:space="preserve">
+    <value>Published. The email is being sent to {0} recipient.</value>
+  </data>
+  <data name="PublishedButNotSent" xml:space="preserve">
+    <value>The announcement was published, but the email could not be sent.</value>
+  </data>
+  <data name="PublishedWithoutAttachments" xml:space="preserve">
+    <value>The announcement was published, but not all attachments could be saved. No email was sent.</value>
+  </data>
+</root>

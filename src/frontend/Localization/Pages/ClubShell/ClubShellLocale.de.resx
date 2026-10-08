@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AccountInfos" xml:space="preserve">
+    <value>Klubprofil informationen</value>
+  </data>
+  <data name="BookingAllowed" xml:space="preserve">
+    <value>Buchen erlaubt</value>
+  </data>
+  <data name="BookingPerWeek" xml:space="preserve">
+    <value>Buchungen pro Woche</value>
+  </data>
+  <data name="ClubNews" xml:space="preserve">
+    <value>Klub nachrichten</value>
+  </data>
+  <data name="EditMember" xml:space="preserve">
+    <value>Mitglied bearbeiten</value>
+  </data>
+  <data name="MyClub" xml:space="preserve">
+    <value>Mein Klub</value>
+  </data>
+  <data name="YourClub" xml:space="preserve">
+    <value>Dein Klub</value>
+  </data>
+  <data name="ClubDetials" xml:space="preserve">
+    <value>Club deteails</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>Von</value>
+  </data>
+  <data name="InvalidClubOpeningHours" xml:space="preserve">
+    <value>Die Kluböffnungszeiten sind ungültig</value>
+  </data>
+  <data name="InvalidPrimeTimeHours" xml:space="preserve">
+    <value>Die Prime-Time Spielzeit sind ungültig</value>
+  </data>
+  <data name="OpeningHours" xml:space="preserve">
+    <value>Öffnungszeiten</value>
+  </data>
+  <data name="PrimeTimeHours" xml:space="preserve">
+    <value>Prime-Time Spielzeit</value>
+  </data>
+  <data name="PrimeTimeHoursMustBeWithinOpeningHours" xml:space="preserve">
+    <value>Die Prime-Time Spielzeit muss innerhalb der Kluböffnungszeiten sein</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>Bis</value>
+  </data>
+  <data name="BookingRules" xml:space="preserve">
+    <value>Buchungsregeln</value>
+  </data>
+  <data name="BookingGracePeriod" xml:space="preserve">
+    <value>Buchung löschen frist (m)</value>
+  </data>
+  <data name="PrimeTimeEnabled" xml:space="preserve">
+    <value>Hauptzeit aktiviert</value>
+  </data>
+  <data name="PrimeTimeWeekdays" xml:space="preserve">
+    <value>Hauptzeit Wochentage</value>
+  </data>
+  <data name="PrimeTimeRestrictChildren" xml:space="preserve">
+    <value>Kinder während Hauptzeit einschränken</value>
+  </data>
+  <data name="PrimeTimeRestrictGuests" xml:space="preserve">
+    <value>Gäste während Hauptzeit einschränken</value>
+  </data>
+  <data name="PrimeTimeSettings" xml:space="preserve">
+    <value>Hauptzeit-Einstellungen</value>
+  </data>
+  <data name="PurchasedBookings" xml:space="preserve">
+    <value>Gekaufte Anzahl</value>
+  </data>
+  <data name="AddGuest" xml:space="preserve">
+    <value>Gast hinzufügen</value>
+  </data>
+  <data name="AllowedSeasons" xml:space="preserve">
+    <value>Erlaubte Saisonen</value>
+  </data>
+  <data name="BookingsPerWeek" xml:space="preserve">
+    <value>Buchungen pro Woche</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Bearbeiten</value>
+  </data>
+  <data name="Seasons" xml:space="preserve">
+    <value>Saisonen</value>
+  </data>
+  <data name="StartDate" xml:space="preserve">
+    <value>Startdatum</value>
+  </data>
+  <data name="EndDate" xml:space="preserve">
+    <value>Enddatum</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="AddSeason" xml:space="preserve">
+    <value>Saison hinzufügen</value>
+  </data>
+  <data name="EditSeason" xml:space="preserve">
+    <value>Saison bearbeiten</value>
+  </data>
+  <data name="DeleteSeasonConfirmation" xml:space="preserve">
+    <value>Sind Sie sicher, dass Sie diese Saison löschen möchten?</value>
+  </data>
+  <data name="DeletePlayModeConfirmation" xml:space="preserve">
+    <value>Sind Sie sicher, dass Sie diesen Spielmodus löschen möchten?</value>
+  </data>
+  <data name="PlayModeNameRequired" xml:space="preserve">
+    <value>Name des Spielmodus ist erforderlich</value>
+  </data>
+  <data name="FixedPlayerCount" xml:space="preserve">
+    <value>Feste Spieleranzahl</value>
+  </data>
+  <data name="HasFixedDuration" xml:space="preserve">
+    <value>Feste Dauer</value>
+  </data>
+  <data name="HasFixedPlayerCount" xml:space="preserve">
+    <value>Feste Spieleranzahl</value>
+  </data>
+  <data name="FixedDuration" xml:space="preserve">
+    <value>Dauer</value>
+  </data>
+  <data name="PlayModeColor" xml:space="preserve">
+    <value>Farbe</value>
+  </data>
+  <data name="AllowedRoles" xml:space="preserve">
+    <value>Erlaubte Rollen</value>
+  </data>
+  <data name="IsChargingBookingSubscription" xml:space="preserve">
+    <value>Abo belasten</value>
+  </data>
+  <data name="CanOverbook" xml:space="preserve">
+    <value>Überbuchen möglich</value>
+  </data>
+  <data name="CommentAllowed" xml:space="preserve">
+    <value>Kommentar erlaubt</value>
+  </data>
+  <data name="AllowRecurring" xml:space="preserve">
+    <value>Wiederkehrende Buchungen erlauben</value>
+  </data>
+  <data name="MaxBookingsPerSeason" xml:space="preserve">
+    <value>Max. Buchungen pro Saison</value>
+  </data>
+  <data name="PrimeTimeChildAgeThreshold" xml:space="preserve">
+    <value>Altersbegrenzung für Kinder</value>
+  </data>
+  <data name="ClubDetailsSaved" xml:space="preserve">
+    <value>Klubeinestellungen gespeichert</value>
+  </data>
+  <data name="BookingHistory" xml:space="preserve">
+    <value>Buchungshistorie</value>
+  </data>
+  <data name="NoBookingsInSeason" xml:space="preserve">
+    <value>Keine Buchungen in dieser Saison</value>
+  </data>
+  <data name="AllPlayModes" xml:space="preserve">
+    <value>Alle Spielmodi</value>
+  </data>
+  <data name="FilterByPlayMode" xml:space="preserve">
+    <value>Nach Spielmodus filtern</value>
+  </data>
+  <data name="Season" xml:space="preserve">
+    <value>Saison</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>Datum</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>Zeit</value>
+  </data>
+  <data name="PlayMode" xml:space="preserve">
+    <value>Spielmodus</value>
+  </data>
+  <data name="Players" xml:space="preserve">
+    <value>Spieler</value>
+  </data>
+  <data name="Court" xml:space="preserve">
+    <value>Platz</value>
+  </data>
+  <data name="SeasonActive" xml:space="preserve">
+    <value>Saison aktiv</value>
+  </data>
+  <data name="FilterByRole" xml:space="preserve">
+    <value>Nach Rolle filtern</value>
+  </data>
+  <data name="FilterNewMembers" xml:space="preserve">
+    <value>Nur neue Mitglieder</value>
+  </data>
+  <data name="CopyEmails" xml:space="preserve">
+    <value>Alle E-Mails kopieren</value>
+  </data>
+  <data name="EmailsCopied" xml:space="preserve">
+    <value>E-Mails in die Zwischenablage kopiert</value>
+  </data>
+  <data name="BookingHistorySubtitle" xml:space="preserve">
+    <value>Alle deine Spiele, Monat für Monat</value>
+  </data>
+  <data name="HistoryPlayed" xml:space="preserve">
+    <value>gespielt</value>
+  </data>
+  <data name="HistoryHours" xml:space="preserve">
+    <value>Stunden</value>
+  </data>
+  <data name="HistoryPartners" xml:space="preserve">
+    <value>Partner</value>
+  </data>
+  <data name="HistoryUpcoming" xml:space="preserve">
+    <value>geplant</value>
+  </data>
+  <data name="Recurring" xml:space="preserve">
+    <value>Serienbuchung</value>
+  </data>
+  <data name="Upcoming" xml:space="preserve">
+    <value>Geplant</value>
+  </data>
+</root>

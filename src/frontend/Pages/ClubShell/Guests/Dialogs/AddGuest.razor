@@ -1,0 +1,88 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using System.ComponentModel.DataAnnotations
+@using Bookennis.Client.Localization.Pages.Account
+@using Bookennis.Client.Localization.Pages.ClubShell
+@using Bookennis.Client.Services.Store.Guests
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Guests
+@using Bookennis.Shared.Controller.Shared
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption=@SharedLocale["Add"] CancelFunc="Cancel" CancelCaption=@SharedLocale["Cancel"] >
+   <MudForm Model="@formModel" @ref="form">
+       <div class="d-flex flex-column gap-2">
+            <MudSelect T="int" Label=@SharedLocale["Gender"] Variant="Variant.Outlined" @bind-Value="formModel.Gender" For="@(() => formModel.Gender)">
+                <MudSelectItem T="int" Value="0">@SharedLocale["Mr"].</MudSelectItem>
+                <MudSelectItem T="int" Value="1">@SharedLocale["Mrs"].</MudSelectItem>
+                <MudSelectItem T="int" Value="2">@SharedLocale["None"]</MudSelectItem>
+            </MudSelect>
+            <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Firstname"] @bind-Value="formModel.FirstName" For="@(() => formModel.FirstName)" Required="true" />
+            <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Lastname"] @bind-Value="formModel.LastName" For="@(() => formModel.LastName)" Required="true" />
+            <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Email"] @bind-Value="formModel.Email" For="@(() => formModel.Email)" Required="true" />
+            <MudDatePicker Variant="Variant.Outlined" Label=@SharedLocale["Birthday"] @bind-Date="formModel.Birthday" For="@(() => formModel.Birthday)" DateFormat="dd.MM.yyyy" Required="true" PickerVariant="PickerVariant.Dialog" />
+            <MudNumericField Variant="Variant.Outlined" @bind-Value="formModel.PurchasedBookings" Required="true" Label="@ClubShellLocale["PurchasedBookings"]" />
+       </div>
+   </MudForm>
+</BaseDialog>
+
+@code {
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<ClubShellLocale> ClubShellLocale { get; set; } = null!;
+    [Inject]
+    private IGuestStore guestStore { get; set; } = null!;
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private async Task<DialogResult?> Submit()
+    {
+        await form.Validate();
+
+        if (!form.IsValid)
+            return null;
+
+        var request = new CreateGuestCardRequest(
+            formModel.PurchasedBookings,
+            formModel.Email!,
+            formModel.FirstName!,
+            formModel.LastName!,
+            DateOnly.FromDateTime(formModel.Birthday!.Value),
+            (Gender)formModel.Gender
+        );
+
+        var result = await guestStore.CreateGuestCard(request);
+        if (result.Success)
+            return DialogResult.Ok((object?)null);
+
+        Snackbar.ShowErrorDetails(result, BackendLocale);
+
+        return null;
+    }
+
+    private Task<DialogResult> Cancel() => Task.FromResult(DialogResult.Cancel());
+    private RegisterUserForm formModel = new();
+    private MudForm form = null!;
+
+    private class RegisterUserForm
+    {
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "FirstnameValidation")]
+        public string? FirstName { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "LastnameValidation")]
+        public string? LastName { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "BirthdayValidation")]
+        public DateTime? Birthday { get; set; } = DateTime.Today.AddYears(-20);
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "EmailValidation"),
+         EmailAddress(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "EmailValidation")]
+        public string? Email { get; set; }
+
+        public int PurchasedBookings { get; set; }
+
+        public int Gender { get; set; }
+    }
+}

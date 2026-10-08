@@ -1,0 +1,50 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Leaderboards
+@using Bookennis.Shared.Controller.Leaderboards
+
+<div class="lb-podium">
+    @foreach (var (entry, place) in Podium)
+    {
+        <div class="lb-podium__slot lb-podium__slot--@place @(entry.IsCurrentMember ? "lb-podium__slot--me" : null)"
+             role="link" tabindex="0"
+             @onclick="() => OnSelect.InvokeAsync(entry)"
+             @onkeydown="e => OnKeyDown(e, entry)">
+            <div class="lb-podium__medal" aria-hidden="true">@(place switch { 1 => "🥇", 2 => "🥈", _ => "🥉" })</div>
+            <UserAvatar FirstName="@entry.FirstName" LastName="@entry.LastName" ProfilePictureUrl="@entry.ProfilePictureUrl"
+                        BadgeImageUrl="@entry.DisplayBadgeImageUrl" BadgeLevel="@entry.DisplayBadgeLevel"
+                        Size="Size.Large" Color="Color.Secondary" AvatarClass="@($"lb-podium__avatar lb-podium__avatar--{place}")" />
+            <div class="lb-podium__name">
+                @entry.FirstName
+                <span class="lb-podium__last-name">@entry.LastName</span>
+            </div>
+            @if (entry.IsCurrentMember)
+            {
+                <span class="lb-podium__you">@Locale["You"]</span>
+            }
+            <div class="lb-podium__hours">@entry.TotalHours.ToString("0.#", CultureInfo.CurrentCulture)<span> @Locale["HoursUnit"]</span></div>
+            <div class="lb-podium__step">
+                <span class="lb-podium__place">@place</span>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<LeaderboardEntry> Entries { get; set; } = null!;
+    [Parameter] public EventCallback<LeaderboardEntry> OnSelect { get; set; }
+
+    [Inject] private IStringLocalizer<LeaderboardLocale> Locale { get; set; } = null!;
+
+    // Classic podium order: second, first, third
+    private IEnumerable<(LeaderboardEntry Entry, int Place)> Podium =>
+        new[] { 1, 0, 2 }
+            .Where(index => index < Entries.Count)
+            .Select(index => (Entries[index], index + 1));
+
+    private async Task OnKeyDown(KeyboardEventArgs e, LeaderboardEntry entry)
+    {
+        if (e.Key is "Enter" or " ")
+            await OnSelect.InvokeAsync(entry);
+    }
+}

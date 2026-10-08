@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="SubscriptionPlanner" xml:space="preserve">
+    <value>Abo-Planer</value>
+  </data>
+  <data name="PlannerIntro" xml:space="preserve">
+    <value>Plane das Winter-Abo deiner Gruppe: Spieler*innen eintragen, spielfreie Wochen streichen und der Planer erstellt einen fairen Spielplan, in dem alle gleich oft mit allen anderen spielen.</value>
+  </data>
+  <data name="NewPlan" xml:space="preserve">
+    <value>Neuer Plan</value>
+  </data>
+  <data name="NoPlansYet" xml:space="preserve">
+    <value>Du hast noch keine Pläne. Erstelle deinen ersten Plan, um loszulegen.</value>
+  </data>
+  <data name="OpenPlan" xml:space="preserve">
+    <value>Öffnen</value>
+  </data>
+  <data name="DeletePlan" xml:space="preserve">
+    <value>Plan löschen</value>
+  </data>
+  <data name="DeletePlanConfirm" xml:space="preserve">
+    <value>Möchtest du den Plan „{0}“ wirklich löschen?</value>
+  </data>
+  <data name="ParticipantsCount" xml:space="preserve">
+    <value>{0} Teilnehmer*innen</value>
+  </data>
+  <data name="PerWeekCount" xml:space="preserve">
+    <value>{0} pro Woche</value>
+  </data>
+  <data name="ScheduleReady" xml:space="preserve">
+    <value>Spielplan fertig</value>
+  </data>
+  <data name="Draft" xml:space="preserve">
+    <value>Entwurf</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Erstellen</value>
+  </data>
+  <data name="Winter" xml:space="preserve">
+    <value>Winter</value>
+  </data>
+  <data name="PlanName" xml:space="preserve">
+    <value>Name des Plans</value>
+  </data>
+  <data name="StartDate" xml:space="preserve">
+    <value>Startdatum</value>
+  </data>
+  <data name="EndDate" xml:space="preserve">
+    <value>Enddatum</value>
+  </data>
+  <data name="PlayersPerWeek" xml:space="preserve">
+    <value>Spieler*innen pro Woche</value>
+  </data>
+  <data name="PlayersPerWeekHelp" xml:space="preserve">
+    <value>z. B. 2 für Einzel, 4 für Doppel</value>
+  </data>
+  <data name="StartAfterEnd" xml:space="preserve">
+    <value>Das Startdatum darf nicht nach dem Enddatum liegen.</value>
+  </data>
+  <data name="WeeksInRange" xml:space="preserve">
+    <value>Der Zeitraum umfasst {0} Kalenderwochen.</value>
+  </data>
+  <data name="BackToPlans" xml:space="preserve">
+    <value>Zurück zu allen Plänen</value>
+  </data>
+  <data name="PlanNotFound" xml:space="preserve">
+    <value>Der Plan wurde nicht gefunden.</value>
+  </data>
+  <data name="StepBasics" xml:space="preserve">
+    <value>Zeitraum</value>
+  </data>
+  <data name="StepParticipants" xml:space="preserve">
+    <value>Teilnehmer*innen</value>
+  </data>
+  <data name="StepBlockedWeeks" xml:space="preserve">
+    <value>Spielfreie Wochen</value>
+  </data>
+  <data name="StepAvailability" xml:space="preserve">
+    <value>Verfügbarkeit</value>
+  </data>
+  <data name="StepSchedule" xml:space="preserve">
+    <value>Spielplan</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Zurück</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Weiter</value>
+  </data>
+  <data name="ToSchedule" xml:space="preserve">
+    <value>Zum Spielplan</value>
+  </data>
+  <data name="FixBasicsFirst" xml:space="preserve">
+    <value>Bitte gib zuerst einen Namen und einen gültigen Zeitraum ein.</value>
+  </data>
+  <data name="ScheduleWillBeCleared" xml:space="preserve">
+    <value>Spielplan wird zurückgesetzt</value>
+  </data>
+  <data name="ScheduleWillBeClearedText" xml:space="preserve">
+    <value>Deine Änderungen wirken sich auf den Spielplan aus. Wenn du sie speicherst, wird der aktuelle Spielplan (inklusive manueller Änderungen) entfernt und muss neu berechnet werden.</value>
+  </data>
+  <data name="DiscardChanges" xml:space="preserve">
+    <value>Änderungen verwerfen</value>
+  </data>
+  <data name="ParticipantsHelp" xml:space="preserve">
+    <value>Trage alle ein, die sich das Abo teilen. Sie müssen keine Vereinsmitglieder sein. Der Anteil bestimmt, wie oft jemand spielt: 100 % spielt doppelt so oft wie 50 %.</value>
+  </data>
+  <data name="NewParticipant" xml:space="preserve">
+    <value>Name der Person</value>
+  </data>
+  <data name="DuplicateParticipant" xml:space="preserve">
+    <value>Dieser Name ist bereits in der Liste.</value>
+  </data>
+  <data name="ChangeColor" xml:space="preserve">
+    <value>Farbe ändern</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Share" xml:space="preserve">
+    <value>Anteil (%)</value>
+  </data>
+  <data name="NoParticipantsYet" xml:space="preserve">
+    <value>Noch keine Teilnehmer*innen.</value>
+  </data>
+  <data name="NotEnoughParticipants" xml:space="preserve">
+    <value>Für einen Spielplan werden mindestens {0} Teilnehmer*innen benötigt.</value>
+  </data>
+  <data name="BlockedWeeksHelp" xml:space="preserve">
+    <value>Tippe auf die Wochen, in denen niemand eingeteilt werden soll (z. B. Feiertage). Durchgestrichene Wochen werden übersprungen.</value>
+  </data>
+  <data name="ActiveWeeksSummary" xml:space="preserve">
+    <value>{0} von {1} Wochen werden eingeplant.</value>
+  </data>
+  <data name="CalendarWeekShort" xml:space="preserve">
+    <value>KW</value>
+  </data>
+  <data name="AvailabilityHelp" xml:space="preserve">
+    <value>Tippe auf die Wochen, in denen jemand nicht spielen kann. Durchgestrichene Wochen sind nicht verfügbar.</value>
+  </data>
+  <data name="GridView" xml:space="preserve">
+    <value>Als Tabelle anzeigen</value>
+  </data>
+  <data name="UnavailableWeeksCount" xml:space="preserve">
+    <value>{0} Wochen verhindert</value>
+  </data>
+  <data name="Compute" xml:space="preserve">
+    <value>Spielplan berechnen</value>
+  </data>
+  <data name="Shuffle" xml:space="preserve">
+    <value>Neu berechnen</value>
+  </data>
+  <data name="ShuffleConfirm" xml:space="preserve">
+    <value>Ein neuer Spielplan ersetzt den aktuellen inklusive deiner manuellen Änderungen. Fortfahren?</value>
+  </data>
+  <data name="DownloadExcel" xml:space="preserve">
+    <value>Excel herunterladen</value>
+  </data>
+  <data name="ComputeHelp" xml:space="preserve">
+    <value>Alles bereit. Berechne jetzt den Spielplan.</value>
+  </data>
+  <data name="SwapHelp" xml:space="preserve">
+    <value>Tippe auf eine Person, um sie auszutauschen.</value>
+  </data>
+  <data name="GamesPerParticipant" xml:space="preserve">
+    <value>Spiele pro Person</value>
+  </data>
+  <data name="Target" xml:space="preserve">
+    <value>Soll</value>
+  </data>
+  <data name="Understaffed" xml:space="preserve">
+    <value>In dieser Woche sind nicht genügend Personen verfügbar.</value>
+  </data>
+  <data name="NoPlay" xml:space="preserve">
+    <value>Kein Spiel</value>
+  </data>
+  <data name="AddPlayer" xml:space="preserve">
+    <value>Hinzufügen</value>
+  </data>
+  <data name="PairMatrix" xml:space="preserve">
+    <value>Wer spielt mit wem?</value>
+  </data>
+  <data name="PairMatrixHelp" xml:space="preserve">
+    <value>Anzahl der Wochen, in denen zwei Personen gemeinsam spielen. Grün bedeutet nahe am fairen Wert, rot weit davon entfernt.</value>
+  </data>
+  <data name="PairTooltip" xml:space="preserve">
+    <value>{0} Wochen gemeinsam (fair: {1})</value>
+  </data>
+  <data name="ReplacePlayer" xml:space="preserve">
+    <value>Ersetzen</value>
+  </data>
+  <data name="RemovePlayer" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="NoAvailablePlayers" xml:space="preserve">
+    <value>In dieser Woche ist niemand sonst verfügbar.</value>
+  </data>
+</root>

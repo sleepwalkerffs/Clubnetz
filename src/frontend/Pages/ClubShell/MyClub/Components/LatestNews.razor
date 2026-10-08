@@ -1,0 +1,58 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.News
+@using Bookennis.Client.Pages.ClubShell.News.Components
+@using Bookennis.Client.Services.Store.ClubAnnouncements
+
+@implements IDisposable
+
+<SectionCard Emoji="📣" Title="@Locale["News"]"
+             Subtitle="@(Announcements is { Count: > 0 } ? Locale["MyClubNewsSubtitle"] : Locale["MyClubNewsEmptySubtitle"])">
+    <Actions>
+        <MudButton Href="@NewsHelpers.NewsUrl(ClubId)" Variant="Variant.Text" Size="Size.Small" Color="Color.Primary"
+                   EndIcon="@Icons.Material.Filled.ChevronRight">
+            @Locale["ShowAllNews"]
+        </MudButton>
+    </Actions>
+    <ChildContent>
+        @if (Announcements is null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (Announcements.Count == 0)
+        {
+            <div class="latest-news-empty">
+                <span class="latest-news-empty__emoji" aria-hidden="true">🗞️</span>
+                <span>@Locale["NoNews"]</span>
+            </div>
+        }
+        else
+        {
+            @foreach (var announcement in Announcements)
+            {
+                <AnnouncementListItem @key="announcement.Id" Announcement="@announcement" ClubId="@ClubId" Compact="true" />
+            }
+        }
+    </ChildContent>
+</SectionCard>
+
+@code {
+    private const int AnnouncementCount = 3;
+
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+
+    [Inject] private IClubAnnouncementsStore Store { get; set; } = null!;
+    [Inject] private IStringLocalizer<NewsLocale> Locale { get; set; } = null!;
+
+    private List<Bookennis.Shared.Controller.ClubAnnouncements.ClubAnnouncementSummaryDto>? Announcements => loaded ? Store.LatestAnnouncements : null;
+
+    private bool loaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnLatestAnnouncementsChanged += StateHasChanged;
+        await Store.LoadLatestAnnouncements(AnnouncementCount);
+        loaded = true;
+    }
+
+    public void Dispose() => Store.OnLatestAnnouncementsChanged -= StateHasChanged;
+}

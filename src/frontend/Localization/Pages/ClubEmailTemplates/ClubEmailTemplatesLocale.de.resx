@@ -1,0 +1,388 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+    <data name="Title" xml:space="preserve">
+    <value>E-Mails</value>
+  </data>
+  <data name="Subtitle" xml:space="preserve">
+    <value>Passe die E-Mails an, die deine Mitglieder vom Verein erhalten</value>
+  </data>
+  <data name="CustomizedChip" xml:space="preserve">
+    <value>{0} von {1} angepasst</value>
+  </data>
+  <data name="LanguagesChip" xml:space="preserve">
+    <value>Deutsch &amp; Englisch</value>
+  </data>
+  <data name="AsideCaption" xml:space="preserve">
+    <value>Antworten gehen an</value>
+  </data>
+  <data name="AsideNotSet" xml:space="preserve">
+    <value>Nicht gesetzt</value>
+  </data>
+  <data name="AsideText" xml:space="preserve">
+    <value>Hinterlege eine Antwortadresse, damit Mitglieder auf Vereins-E-Mails antworten können.</value>
+  </data>
+  <data name="DetailsTitle" xml:space="preserve">
+    <value>Vereinsdaten</value>
+  </data>
+  <data name="DetailsSubtitle" xml:space="preserve">
+    <value>Werden in allen E-Mails verwendet</value>
+  </data>
+  <data name="WebsiteUrl" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="WebsiteUrlHelper" xml:space="preserve">
+    <value>z. B. https://www.mein-verein.at – verfügbar als {{ club.website_url }}</value>
+  </data>
+  <data name="ReplyToEmail" xml:space="preserve">
+    <value>Antwortadresse</value>
+  </data>
+  <data name="ReplyToEmailHelper" xml:space="preserve">
+    <value>Mitglieder erreichen diese Adresse, wenn sie auf eine Vereins-E-Mail antworten</value>
+  </data>
+  <data name="DetailsSaved" xml:space="preserve">
+    <value>Vereinsdaten gespeichert</value>
+  </data>
+  <data name="EmailsTitle" xml:space="preserve">
+    <value>E-Mails</value>
+  </data>
+  <data name="EmailsSubtitle" xml:space="preserve">
+    <value>Werden automatisch verschickt, wenn im Verein etwas passiert</value>
+  </data>
+  <data name="Customized" xml:space="preserve">
+    <value>Angepasst</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="Type_Welcome" xml:space="preserve">
+    <value>Willkommen</value>
+  </data>
+  <data name="TypeDescription_Welcome" xml:space="preserve">
+    <value>Wird verschickt, wenn ein neues Mitglied zum ersten Mal für eine Saison aktiviert wird.</value>
+  </data>
+  <data name="Type_SeasonActivated" xml:space="preserve">
+    <value>Saison aktiviert</value>
+  </data>
+  <data name="TypeDescription_SeasonActivated" xml:space="preserve">
+    <value>Wird verschickt, wenn ein bestehendes Mitglied für eine neue Saison aktiviert wird.</value>
+  </data>
+  <data name="Type_BadgeAwarded" xml:space="preserve">
+    <value>Abzeichen erhalten</value>
+  </data>
+  <data name="TypeDescription_BadgeAwarded" xml:space="preserve">
+    <value>Wird verschickt, wenn ein Mitglied ein Abzeichen erreicht oder eine Sonderauszeichnung erhält.</value>
+  </data>
+  <data name="Type_GuestCard" xml:space="preserve">
+    <value>Gäste-Login</value>
+  </data>
+  <data name="TypeDescription_GuestCard" xml:space="preserve">
+    <value>Wird mit dem Login-Link verschickt, wenn eine Gästekarte erstellt wird.</value>
+  </data>
+  <data name="Type_BookingDeleted" xml:space="preserve">
+    <value>Buchung gelöscht</value>
+  </data>
+  <data name="TypeDescription_BookingDeleted" xml:space="preserve">
+    <value>Wird an die Spieler verschickt, wenn ihre Buchung entfernt wird, z. B. wegen einer Überbuchung oder einer Platzsperre.</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Alle E-Mails</value>
+  </data>
+  <data name="ContentTitle" xml:space="preserve">
+    <value>Inhalt</value>
+  </data>
+  <data name="MoreActions" xml:space="preserve">
+    <value>Weitere Aktionen</value>
+  </data>
+  <data name="Subject" xml:space="preserve">
+    <value>Betreff</value>
+  </data>
+  <data name="Body" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="BodyHelper" xml:space="preserve">
+    <value>Unterstützt Markdown-Formatierung und Variablen</value>
+  </data>
+  <data name="LanguageInfo" xml:space="preserve">
+    <value>Mitglieder erhalten die E-Mail in ihrer Sprache. Wenn du nur eine Sprache anpasst, wird diese an alle Mitglieder verschickt.</value>
+  </data>
+  <data name="CustomizedText" xml:space="preserve">
+    <value>Angepasster Text</value>
+  </data>
+  <data name="DefaultText" xml:space="preserve">
+    <value>Standardtext</value>
+  </data>
+  <data name="UseDefaultText" xml:space="preserve">
+    <value>Standardtext verwenden</value>
+  </data>
+  <data name="UnsavedChanges" xml:space="preserve">
+    <value>Ungespeicherte Änderungen</value>
+  </data>
+  <data name="VariablesTitle" xml:space="preserve">
+    <value>Variablen</value>
+  </data>
+  <data name="VariablesText" xml:space="preserve">
+    <value>Klicke auf eine Variable, um sie an der Cursorposition einzufügen.</value>
+  </data>
+  <data name="VariableExample" xml:space="preserve">
+    <value>Beispiel: {0}</value>
+  </data>
+  <data name="VariableEmpty" xml:space="preserve">
+    <value>(leer)</value>
+  </data>
+  <data name="Variable_member.first_name" xml:space="preserve">
+    <value>Vorname</value>
+  </data>
+  <data name="Variable_member.last_name" xml:space="preserve">
+    <value>Nachname</value>
+  </data>
+  <data name="Variable_member.full_name" xml:space="preserve">
+    <value>Vollständiger Name</value>
+  </data>
+  <data name="Variable_club.name" xml:space="preserve">
+    <value>Vereinsname</value>
+  </data>
+  <data name="Variable_club.website_url" xml:space="preserve">
+    <value>Website des Vereins</value>
+  </data>
+  <data name="Variable_club.reply_to_email" xml:space="preserve">
+    <value>Antwortadresse</value>
+  </data>
+  <data name="Variable_season.from" xml:space="preserve">
+    <value>Saisonbeginn</value>
+  </data>
+  <data name="Variable_season.to" xml:space="preserve">
+    <value>Saisonende</value>
+  </data>
+  <data name="Variable_season.period" xml:space="preserve">
+    <value>Saisonzeitraum</value>
+  </data>
+  <data name="Variable_badge.name" xml:space="preserve">
+    <value>Name des Abzeichens</value>
+  </data>
+  <data name="Variable_badge.description" xml:space="preserve">
+    <value>Beschreibung des Abzeichens</value>
+  </data>
+  <data name="Variable_badge.image_url" xml:space="preserve">
+    <value>Bild-Link des Abzeichens</value>
+  </data>
+  <data name="Variable_badge.is_one_time" xml:space="preserve">
+    <value>Ist eine Sonderauszeichnung</value>
+  </data>
+  <data name="Variable_trophy_case_url" xml:space="preserve">
+    <value>Link zur Trophäensammlung</value>
+  </data>
+  <data name="Variable_guest_card_url" xml:space="preserve">
+    <value>Gäste-Login-Link</value>
+  </data>
+  <data name="Variable_booking.date" xml:space="preserve">
+    <value>Datum der Buchung</value>
+  </data>
+  <data name="Variable_booking.court" xml:space="preserve">
+    <value>Platz</value>
+  </data>
+  <data name="Variable_booking.deleted_by" xml:space="preserve">
+    <value>Gelöscht von</value>
+  </data>
+  <data name="Variable_booking.reason" xml:space="preserve">
+    <value>Grund</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>Formatierungshilfe</value>
+  </data>
+  <data name="HelpBold" xml:space="preserve">
+    <value>Fett</value>
+  </data>
+  <data name="HelpItalic" xml:space="preserve">
+    <value>Kursiv</value>
+  </data>
+  <data name="HelpHeading" xml:space="preserve">
+    <value>Überschrift</value>
+  </data>
+  <data name="HelpList" xml:space="preserve">
+    <value>Liste</value>
+  </data>
+  <data name="HelpLink" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="HelpButton" xml:space="preserve">
+    <value>Button</value>
+  </data>
+  <data name="HelpImage" xml:space="preserve">
+    <value>Bild</value>
+  </data>
+  <data name="HelpCondition" xml:space="preserve">
+    <value>Nur wenn ein Wert vorhanden ist</value>
+  </data>
+  <data name="HelpLineBreaks" xml:space="preserve">
+    <value>Ein Zeilenumbruch beginnt eine neue Zeile, eine Leerzeile einen neuen Absatz.</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Vorschau</value>
+  </data>
+  <data name="PreviewHint" xml:space="preserve">
+    <value>Mit Beispielwerten</value>
+  </data>
+  <data name="PreviewSubject" xml:space="preserve">
+    <value>Betreff</value>
+  </data>
+  <data name="ResetAll" xml:space="preserve">
+    <value>Auf Standard zurücksetzen</value>
+  </data>
+  <data name="ResetConfirmation" xml:space="preserve">
+    <value>Beide Sprachen dieser E-Mail auf den Standardtext zurücksetzen? Deine Änderungen gehen verloren.</value>
+  </data>
+  <data name="ResetDone" xml:space="preserve">
+    <value>E-Mail auf den Standardtext zurückgesetzt</value>
+  </data>
+  <data name="SendTest" xml:space="preserve">
+    <value>Test-E-Mail senden</value>
+  </data>
+  <data name="TestSent" xml:space="preserve">
+    <value>Test-E-Mail an deine E-Mail-Adresse gesendet</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>E-Mail gespeichert</value>
+  </data>
+  <data name="LeaveConfirmation" xml:space="preserve">
+    <value>Du hast ungespeicherte Änderungen. Trotzdem verlassen?</value>
+  </data>
+  <data name="Leave" xml:space="preserve">
+    <value>Verlassen</value>
+  </data>
+  <data name="Type_Announcement" xml:space="preserve">
+    <value>Mitteilung</value>
+  </data>
+  <data name="TypeDescription_Announcement" xml:space="preserve">
+    <value>Wird verschickt, wenn eine Mitteilung aus den Neuigkeiten zusätzlich als E-Mail verschickt wird. Text und Anhänge kommen aus der Mitteilung.</value>
+  </data>
+  <data name="Variable_announcement.title" xml:space="preserve">
+    <value>Titel der Mitteilung</value>
+  </data>
+  <data name="Variable_announcement.body" xml:space="preserve">
+    <value>Text der Mitteilung</value>
+  </data>
+  <data name="Variable_announcement.url" xml:space="preserve">
+    <value>Link zur Mitteilung in der App</value>
+  </data>
+  <data name="Type_BookingAdded" xml:space="preserve">
+    <value>Buchung eingetragen</value>
+  </data>
+  <data name="TypeDescription_BookingAdded" xml:space="preserve">
+    <value>Geht an die Mitspieler*innen, wenn jemand einen Platz mit ihnen bucht (bei einer Serienbuchung einmal für die Serie).</value>
+  </data>
+  <data name="Type_BookingReminder" xml:space="preserve">
+    <value>Buchungserinnerung</value>
+  </data>
+  <data name="TypeDescription_BookingReminder" xml:space="preserve">
+    <value>Geht kurz vor Beginn der Buchung an die Spieler*innen.</value>
+  </data>
+  <data name="Type_ClubEventCreated" xml:space="preserve">
+    <value>Neue Veranstaltung</value>
+  </data>
+  <data name="TypeDescription_ClubEventCreated" xml:space="preserve">
+    <value>Geht an die Clubmitglieder, wenn eine Veranstaltung in den Kalender eingetragen wird und die Mitglieder benachrichtigt werden sollen.</value>
+  </data>
+  <data name="Type_ClubEventReminder" xml:space="preserve">
+    <value>Veranstaltungserinnerung</value>
+  </data>
+  <data name="TypeDescription_ClubEventReminder" xml:space="preserve">
+    <value>Geht am Tag vor der Veranstaltung an die angemeldeten Mitglieder.</value>
+  </data>
+  <data name="Type_ClubEventRegistrationDeadline" xml:space="preserve">
+    <value>Erinnerung an den Anmeldeschluss</value>
+  </data>
+  <data name="TypeDescription_ClubEventRegistrationDeadline" xml:space="preserve">
+    <value>Geht am Tag vor dem Anmeldeschluss an die Mitglieder, die sich noch nicht angemeldet haben.</value>
+  </data>
+  <data name="Variable_booking.time" xml:space="preserve">
+    <value>Uhrzeit der Buchung</value>
+  </data>
+  <data name="Variable_booking.play_mode" xml:space="preserve">
+    <value>Spielmodus</value>
+  </data>
+  <data name="Variable_booking.players" xml:space="preserve">
+    <value>Spieler*innen</value>
+  </data>
+  <data name="Variable_booking.url" xml:space="preserve">
+    <value>Link zur Buchung in der App</value>
+  </data>
+  <data name="Variable_booked_by" xml:space="preserve">
+    <value>Eingetragen von</value>
+  </data>
+  <data name="Variable_event.title" xml:space="preserve">
+    <value>Titel der Veranstaltung</value>
+  </data>
+  <data name="Variable_event.date" xml:space="preserve">
+    <value>Datum der Veranstaltung</value>
+  </data>
+  <data name="Variable_event.time" xml:space="preserve">
+    <value>Uhrzeit der Veranstaltung (leer bei ganztägigen Veranstaltungen)</value>
+  </data>
+  <data name="Variable_event.location" xml:space="preserve">
+    <value>Ort</value>
+  </data>
+  <data name="Variable_event.registration_deadline" xml:space="preserve">
+    <value>Anmeldeschluss</value>
+  </data>
+  <data name="Variable_event.url" xml:space="preserve">
+    <value>Link zur Veranstaltung in der App</value>
+  </data>
+</root>

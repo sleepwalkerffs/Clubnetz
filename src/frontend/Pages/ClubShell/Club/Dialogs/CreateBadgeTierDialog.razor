@@ -1,0 +1,105 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.BadgeSettings
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Badges
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.BadgeTiers
+
+<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@BadgesStore.IsSaving" Title="@L["AddTier"]">
+    <div class="badge-edit" style="--badge-color: @BadgeColors.ForLevel(Level)">
+        <div class="badge-edit__preview">
+            <BadgeIcon ImageUrl="@Tier?.ImageUrl" Level="@Level" Size="Size.Large" Class="badge-edit__icon" />
+            <div>
+                <div class="badge-edit__name">@(string.IsNullOrWhiteSpace(name) ? L["TierNamePlaceholder"] : name)</div>
+                <span class="badge-edit__pill">@string.Format(L["LevelPill"], Level)</span>
+                <div class="badge-edit__rule">🎾 @string.Format(L["MatchesRule"], matchesRequired)</div>
+            </div>
+        </div>
+
+        <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Name"]" @bind-Value="name" Immediate="true" Margin="Margin.Dense" />
+        <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Description"]" @bind-Value="description" Immediate="true" Lines="3"
+                      HelperText="@L["DescriptionHint"]" />
+
+        <div class="badge-edit__matches">
+            <div>
+                <div class="badge-edit__label">@SharedLocale["MatchesRequired"]</div>
+                @if (PreviousTier is { } previous)
+                {
+                    <div class="badge-edit__hint">@string.Format(L["PreviousTierHint"], previous.Name, previous.MatchesRequired)</div>
+                }
+            </div>
+            <NumberStepper @bind-Value="matchesRequired" Min="1" Max="500" Unit="@L["Matches"]" Label="@SharedLocale["MatchesRequired"]" />
+        </div>
+        @if (PreviousTier is { } prev && matchesRequired <= prev.MatchesRequired)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true">@L["ThresholdNotIncreasing"]</MudAlert>
+        }
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter] public int SeasonId { get; set; }
+
+    /// <summary>The tier to edit, null to create a new tier.</summary>
+    [Parameter] public BadgeTierDto? Tier { get; set; }
+
+    [Inject] private IBadgesStore BadgesStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<BadgeSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private string name = "";
+    private string description = "";
+    private int matchesRequired = 1;
+
+    private List<BadgeTierDto> Tiers => BadgesStore.BadgeTiers?.Tiers ?? [];
+
+    // New tiers get the next level
+    private int Level => Tier?.Level ?? (Tiers.Count == 0 ? 1 : Tiers.Max(t => t.Level) + 1);
+
+    private BadgeTierDto? PreviousTier => Tiers.Where(t => t.Level < Level).MaxBy(t => t.Level);
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(description) && matchesRequired > 0;
+
+    protected override void OnInitialized()
+    {
+        if (Tier is not null)
+        {
+            name = Tier.Name;
+            description = Tier.Description;
+            matchesRequired = Tier.MatchesRequired;
+        }
+        else if (Tiers.Count > 0)
+        {
+            matchesRequired = Tiers.Max(t => t.MatchesRequired) + 5;
+        }
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        var result = Tier is null
+            ? await BadgesStore.CreateBadgeTier(SeasonId, new CreateBadgeTierModel(name.Trim(), description.Trim(), matchesRequired))
+            : await BadgesStore.UpdateBadgeTier(Tier.Id, new UpdateBadgeTierModel(name.Trim(), description.Trim(), matchesRequired));
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+        return null;
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

@@ -1,0 +1,303 @@
+@page "/admin/users/{UserId:int}"
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.Store.Admin
+@using Bookennis.Shared.Controller.Admin
+@using Bookennis.Shared.Controller.Shared
+
+@implements IDisposable
+
+<PageTitle>@L["AdminPanel"] - @AdminStore.UserDetail?.FullName</PageTitle>
+
+@if (AdminStore.UserDetail is null)
+{
+    <div class="d-flex justify-center pa-8">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    </div>
+}
+else
+{
+    var user = AdminStore.UserDetail;
+
+    <div class="d-flex flex-wrap align-center gap-3 mb-5">
+        <MudIcon Icon="@Icons.Material.Filled.Person" Color="Color.Primary" />
+        <div class="accent-border-left">
+            <MudText Typo="Typo.h5">@user.FullName</MudText>
+        </div>
+    </div>
+
+    <div class="d-flex flex-column gap-4">
+        <MudPaper Class="pa-4 pa-sm-5" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
+            <MudText Typo="Typo.h6" Class="mb-3">@L["EditUser"]</MudText>
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="firstName" Label="@SharedLocale.Firstname" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="lastName" Label="@SharedLocale.Lastname" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker @bind-Date="birthday" Label="@SharedLocale.Birthday" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect @bind-Value="gender" Label="@SharedLocale.Gender" Variant="Variant.Outlined">
+                        @foreach (Gender g in Enum.GetValues<Gender>())
+                        {
+                            <MudSelectItem Value="g">@g</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.subtitle1" Class="mt-2 mb-1"><strong>@SharedLocale.Address</strong></MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="street" Label="@SharedLocale.Street" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="city" Label="@SharedLocale.City" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="zipCode" Label="@SharedLocale.ZipCode" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect @bind-Value="country" Label="@SharedLocale.Country" Variant="Variant.Outlined">
+                        @foreach (Country c in Enum.GetValues<Country>())
+                        {
+                            <MudSelectItem Value="c">@c</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveUser" StartIcon="@Icons.Material.Filled.Save" FullWidth="true" Class="d-sm-none">@L["SaveChanges"]</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveUser" StartIcon="@Icons.Material.Filled.Save" Class="d-none d-sm-flex">@L["SaveChanges"]</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 pa-sm-5" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
+            <MudText Typo="Typo.h6" Class="mb-3">@L["EmailManagement"]</MudText>
+            <div class="d-flex flex-column gap-2 mb-3">
+                <MudText Typo="Typo.body2">@L["CurrentEmail"]: <strong>@user.Email</strong></MudText>
+                <div class="d-flex align-center gap-2">
+                    <MudText Typo="Typo.body2">@L["Confirmed"]:</MudText>
+                    @if (user.EmailConfirmed)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">@L["Yes"]</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text">@L["No"]</MudChip>
+                    }
+                </div>
+            </div>
+            @if (!user.EmailConfirmed)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ResendConfirmation" StartIcon="@Icons.Material.Filled.Email" Class="mb-3" FullWidth="true">
+                    @L["ResendConfirmationEmail"]
+                </MudButton>
+            }
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="newEmail" Label="@L["NewEmail"]" InputType="InputType.Email" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6" Class="d-flex align-end">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="ChangeEmail" StartIcon="@Icons.Material.Filled.AlternateEmail" FullWidth="true" Class="d-sm-none">
+                        @L["ChangeEmail"]
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="ChangeEmail" StartIcon="@Icons.Material.Filled.AlternateEmail" Class="d-none d-sm-flex mb-1">
+                        @L["ChangeEmail"]
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 pa-sm-5" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
+            <MudText Typo="Typo.h6" Class="mb-3">@L["Password"]</MudText>
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ResetPassword" StartIcon="@Icons.Material.Filled.LockReset" FullWidth="true" Class="d-sm-none">
+                @L["SendPasswordResetLink"]
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ResetPassword" StartIcon="@Icons.Material.Filled.LockReset" Class="d-none d-sm-flex">
+                @L["SendPasswordResetLink"]
+            </MudButton>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 pa-sm-5" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
+            <MudText Typo="Typo.h6" Class="mb-3">@L["Impersonation"]</MudText>
+            <MudText Typo="Typo.body2" Class="mb-3">@L["ImpersonateDescription"]</MudText>
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ImpersonateUser" StartIcon="@Icons.Material.Filled.SwitchAccount" FullWidth="true" Class="d-sm-none">
+                @L["Impersonate"]
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ImpersonateUser" StartIcon="@Icons.Material.Filled.SwitchAccount" Class="d-none d-sm-flex">
+                @L["Impersonate"]
+            </MudButton>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 pa-sm-5" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter); border-color: var(--mud-palette-error);">
+            <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Error">@L["DangerZone"]</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteUser" StartIcon="@Icons.Material.Filled.DeleteForever" FullWidth="true" Class="d-sm-none">
+                @L["DeleteUser"]
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteUser" StartIcon="@Icons.Material.Filled.DeleteForever" Class="d-none d-sm-flex">
+                @L["DeleteUser"]
+            </MudButton>
+        </MudPaper>
+    </div>
+}
+
+@code {
+    [Parameter] public int UserId { get; set; }
+
+    [Inject] private IAdminStore AdminStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
+    [Inject] private IAuthStateChanged AuthStateChanged { get; set; } = null!;
+
+    private string firstName = "";
+    private string lastName = "";
+    private DateTime? birthday;
+    private Gender gender;
+    private string street = "";
+    private string city = "";
+    private string zipCode = "";
+    private Country country;
+    private string newEmail = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        AdminStore.OnUserDetailChanged += OnUserDetailChanged;
+        await AdminStore.LoadUser(UserId);
+    }
+
+    private void OnUserDetailChanged()
+    {
+        if (AdminStore.UserDetail is not null)
+        {
+            firstName = AdminStore.UserDetail.FirstName;
+            lastName = AdminStore.UserDetail.LastName;
+            birthday = AdminStore.UserDetail.Birthday.ToDateTime(TimeOnly.MinValue);
+            gender = AdminStore.UserDetail.Gender;
+            street = AdminStore.UserDetail.Street;
+            city = AdminStore.UserDetail.City;
+            zipCode = AdminStore.UserDetail.ZipCode;
+            country = AdminStore.UserDetail.Country;
+        }
+        StateHasChanged();
+    }
+
+    private async Task SaveUser()
+    {
+        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) || birthday is null
+            || string.IsNullOrWhiteSpace(street) || string.IsNullOrWhiteSpace(city)
+            || string.IsNullOrWhiteSpace(zipCode))
+        {
+            Snackbar.Add(L["FillRequiredFields"], Severity.Warning);
+            return;
+        }
+
+        var success = await AdminStore.UpdateUser(UserId, new UpdateAdminUserRequest
+        {
+            FirstName = firstName,
+            LastName = lastName,
+            Birthday = DateOnly.FromDateTime(birthday.Value),
+            Gender = gender,
+            Street = street,
+            City = city,
+            ZipCode = zipCode,
+            Country = country
+        });
+
+        if (success)
+        {
+            Snackbar.Add(L["UserUpdated"], Severity.Success);
+            await AdminStore.LoadUser(UserId);
+        }
+        else
+        {
+            Snackbar.Add(L["FailedUpdateUser"], Severity.Error);
+        }
+    }
+
+    private async Task ResendConfirmation()
+    {
+        var success = await AdminStore.ResendConfirmationEmail(UserId);
+        Snackbar.Add(success ? L["ConfirmationEmailSent"] : L["FailedSendConfirmation"],
+            success ? Severity.Success : Severity.Error);
+    }
+
+    private async Task ChangeEmail()
+    {
+        if (string.IsNullOrWhiteSpace(newEmail))
+        {
+            Snackbar.Add(L["EnterNewEmail"], Severity.Warning);
+            return;
+        }
+
+        var success = await AdminStore.ChangeEmail(UserId, new ChangeUserEmailRequest { NewEmail = newEmail });
+        if (success)
+        {
+            Snackbar.Add(L["EmailChangeConfirmationSent"], Severity.Success);
+            newEmail = "";
+        }
+        else
+        {
+            Snackbar.Add(L["FailedChangeEmail"], Severity.Error);
+        }
+    }
+
+    private async Task ResetPassword()
+    {
+        var success = await AdminStore.ResetPassword(UserId);
+        Snackbar.Add(success ? L["PasswordResetLinkSent"] : L["FailedSendPasswordReset"],
+            success ? Severity.Success : Severity.Error);
+    }
+
+    private async Task DeleteUser()
+    {
+        var result = await DialogService.ShowMessageBox(
+            L["ConfirmDeletion"],
+            L["DeleteUserConfirm"],
+            yesText: SharedLocale.Delete, cancelText: SharedLocale.Cancel);
+
+        if (result == true)
+        {
+            var success = await AdminStore.DeleteUser(UserId);
+            if (success)
+            {
+                Snackbar.Add(L["UserDeleted"], Severity.Success);
+                NavigationManager.NavigateTo("/admin/users");
+            }
+            else
+            {
+                Snackbar.Add(L["FailedDeleteUser"], Severity.Error);
+            }
+        }
+    }
+
+    private async Task ImpersonateUser()
+    {
+        var result = await DialogService.ShowMessageBox(
+            L["Impersonate"],
+            L["ImpersonateConfirm"],
+            yesText: L["Confirm"], cancelText: SharedLocale.Cancel);
+
+        if (result == true)
+        {
+            var success = await AdminStore.ImpersonateUser(UserId);
+            if (success)
+            {
+                Snackbar.Add(L["ImpersonationSuccess"], Severity.Success);
+                NavigationManager.NavigateTo("/", forceLoad: true);
+            }
+            else
+            {
+                Snackbar.Add(L["FailedImpersonate"], Severity.Error);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        AdminStore.OnUserDetailChanged -= OnUserDetailChanged;
+    }
+}

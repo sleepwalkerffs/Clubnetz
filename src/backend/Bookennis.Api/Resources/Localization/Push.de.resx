@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+    <data name="Test_Title" xml:space="preserve">
+    <value>Es funktioniert 🎾</value>
+  </data>
+  <data name="Test_Body" xml:space="preserve">
+    <value>Push-Benachrichtigungen sind auf diesem Gerät aktiv.</value>
+  </data>
+  <data name="BookingAdded_Title" xml:space="preserve">
+    <value>Neue Buchung · {0}</value>
+  </data>
+  <data name="BookingDeleted_Title" xml:space="preserve">
+    <value>Buchung storniert · {0}</value>
+  </data>
+  <data name="RecurringBookingAdded_Title" xml:space="preserve">
+    <value>Neue Serienbuchung · {0}, {1}</value>
+  </data>
+  <data name="RecurringBookingDeleted_Title" xml:space="preserve">
+    <value>Serienbuchung ab {0} storniert</value>
+  </data>
+  <data name="BookedBy" xml:space="preserve">
+    <value>eingetragen von {0}</value>
+  </data>
+  <data name="CancelledBy" xml:space="preserve">
+    <value>storniert von {0}</value>
+  </data>
+  <data name="BookingReminder_Title" xml:space="preserve">
+    <value>Deine Buchung beginnt um {0}</value>
+  </data>
+  <data name="ClubEventCreated_Title" xml:space="preserve">
+    <value>Neue Veranstaltung: {0}</value>
+  </data>
+  <data name="ClubAnnouncementCreated_Title" xml:space="preserve">
+    <value>Neuigkeiten von {0}</value>
+  </data>
+  <data name="BadgeAwarded_Title" xml:space="preserve">
+    <value>Neues Abzeichen 🏆</value>
+  </data>
+  <data name="BadgeAwarded_Body" xml:space="preserve">
+    <value>Du hast das Abzeichen „{0}“ erhalten.</value>
+  </data>
+  <data name="BadgeAwarded_Body_Child" xml:space="preserve">
+    <value>{0} hat das Abzeichen „{1}“ erhalten.</value>
+  </data>
+  <data name="ClubEventReminder_Title" xml:space="preserve">
+    <value>Erinnerung: {0}</value>
+  </data>
+  <data name="ClubEventDeadline_Title" xml:space="preserve">
+    <value>Anmeldeschluss naht: {0}</value>
+  </data>
+  <data name="ClubEventDeadline_Body" xml:space="preserve">
+    <value>Anmeldung bis {0}</value>
+  </data>
+</root>

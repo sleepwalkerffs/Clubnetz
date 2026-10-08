@@ -1,0 +1,132 @@
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.SubscriptionPlanner
+@using Bookennis.Shared.Controller.SubscriptionPlans
+
+<div class="d-flex flex-column gap-3" style="max-width: 720px;">
+    <MudText Typo="Typo.body2" Class="mud-text-secondary">@L["ParticipantsHelp"]</MudText>
+
+    <div class="d-flex gap-2 align-center">
+        <MudTextField T="string"
+                      Variant="Variant.Outlined"
+                      Label="@L["NewParticipant"]"
+                      @bind-Value="newName"
+                      Immediate="true"
+                      MaxLength="100"
+                      OnKeyUp="OnNewNameKeyUp"
+                      Disabled="@(Draft.Participants.Count >= SubscriptionPlanDraft.MaxParticipants)"
+                      Class="flex-grow-1" />
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.PersonAdd"
+                   OnClick="AddParticipant"
+                   Disabled="@(!CanAdd)">
+            @SharedLocale["Add"]
+        </MudButton>
+    </div>
+    @if (IsDuplicate)
+    {
+        <MudText Typo="Typo.caption" Color="Color.Error">@L["DuplicateParticipant"]</MudText>
+    }
+
+    @foreach (var participant in Draft.Participants)
+    {
+        <MudPaper Outlined="true" Class="pa-2 d-flex flex-wrap align-center gap-2">
+            <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" AriaLabel="@L["ChangeColor"]">
+                <ActivatorContent>
+                    <div class="participant-color" style="@($"background-color:{participant.Color.Background}")" title="@L["ChangeColor"]"></div>
+                </ActivatorContent>
+                <ChildContent>
+                    <div class="color-grid pa-2">
+                        @for (var i = 0; i < SubscriptionPlanColors.Palette.Count; i++)
+                        {
+                            var colorIndex = i;
+                            <div class="@(participant.ColorIndex == colorIndex ? "color-option selected" : "color-option")"
+                                 style="@($"background-color:{SubscriptionPlanColors.Palette[colorIndex].Background}")"
+                                 @onclick="@(() => Change(() => participant.ColorIndex = colorIndex))"></div>
+                        }
+                    </div>
+                </ChildContent>
+            </MudMenu>
+
+            <MudTextField T="string"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Label="@L["Name"]"
+                          Value="@participant.Name"
+                          ValueChanged="@(v => Change(() => participant.Name = v))"
+                          MaxLength="100"
+                          Error="@(string.IsNullOrWhiteSpace(participant.Name) || IsNameUsedTwice(participant))"
+                          Class="participant-name" />
+
+            <MudNumericField T="int"
+                             Variant="Variant.Outlined"
+                             Margin="Margin.Dense"
+                             Label="@L["Share"]"
+                             Value="@participant.Percentage"
+                             ValueChanged="@(v => Change(() => participant.Percentage = Math.Clamp(v, 1, 100)))"
+                             Min="1"
+                             Max="100"
+                             Step="10"
+                             Style="width: 130px;" />
+
+            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                           Color="Color.Error"
+                           aria-label="@SharedLocale["Delete"]"
+                           OnClick="@(() => Change(() => Draft.Participants.Remove(participant)))" />
+        </MudPaper>
+    }
+
+    @if (Draft.Participants.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">@L["NoParticipantsYet"]</MudAlert>
+    }
+    else if (!Draft.HasEnoughParticipants)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true">@string.Format(L["NotEnoughParticipants"], Draft.PlayersPerWeek)</MudAlert>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required SubscriptionPlanDraft Draft { get; set; }
+
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
+    [Inject]
+    private IStringLocalizer<SubscriptionPlannerLocale> L { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private string newName = "";
+
+    private bool IsDuplicate => Draft.Participants.Any(p => string.Equals(p.Name.Trim(), newName.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    private bool CanAdd => !string.IsNullOrWhiteSpace(newName) && !IsDuplicate && Draft.Participants.Count < SubscriptionPlanDraft.MaxParticipants;
+
+    private bool IsNameUsedTwice(ParticipantDraft participant)
+        => Draft.Participants.Any(p => p != participant && string.Equals(p.Name.Trim(), participant.Name.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    private async Task OnNewNameKeyUp(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+            await AddParticipant();
+    }
+
+    private async Task AddParticipant()
+    {
+        if (!CanAdd)
+            return;
+
+        Draft.Participants.Add(new ParticipantDraft { Name = newName.Trim(), ColorIndex = Draft.NextColorIndex() });
+        newName = "";
+        await OnChanged.InvokeAsync();
+    }
+
+    private Task Change(Action change)
+    {
+        change();
+        return OnChanged.InvokeAsync();
+    }
+}

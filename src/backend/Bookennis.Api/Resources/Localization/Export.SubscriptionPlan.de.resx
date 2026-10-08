@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="SheetSchedule" xml:space="preserve">
+    <value>Spielplan</value>
+  </data>
+  <data name="SheetOverview" xml:space="preserve">
+    <value>Übersicht</value>
+  </data>
+  <data name="SheetStatistics" xml:space="preserve">
+    <value>Statistik</value>
+  </data>
+  <data name="Week" xml:space="preserve">
+    <value>KW</value>
+  </data>
+  <data name="Dates" xml:space="preserve">
+    <value>Zeitraum</value>
+  </data>
+  <data name="Player" xml:space="preserve">
+    <value>Spieler {0}</value>
+  </data>
+  <data name="NoPlay" xml:space="preserve">
+    <value>Kein Spiel</value>
+  </data>
+  <data name="Understaffed" xml:space="preserve">
+    <value>Unterbesetzt</value>
+  </data>
+  <data name="Unavailable" xml:space="preserve">
+    <value>Verhindert</value>
+  </data>
+  <data name="Participant" xml:space="preserve">
+    <value>Teilnehmer*in</value>
+  </data>
+  <data name="Share" xml:space="preserve">
+    <value>Anteil</value>
+  </data>
+  <data name="Games" xml:space="preserve">
+    <value>Spiele</value>
+  </data>
+  <data name="Target" xml:space="preserve">
+    <value>Soll</value>
+  </data>
+  <data name="PairMatrix" xml:space="preserve">
+    <value>Gemeinsame Wochen pro Paar</value>
+  </data>
+  <data name="Period" xml:space="preserve">
+    <value>Zeitraum</value>
+  </data>
+  <data name="PlayersPerWeek" xml:space="preserve">
+    <value>Spieler*innen pro Woche</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Summe</value>
+  </data>
+</root>

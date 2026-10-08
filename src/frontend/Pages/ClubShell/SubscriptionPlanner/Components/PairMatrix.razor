@@ -1,0 +1,85 @@
+@using Bookennis.Client.Localization.Pages.SubscriptionPlanner
+@using Bookennis.Shared.Controller.SubscriptionPlans
+
+<MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">@L["PairMatrixHelp"]</MudText>
+
+@* Desktop: full heat map *@
+<MudHidden Breakpoint="Breakpoint.SmAndDown">
+    <div class="matrix-wrapper">
+        <table class="pair-matrix">
+            <thead>
+                <tr>
+                    <th></th>
+                    @foreach (var participant in Plan.Participants)
+                    {
+                        <th><ParticipantChip Name="@participant.Name" ColorIndex="participant.ColorIndex" Size="Size.Small" /></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var first in Plan.Participants)
+                {
+                    <tr>
+                        <th><ParticipantChip Name="@first.Name" ColorIndex="first.ColorIndex" Size="Size.Small" /></th>
+                        @foreach (var second in Plan.Participants)
+                        {
+                            if (first.Id == second.Id)
+                            {
+                                <td class="diagonal"></td>
+                            }
+                            else
+                            {
+                                var pair = GetPair(first.Id, second.Id);
+                                <td style="@HeatStyle(pair)" title="@string.Format(L["PairTooltip"], pair.Count, SubscriptionPlannerFormat.Number(pair.Expected))">@pair.Count</td>
+                            }
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</MudHidden>
+
+@* Mobile: partners per participant *@
+<MudHidden Breakpoint="Breakpoint.MdAndUp">
+    <div class="d-flex flex-column gap-3">
+        @foreach (var first in Plan.Participants)
+        {
+            <div>
+                <ParticipantChip Name="@first.Name" ColorIndex="first.ColorIndex" Size="Size.Small" />
+                <div class="d-flex flex-wrap gap-2 ml-2 mt-1">
+                    @foreach (var second in Plan.Participants.Where(p => p.Id != first.Id))
+                    {
+                        var pair = GetPair(first.Id, second.Id);
+                        <MudText Typo="Typo.body2" Style="@HeatStyle(pair)" Class="px-2 rounded">@second.Name: <b>@pair.Count</b></MudText>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</MudHidden>
+
+@code {
+    [Parameter, EditorRequired]
+    public required SubscriptionPlanDto Plan { get; set; }
+
+    [Inject]
+    private IStringLocalizer<SubscriptionPlannerLocale> L { get; set; } = null!;
+
+    private Dictionary<(int, int), SubscriptionPairDto> pairs = [];
+
+    protected override void OnParametersSet()
+        => pairs = Plan.Pairs.ToDictionary(p => (p.ParticipantId1, p.ParticipantId2));
+
+    private SubscriptionPairDto GetPair(int id1, int id2)
+        => pairs.GetValueOrDefault(id1 < id2 ? (id1, id2) : (id2, id1))
+           ?? new SubscriptionPairDto { ParticipantId1 = id1, ParticipantId2 = id2, Count = 0, Expected = 0 };
+
+    /// <summary>Green when a pair plays together as often as expected, red when far off.</summary>
+    private static string HeatStyle(SubscriptionPairDto pair)
+    {
+        var deviation = Math.Min(Math.Abs(pair.Count - pair.Expected) / Math.Max(pair.Expected, 1), 1);
+        var hue = (int)Math.Round(140 * (1 - deviation));
+        return $"background-color:hsla({hue}, 70%, 50%, 0.25);";
+    }
+}

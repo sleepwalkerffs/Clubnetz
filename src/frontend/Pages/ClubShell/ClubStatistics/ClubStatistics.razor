@@ -1,0 +1,467 @@
+@page "/clubs/{ClubId:int}/club-statistics"
+@layout ClubWithStoreLayout
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.ClubStatistics
+@using Bookennis.Client.Pages.ClubShell.ClubStatistics.Components
+@using Bookennis.Client.Services.Store.Statistics
+@using Bookennis.Shared.Controller.Statistics
+
+@implements IDisposable
+
+<PageTitle>@L["ClubStatistics"]</PageTitle>
+
+@if (ClubStatisticsStore.ClubStatistics is not { } stats)
+{
+    @if (ClubStatisticsStore.IsLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+}
+else
+{
+    var season = stats.SeasonStatistics.FirstOrDefault(s => s.SeasonId == selectedSeasonId);
+
+    <div class="cstats">
+        <ChoiceChips TItem="Scope" Items="@Scopes(stats)" Value="@Scopes(stats).FirstOrDefault(s => s.SeasonId == selectedSeasonId)"
+                     ValueChanged="@(scope => selectedSeasonId = scope.SeasonId)" TextFunc="@(scope => scope.Label)" ColorFunc="@(scope => scope.IsLive ? "#059669" : null)" />
+
+        @if (season is null)
+        {
+            @RenderAllTime(stats)
+        }
+        else
+        {
+            @RenderSeason(stats, season)
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [Inject] private IClubStatisticsStore ClubStatisticsStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubStatisticsLocale> L { get; set; } = null!;
+
+    private sealed record Scope(int? SeasonId, string Label, bool IsLive);
+
+    private static readonly bool[] MatchScopes = [false, true];
+
+    /// <summary>Only bookings of play modes that count as match, for the top players and the booking behavior.</summary>
+    private bool matchesOnly;
+
+    /// <summary>Selected season, null for all time.</summary>
+    private int? selectedSeasonId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ClubStatisticsStore.OnClubStatisticsChanged += OnStatisticsChanged;
+        if (ClubStatisticsStore.ClubStatistics is not null)
+            SelectDefaultScope();
+
+        await ClubStatisticsStore.LoadClubStatistics();
+    }
+
+    private void OnStatisticsChanged()
+    {
+        SelectDefaultScope();
+        StateHasChanged();
+    }
+
+    private void SelectDefaultScope()
+    {
+        var stats = ClubStatisticsStore.ClubStatistics!;
+        if (selectedSeasonId is not null && stats.SeasonStatistics.Any(s => s.SeasonId == selectedSeasonId))
+            return;
+
+        selectedSeasonId = (stats.SeasonStatistics.FirstOrDefault(s => s.State == SeasonState.Current)
+                            ?? stats.SeasonStatistics.FirstOrDefault(s => s.State == SeasonState.Past))?.SeasonId;
+    }
+
+    private List<Scope> Scopes(GetClubStatisticsResult stats)
+        => stats.SeasonStatistics
+            .Select(s => new Scope(s.SeasonId, string.Format(L["SeasonChip"], s.SeasonLabel), s.State == SeasonState.Current))
+            .Append(new Scope(null, L["AllTime"], false))
+            .ToList();
+
+    private static string Hours(double value) => value.ToString(value >= 100 ? "0" : "0.#", CultureInfo.CurrentCulture);
+
+    private static string Percent(double value) => value.ToString("0.#", CultureInfo.CurrentCulture) + " %";
+
+    private static string Number(int value) => value.ToString("N0", CultureInfo.CurrentCulture);
+
+    private static string? Delta(double current, double previous)
+    {
+        if (previous <= 0)
+            return null;
+
+        var delta = (current - previous) / previous * 100;
+        return $"{(delta >= 0 ? "▲" : "▼")} {Math.Abs(delta).ToString("0", CultureInfo.CurrentCulture)}%";
+    }
+
+    private RenderFragment RenderSeason(GetClubStatisticsResult stats, ClubSeasonStatisticsResult season) => __builder =>
+    {
+        var play = season.PlayStats;
+        var activity = season.MemberActivity;
+        var pace = season.PreviousSeasonPace;
+        var previous = stats.SeasonStatistics.SkipWhile(s => s.SeasonId != season.SeasonId).Skip(1).FirstOrDefault();
+        var progress = season.SeasonLengthDays > 0 ? season.ElapsedDays * 100.0 / season.SeasonLengthDays : 0;
+
+        <AdminHero Emoji="📊" Eyebrow="@L["ClubStatistics"]" Title="@string.Format(L["SeasonTitle"], season.SeasonLabel)"
+                   Subtitle="@($"{season.StartDate.ToString("d", CultureInfo.CurrentCulture)} – {season.EndDate.ToString("d", CultureInfo.CurrentCulture)}")">
+            <Chips>
+                @switch (season.State)
+                {
+                    case SeasonState.Current:
+                        <span class="hero-chip hero-chip--ok">● @string.Format(L["DayOfSeason"], season.ElapsedDays, season.SeasonLengthDays)</span>
+                        <span class="hero-chip">⏳ @string.Format(L["DaysLeft"], season.SeasonLengthDays - season.ElapsedDays)</span>
+                        break;
+                    case SeasonState.Upcoming:
+                        <span class="hero-chip">🗓️ @L["Upcoming"]</span>
+                        break;
+                    default:
+                        <span class="hero-chip">🏁 @L["Finished"]</span>
+                        break;
+                }
+                <span class="hero-chip">👥 @string.Format(L["EnrolledChip"], activity.EnrolledMembers)</span>
+                @if (play.UpcomingBookings > 0)
+                {
+                    <span class="hero-chip">📅 @string.Format(L["UpcomingChip"], play.UpcomingBookings)</span>
+                }
+            </Chips>
+            <Aside>
+                <div class="pace__caption">@(pace is null ? L["SeasonProgress"] : string.Format(L["PaceCaption"], pace.SeasonLabel))</div>
+                @if (pace is not null && pace.HoursAtSamePoint > 0)
+                {
+                    var diff = (play.TotalPlaytimeHours - pace.HoursAtSamePoint) / pace.HoursAtSamePoint * 100;
+                    <div class="pace__value">@(diff >= 0 ? "▲" : "▼") @Math.Abs(diff).ToString("0", CultureInfo.CurrentCulture)%</div>
+                    <div class="pace__text">@string.Format(L["PaceText"], Hours(play.TotalPlaytimeHours), Hours(pace.HoursAtSamePoint))</div>
+                }
+                else
+                {
+                    <div class="pace__value">@progress.ToString("0", CultureInfo.CurrentCulture)%</div>
+                    <div class="pace__text">@string.Format(L["DayOfSeason"], season.ElapsedDays, season.SeasonLengthDays)</div>
+                }
+                <div class="pace__bar"><span style="width: @progress.ToString("0.#", CultureInfo.InvariantCulture)%"></span></div>
+                @if (season.State == SeasonState.Current)
+                {
+                    <div class="pace__note">@string.Format(L["DataUntil"], stats.Today.ToString("d", CultureInfo.CurrentCulture))</div>
+                }
+            </Aside>
+        </AdminHero>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.Timer" Color="#059669" Value="@Hours(play.TotalPlaytimeHours)" Unit="h" Label="@L["PlayedHours"]"
+                          Hint="@(previous is null ? null : Delta(play.TotalPlaytimeHours, pace?.HoursAtSamePoint ?? 0))" />
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.SportsTennis" Color="#F97316" Value="@Number(play.TotalBookings)" Label="@L["Bookings"]"
+                          Hint="@(play.RecurringBookings > 0 ? string.Format(L["RecurringHint"], play.RecurringBookings) : null)" />
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.Groups" Color="#6366F1" Value="@Number(activity.ActivePlayers)" Label="@L["ActivePlayers"]"
+                          Hint="@string.Format(L["ActivationHint"], activity.ActivationRate.ToString("0", CultureInfo.CurrentCulture))" />
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.GridOn" Color="#D97706" Value="@Percent(season.Occupancy.OverallPercentage)" Label="@L["Occupancy"]"
+                          Hint="@(season.Occupancy.PrimeTimePercentage is { } prime ? string.Format(L["PrimeTimeHint"], Percent(prime)) : null)" />
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.People" Color="#0EA5E9" Value="@play.AveragePlayersPerBooking.ToString("0.#", CultureInfo.CurrentCulture)" Label="@L["PlayersPerBooking"]"
+                          Hint="@(activity.GuestPlayers > 0 ? string.Format(L["GuestsHint"], activity.GuestPlayers) : null)" />
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.LocalFireDepartment" Color="#DC2626"
+                          Value="@(play.BusiestDay is { } busiest ? Hours(busiest.Hours) : "–")" Unit="@(play.BusiestDay is null ? null : "h")"
+                          Label="@L["BusiestDay"]" Hint="@play.BusiestDay?.Date.ToString("ddd, dd.MM.", CultureInfo.CurrentCulture)" />
+            </MudItem>
+        </MudGrid>
+
+        <SectionCard Emoji="🗺️" Title="@L["CourtOccupancy"]" Subtitle="@L["CourtOccupancySubtitle"]">
+            <OccupancyHeatmap Occupancy="@season.Occupancy" PrimeTime="@stats.PrimeTime" />
+        </SectionCard>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="8">
+                <SectionCard Emoji="📈" Title="@L["WeeklyTrend"]" Subtitle="@L["WeeklyTrendSubtitle"]">
+                    <WeeklyTrend Weeks="@play.WeeklyActivity" Previous="@previous?.PlayStats.WeeklyActivity"
+                                 CurrentLabel="@season.SeasonLabel" PreviousLabel="@previous?.SeasonLabel" />
+                </SectionCard>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <SectionCard Emoji="📅" Title="@L["Weekdays"]" Subtitle="@L["WeekdaysSubtitle"]">
+                    <WeekdayBars Days="@play.WeekdayActivity" />
+                </SectionCard>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <SectionCard Emoji="👥" Title="@L["MemberDemographics"]" Subtitle="@L["MemberDemographicsSubtitle"]">
+                    <DemographicsPyramid Demographics="@season.MemberDemographics" />
+                </SectionCard>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <SectionCard Emoji="🎯" Title="@L["MemberActivity"]" Subtitle="@L["MemberActivitySubtitle"]">
+                    @RenderMemberActivity(season)
+                </SectionCard>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <SectionCard Emoji="🏆" Title="@L["TopPlayers"]" Subtitle="@L["TopPlayersSubtitle"]">
+                    @RenderMatchScope()
+                    <TopPlayersList Players="@(matchesOnly ? activity.TopMatchPlayers : activity.TopPlayers)" ClubId="@ClubId" />
+                </SectionCard>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <div class="cstats__stack">
+                    <SectionCard Emoji="🎾" Title="@L["PlayModeUsage"]" Subtitle="@L["PlayModeUsageSubtitle"]">
+                        <BarList Items="@PlayModeItems(play.PlayModeUsage)" EmptyText="@L["NoBookings"]" />
+                    </SectionCard>
+                    <SectionCard Emoji="⏱️" Title="@L["BookingBehavior"]" Subtitle="@L["BookingBehaviorSubtitle"]">
+                        @RenderMatchScope()
+                        @RenderBookingBehavior(matchesOnly ? play.MatchBookingBehavior : play.BookingBehavior)
+                    </SectionCard>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12">
+                <SectionCard Emoji="☀️" Title="@L["DayQuality"]" Subtitle="@string.Format(L["DayQualitySubtitle"], season.ElapsedDays)">
+                    @RenderDayQuality(play, season.ElapsedDays)
+                </SectionCard>
+            </MudItem>
+        </MudGrid>
+    };
+
+    private RenderFragment RenderAllTime(GetClubStatisticsResult stats) => __builder =>
+    {
+        var allTime = stats.AllTime;
+        var totals = allTime.Totals;
+        var played = allTime.Seasons.Where(s => s.State != SeasonState.Upcoming).ToList();
+        var bestSeason = played.MaxBy(s => s.Hours);
+
+        <AdminHero Emoji="🏛️" Eyebrow="@L["ClubStatistics"]" Title="@L["AllTime"]"
+                   Subtitle="@(totals.FirstSeasonStart is { } since ? string.Format(L["SinceSubtitle"], since.ToString("MMMM yyyy", CultureInfo.CurrentCulture)) : null)">
+            <Chips>
+                <span class="hero-chip">🗓️ @string.Format(L["SeasonsChip"], totals.Seasons)</span>
+                <span class="hero-chip">👥 @string.Format(L["MembersEverChip"], totals.DistinctMembers)</span>
+                @if (bestSeason is not null && bestSeason.Hours > 0)
+                {
+                    <span class="hero-chip">👑 @string.Format(L["BestSeasonChip"], bestSeason.SeasonLabel)</span>
+                }
+            </Chips>
+            <Aside>
+                <div class="pace__caption">@L["TotalHoursOnCourt"]</div>
+                <div class="pace__value">@Hours(totals.Hours) h</div>
+                <div class="pace__text">@string.Format(L["TotalHoursText"], (totals.Hours / 24).ToString("0", CultureInfo.CurrentCulture))</div>
+            </Aside>
+        </AdminHero>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.SportsTennis" Color="#F97316" Value="@Number(totals.Bookings)" Label="@L["Bookings"]" />
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.Timer" Color="#059669" Value="@Hours(totals.Hours)" Unit="h" Label="@L["PlayedHours"]" />
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.Groups" Color="#6366F1" Value="@Number(totals.DistinctPlayers)" Label="@L["DistinctPlayers"]" />
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.CardMembership" Color="#0EA5E9" Value="@Number(totals.DistinctMembers)" Label="@L["MembersEver"]" />
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.GridOn" Color="#D97706" Value="@Percent(allTime.Occupancy.OverallPercentage)" Label="@L["Occupancy"]" />
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <StatTile Icon="@Icons.Material.Filled.People" Color="#DB2777" Value="@totals.AveragePlayersPerBooking.ToString("0.#", CultureInfo.CurrentCulture)" Label="@L["PlayersPerBooking"]" />
+            </MudItem>
+        </MudGrid>
+
+        <SectionCard Emoji="📊" Title="@L["SeasonComparison"]" Subtitle="@L["SeasonComparisonSubtitle"]">
+            <SeasonComparison Seasons="@allTime.Seasons" />
+        </SectionCard>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <SectionCard Emoji="🔁" Title="@L["Retention"]" Subtitle="@L["RetentionSubtitle"]">
+                    <RetentionChart Seasons="@allTime.Seasons" ClubId="@ClubId" />
+                </SectionCard>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <SectionCard Emoji="👥" Title="@L["DemographicsOverSeasons"]" Subtitle="@L["DemographicsOverSeasonsSubtitle"]">
+                    <DemographicsTrend Seasons="@allTime.Seasons" />
+                </SectionCard>
+            </MudItem>
+        </MudGrid>
+
+        <SectionCard Emoji="🗺️" Title="@L["CourtOccupancy"]" Subtitle="@L["CourtOccupancyAllTimeSubtitle"]">
+            <OccupancyHeatmap Occupancy="@allTime.Occupancy" PrimeTime="@stats.PrimeTime" />
+        </SectionCard>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <SectionCard Emoji="🏆" Title="@L["TopPlayersAllTime"]" Subtitle="@L["TopPlayersSubtitle"]">
+                    @RenderMatchScope()
+                    <TopPlayersList Players="@(matchesOnly ? allTime.TopMatchPlayers : allTime.TopPlayers)" ClubId="@ClubId" />
+                </SectionCard>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <div class="cstats__stack">
+                    <SectionCard Emoji="📅" Title="@L["Weekdays"]" Subtitle="@L["WeekdaysSubtitle"]">
+                        <WeekdayBars Days="@allTime.WeekdayActivity" />
+                    </SectionCard>
+                    <SectionCard Emoji="🎾" Title="@L["PlayModeUsage"]" Subtitle="@L["PlayModeUsageSubtitle"]">
+                        <BarList Items="@PlayModeItems(allTime.PlayModeUsage)" EmptyText="@L["NoBookings"]" />
+                    </SectionCard>
+                    <SectionCard Emoji="⏱️" Title="@L["BookingBehavior"]" Subtitle="@L["BookingBehaviorSubtitle"]">
+                        @RenderMatchScope()
+                        @RenderBookingBehavior(matchesOnly ? allTime.MatchBookingBehavior : allTime.BookingBehavior)
+                    </SectionCard>
+                </div>
+            </MudItem>
+        </MudGrid>
+    };
+
+    private RenderFragment RenderMemberActivity(ClubSeasonStatisticsResult season) => __builder =>
+    {
+        var activity = season.MemberActivity;
+
+        <div class="activity">
+            <div class="activity__ring">
+                <MudProgressCircular Value="@activity.ActivationRate" Size="Size.Large" StrokeWidth="6" Color="Color.Success" Class="activity__circle" />
+                <div class="activity__ring-text">
+                    <span class="activity__ring-value">@activity.ActivationRate.ToString("0", CultureInfo.CurrentCulture)%</span>
+                    <span class="activity__ring-label">@L["Activated"]</span>
+                </div>
+            </div>
+            <div class="activity__facts">
+                <div class="activity__fact"><strong>@activity.ActivePlayers</strong> @string.Format(L["OfEnrolledPlayed"], activity.EnrolledMembers)</div>
+                <div class="activity__fact activity__fact--returning"><strong>@activity.ReturningMembers</strong> @L["Returning"]</div>
+                <div class="activity__fact activity__fact--new"><strong>@activity.NewMembers</strong> @L["New"]</div>
+                @if (activity.LapsedMembers > 0)
+                {
+                    var previousSeasonId = ClubStatisticsStore.ClubStatistics!.SeasonStatistics.SkipWhile(s => s.SeasonId != season.SeasonId).Skip(1).FirstOrDefault()?.SeasonId;
+                    <a class="activity__fact activity__fact--lapsed" href="@($"/clubs/{ClubId}/members?in={previousSeasonId}&notIn={season.SeasonId}")">
+                        <strong>@activity.LapsedMembers</strong> @L["LapsedLink"] →
+                    </a>
+                }
+            </div>
+        </div>
+
+        <div class="activity__caption">@L["BookingsPerMember"]</div>
+        <BarList Items="@ActivityItems(activity.BookingsPerPlayer)" Color="#6366F1" EmptyText="@L["NoMembers"]" />
+
+        @if (activity.EnrolledMembers > activity.ActivePlayers)
+        {
+            <a class="activity__inactive" href="@($"/clubs/{ClubId}/members?in={season.SeasonId}&noBookingsIn={season.SeasonId}")">
+                💤 @string.Format(L["InactiveMembersLink"], activity.EnrolledMembers - activity.ActivePlayers)
+            </a>
+        }
+    };
+
+    // Shared by the top players and the booking behavior, so both always show the same bookings
+    private RenderFragment RenderMatchScope() => __builder =>
+    {
+        <div class="match-scope">
+            <ChoiceChips TItem="bool" Items="@MatchScopes" Value="@matchesOnly" ValueChanged="@(value => matchesOnly = value)"
+                         TextFunc="@(value => value ? L["MatchesOnly"] : L["AllBookings"])" />
+            @if (matchesOnly)
+            {
+                <div class="match-scope__hint">🎾 @L["MatchesOnlyHint"]</div>
+            }
+        </div>
+    };
+
+    private RenderFragment RenderBookingBehavior(ClubBookingBehaviorResult behavior) => __builder =>
+    {
+        var leadTimes = behavior.LeadTimes;
+        var recurring = behavior.RecurringBookings;
+        var total = behavior.Bookings;
+
+        <div class="behavior__pills">
+            @if (behavior.PrimeTimeHoursShare is { } share)
+            {
+                <div class="behavior__pill behavior__pill--prime">
+                    <span class="behavior__pill-value">⚡ @share.ToString("0", CultureInfo.CurrentCulture)%</span>
+                    <span class="behavior__pill-label">@L["PrimeTimeShare"]</span>
+                </div>
+            }
+            <div class="behavior__pill behavior__pill--recurring">
+                <span class="behavior__pill-value">🔁 @(total > 0 ? (recurring * 100.0 / total).ToString("0", CultureInfo.CurrentCulture) : "0")%</span>
+                <span class="behavior__pill-label">@L["RecurringShare"]</span>
+            </div>
+        </div>
+        <div class="activity__caption">@L["LeadTime"]</div>
+        <BarList Items="@LeadTimeItems(leadTimes)" Color="#0EA5E9" EmptyText="@L["NoBookings"]" />
+    };
+
+    private RenderFragment RenderDayQuality(ClubPlayStatsResult play, int elapsedDays) => __builder =>
+    {
+        var segments = new (string Key, int Days, string Color)[]
+        {
+            // In dark mode few hours must be dim and many hours bright (see app.css)
+            ("DaysEmpty", play.DaysWithoutBookings, "var(--bk-dark-day-0, #CBD5E1)"),
+            ("DaysUnder3", play.DaysUnder3Hours, "var(--bk-dark-heat-1, #A7F3D0)"),
+            ("Days3To5", play.Days3To5Hours, "var(--bk-dark-heat-2, #34D399)"),
+            ("Days5To10", play.Days5To10Hours, "var(--bk-dark-heat-3, #059669)"),
+            ("DaysOver10", play.DaysOver10Hours, "var(--bk-dark-heat-4, #064E3B)"),
+        };
+
+        if (elapsedDays == 0)
+        {
+            <div class="cstats__empty">@L["NoDaysYet"]</div>
+            return;
+        }
+
+        <div class="dayq__bar">
+            @foreach (var segment in segments.Where(s => s.Days > 0))
+            {
+                <span class="dayq__segment" style="flex: @segment.Days; background: @segment.Color" title="@($"{L[segment.Key]}: {segment.Days}")"></span>
+            }
+        </div>
+        <div class="dayq__legend">
+            @foreach (var segment in segments)
+            {
+                <div class="dayq__item">
+                    <i class="dayq__dot" style="background: @segment.Color"></i>
+                    <span class="dayq__value">@segment.Days</span>
+                    <span class="dayq__label">@L[segment.Key]</span>
+                    <span class="dayq__share">@((segment.Days * 100.0 / elapsedDays).ToString("0", CultureInfo.CurrentCulture))%</span>
+                </div>
+            }
+            <div class="dayq__item dayq__item--avg">
+                <span class="dayq__value">Ø @Hours(play.AverageHoursPerDay) h</span>
+                <span class="dayq__label">@L["AverageHoursPerDay"]</span>
+            </div>
+        </div>
+    };
+
+    private static List<BarList.BarItem> PlayModeItems(List<PlayModeUsageEntry> usage)
+    {
+        var total = usage.Sum(p => p.Hours);
+        return usage
+            .Select(p => new BarList.BarItem(p.Name, p.Hours, $"{Hours(p.Hours)} h", p.Color,
+                total > 0 ? $"{(p.Hours / total * 100).ToString("0", CultureInfo.CurrentCulture)}%" : null))
+            .ToList();
+    }
+
+    private List<BarList.BarItem> LeadTimeItems(List<LeadTimeBucket> buckets)
+    {
+        var total = buckets.Sum(b => b.Bookings);
+        return buckets
+            .Select(b => new BarList.BarItem(L[$"LeadTime_{b.Category}"], b.Bookings, Number(b.Bookings), null,
+                total > 0 ? $"{(b.Bookings * 100.0 / total).ToString("0", CultureInfo.CurrentCulture)}%" : null))
+            .ToList();
+    }
+
+    private List<BarList.BarItem> ActivityItems(List<ActivityBucket> buckets)
+        => buckets
+            .Select(b => new BarList.BarItem(L[$"Activity_{b.Category}"], b.Members, Number(b.Members),
+                b.Category == ActivityBucketCategory.None ? "#94A3B8" : null))
+            .ToList();
+
+    public void Dispose()
+    {
+        ClubStatisticsStore.OnClubStatisticsChanged -= OnStatisticsChanged;
+    }
+}

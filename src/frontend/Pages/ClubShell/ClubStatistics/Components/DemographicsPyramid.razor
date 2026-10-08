@@ -1,0 +1,72 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.ClubStatistics
+@using Bookennis.Shared.Controller.Statistics
+
+@if (Demographics.TotalMembers == 0)
+{
+    <div class="pyramid__empty">@L["NoMembers"]</div>
+}
+else
+{
+    var groups = Groups;
+    var max = groups.Max(g => Math.Max(g.Male, g.Female));
+    var malePercent = Demographics.TotalMale * 100.0 / Demographics.TotalMembers;
+
+    <div class="pyramid">
+        <div class="pyramid__header">
+            <span class="pyramid__side pyramid__side--male">♂ @L["Male"] · @Demographics.TotalMale</span>
+            <span class="pyramid__side pyramid__side--female">@Demographics.TotalFemale · @L["Female"] ♀</span>
+        </div>
+
+        @foreach (var group in groups)
+        {
+            <div class="pyramid__row">
+                <div class="pyramid__bar pyramid__bar--male">
+                    <span class="pyramid__count">@(group.Male > 0 ? group.Male : "")</span>
+                    <span class="pyramid__fill" style="width: @Width(group.Male, max)"></span>
+                </div>
+                <div class="pyramid__label">
+                    <span class="pyramid__emoji" aria-hidden="true">@group.Emoji</span>
+                    <span class="pyramid__name">@group.Name</span>
+                    <span class="pyramid__range">@group.Range</span>
+                </div>
+                <div class="pyramid__bar pyramid__bar--female">
+                    <span class="pyramid__fill" style="width: @Width(group.Female, max)"></span>
+                    <span class="pyramid__count">@(group.Female > 0 ? group.Female : "")</span>
+                </div>
+            </div>
+        }
+
+        <div class="pyramid__split" role="img" aria-label="@($"{L["Male"]} {malePercent:0}%, {L["Female"]} {100 - malePercent:0}%")">
+            <span class="pyramid__split-male" style="width: @malePercent.ToString("0.#", CultureInfo.InvariantCulture)%"></span>
+        </div>
+        <div class="pyramid__facts">
+            <span>@string.Format(L["MembersTotal"], Demographics.TotalMembers)</span>
+            @if (Demographics.AverageAge is { } averageAge)
+            {
+                <span>@string.Format(L["AverageAge"], averageAge.ToString("0.#", CultureInfo.CurrentCulture))</span>
+            }
+            <span>@string.Format(L["YouthShare"], ((Demographics.MaleKids + Demographics.FemaleKids + Demographics.MaleTeenagers + Demographics.FemaleTeenagers) * 100.0 / Demographics.TotalMembers).ToString("0", CultureInfo.CurrentCulture))</span>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public MemberDemographicsResult Demographics { get; set; } = null!;
+
+    [Inject] private IStringLocalizer<ClubStatisticsLocale> L { get; set; } = null!;
+
+    private sealed record AgeGroup(string Emoji, string Name, string Range, int Male, int Female);
+
+    // Oldest on top like a population pyramid
+    private List<AgeGroup> Groups =>
+    [
+        new("🧓", L["Seniors"], "35+", Demographics.MaleSeniors, Demographics.FemaleSeniors),
+        new("🧑", L["Adults"], "18–34", Demographics.MaleMembers, Demographics.FemaleMembers),
+        new("🧑‍🎓", L["Teenagers"], "13–17", Demographics.MaleTeenagers, Demographics.FemaleTeenagers),
+        new("🧒", L["Kids"], "≤ 12", Demographics.MaleKids, Demographics.FemaleKids),
+    ];
+
+    private static string Width(int value, int max)
+        => max == 0 ? "0%" : (value * 100.0 / max).ToString("0.#", CultureInfo.InvariantCulture) + "%";
+}

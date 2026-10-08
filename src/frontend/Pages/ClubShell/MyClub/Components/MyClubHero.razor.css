@@ -1,0 +1,247 @@
+.myclub-hero {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 20px;
+    padding: 24px;
+    border-radius: 20px;
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #064E3B 0%, #047857 45%, #0D9488 80%, #65A30D 130%);
+    box-shadow: 0 10px 30px rgba(6, 78, 59, 0.25);
+}
+
+/* Decorative tennis court lines */
+.myclub-hero__court {
+    position: absolute;
+    inset: -40px -120px -40px auto;
+    width: 420px;
+    border: 3px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    transform: rotate(-12deg);
+    pointer-events: none;
+}
+
+.myclub-hero__court::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    border-left: 3px solid rgba(255, 255, 255, 0.12);
+}
+
+.myclub-hero__court::after {
+    content: "";
+    position: absolute;
+    left: 22%;
+    right: 22%;
+    top: 50%;
+    border-top: 3px solid rgba(255, 255, 255, 0.12);
+}
+
+.myclub-hero__profile {
+    position: relative;
+    flex: 1 1 320px;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+}
+
+::deep .myclub-hero__avatar-wrapper {
+    flex-shrink: 0;
+}
+
+::deep .myclub-hero__avatar {
+    width: 84px !important;
+    height: 84px !important;
+    font-size: 1.8rem !important;
+    font-weight: 700;
+    border: 3px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.myclub-hero__text {
+    min-width: 0;
+}
+
+.myclub-hero__eyebrow {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+.myclub-hero__greeting {
+    margin-top: 2px;
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+}
+
+.myclub-hero__tagline {
+    margin-top: 6px;
+    font-size: 0.95rem;
+    opacity: 0.92;
+}
+
+.myclub-hero__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+
+.hero-chip--ok {
+    background: rgba(167, 243, 208, 0.3);
+}
+
+.hero-chip--warn {
+    background: rgba(254, 202, 202, 0.32);
+}
+
+.myclub-hero__next {
+    position: relative;
+    flex: 0 1 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(6px);
+}
+
+.myclub-hero__next--clickable {
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.myclub-hero__next--clickable:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.next__caption {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.next__countdown {
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.next__when {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.next__where {
+    margin-top: 2px;
+    font-size: 0.85rem;
+    opacity: 0.9;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.next__players {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    min-width: 0;
+}
+
+.next__avatars {
+    display: flex;
+    flex-shrink: 0;
+}
+
+.next__avatars > ::deep div + div {
+    margin-left: -8px;
+}
+
+::deep .next__avatar {
+    border: 2px solid #047857;
+}
+
+.next__with {
+    min-width: 0;
+    font-size: 0.8rem;
+    opacity: 0.9;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.next__empty-emoji {
+    margin-top: 4px;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.next__empty {
+    margin-top: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+::deep .next__book {
+    align-self: flex-start;
+    background: #FFFFFF;
+    color: #065F46;
+    font-weight: 700;
+}
+
+::deep .next__book:hover {
+    background: #ECFDF5;
+}
+
+@media (max-width: 599px) {
+    .myclub-hero {
+        padding: 20px 16px;
+    }
+
+    .myclub-hero__profile {
+        gap: 14px;
+    }
+
+    ::deep .myclub-hero__avatar {
+        width: 64px !important;
+        height: 64px !important;
+        font-size: 1.4rem !important;
+    }
+
+    .myclub-hero__greeting {
+        font-size: 1.45rem;
+    }
+
+    .myclub-hero__next {
+        flex-basis: 100%;
+    }
+}

@@ -1,0 +1,274 @@
+@page "/clubs/{ClubId:int}/members/{MemberId:int}"
+@using System.Globalization
+@using Bookennis.Client.Components.BookingHistory
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Members
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Members
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Members
+@using Bookennis.Shared.Controller.Shared
+
+@implements IDisposable
+
+@if (MembersStore.MemberDetail is { } member && MembersStore.LoadedMemberId(MemberId))
+{
+    var overview = MembersStore.MemberOverview;
+    var currentSeason = ClubStore.Seasons.FirstOrDefault(s => s.IsActive);
+    var currentOverview = currentSeason is null ? null : overview?.Seasons.FirstOrDefault(s => s.SeasonId == currentSeason.Id);
+    var firstSeason = ClubStore.Seasons.Where(s => member.AllowedSeasonIds.Contains(s.Id)).MinBy(s => s.StartDate);
+
+    <PageTitle>@member.FullName</PageTitle>
+
+    <div class="member-page">
+        <div class="member-page__nav">
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="BackToList">@L["BackToMembers"]</MudButton>
+        </div>
+
+        <AdminHero Eyebrow="@string.Format(L["MemberEyebrow"], ClubProfileStore.SelectedClub?.ClubName)" Title="@member.FullName">
+            <Media>
+                <UserAvatar FirstName="@member.FirstName" LastName="@member.LastName" ProfilePictureUrl="@member.ProfilePictureUrl"
+                            Size="Size.Large" Color="Color.Secondary" AvatarClass="member-hero__avatar" />
+            </Media>
+            <Chips>
+                @if (currentSeason is not null)
+                {
+                    var enrolled = member.AllowedSeasonIds.Contains(currentSeason.Id);
+                    <span class="hero-chip @(enrolled ? "hero-chip--ok" : "hero-chip--warn")">
+                        @(enrolled ? "✅" : "⛔") @string.Format(L[enrolled ? "EnrolledChip" : "NotEnrolledChip"], MemberAdminHelpers.SeasonLabel(currentSeason))
+                    </span>
+                }
+                <span class="hero-chip">🎂 @string.Format(L["AgeYears"], MemberAdminHelpers.Age(member.Birthday)) · @L[$"AgeGroup_{MemberAdminHelpers.AgeGroupOf(member.Birthday)}"]</span>
+                @foreach (var role in member.Roles.Where(r => r != MemberRole.User))
+                {
+                    <span class="hero-chip">⭐ @SharedLocale[$"Role_{role}"]</span>
+                }
+                @if (firstSeason is not null)
+                {
+                    <span class="hero-chip">🗓️ @string.Format(L["MemberSinceChip"], MemberAdminHelpers.SeasonLabel(firstSeason))</span>
+                }
+                @if (member.FamilyId is not null)
+                {
+                    <span class="hero-chip">👪 @L["Family"]</span>
+                }
+            </Chips>
+            <ChildContent>
+                <div class="member-hero__contact">
+                    @if (member.ContactEmail is { } email)
+                    {
+                        <button type="button" class="member-hero__email" title="@L["CopyEmail"]" @onclick="() => CopyEmail(email)">
+                            @(member.Email is null ? "👪" : "✉️") @email
+                            <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" Style="font-size: 0.9rem;" />
+                        </button>
+                        @if (member.Email is null)
+                        {
+                            <span class="member-hero__parent">@L["ParentEmail"]</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="member-hero__email member-hero__email--missing">📭 @L["NoEmail"]</span>
+                    }
+                </div>
+            </ChildContent>
+            <Aside>
+                <div class="member-aside__caption">@L["LastPlayed"]</div>
+                <div class="member-aside__value">@MemberAdminHelpers.RelativeDate(L, member.LastPlayed)</div>
+                @if (member.LastPlayed is { } lastPlayed)
+                {
+                    <div class="member-aside__text">@lastPlayed.LocalDateTime.ToString("dddd, d. MMMM yyyy", CultureInfo.CurrentCulture)</div>
+                }
+                <div class="member-aside__actions">
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Person" Class="member-aside__button" OnClick="OpenProfile">
+                        @SharedLocale["MemberProfile"]
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.EmojiEvents" Class="member-aside__button" OnClick="OpenTrophyCase">
+                        @SharedLocale["TrophyCase"]
+                    </MudButton>
+                </div>
+            </Aside>
+        </AdminHero>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.SportsTennis" Color="#F97316" Value="@(overview?.TotalBookings.ToString(CultureInfo.CurrentCulture) ?? "–")" Label="@L["TotalMatches"]"
+                          Hint="@(overview is { UpcomingBookings: > 0 } ? string.Format(L["UpcomingHint"], overview.UpcomingBookings) : null)" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.Timer" Color="#059669" Value="@(overview?.TotalHours.ToString("0.#", CultureInfo.CurrentCulture) ?? "–")" Unit="h" Label="@L["TotalHours"]" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.CalendarMonth" Color="#6366F1" Value="@(currentOverview?.Bookings.ToString(CultureInfo.CurrentCulture) ?? "–")" Label="@L["MatchesThisSeason"]"
+                          Hint="@(currentOverview is null ? null : $"{currentOverview.Hours.ToString("0.#", CultureInfo.CurrentCulture)} h")" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.Verified" Color="#D97706" Value="@member.AllowedSeasonIds.Length.ToString(CultureInfo.CurrentCulture)" Label="@L["SeasonsEnrolled"]"
+                          Hint="@(overview?.FirstPlayed is { } first ? string.Format(L["PlayingSinceHint"], first.LocalDateTime.ToString("MMM yyyy", CultureInfo.CurrentCulture)) : null)" />
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="7">
+                <SectionCard Emoji="🗓️" Title="@L["SeasonEnrollment"]" Subtitle="@L["SeasonEnrollmentHint"]">
+                    <SeasonEnrollmentEditor Seasons="@ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList()" Overview="@overview?.Seasons"
+                                            SelectedIds="@selectedSeasonIds" SelectedIdsChanged="@(ids => selectedSeasonIds = ids.ToList())" Disabled="@MembersStore.IsSaving" />
+                </SectionCard>
+            </MudItem>
+            <MudItem xs="12" md="5">
+                <div class="member-page__stack">
+                    <SectionCard Emoji="⭐" Title="@SharedLocale["Role"]" Subtitle="@L["RolesHint"]">
+                        <RoleEditor Values="@selectedRoles" ValuesChanged="@(roles => selectedRoles = roles.ToList())" Disabled="@MembersStore.IsSaving" />
+                        @if (selectedRoles.Count == 0)
+                        {
+                            <div class="member-page__warning">⚠️ @L["RoleRequired"]</div>
+                        }
+                    </SectionCard>
+                    <SectionCard Emoji="🎾" Title="@L["BookingsPerWeek"]" Subtitle="@L["BookingsPerWeekHint"]">
+                        <NumberStepper @bind-Value="bookingsPerWeek" Min="0" Max="10" Unit="@L["PerWeek"]" Label="@L["BookingsPerWeek"]" Disabled="@MembersStore.IsSaving" />
+                    </SectionCard>
+                    <SectionCard Emoji="🪪" Title="@L["PersonalData"]">
+                        <dl class="member-facts">
+                            <dt>@SharedLocale["Birthday"]</dt>
+                            <dd>@member.Birthday.ToString("d", CultureInfo.CurrentCulture)</dd>
+                            <dt>@L["Gender"]</dt>
+                            <dd>@L[$"Gender_{member.Gender}"]</dd>
+                            <dt>@SharedLocale["Email"]</dt>
+                            <dd>@(member.Email ?? "–")</dd>
+                        </dl>
+                    </SectionCard>
+                </div>
+            </MudItem>
+        </MudGrid>
+
+        <BookingHistory MemberId="@member.MemberId" ClubId="@ClubId" />
+
+        @if (IsDirty)
+        {
+            <div class="save-bar" role="region" aria-label="@L["UnsavedChanges"]">
+                <div class="save-bar__text">✏️ @L["UnsavedChanges"]</div>
+                <div class="save-bar__actions">
+                    <MudButton Variant="Variant.Text" OnClick="ResetEdits" Disabled="@MembersStore.IsSaving">@L["Discard"]</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="Save"
+                               Disabled="@(MembersStore.IsSaving || selectedRoles.Count == 0)">
+                        @SharedLocale["Update"]
+                    </MudButton>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (MembersStore.IsLoading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+    [Parameter] public int MemberId { get; set; }
+
+    [Inject] private IMembersStore MembersStore { get; set; } = null!;
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembersAdminLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    private int loadedMemberId;
+    private int bookingsPerWeek;
+    private List<MemberRole> selectedRoles = [];
+    private List<int> selectedSeasonIds = [];
+
+    private MembersDetailResult? Detail => MembersStore.MemberDetail;
+
+    private bool RolesChanged => Detail is not null && !Detail.Roles.Order().SequenceEqual(selectedRoles.Order());
+
+    private bool BookingOptionsChanged => Detail is not null
+                                          && (bookingsPerWeek != Detail.BookingsPerWeek || !Detail.AllowedSeasonIds.Order().SequenceEqual(selectedSeasonIds.Order()));
+
+    private bool IsDirty => RolesChanged || BookingOptionsChanged;
+
+    protected override void OnInitialized()
+    {
+        MembersStore.OnMemberChanged += StateHasChanged;
+        MembersStore.OnMemberOverviewChanged += StateHasChanged;
+        ClubStore.OnSeasonsChanged += StateHasChanged;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (loadedMemberId == MemberId)
+            return;
+
+        loadedMemberId = MemberId;
+        await Task.WhenAll(MembersStore.LoadMember(MemberId), MembersStore.LoadMemberOverview(MemberId), ClubStore.LoadSeasons());
+        ResetEdits();
+    }
+
+    private void ResetEdits()
+    {
+        if (Detail is null)
+            return;
+
+        bookingsPerWeek = Detail.BookingsPerWeek;
+        selectedRoles = Detail.Roles.ToList();
+        selectedSeasonIds = Detail.AllowedSeasonIds.ToList();
+    }
+
+    private async Task Save()
+    {
+        if (Detail is null)
+            return;
+
+        if (RolesChanged)
+        {
+            var result = await MembersStore.UpdateMemberRoles(Detail.MemberId, selectedRoles.ToArray());
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return;
+            }
+        }
+
+        if (BookingOptionsChanged)
+        {
+            var result = await MembersStore.UpdateMemberBookingOptions(Detail.MemberId, selectedSeasonIds.ToArray(), bookingsPerWeek);
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return;
+            }
+        }
+
+        ResetEdits();
+        Snackbar.Add(string.Format(L["MemberSaved"], Detail.FullName), Severity.Success);
+    }
+
+    private async Task CopyEmail(string email)
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", email);
+        Snackbar.Add(L["EmailCopied"], Severity.Success);
+    }
+
+    private void BackToList()
+        => NavigationManager.NavigateTo(MembersStore.ListUri ?? $"/clubs/{ClubId}/members");
+
+    private void OpenProfile()
+        => NavigationManager.NavigateTo($"/clubs/{ClubId}/members/{MemberId}/profile");
+
+    private void OpenTrophyCase()
+        => NavigationManager.NavigateTo($"/clubs/{ClubId}/members/{MemberId}/trophy-case");
+
+    public void Dispose()
+    {
+        MembersStore.OnMemberChanged -= StateHasChanged;
+        MembersStore.OnMemberOverviewChanged -= StateHasChanged;
+        ClubStore.OnSeasonsChanged -= StateHasChanged;
+        MembersStore.ResetMember();
+    }
+}

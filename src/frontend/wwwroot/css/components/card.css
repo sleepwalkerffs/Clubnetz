@@ -1,0 +1,40 @@
+/* ===== Card Styles ===== */
+
+.mud-card {
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  border: 1px solid var(--mud-palette-gray-lighter);
+  transition: all 0.2s ease !important;
+}
+
+.mud-card:hover {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04) !important;
+}
+
+.mud-paper {
+  border-radius: 12px !important;
+  transition: box-shadow 0.2s ease !important;
+}
+
+.mud-paper.mud-paper-outlined {
+  border-color: var(--mud-palette-gray-lighter) !important;
+}
+
+/* Elevated card variant */
+.bookennis-card {
+  background: var(--mud-palette-surface);
+  border-radius: 14px;
+  border: 1px solid var(--mud-palette-gray-lighter);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  padding: 24px;
+  transition: all 0.2s ease;
+}
+
+.bookennis-card:hover {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+}
+
+/* Card with accent top border */
+.bookennis-card-accent {
+  border-top: 3px solid var(--mud-palette-primary);
+}

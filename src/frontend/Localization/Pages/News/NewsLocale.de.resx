@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="News" xml:space="preserve">
+    <value>Neuigkeiten</value>
+  </data>
+  <data name="HeroTitle" xml:space="preserve">
+    <value>Neues aus dem Verein</value>
+  </data>
+  <data name="HeroSubtitle" xml:space="preserve">
+    <value>Alles, was dein Verein dir mitteilen möchte, an einem Ort.</value>
+  </data>
+  <data name="NewAnnouncement" xml:space="preserve">
+    <value>Neue Mitteilung</value>
+  </data>
+  <data name="ShowExpired" xml:space="preserve">
+    <value>Abgelaufene anzeigen</value>
+  </data>
+  <data name="AllNews" xml:space="preserve">
+    <value>Mitteilungen</value>
+  </data>
+  <data name="AnnouncementCount" xml:space="preserve">
+    <value>{0} Mitteilungen</value>
+  </data>
+  <data name="AnnouncementCountOne" xml:space="preserve">
+    <value>{0} Mitteilung</value>
+  </data>
+  <data name="NoNews" xml:space="preserve">
+    <value>Aktuell gibt es keine Neuigkeiten.</value>
+  </data>
+  <data name="NoNewsManager" xml:space="preserve">
+    <value>Es gibt noch keine Neuigkeiten. Schreibe die erste Mitteilung für deine Mitglieder.</value>
+  </data>
+  <data name="Pinned" xml:space="preserve">
+    <value>Angeheftet</value>
+  </data>
+  <data name="Expired" xml:space="preserve">
+    <value>Abgelaufen</value>
+  </data>
+  <data name="VisibleUntil" xml:space="preserve">
+    <value>Sichtbar bis {0}</value>
+  </data>
+  <data name="AttachmentCount" xml:space="preserve">
+    <value>{0} Anhänge</value>
+  </data>
+  <data name="AttachmentCountOne" xml:space="preserve">
+    <value>{0} Anhang</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Heute</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>Gestern</value>
+  </data>
+  <data name="DateFormat" xml:space="preserve">
+    <value>d. MMM yyyy</value>
+  </data>
+  <data name="MyClubNewsSubtitle" xml:space="preserve">
+    <value>Das Neueste aus deinem Verein</value>
+  </data>
+  <data name="MyClubNewsEmptySubtitle" xml:space="preserve">
+    <value>Gerade nichts Neues</value>
+  </data>
+  <data name="ShowAllNews" xml:space="preserve">
+    <value>Alle Neuigkeiten</value>
+  </data>
+  <data name="BackToNews" xml:space="preserve">
+    <value>Zurück zu den Neuigkeiten</value>
+  </data>
+  <data name="AnnouncementNotFound" xml:space="preserve">
+    <value>Diese Mitteilung gibt es nicht (mehr).</value>
+  </data>
+  <data name="ExpiredHint" xml:space="preserve">
+    <value>Abgelaufen - nur für dich sichtbar</value>
+  </data>
+  <data name="WrittenBy" xml:space="preserve">
+    <value>von {0}</value>
+  </data>
+  <data name="Attachments" xml:space="preserve">
+    <value>Anhänge</value>
+  </data>
+  <data name="DownloadFile" xml:space="preserve">
+    <value>{0} herunterladen</value>
+  </data>
+  <data name="Manage" xml:space="preserve">
+    <value>Verwalten</value>
+  </data>
+  <data name="ManageSubtitle" xml:space="preserve">
+    <value>Nur für dich sichtbar</value>
+  </data>
+  <data name="EmailSentStatus" xml:space="preserve">
+    <value>Als E-Mail verschickt am {0}</value>
+  </data>
+  <data name="RecipientCount" xml:space="preserve">
+    <value>{0} Empfänger</value>
+  </data>
+  <data name="RecipientCountOne" xml:space="preserve">
+    <value>{0} Empfänger</value>
+  </data>
+  <data name="EmailNotSent" xml:space="preserve">
+    <value>Noch nicht als E-Mail verschickt</value>
+  </data>
+  <data name="EmailNotSentHint" xml:space="preserve">
+    <value>Mitglieder sehen die Mitteilung in der App. Du kannst sie ihnen zusätzlich als E-Mail schicken.</value>
+  </data>
+  <data name="SendAsEmail" xml:space="preserve">
+    <value>Als E-Mail verschicken</value>
+  </data>
+  <data name="SendAgain" xml:space="preserve">
+    <value>Erneut verschicken</value>
+  </data>
+  <data name="EmailQueued" xml:space="preserve">
+    <value>Die Mitteilung wird an {0} Empfänger verschickt.</value>
+  </data>
+  <data name="EmailQueuedOne" xml:space="preserve">
+    <value>Die Mitteilung wird an {0} Empfänger verschickt.</value>
+  </data>
+  <data name="DeleteAnnouncement" xml:space="preserve">
+    <value>Mitteilung löschen</value>
+  </data>
+  <data name="DeleteAnnouncementConfirm" xml:space="preserve">
+    <value>„{0}“ samt Anhängen löschen? Das kann nicht rückgängig gemacht werden.</value>
+  </data>
+  <data name="AnnouncementDeleted" xml:space="preserve">
+    <value>Die Mitteilung wurde gelöscht.</value>
+  </data>
+  <data name="AudienceLabel" xml:space="preserve">
+    <value>Wer soll die E-Mail bekommen?</value>
+  </data>
+  <data name="Audience_AllMembers" xml:space="preserve">
+    <value>Alle Mitglieder</value>
+  </data>
+  <data name="Audience_ActiveSeasonMembers" xml:space="preserve">
+    <value>Aktuelle Saison</value>
+  </data>
+  <data name="Audience_Youth" xml:space="preserve">
+    <value>Jugend</value>
+  </data>
+  <data name="Audience_Roles" xml:space="preserve">
+    <value>Rollen</value>
+  </data>
+  <data name="AudienceHint_AllMembers" xml:space="preserve">
+    <value>Jedes Mitglied des Vereins mit einer E-Mail-Adresse.</value>
+  </data>
+  <data name="AudienceHint_ActiveSeasonMembers" xml:space="preserve">
+    <value>Mitglieder, die für die aktuelle Saison freigeschaltet sind.</value>
+  </data>
+  <data name="AudienceHint_Youth" xml:space="preserve">
+    <value>Mitglieder unter 18. Kinder ohne eigene E-Mail-Adresse werden über ihre Eltern erreicht.</value>
+  </data>
+  <data name="AudienceHint_Roles" xml:space="preserve">
+    <value>Mitglieder mit mindestens einer der gewählten Rollen.</value>
+  </data>
+  <data name="RolesLabel" xml:space="preserve">
+    <value>Rollen</value>
+  </data>
+  <data name="SelectRole" xml:space="preserve">
+    <value>Wähle mindestens eine Rolle.</value>
+  </data>
+  <data name="CountingRecipients" xml:space="preserve">
+    <value>Empfänger werden gezählt ...</value>
+  </data>
+  <data name="NoRecipients" xml:space="preserve">
+    <value>In dieser Gruppe ist niemand per E-Mail erreichbar.</value>
+  </data>
+  <data name="CountFailed" xml:space="preserve">
+    <value>Die Empfänger konnten nicht gezählt werden.</value>
+  </data>
+  <data name="EmailDialogAnnouncement" xml:space="preserve">
+    <value>Mitteilung</value>
+  </data>
+  <data name="AlreadySentWarning" xml:space="preserve">
+    <value>Diese Mitteilung wurde bereits am {0} an {1} Empfänger verschickt. Sie würden sie ein zweites Mal bekommen.</value>
+  </data>
+  <data name="EmailIncludesAttachments" xml:space="preserve">
+    <value>{0} Anhänge werden mitgeschickt.</value>
+  </data>
+  <data name="EmailIncludesAttachmentsOne" xml:space="preserve">
+    <value>{0} Anhang wird mitgeschickt.</value>
+  </data>
+  <data name="EmailDialogHint" xml:space="preserve">
+    <value>Jede Adresse bekommt die E-Mail nur einmal, auch wenn mehrere Mitglieder sie teilen. Das Verschicken kann nicht rückgängig gemacht werden.</value>
+  </data>
+  <data name="SendToRecipients" xml:space="preserve">
+    <value>An {0} Empfänger senden</value>
+  </data>
+  <data name="SendToRecipientsOne" xml:space="preserve">
+    <value>An {0} Empfänger senden</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Senden</value>
+  </data>
+  <data name="EditAnnouncement" xml:space="preserve">
+    <value>Mitteilung bearbeiten</value>
+  </data>
+  <data name="BackToAnnouncement" xml:space="preserve">
+    <value>Zurück zur Mitteilung</value>
+  </data>
+  <data name="NotAllowedToManage" xml:space="preserve">
+    <value>Du darfst keine Mitteilungen schreiben.</value>
+  </data>
+  <data name="ContentTitle" xml:space="preserve">
+    <value>Inhalt</value>
+  </data>
+  <data name="TitleLabel" xml:space="preserve">
+    <value>Titel</value>
+  </data>
+  <data name="TitlePlaceholder" xml:space="preserve">
+    <value>z. B. Sommerfest am 12. Juli</value>
+  </data>
+  <data name="BodyLabel" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="BodyHelper" xml:space="preserve">
+    <value>Unterstützt Markdown-Formatierung</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>Formatierungshilfe</value>
+  </data>
+  <data name="HelpBold" xml:space="preserve">
+    <value>Fett</value>
+  </data>
+  <data name="HelpItalic" xml:space="preserve">
+    <value>Kursiv</value>
+  </data>
+  <data name="HelpHeading" xml:space="preserve">
+    <value>Überschrift</value>
+  </data>
+  <data name="HelpList" xml:space="preserve">
+    <value>Liste</value>
+  </data>
+  <data name="HelpLink" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="HelpButton" xml:space="preserve">
+    <value>Button</value>
+  </data>
+  <data name="HelpLineBreaks" xml:space="preserve">
+    <value>Ein Zeilenumbruch beginnt eine neue Zeile, eine Leerzeile einen neuen Absatz. Bilder können nicht in den Text eingebettet werden - füge sie als Anhang hinzu.</value>
+  </data>
+  <data name="VisibilityTitle" xml:space="preserve">
+    <value>Sichtbarkeit</value>
+  </data>
+  <data name="VisibilitySubtitle" xml:space="preserve">
+    <value>Alle Vereinsmitglieder sehen die Mitteilung, Gäste nicht</value>
+  </data>
+  <data name="PinLabel" xml:space="preserve">
+    <value>Oben anheften</value>
+  </data>
+  <data name="PinHint" xml:space="preserve">
+    <value>Angeheftete Mitteilungen bleiben über allen anderen, auch auf Mein Verein.</value>
+  </data>
+  <data name="ExpiresOnLabel" xml:space="preserve">
+    <value>Sichtbar bis (optional)</value>
+  </data>
+  <data name="ExpiresOnHint" xml:space="preserve">
+    <value>Nach diesem Tag sehen Mitglieder die Mitteilung nicht mehr.</value>
+  </data>
+  <data name="AttachmentsSubtitle" xml:space="preserve">
+    <value>In der App sichtbar und an die E-Mail angehängt</value>
+  </data>
+  <data name="AddAttachment" xml:space="preserve">
+    <value>Datei hinzufügen</value>
+  </data>
+  <data name="NoAttachments" xml:space="preserve">
+    <value>Noch keine Anhänge.</value>
+  </data>
+  <data name="RemoveAttachment" xml:space="preserve">
+    <value>Anhang entfernen</value>
+  </data>
+  <data name="NewAttachment" xml:space="preserve">
+    <value>Neu</value>
+  </data>
+  <data name="AttachmentLimits" xml:space="preserve">
+    <value>Bis zu {0} Dateien, {1} MB pro Datei und {2} MB insgesamt. PDF, Bilder, Office-Dokumente, Text-, CSV- und Kalenderdateien.</value>
+  </data>
+  <data name="TooManyAttachments" xml:space="preserve">
+    <value>Eine Mitteilung kann höchstens {0} Anhänge haben.</value>
+  </data>
+  <data name="FileTypeNotAllowed" xml:space="preserve">
+    <value>„{0}“ kann nicht angehängt werden, dieser Dateityp wird nicht unterstützt.</value>
+  </data>
+  <data name="FileEmpty" xml:space="preserve">
+    <value>„{0}“ ist leer.</value>
+  </data>
+  <data name="FileTooLarge" xml:space="preserve">
+    <value>„{0}“ ist zu groß. Eine Datei darf höchstens {1} MB haben.</value>
+  </data>
+  <data name="FilesTooLarge" xml:space="preserve">
+    <value>Die Anhänge sind zu groß. Zusammen dürfen sie höchstens {0} MB haben.</value>
+  </data>
+  <data name="FileReadFailed" xml:space="preserve">
+    <value>„{0}“ konnte nicht gelesen werden.</value>
+  </data>
+  <data name="EmailTitle" xml:space="preserve">
+    <value>E-Mail</value>
+  </data>
+  <data name="EmailSubtitle" xml:space="preserve">
+    <value>Optional - Mitglieder sehen die Mitteilung immer in der App</value>
+  </data>
+  <data name="AlsoSendAsEmail" xml:space="preserve">
+    <value>Zusätzlich als E-Mail verschicken</value>
+  </data>
+  <data name="EmailLaterHint" xml:space="preserve">
+    <value>Du kannst die Mitteilung auch später noch als E-Mail verschicken.</value>
+  </data>
+  <data name="Publish" xml:space="preserve">
+    <value>Veröffentlichen</value>
+  </data>
+  <data name="PublishAndSend" xml:space="preserve">
+    <value>Veröffentlichen und senden</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Vorschau</value>
+  </data>
+  <data name="PreviewHint" xml:space="preserve">
+    <value>So sehen Mitglieder die Mitteilung</value>
+  </data>
+  <data name="PreviewEmpty" xml:space="preserve">
+    <value>Beginne zu schreiben, um die Vorschau zu sehen.</value>
+  </data>
+  <data name="PreviewFailed" xml:space="preserve">
+    <value>Die Vorschau konnte nicht erstellt werden.</value>
+  </data>
+  <data name="AnnouncementPublished" xml:space="preserve">
+    <value>Die Mitteilung wurde veröffentlicht.</value>
+  </data>
+  <data name="AnnouncementSaved" xml:space="preserve">
+    <value>Die Mitteilung wurde gespeichert.</value>
+  </data>
+  <data name="PublishedAndQueued" xml:space="preserve">
+    <value>Veröffentlicht. Die E-Mail wird an {0} Empfänger verschickt.</value>
+  </data>
+  <data name="PublishedAndQueuedOne" xml:space="preserve">
+    <value>Veröffentlicht. Die E-Mail wird an {0} Empfänger verschickt.</value>
+  </data>
+  <data name="PublishedButNotSent" xml:space="preserve">
+    <value>Die Mitteilung wurde veröffentlicht, die E-Mail konnte aber nicht verschickt werden.</value>
+  </data>
+  <data name="PublishedWithoutAttachments" xml:space="preserve">
+    <value>Die Mitteilung wurde veröffentlicht, es konnten aber nicht alle Anhänge gespeichert werden. Es wurde keine E-Mail verschickt.</value>
+  </data>
+</root>

@@ -1,0 +1,71 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.Statistics
+@using Bookennis.Shared.Controller.Statistics
+
+<div class="stats-hero">
+    <div class="stats-hero__content">
+        <div class="stats-hero__eyebrow">@Title</div>
+        <div class="stats-hero__main">
+            <span class="stats-hero__number">@Data.TotalBookings</span>
+            <span class="stats-hero__unit">@(Data.TotalBookings == 1 ? Locale["Match"] : Locale["Matches"])</span>
+        </div>
+        <div class="stats-hero__sub">
+            @string.Format(Locale["HoursOnCourtSentence"], Data.TotalHoursOnCourt.ToString("0.#", CultureInfo.CurrentCulture))
+        </div>
+
+        <div class="stats-hero__chips">
+            @if (TrendPercentage is { } trend && PreviousLabel is not null)
+            {
+                <span class="stats-chip @(trend >= 0 ? "stats-chip--up" : "stats-chip--down")">
+                    @(trend >= 0 ? "▲" : "▼") @string.Format(Locale["TrendVs"], Math.Abs(trend), PreviousLabel)
+                </span>
+            }
+            @if (Data.CurrentWeekStreak >= 2)
+            {
+                <span class="stats-chip stats-chip--fire">🔥 @string.Format(Locale["CurrentStreakChip"], Data.CurrentWeekStreak)</span>
+            }
+            @if (ShowSince && Data.FirstBooking is { } first)
+            {
+                <span class="stats-chip">🎾 @string.Format(Locale["PlayingSince"], first.ToString("MMMM yyyy", CultureInfo.CurrentCulture))</span>
+            }
+            @if (SeasonsPlayed is > 0)
+            {
+                <span class="stats-chip">🏅 @string.Format(Locale["SeasonsPlayedChip"], SeasonsPlayed)</span>
+            }
+        </div>
+    </div>
+
+    @if (Data.PlayerType is { } playerType)
+    {
+        <div class="stats-hero__persona">
+            <div class="persona-emoji" aria-hidden="true">@GetEmoji(playerType)</div>
+            <div class="persona-caption">@Locale["YourPlayStyle"]</div>
+            <div class="persona-name">@Locale[$"PlayerType_{playerType}"]</div>
+            <div class="persona-description">@Locale[$"PlayerType_{playerType}_Description"]</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public StatisticsData Data { get; set; } = null!;
+    [Parameter, EditorRequired] public string Title { get; set; } = null!;
+    [Parameter] public StatisticsData? PreviousData { get; set; }
+    [Parameter] public string? PreviousLabel { get; set; }
+    [Parameter] public bool ShowSince { get; set; }
+    [Parameter] public int? SeasonsPlayed { get; set; }
+
+    [Inject] private IStringLocalizer<StatisticsLocale> Locale { get; set; } = null!;
+
+    private int? TrendPercentage => PreviousData is { TotalBookings: > 0 } previous
+        ? (int)Math.Round((Data.TotalBookings - previous.TotalBookings) * 100.0 / previous.TotalBookings)
+        : null;
+
+    private static string GetEmoji(PlayerType playerType) => playerType switch
+    {
+        PlayerType.EarlyBird => "🌅",
+        PlayerType.AfternoonAce => "☀️",
+        PlayerType.NightOwl => "🦉",
+        PlayerType.WeekendWarrior => "🏖️",
+        _ => "🎾",
+    };
+}

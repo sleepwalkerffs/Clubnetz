@@ -1,0 +1,117 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubSettings
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.HttpClients
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+
+<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@ClubStore.IsSaving" Title="@L["AddSeason"]">
+    <div class="season-edit">
+        @if (Season is null && Template is not null)
+        {
+            <button type="button" class="season-edit__suggestion" @onclick="ApplyTemplate">
+                <span aria-hidden="true">✨</span>
+                <span>
+                    <span class="season-edit__suggestion-title">@string.Format(L["SuggestNextSeason"], MemberAdminHelpers.SeasonLabel(Template.Value.Start, Template.Value.End))</span>
+                    <span class="season-edit__suggestion-text">@Template.Value.Start.ToString("d", CultureInfo.CurrentCulture) – @Template.Value.End.ToString("d", CultureInfo.CurrentCulture)</span>
+                </span>
+            </button>
+        }
+
+        <MudDateRangePicker Variant="Variant.Outlined" Label="@L["SeasonPeriod"]" DateRange="@range" DateRangeChanged="@(value => range = value)"
+                            PickerVariant="PickerVariant.Dialog" Required="true" DisplayMonths="2" TitleDateFormat="dd.MM.yyyy" />
+
+        @if (Start is { } start && End is { } end && end > start)
+        {
+            var days = end.DayNumber - start.DayNumber + 1;
+            <div class="season-edit__summary">
+                <div>
+                    <span class="season-edit__value">@Math.Round(days / 7.0)</span>
+                    <span class="season-edit__unit">@L["Weeks"]</span>
+                </div>
+                <div>
+                    <span class="season-edit__value">@days</span>
+                    <span class="season-edit__unit">@L["Days"]</span>
+                </div>
+                <div>
+                    <span class="season-edit__value">@MemberAdminHelpers.SeasonLabel(start, end)</span>
+                    <span class="season-edit__unit">@L["Label"]</span>
+                </div>
+            </div>
+        }
+
+        @foreach (var overlap in Overlaps)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true">
+                @string.Format(L["OverlapWarning"], MemberAdminHelpers.SeasonLabel(overlap), overlap.StartDate.ToString("d", CultureInfo.CurrentCulture), overlap.EndDate.ToString("d", CultureInfo.CurrentCulture))
+            </MudAlert>
+        }
+
+        <div class="season-edit__hint">💡 @L["SeasonHint"]</div>
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter] public SeasonResult? Season { get; set; }
+
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    private DateRange? range;
+
+    private DateOnly? Start => range?.Start is { } start ? DateOnly.FromDateTime(start) : null;
+    private DateOnly? End => range?.End is { } end ? DateOnly.FromDateTime(end) : null;
+
+    private bool CanSubmit => Start is { } start && End is { } end && start < end;
+
+    /// <summary>The latest season moved by one year, as suggestion for a new season.</summary>
+    private (DateOnly Start, DateOnly End)? Template
+    {
+        get
+        {
+            var latest = ClubStore.Seasons.MaxBy(s => s.StartDate);
+            return latest is null ? null : (latest.StartDate.AddYears(1), latest.EndDate.AddYears(1));
+        }
+    }
+
+    private List<SeasonResult> Overlaps
+        => Start is { } start && End is { } end
+            ? ClubStore.Seasons.Where(s => s.Id != Season?.Id && s.StartDate <= end && s.EndDate >= start).ToList()
+            : [];
+
+    protected override void OnInitialized()
+    {
+        if (Season is not null)
+            range = new DateRange(Season.StartDate.ToDateTime(TimeOnly.MinValue), Season.EndDate.ToDateTime(TimeOnly.MinValue));
+    }
+
+    private void ApplyTemplate()
+    {
+        if (Template is { } template)
+            range = new DateRange(template.Start.ToDateTime(TimeOnly.MinValue), template.End.ToDateTime(TimeOnly.MinValue));
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        var request = new SeasonRequest { StartDate = Start!.Value, EndDate = End!.Value };
+
+        HttpResult response = Season is not null
+            ? await ClubStore.UpdateSeason(Season.Id, request)
+            : await ClubStore.AddSeason(request);
+
+        if (response.Success)
+            return DialogResult.Ok(true);
+
+        Snackbar.ShowErrorDetails(response, BackendLocale);
+        return null;
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+}

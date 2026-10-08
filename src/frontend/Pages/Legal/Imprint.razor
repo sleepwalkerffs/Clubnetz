@@ -1,0 +1,23 @@
+@page "/legal/imprint"
+@layout NoNavigationLayout
+@using Bookennis.Client.Localization.Pages.Legal
+@using Bookennis.Client.Shared
+
+<PageTitle>@Locale["Imprint"]</PageTitle>
+
+<LegalDocument Title="@Locale["Imprint"]" Emoji="📄">
+    <LegalSection Title="@Locale["Operator"]">
+        <p>@Locale["Imprint_LegalBasis"]</p>
+        <OperatorDetails />
+    </LegalSection>
+    <LegalSection Title="@Locale["Imprint_PurposeTitle"]" Text="@Locale["Imprint_Purpose"]" />
+    <LegalSection Title="@Locale["Imprint_ClubContentTitle"]" Text="@Locale["Imprint_ClubContent"]" />
+    <LegalSection Title="@Locale["Imprint_LiabilityTitle"]" Text="@Locale["Imprint_Liability"]" />
+    <LegalSection>
+        <MudLink Href="legal/privacy" Color="Color.Primary">@Locale["Privacy"]</MudLink>
+    </LegalSection>
+</LegalDocument>
+
+@code {
+    [Inject] private IStringLocalizer<LegalLocale> Locale { get; set; } = null!;
+}

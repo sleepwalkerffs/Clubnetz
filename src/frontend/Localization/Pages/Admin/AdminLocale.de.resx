@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AdminPanel" xml:space="preserve">
+    <value>Admin-Bereich</value>
+  </data>
+  <data name="Users" xml:space="preserve">
+    <value>Benutzer</value>
+  </data>
+  <data name="Clubs" xml:space="preserve">
+    <value>Klubs</value>
+  </data>
+  <data name="EmailConfirmed" xml:space="preserve">
+    <value>E-Mail bestätigt</value>
+  </data>
+  <data name="EditUser" xml:space="preserve">
+    <value>Benutzer bearbeiten</value>
+  </data>
+  <data name="SaveChanges" xml:space="preserve">
+    <value>Änderungen speichern</value>
+  </data>
+  <data name="EmailManagement" xml:space="preserve">
+    <value>E-Mail-Verwaltung</value>
+  </data>
+  <data name="CurrentEmail" xml:space="preserve">
+    <value>Aktuelle E-Mail</value>
+  </data>
+  <data name="Confirmed" xml:space="preserve">
+    <value>Bestätigt</value>
+  </data>
+  <data name="ResendConfirmationEmail" xml:space="preserve">
+    <value>Bestätigungsemail erneut senden</value>
+  </data>
+  <data name="NewEmail" xml:space="preserve">
+    <value>Neue E-Mail</value>
+  </data>
+  <data name="ChangeEmail" xml:space="preserve">
+    <value>E-Mail ändern</value>
+  </data>
+  <data name="SendPasswordResetLink" xml:space="preserve">
+    <value>Passwort-Reset-Link senden</value>
+  </data>
+  <data name="DangerZone" xml:space="preserve">
+    <value>Gefahrenzone</value>
+  </data>
+  <data name="DeleteUser" xml:space="preserve">
+    <value>Benutzer löschen</value>
+  </data>
+  <data name="UserUpdated" xml:space="preserve">
+    <value>Benutzer erfolgreich aktualisiert.</value>
+  </data>
+  <data name="FailedUpdateUser" xml:space="preserve">
+    <value>Benutzer konnte nicht aktualisiert werden.</value>
+  </data>
+  <data name="ConfirmationEmailSent" xml:space="preserve">
+    <value>Bestätigungsemail gesendet.</value>
+  </data>
+  <data name="FailedSendConfirmation" xml:space="preserve">
+    <value>Bestätigungsemail konnte nicht gesendet werden.</value>
+  </data>
+  <data name="EnterNewEmail" xml:space="preserve">
+    <value>Bitte geben Sie eine neue E-Mail-Adresse ein.</value>
+  </data>
+  <data name="EmailChangeConfirmationSent" xml:space="preserve">
+    <value>Bestätigung der E-Mail-Änderung an die neue Adresse gesendet.</value>
+  </data>
+  <data name="FailedChangeEmail" xml:space="preserve">
+    <value>E-Mail-Änderung fehlgeschlagen. Die E-Mail wird möglicherweise bereits verwendet.</value>
+  </data>
+  <data name="PasswordResetLinkSent" xml:space="preserve">
+    <value>Passwort-Reset-Link gesendet.</value>
+  </data>
+  <data name="FailedSendPasswordReset" xml:space="preserve">
+    <value>Passwort-Reset-Link konnte nicht gesendet werden.</value>
+  </data>
+  <data name="ConfirmDeletion" xml:space="preserve">
+    <value>Löschung bestätigen</value>
+  </data>
+  <data name="DeleteUserConfirm" xml:space="preserve">
+    <value>Sind Sie sicher, dass Sie diesen Benutzer löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.</value>
+  </data>
+  <data name="UserDeleted" xml:space="preserve">
+    <value>Benutzer gelöscht.</value>
+  </data>
+  <data name="FailedDeleteUser" xml:space="preserve">
+    <value>Benutzer konnte nicht gelöscht werden.</value>
+  </data>
+  <data name="AddClub" xml:space="preserve">
+    <value>Klub hinzufügen</value>
+  </data>
+  <data name="PlayModes" xml:space="preserve">
+    <value>Spielmodi</value>
+  </data>
+  <data name="CreateClub" xml:space="preserve">
+    <value>Klub erstellen</value>
+  </data>
+  <data name="ClubName" xml:space="preserve">
+    <value>Klubname</value>
+  </data>
+  <data name="OpeningStart" xml:space="preserve">
+    <value>Öffnungszeit Beginn</value>
+  </data>
+  <data name="OpeningEnd" xml:space="preserve">
+    <value>Öffnungszeit Ende</value>
+  </data>
+  <data name="PrimeTimeStart" xml:space="preserve">
+    <value>Hauptzeit Beginn</value>
+  </data>
+  <data name="PrimeTimeEnd" xml:space="preserve">
+    <value>Hauptzeit Ende</value>
+  </data>
+  <data name="FillAllFields" xml:space="preserve">
+    <value>Bitte füllen Sie alle Felder aus.</value>
+  </data>
+  <data name="FillRequiredFields" xml:space="preserve">
+    <value>Bitte füllen Sie alle Pflichtfelder aus.</value>
+  </data>
+  <data name="ClubCreated" xml:space="preserve">
+    <value>Klub erstellt.</value>
+  </data>
+  <data name="FailedCreateClub" xml:space="preserve">
+    <value>Klub konnte nicht erstellt werden.</value>
+  </data>
+  <data name="DeleteClubConfirm" xml:space="preserve">
+    <value>Sind Sie sicher, dass Sie '{0}' löschen möchten? Alle Mitglieder werden ebenfalls entfernt.</value>
+  </data>
+  <data name="ClubDeleted" xml:space="preserve">
+    <value>Klub gelöscht.</value>
+  </data>
+  <data name="FailedDeleteClub" xml:space="preserve">
+    <value>Klub konnte nicht gelöscht werden.</value>
+  </data>
+  <data name="BookingGracePeriod" xml:space="preserve">
+    <value>Buchungskarenzzeit (Min.)</value>
+  </data>
+  <data name="SaveSettings" xml:space="preserve">
+    <value>Einstellungen speichern</value>
+  </data>
+  <data name="ClubUpdated" xml:space="preserve">
+    <value>Klub aktualisiert.</value>
+  </data>
+  <data name="FailedUpdateClub" xml:space="preserve">
+    <value>Klub konnte nicht aktualisiert werden.</value>
+  </data>
+  <data name="AddPlayMode" xml:space="preserve">
+    <value>Spielmodus hinzufügen</value>
+  </data>
+  <data name="PlayMode" xml:space="preserve">
+    <value>Spielmodus</value>
+  </data>
+  <data name="Color" xml:space="preserve">
+    <value>Farbe</value>
+  </data>
+  <data name="Duration" xml:space="preserve">
+    <value>Dauer</value>
+  </data>
+  <data name="HasFixedDuration" xml:space="preserve">
+    <value>Feste Dauer</value>
+  </data>
+  <data name="HasFixedPlayerCount" xml:space="preserve">
+    <value>Feste Spieleranzahl</value>
+  </data>
+  <data name="Players" xml:space="preserve">
+    <value>Spieler</value>
+  </data>
+  <data name="CanOverbook" xml:space="preserve">
+    <value>Überbuchen möglich</value>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>Aktionen</value>
+  </data>
+  <data name="FixedPlayerCount" xml:space="preserve">
+    <value>Feste Spieleranzahl</value>
+  </data>
+  <data name="CommentAllowed" xml:space="preserve">
+    <value>Kommentar erlaubt</value>
+  </data>
+  <data name="ChargesSubscription" xml:space="preserve">
+    <value>Abo belasten</value>
+  </data>
+  <data name="MaxBookingsPerSeason" xml:space="preserve">
+    <value>Max. Buchungen pro Saison</value>
+  </data>
+  <data name="PlayModeSaved" xml:space="preserve">
+    <value>Spielmodus gespeichert.</value>
+  </data>
+  <data name="FailedSavePlayMode" xml:space="preserve">
+    <value>Spielmodus konnte nicht gespeichert werden.</value>
+  </data>
+  <data name="DeletePlayModeConfirm" xml:space="preserve">
+    <value>Spielmodus '{0}' löschen?</value>
+  </data>
+  <data name="PlayModeDeleted" xml:space="preserve">
+    <value>Spielmodus gelöscht.</value>
+  </data>
+  <data name="FailedDeletePlayMode" xml:space="preserve">
+    <value>Spielmodus konnte nicht gelöscht werden.</value>
+  </data>
+  <data name="SearchUserByEmail" xml:space="preserve">
+    <value>Benutzer per E-Mail suchen</value>
+  </data>
+  <data name="AddMember" xml:space="preserve">
+    <value>Mitglied hinzufügen</value>
+  </data>
+  <data name="Roles" xml:space="preserve">
+    <value>Rollen</value>
+  </data>
+  <data name="BookingAllowed" xml:space="preserve">
+    <value>Buchung erlaubt</value>
+  </data>
+  <data name="SelectUser" xml:space="preserve">
+    <value>Bitte wählen Sie einen Benutzer aus.</value>
+  </data>
+  <data name="MemberAdded" xml:space="preserve">
+    <value>Mitglied hinzugefügt.</value>
+  </data>
+  <data name="FailedAddMember" xml:space="preserve">
+    <value>Mitglied konnte nicht hinzugefügt werden.</value>
+  </data>
+  <data name="RemoveMemberConfirm" xml:space="preserve">
+    <value>'{0}' aus diesem Klub entfernen?</value>
+  </data>
+  <data name="MemberRemoved" xml:space="preserve">
+    <value>Mitglied entfernt.</value>
+  </data>
+  <data name="FailedRemoveMember" xml:space="preserve">
+    <value>Mitglied konnte nicht entfernt werden.</value>
+  </data>
+  <data name="EditMember" xml:space="preserve">
+    <value>Mitglied bearbeiten</value>
+  </data>
+  <data name="BookingsPerWeek" xml:space="preserve">
+    <value>Buchungen pro Woche</value>
+  </data>
+  <data name="IsAtpClub" xml:space="preserve">
+    <value>ATP-Verein</value>
+  </data>
+  <data name="PrimeTimeEnabled" xml:space="preserve">
+    <value>Hauptzeit aktiviert</value>
+  </data>
+  <data name="PrimeTimeWeekdays" xml:space="preserve">
+    <value>Hauptzeit Wochentage</value>
+  </data>
+  <data name="PrimeTimeRestrictChildren" xml:space="preserve">
+    <value>Kinder während Hauptzeit einschränken</value>
+  </data>
+  <data name="PrimeTimeRestrictGuests" xml:space="preserve">
+    <value>Gäste während Hauptzeit einschränken</value>
+  </data>
+  <data name="PrimeTimeSettings" xml:space="preserve">
+    <value>Hauptzeit-Einstellungen</value>
+  </data>
+  <data name="ChildAgeThreshold" xml:space="preserve">
+    <value>Kindesaltersgrenze</value>
+  </data>
+  <data name="MemberUpdated" xml:space="preserve">
+    <value>Mitglied aktualisiert.</value>
+  </data>
+  <data name="FailedUpdateMember" xml:space="preserve">
+    <value>Mitglied konnte nicht aktualisiert werden.</value>
+  </data>
+  <data name="Courts" xml:space="preserve">
+    <value>Plätze</value>
+  </data>
+  <data name="AddCourt" xml:space="preserve">
+    <value>Platz hinzufügen</value>
+  </data>
+  <data name="Court" xml:space="preserve">
+    <value>Platz</value>
+  </data>
+  <data name="Alias" xml:space="preserve">
+    <value>Alias</value>
+  </data>
+  <data name="SortOrder" xml:space="preserve">
+    <value>Reihenfolge</value>
+  </data>
+  <data name="Inactive" xml:space="preserve">
+    <value>Inaktiv</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="InactiveFrom" xml:space="preserve">
+    <value>Inaktiv von</value>
+  </data>
+  <data name="InactiveTo" xml:space="preserve">
+    <value>Inaktiv bis</value>
+  </data>
+  <data name="CourtSaved" xml:space="preserve">
+    <value>Platz gespeichert.</value>
+  </data>
+  <data name="FailedSaveCourt" xml:space="preserve">
+    <value>Platz konnte nicht gespeichert werden.</value>
+  </data>
+  <data name="DeleteCourtConfirm" xml:space="preserve">
+    <value>Platz '{0}' löschen?</value>
+  </data>
+  <data name="CourtDeleted" xml:space="preserve">
+    <value>Platz gelöscht.</value>
+  </data>
+  <data name="FailedDeleteCourt" xml:space="preserve">
+    <value>Platz konnte nicht gelöscht werden.</value>
+  </data>
+  <data name="Families" xml:space="preserve">
+    <value>Familien</value>
+  </data>
+  <data name="Family" xml:space="preserve">
+    <value>Familie</value>
+  </data>
+  <data name="NoFamiliesFound" xml:space="preserve">
+    <value>Keine Familien für diesen Klub gefunden.</value>
+  </data>
+  <data name="Parents" xml:space="preserve">
+    <value>Eltern</value>
+  </data>
+  <data name="Children" xml:space="preserve">
+    <value>Kinder</value>
+  </data>
+  <data name="OwnedAccount" xml:space="preserve">
+    <value>Verwaltetes Konto</value>
+  </data>
+  <data name="EditFamilyMember" xml:space="preserve">
+    <value>Familienmitglied bearbeiten</value>
+  </data>
+  <data name="FamilyMemberUpdated" xml:space="preserve">
+    <value>Familienmitglied aktualisiert.</value>
+  </data>
+  <data name="FailedUpdateFamilyMember" xml:space="preserve">
+    <value>Familienmitglied konnte nicht aktualisiert werden.</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Ja</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>Nein</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>Bestätigen</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Passwort</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Erstellen</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Suchen</value>
+  </data>
+  <!-- Seasons -->
+  <data name="Seasons" xml:space="preserve">
+    <value>Saisonen</value>
+  </data>
+  <data name="Season" xml:space="preserve">
+    <value>Saison</value>
+  </data>
+  <data name="AddSeason" xml:space="preserve">
+    <value>Saison hinzufügen</value>
+  </data>
+  <data name="StartDate" xml:space="preserve">
+    <value>Startdatum</value>
+  </data>
+  <data name="EndDate" xml:space="preserve">
+    <value>Enddatum</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="SeasonSaved" xml:space="preserve">
+    <value>Saison gespeichert.</value>
+  </data>
+  <data name="FailedSaveSeason" xml:space="preserve">
+    <value>Saison konnte nicht gespeichert werden.</value>
+  </data>
+  <data name="DeleteSeasonConfirm" xml:space="preserve">
+    <value>Saison '{0}' löschen?</value>
+  </data>
+  <data name="SeasonDeleted" xml:space="preserve">
+    <value>Saison gelöscht.</value>
+  </data>
+  <data name="FailedDeleteSeason" xml:space="preserve">
+    <value>Saison konnte nicht gelöscht werden.</value>
+  </data>
+  <!-- Impersonation -->
+  <data name="Impersonation" xml:space="preserve">
+    <value>Identitätswechsel</value>
+  </data>
+  <data name="Impersonate" xml:space="preserve">
+    <value>Benutzer imitieren</value>
+  </data>
+  <data name="ImpersonateDescription" xml:space="preserve">
+    <value>Als dieser Benutzer anmelden. Ihre aktuelle Admin-Sitzung wird ersetzt.</value>
+  </data>
+  <data name="ImpersonateConfirm" xml:space="preserve">
+    <value>Möchten Sie wirklich diesen Benutzer imitieren? Sie werden als dieser Benutzer angemeldet und müssen sich erneut einloggen, um zu Ihrem Admin-Konto zurückzukehren.</value>
+  </data>
+  <data name="ImpersonationSuccess" xml:space="preserve">
+    <value>Identitätswechsel erfolgreich. Sie sind jetzt als dieser Benutzer angemeldet.</value>
+  </data>
+  <data name="FailedImpersonate" xml:space="preserve">
+    <value>Identitätswechsel fehlgeschlagen.</value>
+  </data>
+</root>

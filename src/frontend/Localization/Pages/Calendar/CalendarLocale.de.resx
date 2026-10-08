@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Calendar" xml:space="preserve">
+    <value>Kalender</value>
+  </data>
+  <data name="HeroTitle" xml:space="preserve">
+    <value>Vereinskalender</value>
+  </data>
+  <data name="HeroSubtitle" xml:space="preserve">
+    <value>Arbeitseinsätze, Feste und Treffen des Vereins auf einen Blick.</value>
+  </data>
+  <data name="NewEvent" xml:space="preserve">
+    <value>Neuer Termin</value>
+  </data>
+  <data name="NextUp" xml:space="preserve">
+    <value>Als Nächstes</value>
+  </data>
+  <data name="NothingPlanned" xml:space="preserve">
+    <value>Noch nichts geplant</value>
+  </data>
+  <data name="ViewList" xml:space="preserve">
+    <value>Demnächst</value>
+  </data>
+  <data name="ViewMonth" xml:space="preserve">
+    <value>Monat</value>
+  </data>
+  <data name="ShowPastEvents" xml:space="preserve">
+    <value>Vergangene Termine anzeigen</value>
+  </data>
+  <data name="UpcomingEvents" xml:space="preserve">
+    <value>Kommende Termine</value>
+  </data>
+  <data name="PastEvents" xml:space="preserve">
+    <value>Vergangene Termine</value>
+  </data>
+  <data name="EventCount" xml:space="preserve">
+    <value>{0} Termine</value>
+  </data>
+  <data name="EventCountOne" xml:space="preserve">
+    <value>{0} Termin</value>
+  </data>
+  <data name="NoUpcomingEvents" xml:space="preserve">
+    <value>Noch keine Termine geplant.</value>
+  </data>
+  <data name="NoPastEvents" xml:space="preserve">
+    <value>Keine vergangenen Termine im letzten Jahr.</value>
+  </data>
+  <data name="NoEventsInMonth" xml:space="preserve">
+    <value>Keine Termine in diesem Monat.</value>
+  </data>
+  <data name="NoEventsOnDay" xml:space="preserve">
+    <value>Keine Termine an diesem Tag.</value>
+  </data>
+  <data name="PreviousMonth" xml:space="preserve">
+    <value>Vorheriger Monat</value>
+  </data>
+  <data name="NextMonth" xml:space="preserve">
+    <value>Nächster Monat</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Heute</value>
+  </data>
+  <data name="Tomorrow" xml:space="preserve">
+    <value>Morgen</value>
+  </data>
+  <data name="InDays" xml:space="preserve">
+    <value>In {0} Tagen</value>
+  </data>
+  <data name="Now" xml:space="preserve">
+    <value>Läuft gerade</value>
+  </data>
+  <data name="Past" xml:space="preserve">
+    <value>Vorbei</value>
+  </data>
+  <data name="AllDay" xml:space="preserve">
+    <value>Ganztägig</value>
+  </data>
+  <data name="FromTime" xml:space="preserve">
+    <value>ab {0}</value>
+  </data>
+  <data name="DateFormat" xml:space="preserve">
+    <value>ddd, d. MMM</value>
+  </data>
+  <data name="DateFormatWithYear" xml:space="preserve">
+    <value>ddd, d. MMM yyyy</value>
+  </data>
+  <data name="YoureIn" xml:space="preserve">
+    <value>Du bist dabei ({0})</value>
+  </data>
+  <data name="Full" xml:space="preserve">
+    <value>Ausgebucht</value>
+  </data>
+  <data name="Category_WorkEffort" xml:space="preserve">
+    <value>Arbeitseinsatz</value>
+  </data>
+  <data name="Category_Social" xml:space="preserve">
+    <value>Geselliges</value>
+  </data>
+  <data name="Category_Tournament" xml:space="preserve">
+    <value>Turnier</value>
+  </data>
+  <data name="Category_Meeting" xml:space="preserve">
+    <value>Versammlung</value>
+  </data>
+  <data name="Category_Other" xml:space="preserve">
+    <value>Sonstiges</value>
+  </data>
+  <data name="BackToCalendar" xml:space="preserve">
+    <value>Kalender</value>
+  </data>
+  <data name="BackToEvent" xml:space="preserve">
+    <value>Zurück zum Termin</value>
+  </data>
+  <data name="EventNotFound" xml:space="preserve">
+    <value>Diesen Termin gibt es nicht (mehr).</value>
+  </data>
+  <data name="OrganizedBy" xml:space="preserve">
+    <value>Organisiert von {0}</value>
+  </data>
+  <data name="Share" xml:space="preserve">
+    <value>Teilen</value>
+  </data>
+  <data name="CopyLink" xml:space="preserve">
+    <value>Link kopieren</value>
+  </data>
+  <data name="LinkCopied" xml:space="preserve">
+    <value>Link kopiert – füge ihn in WhatsApp oder woanders ein.</value>
+  </data>
+  <data name="ShareFailed" xml:space="preserve">
+    <value>Teilen ist in diesem Browser nicht möglich.</value>
+  </data>
+  <data name="ShareRegisterHint" xml:space="preserve">
+    <value>Hier in der App anmelden:</value>
+  </data>
+  <data name="OrganizerActions" xml:space="preserve">
+    <value>Aktionen für Organisatoren</value>
+  </data>
+  <data name="EditEvent" xml:space="preserve">
+    <value>Termin bearbeiten</value>
+  </data>
+  <data name="ExportParticipants" xml:space="preserve">
+    <value>Teilnehmer exportieren (Excel)</value>
+  </data>
+  <data name="DeleteEvent" xml:space="preserve">
+    <value>Termin löschen</value>
+  </data>
+  <data name="DeleteEventConfirm" xml:space="preserve">
+    <value>Möchtest du "{0}" wirklich löschen?</value>
+  </data>
+  <data name="DeleteEventConfirmWithRegistrations" xml:space="preserve">
+    <value>Möchtest du "{0}" wirklich löschen? Die {1} Anmeldungen werden ebenfalls gelöscht.</value>
+  </data>
+  <data name="EventDeleted" xml:space="preserve">
+    <value>Termin gelöscht</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>Worum geht's</value>
+  </data>
+  <data name="NoRegistrationNeeded" xml:space="preserve">
+    <value>Keine Anmeldung nötig – komm einfach vorbei!</value>
+  </data>
+  <data name="Participants" xml:space="preserve">
+    <value>Teilnehmer</value>
+  </data>
+  <data name="PeopleCount" xml:space="preserve">
+    <value>{0} Personen</value>
+  </data>
+  <data name="PeopleCountOne" xml:space="preserve">
+    <value>{0} Person</value>
+  </data>
+  <data name="RegistrationCount" xml:space="preserve">
+    <value>{0} Anmeldungen</value>
+  </data>
+  <data name="RegistrationCountOne" xml:space="preserve">
+    <value>{0} Anmeldung</value>
+  </data>
+  <data name="CapacityLabel" xml:space="preserve">
+    <value>{0} / {1} Plätze</value>
+  </data>
+  <data name="NoParticipantsYet" xml:space="preserve">
+    <value>Noch niemand angemeldet. Sei die/der Erste!</value>
+  </data>
+  <data name="RemoveRegistration" xml:space="preserve">
+    <value>Anmeldung entfernen</value>
+  </data>
+  <data name="RemoveRegistrationConfirm" xml:space="preserve">
+    <value>Die Anmeldung von {0} entfernen?</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="Totals" xml:space="preserve">
+    <value>Summen</value>
+  </data>
+  <data name="TotalsSubtitle" xml:space="preserve">
+    <value>Womit die Organisatoren planen können</value>
+  </data>
+  <data name="Registration" xml:space="preserve">
+    <value>Anmeldung</value>
+  </data>
+  <data name="RegistrationSubtitle" xml:space="preserve">
+    <value>Sag den Organisatoren, dass du kommst</value>
+  </data>
+  <data name="RegisterUntil" xml:space="preserve">
+    <value>Anmeldung bis {0}</value>
+  </data>
+  <data name="DeadlinePassed" xml:space="preserve">
+    <value>Anmeldeschluss war am {0}</value>
+  </data>
+  <data name="EventIsOver" xml:space="preserve">
+    <value>Dieser Termin ist vorbei.</value>
+  </data>
+  <data name="RegistrationClosedAt" xml:space="preserve">
+    <value>Die Anmeldung wurde am {0} geschlossen.</value>
+  </data>
+  <data name="EventIsFull" xml:space="preserve">
+    <value>Dieser Termin ist ausgebucht.</value>
+  </data>
+  <data name="RegistrationClosed" xml:space="preserve">
+    <value>Die Anmeldung ist geschlossen.</value>
+  </data>
+  <data name="YouAreRegistered" xml:space="preserve">
+    <value>Du bist mit {0} Personen angemeldet.</value>
+  </data>
+  <data name="YouAreRegisteredOne" xml:space="preserve">
+    <value>Du bist angemeldet.</value>
+  </data>
+  <data name="HeadCountLabel" xml:space="preserve">
+    <value>Wie viele Personen kommen?</value>
+  </data>
+  <data name="HeadCountHint" xml:space="preserve">
+    <value>Inklusive dir</value>
+  </data>
+  <data name="PersonUnit" xml:space="preserve">
+    <value>Person</value>
+  </data>
+  <data name="PeopleUnit" xml:space="preserve">
+    <value>Personen</value>
+  </data>
+  <data name="PlacesLeft" xml:space="preserve">
+    <value>Noch {0} weitere Plätze frei</value>
+  </data>
+  <data name="Required" xml:space="preserve">
+    <value>Pflichtfeld</value>
+  </data>
+  <data name="MultipleChoiceHint" xml:space="preserve">
+    <value>Mehrfachauswahl möglich</value>
+  </data>
+  <data name="QuantityHint" xml:space="preserve">
+    <value>Wie viele deiner {0} Personen?</value>
+  </data>
+  <data name="CommentLabel" xml:space="preserve">
+    <value>Kommentar (optional)</value>
+  </data>
+  <data name="CommentPlaceholder" xml:space="preserve">
+    <value>z. B. Ich bringe einen Kuchen mit</value>
+  </data>
+  <data name="PleaseAnswer" xml:space="preserve">
+    <value>Bitte beantworte "{0}".</value>
+  </data>
+  <data name="RegisterButton" xml:space="preserve">
+    <value>Anmelden ({0})</value>
+  </data>
+  <data name="UpdateRegistration" xml:space="preserve">
+    <value>Anmeldung aktualisieren</value>
+  </data>
+  <data name="Withdraw" xml:space="preserve">
+    <value>Abmelden</value>
+  </data>
+  <data name="WithdrawTitle" xml:space="preserve">
+    <value>Abmelden</value>
+  </data>
+  <data name="WithdrawConfirm" xml:space="preserve">
+    <value>Möchtest du dich wirklich abmelden?</value>
+  </data>
+  <data name="RegistrationSaved" xml:space="preserve">
+    <value>Du bist angemeldet – bis dann! 🎉</value>
+  </data>
+  <data name="RegistrationUpdated" xml:space="preserve">
+    <value>Anmeldung aktualisiert</value>
+  </data>
+  <data name="RegistrationWithdrawn" xml:space="preserve">
+    <value>Du hast dich abgemeldet</value>
+  </data>
+  <data name="NotAllowedToManage" xml:space="preserve">
+    <value>Nur Verwalter, (Jugend-)Sportwarte und Administratoren können Termine planen.</value>
+  </data>
+  <data name="EventDetails" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="TitleLabel" xml:space="preserve">
+    <value>Titel</value>
+  </data>
+  <data name="TitlePlaceholder" xml:space="preserve">
+    <value>z. B. Frühjahrsputz</value>
+  </data>
+  <data name="CategoryLabel" xml:space="preserve">
+    <value>Kategorie</value>
+  </data>
+  <data name="DateLabel" xml:space="preserve">
+    <value>Datum</value>
+  </data>
+  <data name="StartDateLabel" xml:space="preserve">
+    <value>Erster Tag</value>
+  </data>
+  <data name="EndDateLabel" xml:space="preserve">
+    <value>Letzter Tag</value>
+  </data>
+  <data name="MultiDay" xml:space="preserve">
+    <value>Mehrtägig</value>
+  </data>
+  <data name="StartTimeLabel" xml:space="preserve">
+    <value>Beginn</value>
+  </data>
+  <data name="EndTimeLabel" xml:space="preserve">
+    <value>Ende (optional)</value>
+  </data>
+  <data name="LocationLabel" xml:space="preserve">
+    <value>Ort (optional)</value>
+  </data>
+  <data name="LocationPlaceholder" xml:space="preserve">
+    <value>z. B. Klubhaus</value>
+  </data>
+  <data name="DescriptionLabel" xml:space="preserve">
+    <value>Beschreibung (optional)</value>
+  </data>
+  <data name="DescriptionPlaceholder" xml:space="preserve">
+    <value>Was ist geplant, was soll mitgebracht werden?</value>
+  </data>
+  <data name="DescriptionHelper" xml:space="preserve">
+    <value>Unterstützt Markdown-Formatierung</value>
+  </data>
+  <data name="HelpTitle" xml:space="preserve">
+    <value>Formatierungshilfe</value>
+  </data>
+  <data name="HelpBold" xml:space="preserve">
+    <value>Fett</value>
+  </data>
+  <data name="HelpItalic" xml:space="preserve">
+    <value>Kursiv</value>
+  </data>
+  <data name="HelpHeading" xml:space="preserve">
+    <value>Überschrift</value>
+  </data>
+  <data name="HelpList" xml:space="preserve">
+    <value>Liste</value>
+  </data>
+  <data name="HelpLink" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="HelpButton" xml:space="preserve">
+    <value>Button</value>
+  </data>
+  <data name="HelpLineBreaks" xml:space="preserve">
+    <value>Ein Zeilenumbruch beginnt eine neue Zeile, eine Leerzeile einen neuen Absatz. Bilder können nicht in den Text eingebettet werden.</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Vorschau</value>
+  </data>
+  <data name="PreviewEmpty" xml:space="preserve">
+    <value>Schreibe eine Beschreibung, um die Vorschau zu sehen.</value>
+  </data>
+  <data name="PreviewFailed" xml:space="preserve">
+    <value>Die Vorschau konnte nicht erstellt werden.</value>
+  </data>
+  <data name="RegistrationEditorSubtitle" xml:space="preserve">
+    <value>Anmeldungen sammeln, z. B. Helfer oder wer zum Essen bleibt</value>
+  </data>
+  <data name="RegistrationEnabledLabel" xml:space="preserve">
+    <value>Mitglieder können sich anmelden</value>
+  </data>
+  <data name="MaxParticipantsLabel" xml:space="preserve">
+    <value>Max. Teilnehmer (optional)</value>
+  </data>
+  <data name="MaxParticipantsHint" xml:space="preserve">
+    <value>Gesamtzahl der Personen inkl. Begleitung</value>
+  </data>
+  <data name="DeadlineDateLabel" xml:space="preserve">
+    <value>Anmeldeschluss (optional)</value>
+  </data>
+  <data name="DeadlineHint" xml:space="preserve">
+    <value>Ohne Uhrzeit endet sie um 23:59</value>
+  </data>
+  <data name="DeadlineTimeLabel" xml:space="preserve">
+    <value>Uhrzeit</value>
+  </data>
+  <data name="Questions" xml:space="preserve">
+    <value>Fragen</value>
+  </data>
+  <data name="QuestionsHint" xml:space="preserve">
+    <value>Frag bei der Anmeldung nach Details, z. B. "Bleibst du zum Essen?" oder "Welche Getränke?".</value>
+  </data>
+  <data name="QuestionLabel" xml:space="preserve">
+    <value>Frage</value>
+  </data>
+  <data name="QuestionPlaceholder" xml:space="preserve">
+    <value>z. B. Bleibst du zum Essen?</value>
+  </data>
+  <data name="MoveUp" xml:space="preserve">
+    <value>Nach oben</value>
+  </data>
+  <data name="MoveDown" xml:space="preserve">
+    <value>Nach unten</value>
+  </data>
+  <data name="DeleteQuestion" xml:space="preserve">
+    <value>Frage löschen</value>
+  </data>
+  <data name="SingleChoice" xml:space="preserve">
+    <value>🔘 Einfachauswahl</value>
+  </data>
+  <data name="MultipleChoice" xml:space="preserve">
+    <value>☑️ Mehrfachauswahl</value>
+  </data>
+  <data name="RequiredLabel" xml:space="preserve">
+    <value>Antwort erforderlich</value>
+  </data>
+  <data name="AllowQuantitiesLabel" xml:space="preserve">
+    <value>Mit Mengenangabe</value>
+  </data>
+  <data name="AllowQuantitiesHint" xml:space="preserve">
+    <value>Mitglieder geben pro Option eine Anzahl an, z. B. 2x Schnitzel, 1x Vegetarisch.</value>
+  </data>
+  <data name="LimitQuantityLabel" xml:space="preserve">
+    <value>Höchstens eine pro Person</value>
+  </data>
+  <data name="LimitQuantityHint" xml:space="preserve">
+    <value>Z. B. Essen: Die Mengen können die Personenanzahl einer Anmeldung nicht übersteigen.</value>
+  </data>
+  <data name="UnlimitedQuantityHint" xml:space="preserve">
+    <value>Z. B. Getränke: beliebige Menge (bis 99), unabhängig von der Personenanzahl.</value>
+  </data>
+  <data name="QuantityHintUnlimited" xml:space="preserve">
+    <value>Wie viele?</value>
+  </data>
+  <data name="OptionLabel" xml:space="preserve">
+    <value>Option {0}</value>
+  </data>
+  <data name="DeleteOption" xml:space="preserve">
+    <value>Option löschen</value>
+  </data>
+  <data name="AddOption" xml:space="preserve">
+    <value>Option hinzufügen</value>
+  </data>
+  <data name="AddQuestion" xml:space="preserve">
+    <value>Frage hinzufügen</value>
+  </data>
+  <data name="TemplateYesNo" xml:space="preserve">
+    <value>Ja / Nein Frage</value>
+  </data>
+  <data name="TemplateSingleChoice" xml:space="preserve">
+    <value>Einfachauswahl</value>
+  </data>
+  <data name="TemplateMultipleChoice" xml:space="preserve">
+    <value>Mehrfachauswahl</value>
+  </data>
+  <data name="TemplateQuantities" xml:space="preserve">
+    <value>Auswahl mit Mengen (z. B. Essen)</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Ja</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>Nein</value>
+  </data>
+  <data name="CreateEvent" xml:space="preserve">
+    <value>Termin erstellen</value>
+  </data>
+  <data name="SaveEvent" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="EventCreated" xml:space="preserve">
+    <value>Termin erstellt</value>
+  </data>
+  <data name="EventSaved" xml:space="preserve">
+    <value>Termin gespeichert</value>
+  </data>
+  <data name="RemoveAnswersTitle" xml:space="preserve">
+    <value>Optionen entfernen?</value>
+  </data>
+  <data name="RemoveAnswersConfirm" xml:space="preserve">
+    <value>{0} Anmeldungen haben entfernte Optionen gewählt. Ihre Antworten zu diesen Optionen werden gelöscht.</value>
+  </data>
+  <data name="MyClubEventsSubtitle" xml:space="preserve">
+    <value>Was im Verein ansteht</value>
+  </data>
+  <data name="MyClubEventsEmptySubtitle" xml:space="preserve">
+    <value>Noch nichts geplant</value>
+  </data>
+  <data name="ShowCalendar" xml:space="preserve">
+    <value>Kalender</value>
+  </data>
+  <data name="NotifyMembersLabel" xml:space="preserve">
+    <value>Mitglieder benachrichtigen</value>
+  </data>
+  <data name="NotifyMembersHint" xml:space="preserve">
+    <value>Die Mitglieder bekommen eine Push-Benachrichtigung und eine E-Mail, wenn die Veranstaltung veröffentlicht wird, und eine Erinnerung vor dem Anmeldeschluss. Schalte das aus, wenn du viele Veranstaltungen auf einmal oder im Nachhinein einträgst.</value>
+  </data>
+</root>

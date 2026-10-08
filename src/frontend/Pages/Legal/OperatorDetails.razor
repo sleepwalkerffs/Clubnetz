@@ -1,0 +1,37 @@
+@using Bookennis.Client.Localization.Pages.Legal
+@using Bookennis.Client.Services.Legal
+
+@* Name, address and contact of the operator from the Legal settings. Empty lines are skipped. *@
+<address class="legal-address">
+    @if (!string.IsNullOrWhiteSpace(Settings.OperatorName))
+    {
+        <strong>@Settings.OperatorName</strong><br />
+    }
+    @if (!string.IsNullOrWhiteSpace(Settings.Street))
+    {
+        @Settings.Street<br />
+    }
+    @if (!string.IsNullOrWhiteSpace(ZipAndCity))
+    {
+        @ZipAndCity<br />
+    }
+    @if (!string.IsNullOrWhiteSpace(Settings.Country))
+    {
+        @Settings.Country<br />
+    }
+    @if (!string.IsNullOrWhiteSpace(Settings.Email))
+    {
+        <span>@Locale["Email"]: <MudLink Href="@($"mailto:{Settings.Email}")" Color="Color.Primary">@Settings.Email</MudLink></span><br />
+    }
+    @if (!string.IsNullOrWhiteSpace(Settings.Phone))
+    {
+        <span>@Locale["Phone"]: @Settings.Phone</span>
+    }
+</address>
+
+@code {
+    [Inject] private LegalSettings Settings { get; set; } = null!;
+    [Inject] private IStringLocalizer<LegalLocale> Locale { get; set; } = null!;
+
+    private string ZipAndCity => $"{Settings.ZipCode} {Settings.City}".Trim();
+}

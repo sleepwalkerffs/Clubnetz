@@ -1,0 +1,112 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.News
+@using Bookennis.Client.Services.Store.ClubAnnouncements
+@using Bookennis.Shared.Controller.ClubAnnouncements
+@using Bookennis.Shared.Controller.Shared
+
+<div class="audience">
+    <ChoiceChips TItem="ClubAnnouncementAudience" Items="@NewsHelpers.Audiences" Value="@Audience" ValueChanged="OnAudienceChanged"
+                 Label="@Locale["AudienceLabel"]" Disabled="@Disabled"
+                 TextFunc="@(a => $"{NewsHelpers.AudienceEmoji(a)} {NewsHelpers.AudienceName(Locale, a)}")" />
+
+    @if (Audience == ClubAnnouncementAudience.Roles)
+    {
+        <MultiChoiceChips TItem="MemberRole" Items="@NewsHelpers.EmailRoles" Values="@Roles" ValuesChanged="OnRolesChanged"
+                          Label="@Locale["RolesLabel"]" Dense="true" Disabled="@Disabled"
+                          TextFunc="@(r => SharedLocale[$"Role_{r}"])" />
+    }
+
+    <div class="audience__hint">@Locale[$"AudienceHint_{Audience}"]</div>
+
+    <div class="audience__count @(error is not null ? "audience__count--error" : null)" role="status">
+        @if (isCounting)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" />
+            <span>@Locale["CountingRecipients"]</span>
+        }
+        else if (error is not null)
+        {
+            <span aria-hidden="true">⚠️</span>
+            <span>@error</span>
+        }
+        else if (RecipientCount is { } count)
+        {
+            <span aria-hidden="true">✉️</span>
+            <span>@(count == 0 ? Locale["NoRecipients"] : NewsHelpers.Count(Locale, "RecipientCount", count))</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public ClubAnnouncementAudience Audience { get; set; }
+    [Parameter] public EventCallback<ClubAnnouncementAudience> AudienceChanged { get; set; }
+
+    [Parameter] public IReadOnlyCollection<MemberRole> Roles { get; set; } = [];
+    [Parameter] public EventCallback<IReadOnlyCollection<MemberRole>> RolesChanged { get; set; }
+
+    /// <summary>The number of email addresses of the audience; <c>null</c> while it is loaded or if the audience is not valid.</summary>
+    [Parameter] public int? RecipientCount { get; set; }
+    [Parameter] public EventCallback<int?> RecipientCountChanged { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    [Inject] private IClubAnnouncementsStore Store { get; set; } = null!;
+    [Inject] private IStringLocalizer<NewsLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private bool isCounting;
+    private string? error;
+
+    protected override Task OnInitializedAsync() => CountRecipients(Audience, Roles);
+
+    private async Task OnAudienceChanged(ClubAnnouncementAudience audience)
+    {
+        Audience = audience;
+        await AudienceChanged.InvokeAsync(audience);
+        await CountRecipients(audience, Roles);
+    }
+
+    private async Task OnRolesChanged(IReadOnlyCollection<MemberRole> roles)
+    {
+        Roles = roles;
+        await RolesChanged.InvokeAsync(roles);
+        await CountRecipients(Audience, roles);
+    }
+
+    private async Task CountRecipients(ClubAnnouncementAudience audience, IReadOnlyCollection<MemberRole> roles)
+    {
+        error = null;
+        await SetCount(null);
+
+        // Nothing to count yet, the member still has to pick a role
+        if (audience == ClubAnnouncementAudience.Roles && roles.Count == 0)
+        {
+            isCounting = false;
+            error = Locale["SelectRole"];
+            return;
+        }
+
+        isCounting = true;
+        StateHasChanged();
+
+        var response = await Store.GetEmailRecipients(new SendClubAnnouncementEmailModel { Audience = audience, Roles = [.. roles] });
+
+        // A newer selection is being counted
+        if (response is null)
+            return;
+
+        isCounting = false;
+        if (response is { Success: true, Dto: not null })
+            await SetCount(response.Dto.RecipientCount);
+        else
+            error = response.ErrorCodeResponse?.ErrorCode is { } code ? BackendLocale[code] : Locale["CountFailed"];
+    }
+
+    private async Task SetCount(int? count)
+    {
+        RecipientCount = count;
+        await RecipientCountChanged.InvokeAsync(count);
+    }
+}

@@ -1,0 +1,114 @@
+.pyramid__empty {
+    padding: 24px 8px;
+    text-align: center;
+    color: var(--mud-palette-text-secondary);
+}
+
+.pyramid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pyramid__header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.pyramid__side--male {
+    color: var(--bk-dark-blue, #2563EB);
+}
+
+.pyramid__side--female {
+    color: var(--bk-dark-pink, #DB2777);
+}
+
+.pyramid__row {
+    display: grid;
+    grid-template-columns: 1fr minmax(96px, auto) 1fr;
+    align-items: center;
+    gap: 8px;
+}
+
+.pyramid__bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+}
+
+.pyramid__bar--male {
+    justify-content: flex-end;
+}
+
+.pyramid__fill {
+    height: 100%;
+    min-width: 0;
+    border-radius: 8px;
+    transition: width 0.6s ease;
+}
+
+.pyramid__bar--male .pyramid__fill {
+    border-radius: 8px 4px 4px 8px;
+    background: linear-gradient(270deg, #3B82F6, #93C5FD);
+}
+
+.pyramid__bar--female .pyramid__fill {
+    border-radius: 4px 8px 8px 4px;
+    background: linear-gradient(90deg, #EC4899, #F9A8D4);
+}
+
+.pyramid__count {
+    flex-shrink: 0;
+    min-width: 18px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-align: center;
+}
+
+.pyramid__label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.1;
+    text-align: center;
+}
+
+.pyramid__emoji {
+    font-size: 1.1rem;
+}
+
+.pyramid__name {
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.pyramid__range {
+    font-size: 0.68rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.pyramid__split {
+    display: flex;
+    height: 8px;
+    margin-top: 6px;
+    border-radius: 4px;
+    background: #EC4899;
+    overflow: hidden;
+}
+
+.pyramid__split-male {
+    height: 100%;
+    background: #3B82F6;
+}
+
+.pyramid__facts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 16px;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}

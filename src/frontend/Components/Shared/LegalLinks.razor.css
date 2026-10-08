@@ -1,0 +1,30 @@
+.legal-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8125rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.legal-links a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.legal-links a:hover,
+.legal-links a:focus-visible {
+    color: var(--mud-palette-primary);
+    text-decoration: underline;
+}
+
+/* Navigation drawer: same mint tones as the club name above */
+.legal-links--on-dark {
+    color: #A7F3D0;
+}
+
+.legal-links--on-dark a:hover,
+.legal-links--on-dark a:focus-visible {
+    color: #FFFFFF;
+}

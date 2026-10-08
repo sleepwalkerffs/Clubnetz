@@ -1,0 +1,36 @@
+@page "/legal/privacy"
+@layout NoNavigationLayout
+@using Bookennis.Client.Localization.Pages.Legal
+@using Bookennis.Client.Services.Legal
+@using Bookennis.Client.Shared
+
+<PageTitle>@Locale["Privacy"]</PageTitle>
+
+<LegalDocument Title="@Locale["Privacy"]" Emoji="🔒">
+    <LegalSection Text="@Locale["Privacy_Intro"]" />
+
+    <LegalSection Title="@Locale["Privacy_Controller_Title"]">
+        <p>@Locale["Privacy_Controller_Body"]</p>
+        <OperatorDetails />
+    </LegalSection>
+
+    <LegalSection Title="@Locale["Privacy_Data_Title"]" Text="@Locale["Privacy_Data_Body"]" />
+    <LegalSection Title="@Locale["Privacy_Purpose_Title"]" Text="@Locale["Privacy_Purpose_Body"]" />
+    <LegalSection Title="@Locale["Privacy_Recipients_Title"]" Text="@string.Format(Locale["Privacy_Recipients_Body"], OrDash(Settings.HostingProvider), OrDash(Settings.EmailProvider))" />
+    <LegalSection Title="@Locale["Privacy_Children_Title"]" Text="@Locale["Privacy_Children_Body"]" />
+    <LegalSection Title="@Locale["Privacy_Cookies_Title"]" Text="@Locale["Privacy_Cookies_Body"]" />
+    <LegalSection Title="@Locale["Privacy_Retention_Title"]" Text="@Locale["Privacy_Retention_Body"]" />
+    <LegalSection Title="@Locale["Privacy_Rights_Title"]" Text="@string.Format(Locale["Privacy_Rights_Body"], OrDash(Settings.Email))" />
+    <LegalSection Title="@Locale["Privacy_Complaint_Title"]" Text="@Locale["Privacy_Complaint_Body"]" />
+
+    <LegalSection>
+        <MudLink Href="legal/imprint" Color="Color.Primary">@Locale["Imprint"]</MudLink>
+    </LegalSection>
+</LegalDocument>
+
+@code {
+    [Inject] private IStringLocalizer<LegalLocale> Locale { get; set; } = null!;
+    [Inject] private LegalSettings Settings { get; set; } = null!;
+
+    private static string OrDash(string? value) => string.IsNullOrWhiteSpace(value) ? "–" : value;
+}

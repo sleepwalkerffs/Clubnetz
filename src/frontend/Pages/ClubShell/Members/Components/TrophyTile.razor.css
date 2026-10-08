@@ -1,0 +1,93 @@
+.trophy-tile {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 18px 10px 14px;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--badge-color) 30%, var(--mud-palette-lines-default));
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.trophy-tile:hover,
+.trophy-tile:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--badge-color) 28%, transparent);
+    outline: none;
+}
+
+.trophy-tile__glow {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    width: 160px;
+    height: 160px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--badge-color) 30%, transparent) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+::deep .trophy-tile__icon {
+    position: relative;
+    width: 64px !important;
+    height: 64px !important;
+    box-shadow: 0 0 0 3px var(--mud-palette-surface), 0 0 0 5px color-mix(in srgb, var(--badge-color) 55%, transparent);
+    transition: transform 0.3s ease;
+}
+
+.trophy-tile:hover ::deep .trophy-tile__icon {
+    transform: rotate(-6deg) scale(1.06);
+}
+
+.trophy-tile__name {
+    position: relative;
+    margin-top: 6px;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.trophy-tile__pill {
+    position: relative;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    background: var(--badge-color);
+}
+
+.trophy-tile__date {
+    position: relative;
+    font-size: 0.72rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.trophy-tile--special {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--badge-color) 8%, var(--mud-palette-surface)), var(--mud-palette-surface) 60%);
+}
+
+.trophy-tile__extra {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.74rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .trophy-tile,
+    ::deep .trophy-tile__icon {
+        transition: none;
+    }
+}

@@ -1,0 +1,20 @@
+@using Texts = Bookennis.Api.Resources.Localization.View_Emails_ConfirmEmailChange;
+@using Bookennis.Api.Business.Admin;
+@model ConfirmEmailChangeViewModel
+
+@{
+    <div class="email-wrapper">
+        <div class="email-container">
+            <div class="email-header">
+                <h1>@Texts.Title</h1>
+            </div>
+            <div class="email-body">
+                <p>@string.Format(Texts.Greeting, Model.FirstName, Model.LastName)</p>
+                <p>@(Model.RequestedByAdmin ? Texts.Description : string.Format(Texts.DescriptionSelf, Model.NewEmail))</p>
+                <a class="btn" href="@Model.Url">@Texts.Link</a>
+                <p class="text-secondary">@Texts.Validity</p>
+                <p class="text-secondary">@Texts.Ignore</p>
+            </div>
+        </div>
+    </div>
+}

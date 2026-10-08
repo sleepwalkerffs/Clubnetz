@@ -1,0 +1,108 @@
+/* One row per notification: text on the left, a switch per channel on the right. Works from 320px up. */
+.prefs {
+    --prefs-channel-width: 64px;
+    display: flex;
+    flex-direction: column;
+}
+
+.prefs__head,
+.prefs__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--prefs-channel-width) var(--prefs-channel-width);
+    align-items: center;
+    column-gap: 4px;
+}
+
+.prefs__head {
+    padding-bottom: 4px;
+}
+
+.prefs__channel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: var(--prefs-channel-width);
+    padding: 6px 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--mud-palette-text-secondary);
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.prefs__channel:hover:not(:disabled),
+.prefs__channel:focus-visible {
+    color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent);
+}
+
+.prefs__channel:disabled {
+    cursor: default;
+    opacity: 0.6;
+}
+
+.prefs__group {
+    margin-top: 14px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.prefs__row {
+    padding: 10px 0;
+}
+
+.prefs__row + .prefs__row {
+    border-top: 1px solid color-mix(in srgb, var(--mud-palette-lines-default) 55%, transparent);
+}
+
+.prefs__text {
+    min-width: 0;
+}
+
+.prefs__label {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.prefs__hint {
+    font-size: 0.8rem;
+    line-height: 1.35;
+    color: var(--mud-palette-text-secondary);
+}
+
+.prefs__switch {
+    display: flex;
+    justify-content: center;
+}
+
+/* The switches have no visible label, so the label's margin would push them off center */
+.prefs__switch ::deep .mud-switch {
+    margin: 0;
+}
+
+.prefs-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+    background: var(--mud-palette-background-gray);
+}
+
+@media (max-width: 399.98px) {
+    .prefs {
+        --prefs-channel-width: 56px;
+    }
+}

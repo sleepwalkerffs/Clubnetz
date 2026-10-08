@@ -1,0 +1,54 @@
+<div class="@($"admin-hero {Class}")">
+    <div class="admin-hero__court" aria-hidden="true"></div>
+
+    <div class="admin-hero__main">
+        @if (Media is not null)
+        {
+            <div class="admin-hero__media">@Media</div>
+        }
+        else if (Emoji is not null)
+        {
+            <div class="admin-hero__emoji" aria-hidden="true">@Emoji</div>
+        }
+        <div class="admin-hero__text">
+            @if (Eyebrow is not null)
+            {
+                <div class="admin-hero__eyebrow">@Eyebrow</div>
+            }
+            <h1 class="admin-hero__title">@Title</h1>
+            @if (Subtitle is not null)
+            {
+                <div class="admin-hero__subtitle">@Subtitle</div>
+            }
+            @if (Chips is not null)
+            {
+                <div class="admin-hero__chips">@Chips</div>
+            }
+            @ChildContent
+        </div>
+    </div>
+
+    @if (Aside is not null)
+    {
+        <div class="admin-hero__aside">@Aside</div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = null!;
+    [Parameter] public string? Eyebrow { get; set; }
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public string? Emoji { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>Optional content instead of the emoji, e.g. an avatar.</summary>
+    [Parameter] public RenderFragment? Media { get; set; }
+
+    /// <summary>Chips below the title, use elements with the <c>hero-chip</c> class.</summary>
+    [Parameter] public RenderFragment? Chips { get; set; }
+
+    /// <summary>Optional glass panel on the right side (below the text on mobile).</summary>
+    [Parameter] public RenderFragment? Aside { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

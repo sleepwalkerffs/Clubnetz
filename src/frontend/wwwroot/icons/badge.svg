@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Monochrome mark for the Android status bar (only the alpha channel is used) -->
+  <path d="M286 68A190 190 0 1 0 390 390" fill="none" stroke="#FFFFFF" stroke-width="84" stroke-linecap="round"/>
+  <circle cx="406" cy="138" r="58" fill="#FFFFFF"/>
+</svg>

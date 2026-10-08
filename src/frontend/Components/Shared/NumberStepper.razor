@@ -1,0 +1,29 @@
+<div class="stepper" role="group" aria-label="@Label">
+    <button type="button" class="stepper__button" disabled="@(Disabled || Value <= Min)" aria-label="@DecreaseLabel" @onclick="() => Set(Value - 1)">−</button>
+    <div class="stepper__value">
+        <span class="stepper__number">@Value</span>
+        @if (Unit is not null)
+        {
+            <span class="stepper__unit">@Unit</span>
+        }
+    </div>
+    <button type="button" class="stepper__button" disabled="@(Disabled || Value >= Max)" aria-label="@IncreaseLabel" @onclick="() => Set(Value + 1)">+</button>
+</div>
+
+@code {
+    [Parameter] public int Value { get; set; }
+    [Parameter] public EventCallback<int> ValueChanged { get; set; }
+    [Parameter] public int Min { get; set; }
+    [Parameter] public int Max { get; set; } = 10;
+    [Parameter] public string? Unit { get; set; }
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string DecreaseLabel { get; set; } = "-";
+    [Parameter] public string IncreaseLabel { get; set; } = "+";
+    [Parameter] public bool Disabled { get; set; }
+
+    private async Task Set(int value)
+    {
+        Value = Math.Clamp(value, Min, Max);
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

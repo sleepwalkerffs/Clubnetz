@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Title" xml:space="preserve">
+    <value>Badges</value>
+  </data>
+  <data name="Subtitle" xml:space="preserve">
+    <value>Reward your members for playing – with levels and special awards</value>
+  </data>
+  <data name="TiersChip" xml:space="preserve">
+    <value>{0} levels</value>
+  </data>
+  <data name="OneTimeChip" xml:space="preserve">
+    <value>{0} special awards</value>
+  </data>
+  <data name="AwardsChip" xml:space="preserve">
+    <value>{0} times earned</value>
+  </data>
+  <data name="SeasonCaption" xml:space="preserve">
+    <value>Season</value>
+  </data>
+  <data name="SeasonName" xml:space="preserve">
+    <value>Season {0}</value>
+  </data>
+  <data name="TopEarned" xml:space="preserve">
+    <value>Highest level reached: {0} ({1}×)</value>
+  </data>
+  <data name="NothingEarnedYet" xml:space="preserve">
+    <value>No badge earned yet</value>
+  </data>
+  <data name="NoSeasons" xml:space="preserve">
+    <value>Create a season first, badges belong to a season.</value>
+  </data>
+  <data name="TiersTitle" xml:space="preserve">
+    <value>Levels</value>
+  </data>
+  <data name="TiersSubtitle" xml:space="preserve">
+    <value>Earned automatically by playing matches – tap a badge to preview it</value>
+  </data>
+  <data name="CopyTiers" xml:space="preserve">
+    <value>Copy from another season</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="NoTiers" xml:space="preserve">
+    <value>No levels in this season</value>
+  </data>
+  <data name="NoTiersText" xml:space="preserve">
+    <value>Create levels like bronze, silver and gold – members earn them with every played match.</value>
+  </data>
+  <data name="AddTier" xml:space="preserve">
+    <value>New level</value>
+  </data>
+  <data name="MatchesRule" xml:space="preserve">
+    <value>{0} matches</value>
+  </data>
+  <data name="EarnedBy" xml:space="preserve">
+    <value>Earned by {0} members</value>
+  </data>
+  <data name="Earned" xml:space="preserve">
+    <value>earned</value>
+  </data>
+  <data name="OneTimeTitle" xml:space="preserve">
+    <value>Special awards</value>
+  </data>
+  <data name="OneTimeSubtitle" xml:space="preserve">
+    <value>Awarded by hand, e.g. to the club champion</value>
+  </data>
+  <data name="CopyOneTime" xml:space="preserve">
+    <value>Copy from another season</value>
+  </data>
+  <data name="NoOneTime" xml:space="preserve">
+    <value>No special awards in this season</value>
+  </data>
+  <data name="NoOneTimeText" xml:space="preserve">
+    <value>Honor club champions, the most improved player or your helpers of the year.</value>
+  </data>
+  <data name="AddOneTimeBadge" xml:space="preserve">
+    <value>New special award</value>
+  </data>
+  <data name="NotAwardedYet" xml:space="preserve">
+    <value>Not awarded yet</value>
+  </data>
+  <data name="AwardedTo" xml:space="preserve">
+    <value>Awarded {0}×</value>
+  </data>
+  <data name="Award" xml:space="preserve">
+    <value>Award</value>
+  </data>
+  <data name="UploadImage" xml:space="preserve">
+    <value>Upload image</value>
+  </data>
+  <data name="EditTitle" xml:space="preserve">
+    <value>Edit {0}</value>
+  </data>
+  <data name="AwardTitle" xml:space="preserve">
+    <value>Award {0}</value>
+  </data>
+  <data name="DeleteTierConfirmation" xml:space="preserve">
+    <value>Do you really want to delete the level "{0}"?</value>
+  </data>
+  <data name="DeleteOneTimeConfirmation" xml:space="preserve">
+    <value>Do you really want to delete the special award "{0}"?</value>
+  </data>
+  <data name="ImageTooLarge" xml:space="preserve">
+    <value>The image must not be larger than 5 MB.</value>
+  </data>
+  <data name="ImageUploaded" xml:space="preserve">
+    <value>Image uploaded</value>
+  </data>
+  <data name="TierNamePlaceholder" xml:space="preserve">
+    <value>New level</value>
+  </data>
+  <data name="LevelPill" xml:space="preserve">
+    <value>Level {0}</value>
+  </data>
+  <data name="DescriptionHint" xml:space="preserve">
+    <value>Shown to members in their trophy case</value>
+  </data>
+  <data name="PreviousTierHint" xml:space="preserve">
+    <value>Previous level {0}: {1} matches</value>
+  </data>
+  <data name="Matches" xml:space="preserve">
+    <value>matches</value>
+  </data>
+  <data name="ThresholdNotIncreasing" xml:space="preserve">
+    <value>Higher levels should need more matches than the previous one.</value>
+  </data>
+  <data name="OneTimeNamePlaceholder" xml:space="preserve">
+    <value>New special award</value>
+  </data>
+  <data name="SpecialAward" xml:space="preserve">
+    <value>Special award</value>
+  </data>
+  <data name="OneTimeRule" xml:space="preserve">
+    <value>Awarded by hand</value>
+  </data>
+</root>

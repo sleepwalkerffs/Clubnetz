@@ -1,0 +1,86 @@
+@page "/account/confirmEmailChange"
+@* Not NotAuthorizedLayout: that one redirects signed-in users home, but the link is usually opened while logged in *@
+@layout NoNavigationLayout
+
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Account
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.HttpClients
+@using Bookennis.Client.Services.HttpClients.Account
+@using Bookennis.Client.Shared
+
+<PageTitle>@Locale["ConfirmEmailChange"]</PageTitle>
+
+@if (processing)
+{
+    <AuthShell Emoji="⏳" Title="@Locale["ConfirmEmailChange"]" Subtitle="@Locale["ConfirmEmailChangeProcessing"]" ShowFeatures="false">
+        <div class="d-flex justify-center">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        </div>
+    </AuthShell>
+}
+else if (success)
+{
+    <AuthShell Emoji="✅" Title="@Locale["ConfirmEmailChange_SuccessTitle"]" Subtitle="@string.Format(Locale["ConfirmEmailChange_SuccessText"], Email)" ShowFeatures="false">
+        <MudButton OnClick="Continue" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large">
+            @Locale["Continue"]
+        </MudButton>
+    </AuthShell>
+}
+else
+{
+    <AuthShell Emoji="⚠️" Title="@Locale["ConfirmEmailChange_FailedTitle"]" Subtitle="@errorMessage" ShowFeatures="false">
+        <MudButton OnClick="Continue" Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true">
+            @Locale["Continue"]
+        </MudButton>
+    </AuthShell>
+}
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int UserId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Email { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Token { get; set; }
+
+    // The router re-creates the page while the auth state settles on startup. The token is single-use,
+    // so all instances share one request instead of the later ones failing.
+    private static readonly Dictionary<string, Task<HttpResult>> confirmations = [];
+
+    [Inject] private IAccountHttpClient AccountHttpClient { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountLocale> Locale { get; set; } = null!;
+
+    private bool processing = true;
+    private bool success;
+    private string errorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserId <= 0 || string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Token))
+        {
+            processing = false;
+            errorMessage = Locale["ConfirmEmailChangeLinkInvalid"];
+            return;
+        }
+
+        if (!confirmations.TryGetValue(Token, out var confirmation))
+            confirmations[Token] = confirmation = AccountHttpClient.ConfirmEmailChange(UserId, Email, Token);
+
+        var result = await confirmation;
+        processing = false;
+        success = result.Success;
+        if (!success)
+            errorMessage = Locale["ConfirmEmailChangeLinkExpired"];
+    }
+
+    // Reload the app (instead of notifying an auth state change, which would re-create this page) so a signed-in
+    // session picks up the new email, or goes to the login if the changed security stamp ended it
+    private void Continue() => Navigation.NavigateTo("/", forceLoad: true);
+}

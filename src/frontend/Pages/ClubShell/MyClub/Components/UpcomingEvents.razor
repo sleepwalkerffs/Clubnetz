@@ -1,0 +1,58 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Calendar
+@using Bookennis.Client.Pages.ClubShell.Calendar.Components
+@using Bookennis.Client.Services.Store.ClubEvents
+
+@implements IDisposable
+
+<SectionCard Emoji="🗓️" Title="@Locale["UpcomingEvents"]"
+             Subtitle="@(Events is { Count: > 0 } ? Locale["MyClubEventsSubtitle"] : Locale["MyClubEventsEmptySubtitle"])">
+    <Actions>
+        <MudButton Href="@ClubEventHelpers.CalendarUrl(ClubId)" Variant="Variant.Text" Size="Size.Small" Color="Color.Primary"
+                   EndIcon="@Icons.Material.Filled.ChevronRight">
+            @Locale["ShowCalendar"]
+        </MudButton>
+    </Actions>
+    <ChildContent>
+        @if (Events is null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (Events.Count == 0)
+        {
+            <div class="upcoming-events-empty">
+                <span class="upcoming-events-empty__emoji" aria-hidden="true">🌤️</span>
+                <span>@Locale["NoUpcomingEvents"]</span>
+            </div>
+        }
+        else
+        {
+            @foreach (var clubEvent in Events)
+            {
+                <ClubEventListItem Event="@clubEvent" ClubId="@ClubId" ShowCountdown="true" />
+            }
+        }
+    </ChildContent>
+</SectionCard>
+
+@code {
+    private const int EventCount = 3;
+
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+
+    [Inject] private IClubEventsStore Store { get; set; } = null!;
+    [Inject] private IStringLocalizer<CalendarLocale> Locale { get; set; } = null!;
+
+    private List<Bookennis.Shared.Controller.ClubEvents.ClubEventSummaryDto>? Events => loaded ? Store.UpcomingEvents : null;
+
+    private bool loaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnUpcomingEventsChanged += StateHasChanged;
+        await Store.LoadUpcomingEvents(EventCount);
+        loaded = true;
+    }
+
+    public void Dispose() => Store.OnUpcomingEventsChanged -= StateHasChanged;
+}

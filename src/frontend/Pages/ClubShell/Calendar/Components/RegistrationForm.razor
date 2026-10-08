@@ -1,0 +1,254 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Calendar
+@using Bookennis.Client.Services.Store.ClubEvents
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.ClubEvents
+
+<SectionCard Emoji="✋" Title="@Locale["Registration"]" Subtitle="@Subtitle">
+    @if (!Event.IsRegistrationOpen || (Event.IsFull && Event.MyRegistration is null))
+    {
+        <div class="registration-closed">
+            <span class="registration-closed__emoji" aria-hidden="true">@(Event.IsFull && Event.IsRegistrationOpen ? "🙈" : "🔒")</span>
+            <span>@ClosedReason</span>
+        </div>
+        @if (Event.MyRegistration is { } mine)
+        {
+            <div class="registration-mine mt-3">
+                ✅ @ClubEventHelpers.Count(Locale, "YouAreRegistered", mine.HeadCount)
+            </div>
+        }
+    }
+    else
+    {
+        @if (Event.MyRegistration is not null)
+        {
+            <div class="registration-mine mb-4">✅ @ClubEventHelpers.Count(Locale, "YouAreRegistered", Event.MyRegistration.HeadCount)</div>
+        }
+
+        <div class="registration-field">
+            <div class="registration-field__label">@Locale["HeadCountLabel"]</div>
+            <div class="registration-field__hint">@Locale["HeadCountHint"]</div>
+            <NumberStepper Value="@headCount" ValueChanged="SetHeadCount" Min="1" Max="@MaxHeadCount" Label="@Locale["HeadCountLabel"]"
+                           Unit="@Locale[headCount == 1 ? "PersonUnit" : "PeopleUnit"]" />
+            @if (Event.MaxParticipants is not null)
+            {
+                <div class="registration-field__hint mt-1">@string.Format(Locale["PlacesLeft"], MaxHeadCount - headCount)</div>
+            }
+        </div>
+
+        @foreach (var question in Event.Questions)
+        {
+            <div class="registration-field">
+                <div class="registration-field__label">
+                    @question.Text
+                    @if (question.IsRequired)
+                    {
+                        <span class="registration-field__required" title="@Locale["Required"]">*</span>
+                    }
+                </div>
+                @if (question.SelectionMode == ClubEventQuestionSelectionMode.SingleChoice)
+                {
+                    <ChoiceChips TItem="ClubEventOptionDto" Items="@question.Options" TextFunc="@(o => o.Label)"
+                                 Value="@question.Options.FirstOrDefault(o => IsSelected(o.Id))"
+                                 ValueChanged="@(o => SelectSingle(question, o))" />
+                }
+                else if (!question.AllowQuantities)
+                {
+                    <div class="registration-field__hint">@Locale["MultipleChoiceHint"]</div>
+                    <MultiChoiceChips TItem="ClubEventOptionDto" Items="@question.Options" TextFunc="@(o => o.Label)"
+                                      Values="@question.Options.Where(o => IsSelected(o.Id)).ToList()"
+                                      ValuesChanged="@(values => SelectMultiple(question, values))" />
+                }
+                else
+                {
+                    <div class="registration-field__hint">
+                        @(question.LimitQuantityToHeadCount ? string.Format(Locale["QuantityHint"], headCount) : Locale["QuantityHintUnlimited"])
+                    </div>
+                    <div class="registration-quantities">
+                        @foreach (var option in question.Options)
+                        {
+                            <div class="registration-quantity @(Quantity(option.Id) > 0 ? "registration-quantity--selected" : null)">
+                                <span class="registration-quantity__label">@option.Label</span>
+                                <NumberStepper Value="@Quantity(option.Id)" ValueChanged="@(value => SetQuantity(option.Id, value))"
+                                               Min="0" Max="@(question.LimitQuantityToHeadCount ? headCount : MaxQuantity)" Label="@option.Label" />
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="registration-field">
+            <MudTextField T="string" @bind-Value="comment" Variant="Variant.Outlined" Label="@Locale["CommentLabel"]"
+                          Placeholder="@Locale["CommentPlaceholder"]" MaxLength="500" Lines="2" AutoGrow="true" />
+        </div>
+
+        @if (MissingQuestion is { } missing)
+        {
+            <div class="registration-field__hint registration-field__hint--warn mb-2">@string.Format(Locale["PleaseAnswer"], missing.Text)</div>
+        }
+
+        <div class="registration-actions">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(Store.IsSaving || MissingQuestion is not null)"
+                       StartIcon="@(Event.MyRegistration is null ? Icons.Material.Filled.HowToReg : Icons.Material.Filled.Save)">
+                @(Event.MyRegistration is null ? string.Format(Locale["RegisterButton"], headCount) : Locale["UpdateRegistration"])
+            </MudButton>
+            @if (Event.MyRegistration is not null)
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="Withdraw" Disabled="@Store.IsSaving"
+                           StartIcon="@Icons.Material.Filled.EventBusy">
+                    @Locale["Withdraw"]
+                </MudButton>
+            }
+        </div>
+    }
+</SectionCard>
+
+@code {
+    [Parameter, EditorRequired] public ClubEventDto Event { get; set; } = null!;
+
+    [Inject] private IClubEventsStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IStringLocalizer<CalendarLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private const int MaxHeadCountPerRegistration = 50;
+    private const int MaxQuantity = 99;
+
+    private int headCount = 1;
+    private string? comment;
+    private Dictionary<int, int> quantities = new();
+    private ClubEventRegistrationDto? initializedFrom;
+    private int? initializedEventId;
+
+    private int MaxHeadCount
+    {
+        get
+        {
+            if (Event.MaxParticipants is not { } max)
+                return MaxHeadCountPerRegistration;
+
+            var others = Event.TotalHeadCount - (Event.MyRegistration?.HeadCount ?? 0);
+            return Math.Clamp(max - others, 1, MaxHeadCountPerRegistration);
+        }
+    }
+
+    private string Subtitle => Event.RegistrationDeadline is { } deadline
+        ? string.Format(Locale[Event.IsDeadlinePassed ? "DeadlinePassed" : "RegisterUntil"], ClubEventHelpers.FormatDeadline(Locale, deadline))
+        : Locale["RegistrationSubtitle"];
+
+    private string ClosedReason
+    {
+        get
+        {
+            if (Event.IsOver)
+                return Locale["EventIsOver"];
+            if (Event.IsDeadlinePassed && Event.RegistrationDeadline is { } deadline)
+                return string.Format(Locale["RegistrationClosedAt"], ClubEventHelpers.FormatDeadline(Locale, deadline));
+            if (Event.IsFull)
+                return Locale["EventIsFull"];
+            return Locale["RegistrationClosed"];
+        }
+    }
+
+    private ClubEventQuestionDto? MissingQuestion
+        => Event.Questions.FirstOrDefault(q => q.IsRequired && !q.Options.Any(o => IsSelected(o.Id)));
+
+    protected override void OnParametersSet()
+    {
+        // Initialize the form from the own registration, and again when the registration was saved or withdrawn
+        if (initializedEventId == Event.Id && ReferenceEquals(initializedFrom, Event.MyRegistration))
+            return;
+
+        initializedEventId = Event.Id;
+        initializedFrom = Event.MyRegistration;
+        headCount = Event.MyRegistration?.HeadCount ?? 1;
+        comment = Event.MyRegistration?.Comment;
+        quantities = Event.MyRegistration?.Answers.ToDictionary(a => a.OptionId, a => a.Quantity) ?? new();
+        headCount = Math.Min(headCount, MaxHeadCount);
+    }
+
+    private bool IsSelected(int optionId) => Quantity(optionId) > 0;
+
+    private int Quantity(int optionId) => quantities.GetValueOrDefault(optionId);
+
+    private void SetHeadCount(int value)
+    {
+        headCount = value;
+
+        // A quantity can't exceed the number of people
+        foreach (var question in Event.Questions.Where(q => q.AllowQuantities && q.LimitQuantityToHeadCount))
+        {
+            foreach (var option in question.Options.Where(o => Quantity(o.Id) > headCount))
+                quantities[option.Id] = headCount;
+        }
+    }
+
+    private void SelectSingle(ClubEventQuestionDto question, ClubEventOptionDto? option)
+    {
+        foreach (var other in question.Options)
+            quantities.Remove(other.Id);
+
+        if (option is not null)
+            quantities[option.Id] = 1;
+    }
+
+    private void SelectMultiple(ClubEventQuestionDto question, IReadOnlyCollection<ClubEventOptionDto> selected)
+    {
+        foreach (var option in question.Options)
+        {
+            if (selected.Contains(option))
+                quantities[option.Id] = 1;
+            else
+                quantities.Remove(option.Id);
+        }
+    }
+
+    private void SetQuantity(int optionId, int value)
+    {
+        if (value > 0)
+            quantities[optionId] = value;
+        else
+            quantities.Remove(optionId);
+    }
+
+    private async Task Submit()
+    {
+        var wasRegistered = Event.MyRegistration is not null;
+        var model = new RegisterForClubEventModel
+        {
+            HeadCount = headCount,
+            Comment = comment,
+            Answers = quantities.Where(q => q.Value > 0).Select(q => new ClubEventAnswerDto(q.Key, q.Value)).ToList(),
+        };
+
+        var result = await Store.Register(Event.Id, model);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(Locale[wasRegistered ? "RegistrationUpdated" : "RegistrationSaved"], Severity.Success);
+    }
+
+    private async Task Withdraw()
+    {
+        var confirmed = await DialogService.ShowMessageBox(Locale["WithdrawTitle"], Locale["WithdrawConfirm"],
+            yesText: Locale["Withdraw"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true)
+            return;
+
+        var result = await Store.Unregister(Event.Id);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(Locale["RegistrationWithdrawn"], Severity.Info);
+    }
+}

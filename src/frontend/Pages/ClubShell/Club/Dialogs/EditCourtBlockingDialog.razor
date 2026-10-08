@@ -1,0 +1,293 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.CourtBlockings
+@using Bookennis.Client.Pages.ClubShell.Club.Components
+@using Bookennis.Client.Services.Store.CourtBlockings
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.CourtBlockings
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SubmitCaption" SubmitColor="@(ShownConflicts is null ? Color.Primary : Color.Error)"
+            CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]" Loading="@(Store.IsSaving || checking)" Title="@L[Blocking is null ? "NewTitle" : "EditTitle"]">
+    <div class="blocking-edit">
+        <section>
+            <MudTextField Variant="Variant.Outlined" T="string" Label="@L["ReasonLabel"]" @bind-Value="title" Immediate="true" Required="true"
+                          RequiredError="@L["ReasonRequired"]" HelperText="@L["ReasonHint"]" MaxLength="100" Margin="Margin.Dense" />
+            <div class="blocking-edit__templates">
+                @foreach (var template in Templates)
+                {
+                    <button type="button" class="blocking-edit__template" @onclick="() => title = template">@template</button>
+                }
+            </div>
+        </section>
+
+        <section>
+            <MultiChoiceChips TItem="CourtResult" Label="@L["CourtsLabel"]" Items="@SortedCourts" @bind-Values="selectedCourts" TextFunc="@(c => c.Name)" Dense="true" />
+            @if (SortedCourts.Count > 1)
+            {
+                <button type="button" class="blocking-edit__link" @onclick="ToggleAllCourts">@L["AllCourts"]</button>
+            }
+        </section>
+
+        <section>
+            <h3 class="blocking-edit__title">@L["PeriodLabel"]</h3>
+            <div class="blocking-edit__row">
+                <MudDatePicker @bind-Date="startDate" @bind-Date:after="OnStartDateChanged" Variant="Variant.Outlined" Label="@L["StartDate"]" Required="true"
+                               PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" />
+                <MudDatePicker @bind-Date="endDate" Variant="Variant.Outlined" Label="@L["EndDate"]" Required="true" MinDate="@startDate"
+                               PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" />
+            </div>
+            <MudSwitch T="bool" @bind-Value="allDay" Color="Color.Primary" Label="@L["AllDaySwitch"]" />
+            @if (!allDay)
+            {
+                <div class="blocking-edit__row">
+                    <MudTimePicker @bind-Time="startTime" Variant="Variant.Outlined" Label="@L["StartTime"]" MinuteSelectionStep="30"
+                                   PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" />
+                    <MudTimePicker @bind-Time="endTime" Variant="Variant.Outlined" Label="@L["EndTime"]" MinuteSelectionStep="30"
+                                   PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" />
+                </div>
+            }
+        </section>
+
+        <section class="blocking-edit__repeat @(repeat ? "blocking-edit__repeat--on" : null)">
+            <MudSwitch T="bool" @bind-Value="repeat" Color="Color.Primary">
+                <span class="d-flex align-center gap-1"><MudIcon Icon="@Icons.Material.Filled.Repeat" Size="Size.Small" /> @L["RepeatSwitch"]</span>
+            </MudSwitch>
+            @if (repeat)
+            {
+                <div class="blocking-edit__row">
+                    <MudNumericField T="int" @bind-Value="repeatWeeks" Variant="Variant.Outlined" Label="@L["RepeatEveryWeeks"]" Min="1" Max="52" Margin="Margin.Dense" />
+                    <MudDatePicker @bind-Date="repeatUntil" Variant="Variant.Outlined" Label="@L["RepeatUntil"]" MinDate="@startDate"
+                                   PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" />
+                </div>
+                @if (RepeatSummary is { } summary)
+                {
+                    <p class="blocking-edit__hint">@summary</p>
+                }
+            }
+        </section>
+
+        @if (Error is { } error && showErrors)
+        {
+            <div class="blocking-edit__error">⚠️ @error</div>
+        }
+
+        @if (ShownConflicts is { } conflicts)
+        {
+            <section class="blocking-edit__conflicts" role="alert" @ref="conflictsPanel">
+                <div class="blocking-edit__conflicts-title">
+                    ⚠️ @(conflicts.Count == 1 ? L["ConflictsTitleOne"] : string.Format(L["ConflictsTitle"], conflicts.Count))
+                </div>
+                <p class="blocking-edit__hint">@L["ConflictsText"]</p>
+                <ul class="blocking-edit__conflict-list">
+                    @foreach (var booking in conflicts.Take(MaxShownConflicts))
+                    {
+                        <li>
+                            <span class="blocking-edit__conflict-when">
+                                @CourtBlockingHelpers.FormatDate(L, DateOnly.FromDateTime(booking.Interval.From.DateTime)) · @booking.Interval.From.ToString("HH:mm")–@booking.Interval.To.ToString("HH:mm") · @booking.CourtName
+                            </span>
+                            <span class="blocking-edit__conflict-players">@string.Join(", ", booking.Players)</span>
+                        </li>
+                    }
+                </ul>
+                @if (conflicts.Count > MaxShownConflicts)
+                {
+                    <p class="blocking-edit__hint">@string.Format(L["ConflictsMore"], conflicts.Count - MaxShownConflicts)</p>
+                }
+            </section>
+        }
+    </div>
+</BaseDialog>
+
+@code {
+    private const int MaxShownConflicts = 8;
+
+    /// <summary>The blocking to edit; <c>null</c> to create one.</summary>
+    [Parameter] public CourtBlockingDto? Blocking { get; set; }
+
+    [Parameter] public required List<CourtResult> Courts { get; set; }
+
+    [Inject] private ICourtBlockingsStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject] private IStringLocalizer<CourtBlockingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private string title = string.Empty;
+    private IReadOnlyCollection<CourtResult> selectedCourts = [];
+    private DateTime? startDate = DateTime.Today;
+    private DateTime? endDate = DateTime.Today;
+    private bool allDay = true;
+    private TimeSpan? startTime = TimeSpan.FromHours(8);
+    private TimeSpan? endTime = TimeSpan.FromHours(12);
+    private bool repeat;
+    private int repeatWeeks = 1;
+    private DateTime? repeatUntil;
+
+    private bool checking;
+    private bool showErrors;
+    private ElementReference conflictsPanel;
+    private bool scrollToConflicts;
+
+    // The conflicts belong to the inputs they were loaded for; changing the inputs asks the server again
+    private List<CourtBlockingConflictDto>? loadedConflicts;
+    private string? conflictsSignature;
+
+    private string[] Templates => [L["TemplateTournament"], L["TemplateMaintenance"], L["TemplateWeather"], L["TemplateTraining"], L["TemplateEvent"]];
+
+    private List<CourtResult> SortedCourts => Courts.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToList();
+
+    private List<CourtBlockingConflictDto>? ShownConflicts => loadedConflicts is { Count: > 0 } && conflictsSignature == Signature ? loadedConflicts : null;
+
+    private string Signature => string.Join('|',
+        string.Join(',', selectedCourts.Select(c => c.CourtId).Order()), startDate, endDate, allDay, startTime, endTime, repeat, repeatWeeks, repeatUntil);
+
+    private string SubmitCaption => ShownConflicts switch
+    {
+        { Count: 1 } => L["SubmitConfirmOne"],
+        { Count: var count } => string.Format(L["SubmitConfirm"], count),
+        null => Blocking is null ? L["SubmitCreate"] : SharedLocale["Save"],
+    };
+
+    private string? Error
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(title))
+                return L["ReasonRequired"];
+
+            if (selectedCourts.Count == 0)
+                return L["ErrorNoCourt"];
+
+            if (startDate is not { } start || endDate is not { } end || end < start
+                || (!allDay && (startTime is not { } from || endTime is not { } to || (start == end && to <= from))))
+            {
+                return L["ErrorEndBeforeStart"];
+            }
+
+            if (repeat && (repeatUntil is not { } until || until < start))
+                return L["ErrorRepeatUntil"];
+
+            if (repeat && (end - start).Days >= repeatWeeks * 7)
+                return L["ErrorRepeatOverlap"];
+
+            return null;
+        }
+    }
+
+    private string? RepeatSummary
+    {
+        get
+        {
+            if (startDate is not { } start || repeatUntil is not { } until || until < start || repeatWeeks < 1)
+                return null;
+
+            var repetitions = (until - start).Days / (repeatWeeks * 7);
+            var last = DateOnly.FromDateTime(start.AddDays(repetitions * repeatWeeks * 7));
+            return string.Format(L["RepeatSummary"], repetitions + 1, CourtBlockingHelpers.FormatDate(L, last));
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (Blocking is null)
+            return;
+
+        title = Blocking.Title;
+        selectedCourts = Courts.Where(c => Blocking.CourtIds.Contains(c.CourtId)).ToList();
+        startDate = Blocking.StartDate.ToDateTime(TimeOnly.MinValue);
+        endDate = Blocking.EndDate.ToDateTime(TimeOnly.MinValue);
+        allDay = Blocking.StartTime is null;
+        startTime = Blocking.StartTime ?? startTime;
+        endTime = Blocking.EndTime ?? endTime;
+        repeat = Blocking.RecurrenceIntervalWeeks is not null;
+        repeatWeeks = Blocking.RecurrenceIntervalWeeks ?? 1;
+        repeatUntil = Blocking.RecurrenceEndDate?.ToDateTime(TimeOnly.MinValue);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // The conflicts are below the inputs, on a phone they would be outside the visible part of the dialog
+        if (scrollToConflicts && ShownConflicts is not null)
+        {
+            scrollToConflicts = false;
+            await JSRuntime.InvokeVoidAsync("App.scrollIntoView", conflictsPanel);
+        }
+    }
+
+    // Moving the start keeps a blocking of one day on one day
+    private void OnStartDateChanged()
+    {
+        if (startDate is { } start && (endDate is null || endDate < start))
+            endDate = start;
+    }
+
+    private void ToggleAllCourts()
+        => selectedCourts = selectedCourts.Count == Courts.Count ? [] : SortedCourts;
+
+    private SaveCourtBlockingModel BuildModel(bool deleteConflictingBookings) => new()
+    {
+        Title = title.Trim(),
+        CourtIds = selectedCourts.Select(c => c.CourtId).ToList(),
+        StartDate = DateOnly.FromDateTime(startDate!.Value),
+        EndDate = DateOnly.FromDateTime(endDate!.Value),
+        StartTime = allDay ? null : startTime,
+        EndTime = allDay ? null : endTime,
+        TimeZoneInfoId = TimeZoneInfo.Local.Id,
+        RecurrenceIntervalWeeks = repeat ? repeatWeeks : null,
+        RecurrenceEndDate = repeat ? DateOnly.FromDateTime(repeatUntil!.Value) : null,
+        DeleteConflictingBookings = deleteConflictingBookings,
+    };
+
+    private async Task<DialogResult?> Submit()
+    {
+        showErrors = true;
+        if (Error is not null)
+            return null;
+
+        // The affected bookings are shown first, the second click confirms deleting them
+        if (conflictsSignature != Signature)
+        {
+            var signature = Signature;
+            checking = true;
+            StateHasChanged();
+
+            var conflicts = await Store.GetConflicts(BuildModel(false));
+            checking = false;
+            if (conflicts is null)
+                return null;
+
+            if (!conflicts.Success || conflicts.Dto is null)
+            {
+                Snackbar.ShowErrorDetails(conflicts, BackendLocale);
+                return null;
+            }
+
+            loadedConflicts = conflicts.Dto.Bookings;
+            conflictsSignature = signature;
+            if (loadedConflicts.Count > 0)
+            {
+                scrollToConflicts = true;
+                StateHasChanged();
+                return null;
+            }
+        }
+
+        var model = BuildModel(deleteConflictingBookings: ShownConflicts is not null);
+        var result = Blocking is null ? await Store.CreateBlocking(model) : await Store.UpdateBlocking(Blocking.Id, model);
+        if (!result.Success)
+        {
+            // E.g. somebody booked in the meantime: check for conflicts again
+            conflictsSignature = null;
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Saved"], Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+}

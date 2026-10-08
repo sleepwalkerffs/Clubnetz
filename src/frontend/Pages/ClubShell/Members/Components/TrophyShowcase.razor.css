@@ -1,0 +1,69 @@
+.showcase {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.showcase__club {
+    margin-top: 4px;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.shelf {
+    position: relative;
+}
+
+.shelf__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.shelf__title {
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.shelf__count {
+    padding: 1px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+    background: var(--mud-palette-background-gray);
+}
+
+.shelf__level {
+    padding: 1px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--badge-color);
+    background: color-mix(in srgb, var(--badge-color) 14%, transparent);
+}
+
+.shelf__items {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+/* Wooden-shelf-like line under the badges */
+.shelf__board {
+    height: 10px;
+    margin: -4px 4px 0;
+    border-radius: 0 0 10px 10px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--mud-palette-text-primary) 12%, transparent), transparent);
+}
+
+@media (max-width: 599px) {
+    .shelf__items {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+    }
+}

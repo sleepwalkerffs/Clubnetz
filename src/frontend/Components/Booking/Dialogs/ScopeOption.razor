@@ -1,0 +1,17 @@
+<button type="button" class="scope-option @(Selected ? "scope-option--selected" : null)"
+        role="radio" aria-checked="@(Selected ? "true" : "false")" @onclick="OnSelect">
+    <span class="scope-option__icon"><MudIcon Icon="@Icon" /></span>
+    <span class="scope-option__text">
+        <span class="scope-option__title">@Title</span>
+        <span class="scope-option__description">@Description</span>
+    </span>
+    <span class="scope-option__radio"></span>
+</button>
+
+@code {
+    [Parameter, EditorRequired] public string Icon { get; set; } = null!;
+    [Parameter, EditorRequired] public string Title { get; set; } = null!;
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public bool Selected { get; set; }
+    [Parameter] public EventCallback OnSelect { get; set; }
+}

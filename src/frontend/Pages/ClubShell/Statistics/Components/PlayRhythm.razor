@@ -1,0 +1,102 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.Statistics
+@using Bookennis.Shared.Controller.Statistics
+
+<MudText Typo="Typo.body2" Class="mb-4">
+    @((MarkupString)string.Format(Locale["FavouriteDaySentence"],
+        $"<strong>{GetDayName(favouriteDayIndex)}</strong>",
+        $"<strong>{favouriteHour}:00</strong>"))
+</MudText>
+
+<div class="rhythm-section-title">@Locale["ByWeekday"]</div>
+<div class="weekday-bars">
+    @for (var i = 0; i < 7; i++)
+    {
+        var count = Data.WeekdayCounts[i];
+        var height = maxWeekday > 0 ? Math.Max(count * 100.0 / maxWeekday, count > 0 ? 6 : 0) : 0;
+        <div class="weekday-bar">
+            <div class="weekday-bar__count">@(count > 0 ? count : "")</div>
+            <div class="weekday-bar__track">
+                <div class="weekday-bar__fill @(i == favouriteDayIndex ? "weekday-bar__fill--top" : "")" style="height: @height.ToString("0.#", CultureInfo.InvariantCulture)%"></div>
+            </div>
+            <div class="weekday-bar__label @(i >= 5 ? "weekday-bar__label--weekend" : "")">@GetShortDayName(i)</div>
+        </div>
+    }
+</div>
+
+<div class="rhythm-section-title mt-5">@Locale["ByTimeOfDay"]</div>
+<div class="hour-curve">
+    @for (var hour = fromHour; hour <= toHour; hour++)
+    {
+        var count = Data.HourCounts[hour];
+        var height = maxHour > 0 ? Math.Max(count * 100.0 / maxHour, count > 0 ? 6 : 0) : 0;
+        <div class="hour-bar" title="@($"{hour}:00 – {count} {(count == 1 ? Locale["Match"] : Locale["Matches"])}")">
+            <div class="hour-bar__track">
+                <div class="hour-bar__fill hour-bar__fill--@GetBucket(hour)" style="height: @height.ToString("0.#", CultureInfo.InvariantCulture)%"></div>
+            </div>
+            <div class="hour-bar__label">@(hour % 3 == 0 ? hour.ToString() : "")</div>
+        </div>
+    }
+</div>
+
+<div class="daytime-buckets">
+    @RenderBucket("🌅", Locale["Morning"], morning, "morning")
+    @RenderBucket("☀️", Locale["Afternoon"], afternoon, "afternoon")
+    @RenderBucket("🌙", Locale["Evening"], evening, "evening")
+</div>
+
+@code {
+    [Parameter, EditorRequired] public StatisticsData Data { get; set; } = null!;
+
+    [Inject] private IStringLocalizer<StatisticsLocale> Locale { get; set; } = null!;
+
+    // Same boundaries as the player type in GetMemberStatistics
+    private const int AfternoonStart = 12;
+    private const int EveningStart = 17;
+
+    private int favouriteDayIndex;
+    private int favouriteHour;
+    private int maxWeekday;
+    private int maxHour;
+    private int fromHour;
+    private int toHour;
+    private int morning;
+    private int afternoon;
+    private int evening;
+
+    protected override void OnParametersSet()
+    {
+        maxWeekday = Data.WeekdayCounts.Max();
+        favouriteDayIndex = Data.WeekdayCounts.IndexOf(maxWeekday);
+
+        maxHour = Data.HourCounts.Max();
+        favouriteHour = Data.HourCounts.IndexOf(maxHour);
+
+        var playedHours = Enumerable.Range(0, 24).Where(h => Data.HourCounts[h] > 0).ToList();
+        fromHour = Math.Min(7, playedHours.FirstOrDefault(7));
+        toHour = Math.Max(22, playedHours.LastOrDefault(22));
+
+        morning = Data.HourCounts.Take(AfternoonStart).Sum();
+        afternoon = Data.HourCounts.Skip(AfternoonStart).Take(EveningStart - AfternoonStart).Sum();
+        evening = Data.HourCounts.Skip(EveningStart).Sum();
+    }
+
+    private static string GetBucket(int hour) => hour < AfternoonStart ? "morning" : hour < EveningStart ? "afternoon" : "evening";
+
+    // dayIndex 0 = Monday
+    private static DayOfWeek ToDayOfWeek(int dayIndex) => (DayOfWeek)((dayIndex + 1) % 7);
+
+    private static string GetDayName(int dayIndex) => CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(ToDayOfWeek(dayIndex));
+
+    private static string GetShortDayName(int dayIndex) => CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(ToDayOfWeek(dayIndex));
+
+    private RenderFragment RenderBucket(string emoji, string label, int count, string bucket) => __builder =>
+    {
+        var total = Math.Max(morning + afternoon + evening, 1);
+        <div class="daytime-bucket daytime-bucket--@bucket">
+            <span class="daytime-bucket__emoji">@emoji</span>
+            <span class="daytime-bucket__value">@((int)Math.Round(count * 100.0 / total))%</span>
+            <span class="daytime-bucket__label">@label</span>
+        </div>
+    };
+}

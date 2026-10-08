@@ -1,0 +1,28 @@
+@using System.Globalization
+@using Bookennis.Shared.Controller.Statistics
+
+@{
+    var max = Days.Count > 0 ? Days.Max(d => d.Hours) : 0;
+}
+
+<div class="weekday-bars">
+    @foreach (var day in Days)
+    {
+        var isTop = day.Hours == max && max > 0;
+        var height = max > 0 ? Math.Max(day.Hours / max * 100, day.Hours > 0 ? 4 : 0) : 0;
+        <div class="weekday-bar" title="@($"{day.Bookings} · {day.Hours.ToString("0.#", CultureInfo.CurrentCulture)} h")">
+            <div class="weekday-bar__count">@day.Hours.ToString("0", CultureInfo.CurrentCulture)</div>
+            <div class="weekday-bar__track">
+                <div class="weekday-bar__fill @(isTop ? "weekday-bar__fill--top" : null)" style="height: @height.ToString("0.#", CultureInfo.InvariantCulture)%"></div>
+            </div>
+            <div class="weekday-bar__label @(day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ? "weekday-bar__label--weekend" : null)">
+                @CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day.DayOfWeek)
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>Weekdays in display order.</summary>
+    [Parameter, EditorRequired] public List<WeekdayActivityEntry> Days { get; set; } = [];
+}

@@ -1,0 +1,66 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.Members
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Members
+
+@if (Seasons.Count == 0)
+{
+    <div class="enrollment__empty">@L["NoSeasons"]</div>
+}
+else
+{
+    <div class="enrollment">
+        @foreach (var season in Seasons)
+        {
+            var enrolled = SelectedIds.Contains(season.Id);
+            var overview = Overview?.FirstOrDefault(o => o.SeasonId == season.Id);
+            <button type="button" class="enrollment__season @(enrolled ? "enrollment__season--on" : null)"
+                    aria-pressed="@(enrolled ? "true" : "false")" disabled="@Disabled" @onclick="() => Toggle(season.Id)">
+                <span class="enrollment__switch" aria-hidden="true"><span></span></span>
+                <span class="enrollment__text">
+                    <span class="enrollment__label">
+                        @MemberAdminHelpers.SeasonLabel(season)
+                        @if (season.IsActive)
+                        {
+                            <span class="enrollment__live">● @L["Current"]</span>
+                        }
+                    </span>
+                    <span class="enrollment__dates">@season.StartDate.ToString("d", CultureInfo.CurrentCulture) – @season.EndDate.ToString("d", CultureInfo.CurrentCulture)</span>
+                </span>
+                @if (overview is not null)
+                {
+                    <span class="enrollment__stats">
+                        <span><strong>@overview.Bookings</strong> @L["MatchesShort"]</span>
+                        @if (overview.Badges > 0)
+                        {
+                            <span class="enrollment__badges">🏅 @overview.Badges</span>
+                        }
+                    </span>
+                }
+            </button>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Seasons, newest first.</summary>
+    [Parameter, EditorRequired] public List<SeasonResult> Seasons { get; set; } = [];
+    [Parameter, EditorRequired] public IReadOnlyCollection<int> SelectedIds { get; set; } = [];
+    [Parameter] public EventCallback<IReadOnlyCollection<int>> SelectedIdsChanged { get; set; }
+
+    /// <summary>Optional booking statistics per season.</summary>
+    [Parameter] public List<MemberSeasonOverview>? Overview { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+
+    [Inject] private IStringLocalizer<MembersAdminLocale> L { get; set; } = null!;
+
+    private async Task Toggle(int seasonId)
+    {
+        var selected = SelectedIds.Contains(seasonId)
+            ? SelectedIds.Where(id => id != seasonId).ToList()
+            : SelectedIds.Append(seasonId).ToList();
+
+        SelectedIds = selected;
+        await SelectedIdsChanged.InvokeAsync(selected);
+    }
+}

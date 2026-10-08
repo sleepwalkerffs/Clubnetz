@@ -1,0 +1,84 @@
+@page "/admin/users"
+@using Bookennis.Client.Services.Store.Admin
+@using Bookennis.Shared.Controller.Admin
+@using Bookennis.Shared.Utils.Paging
+
+@implements IDisposable
+
+<PageTitle>@L["AdminPanel"] - @L["Users"]</PageTitle>
+
+<MudTable ServerData="@ServerReload"
+          @ref="table"
+          OnRowClick="@RowClicked"
+          Dense="true"
+          Hover="true"
+          T="AdminUserResult">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@L["Users"]</MudText>
+        <MudSpacer />
+        <MudTextField T="string" DebounceInterval="300" @bind-Value="searchString" OnDebounceIntervalElapsed="table.ReloadServerData"
+                      Placeholder="@L["Search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Variant="Variant.Outlined" />
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="LastName" T="AdminUserResult">@SharedLocale.Lastname</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="FirstName" T="AdminUserResult">@SharedLocale.Firstname</MudTableSortLabel></MudTh>
+        <MudTh>@SharedLocale.Email</MudTh>
+        <MudTh>@L["EmailConfirmed"]</MudTh>
+        <MudTh>@SharedLocale.Birthday</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="@SharedLocale.Lastname">@context.LastName</MudTd>
+        <MudTd DataLabel="@SharedLocale.Firstname">@context.FirstName</MudTd>
+        <MudTd DataLabel="@SharedLocale.Email">@context.Email</MudTd>
+        <MudTd DataLabel="@L["EmailConfirmed"]">
+            @if (context.EmailConfirmed)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small" />
+            }
+        </MudTd>
+        <MudTd DataLabel="@SharedLocale.Birthday">@context.Birthday.ToString("d")</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    [Inject] private IAdminStore AdminStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
+
+    private MudTable<AdminUserResult> table = null!;
+    private string? searchString;
+
+    protected override void OnInitialized()
+    {
+        AdminStore.OnUsersChanged += StateHasChanged;
+    }
+
+    private async Task<TableData<AdminUserResult>> ServerReload(TableState state, CancellationToken cancellationToken)
+    {
+        var pagination = new PaginationParameters { Page = state.Page + 1, PageSize = state.PageSize, EnablePaging = true };
+        await AdminStore.LoadUsers(pagination, null, searchString);
+
+        return new TableData<AdminUserResult>
+        {
+            Items = AdminStore.Users,
+            TotalItems = AdminStore.TotalUsers
+        };
+    }
+
+    private void RowClicked(TableRowClickEventArgs<AdminUserResult> args)
+    {
+        NavigationManager.NavigateTo($"/admin/users/{args.Item!.Id}");
+    }
+
+    public void Dispose()
+    {
+        AdminStore.OnUsersChanged -= StateHasChanged;
+    }
+}

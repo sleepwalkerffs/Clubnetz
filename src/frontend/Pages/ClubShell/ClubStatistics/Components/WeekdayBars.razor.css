@@ -1,0 +1,53 @@
+.weekday-bars {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    height: 180px;
+}
+
+.weekday-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+}
+
+.weekday-bar__count {
+    height: 18px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.weekday-bar__track {
+    flex: 1;
+    width: 100%;
+    max-width: 44px;
+    display: flex;
+    align-items: flex-end;
+    border-radius: 10px;
+    background: var(--mud-palette-background-gray);
+    overflow: hidden;
+}
+
+.weekday-bar__fill {
+    width: 100%;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #6EE7B7, #10B981);
+    transition: height 0.6s ease;
+}
+
+.weekday-bar__fill--top {
+    background: linear-gradient(180deg, #34D399, #047857);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+}
+
+.weekday-bar__label {
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.weekday-bar__label--weekend {
+    font-weight: 700;
+    color: var(--mud-palette-secondary);
+}

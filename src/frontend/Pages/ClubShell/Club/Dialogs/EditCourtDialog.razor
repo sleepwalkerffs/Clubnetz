@@ -1,0 +1,83 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Components.Shared.Pickers
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubSettings
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Utils
+@using Bookennis.Global.Intervals
+@using Bookennis.Shared.Controller.Club
+
+<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@SharedLocale["Update"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@ClubStore.IsSaving" Title="@Court.Name">
+    <div class="court-edit">
+        <section>
+            <h3 class="court-edit__title">✏️ @L["CourtNaming"]</h3>
+            <div class="court-edit__row">
+                <MudTextField Variant="Variant.Outlined" T="string" Label="@L["CourtName"]" @bind-Value="@Name" Immediate="true" Required="true"
+                              RequiredError="@L["CourtNameRequired"]" Margin="Margin.Dense" />
+                <MudTextField Variant="Variant.Outlined" T="string" Label="@L["CourtAlias"]" @bind-Value="@Alias" Immediate="true" Required="true"
+                              RequiredError="@L["CourtAliasRequired"]" HelperText="@L["CourtAliasHint"]" Margin="Margin.Dense" />
+            </div>
+        </section>
+
+        <section class="court-edit__closure @(closed ? "court-edit__closure--on" : null)">
+            <MudSwitch T="bool" @bind-Value="closed" Color="Color.Error" Label="@L["CourtClosure"]" />
+            <p class="court-edit__hint">@L["CourtClosureHint"]</p>
+            @if (closed)
+            {
+                <div class="court-edit__row">
+                    <DateTimePicker Label="@L["ClosedFrom"]" TimeEditMode="TimeEditMode.OnlyHours" LabelTime="@L["ClosedFrom"]" @bind-NullableValue="From" />
+                    <DateTimePicker Label="@L["ClosedTo"]" TimeEditMode="TimeEditMode.OnlyHours" LabelTime="@L["ClosedTo"]" @bind-NullableValue="To" />
+                </div>
+                @if (From is { } from && To is { } to && to <= from)
+                {
+                    <div class="court-edit__error">⚠️ @L["ClosureEndBeforeStart"]</div>
+                }
+            }
+        </section>
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter] public required CourtResult Court { get; set; }
+
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private DateTimeOffset? From;
+    private DateTimeOffset? To;
+    private string Name = string.Empty;
+    private string Alias = string.Empty;
+    private bool closed;
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Alias)
+                              && (!closed || From is { } from && To is { } to && to > from);
+
+    protected override void OnInitialized()
+    {
+        From = Court.Inactive?.From;
+        To = Court.Inactive?.To;
+        closed = Court.Inactive is not null;
+        Name = Court.Name;
+        Alias = Court.Alias;
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        var inactive = closed && From is not null && To is not null ? new DateTimeOffsetInterval(From.Value, To.Value) : null;
+        var result = await ClubStore.UpdateCourt(Court.CourtId, Name.Trim(), Alias.Trim(), inactive, Court.SortOrder);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        return DialogResult.Ok(Court);
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+}

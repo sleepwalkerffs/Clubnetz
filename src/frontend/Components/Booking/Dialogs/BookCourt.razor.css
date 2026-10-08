@@ -1,0 +1,114 @@
+.book-court {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+}
+
+.book-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    border-radius: 16px;
+    border-left: 5px solid var(--mode-color);
+    background: color-mix(in srgb, var(--mode-color) 12%, var(--mud-palette-surface));
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.book-summary__date {
+    flex: 0 0 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 0;
+    border-radius: 12px;
+    color: #FFFFFF;
+    background: var(--mode-color);
+}
+
+.book-summary__weekday,
+.book-summary__month {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.book-summary__day {
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.book-summary__text {
+    min-width: 0;
+}
+
+.book-summary__time {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 1.3rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.book-summary__duration {
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+    background: var(--mud-palette-surface);
+}
+
+.book-summary__meta {
+    margin-top: 2px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.book-court__label {
+    margin-bottom: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.book-court__times {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.book-court__durations {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.book-court__recurring {
+    padding: 8px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.book-court__recurring--on {
+    border-color: color-mix(in srgb, var(--mud-palette-primary) 45%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-primary) 5%, transparent);
+}
+
+.book-court__hint {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}

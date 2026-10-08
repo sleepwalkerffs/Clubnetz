@@ -1,0 +1,170 @@
+@using System.Globalization
+@using System.Reflection
+@using System
+
+@* copied from and adjusted https://github.com/MudBlazor/MudBlazor/issues/1095#issuecomment-933730297 *@
+
+<div class="d-inline-flex">
+    <MudDatePicker Label="@Label"
+                   Date="dateTime"
+                   DateChanged="DateChanged"
+                   DateFormat="@datePattern"
+                   TitleDateFormat="@datePatternLong"
+                   FirstDayOfWeek="@firstDayOfWeek"
+                   Editable="true"
+                   PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                   AdornmentIcon="@Icons.Material.Filled.Today"
+                   Disabled="ReadOnly" Required="Required" RequiredError="@RequiredError" Style="@(string.IsNullOrEmpty(Label)?"margin-top:0px;":"")" />
+
+    <MudTimePicker Label="@LabelTime"
+                   Time="@(dateTime.HasValue ? dateTime.Value.TimeOfDay : null)"
+                   TimeChanged="TimeChanged"
+                   Culture="CultureInfo.CurrentCulture"
+                   Editable="true"
+                   PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                   AdornmentIcon="@Icons.Material.Filled.AccessTime"
+                   TimeEditMode="@TimeEditMode"
+                   Disabled="ReadOnly" Required="Required" RequiredError="@RequiredError" Style="@(string.IsNullOrEmpty(Label)?"margin-top:0px;":"")" />
+</div>
+
+@code {
+    [Parameter]
+    public DateTimeOffset Value { get; set; }
+    [Parameter]
+    public EventCallback<DateTimeOffset> ValueChanged { get; set; }
+    [Parameter]
+    public DateTimeOffset? NullableValue { get; set; }
+    [Parameter]
+    public EventCallback<DateTimeOffset?> NullableValueChanged { get; set; }
+    [Parameter]
+    public string Label { get; set; } = null!;
+    [Parameter]
+    public string LabelTime { get; set; } = null!;
+    [Parameter]
+    public bool ReadOnly { get; set; } = false;
+    [Parameter]
+    public bool Required { get; set; } = false;
+    [Parameter]
+    public string RequiredError { get; set; } = "Required";
+    [Parameter]
+    public TimeEditMode TimeEditMode { get; set; } = TimeEditMode.Normal;
+
+
+    string datePattern
+    {
+        get
+        {
+            return CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern;
+        }
+    }
+
+    string datePatternLong
+    {
+        get
+        {
+            return "ddd, " + CultureInfo.CurrentCulture.DateTimeFormat.MonthDayPattern;
+        }
+    }
+
+    DayOfWeek firstDayOfWeek
+    {
+        get
+        {
+            return CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
+        }
+    }
+
+    bool timeAmPm
+    {
+        get
+        {
+            return CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern.EndsWith("tt");
+        }
+    }
+
+    DateTime? dateTime;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Required)
+        {
+            dateTime = Value.LocalDateTime;
+        }
+        else
+        {
+            dateTime = NullableValue.HasValue ? NullableValue.Value.LocalDateTime : null;
+        }
+
+        await base.OnParametersSetAsync();
+    }
+
+    async Task DateChanged(DateTime? dt)
+    {
+        if (dt.HasValue)
+        {
+            dateTime = new DateTime(
+                dt.Value.Year,
+                dt.Value.Month,
+                dt.Value.Day,
+                dateTime.HasValue ? dateTime.Value.Hour : 0,
+                dateTime.HasValue ? dateTime.Value.Minute : 0,
+                0
+            );
+
+            await DateTimeChanged();
+        }
+        else
+        {
+            if (!Required)
+            {
+                dateTime = null;
+                await NullableValueChanged.InvokeAsync(null);
+            }
+        }
+    }
+
+    async Task TimeChanged(TimeSpan? ts)
+    {
+        if (ts.HasValue)
+        {
+            dateTime = new DateTime(
+                dateTime.HasValue ? dateTime.Value.Year : DateTime.Now.Year,
+                dateTime.HasValue ? dateTime.Value.Month : DateTime.Now.Month,
+                dateTime.HasValue ? dateTime.Value.Day : DateTime.Now.Day,
+                ts.Value.Hours,
+                ts.Value.Minutes,
+                0
+            );
+
+            await DateTimeChanged();
+        }
+        else
+        {
+            if (!Required)
+            {
+                dateTime = null;
+                await NullableValueChanged.InvokeAsync(null);
+            }
+        }
+    }
+
+    async Task DateTimeChanged()
+    {
+        TimeZoneInfo tzi = TimeZoneInfo.Local;
+        DateTimeOffset dateTimeOffset = new DateTimeOffset(
+            dateTime!.Value.Year,
+            dateTime.Value.Month,
+            dateTime.Value.Day,
+            dateTime.Value.Hour,
+            dateTime.Value.Minute,
+            0,
+            tzi.GetUtcOffset(dateTime.Value)
+            );
+
+        DateTimeOffset? ndateTimeOffset = new DateTimeOffset?(dateTimeOffset);
+
+        await ValueChanged.InvokeAsync(dateTimeOffset);
+        await NullableValueChanged.InvokeAsync(ndateTimeOffset);
+    }
+
+}

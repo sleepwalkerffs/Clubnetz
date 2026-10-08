@@ -1,0 +1,77 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.BadgeSettings
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Badges
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.OneTimeBadges
+
+<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@BadgesStore.IsSaving" Title="@L["AddOneTimeBadge"]">
+    <div class="badge-edit" style="--badge-color: @BadgeColors.ForLevel(null)">
+        <div class="badge-edit__preview">
+            <BadgeIcon ImageUrl="@Badge?.ImageUrl" Size="Size.Large" Class="badge-edit__icon" />
+            <div>
+                <div class="badge-edit__name">@(string.IsNullOrWhiteSpace(name) ? L["OneTimeNamePlaceholder"] : name)</div>
+                <span class="badge-edit__pill">✨ @L["SpecialAward"]</span>
+                <div class="badge-edit__rule">@L["OneTimeRule"]</div>
+            </div>
+        </div>
+
+        <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Name"]" @bind-Value="name" Immediate="true" Margin="Margin.Dense" />
+        <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Description"]" @bind-Value="description" Immediate="true" Lines="3"
+                      HelperText="@L["DescriptionHint"]" />
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter] public int SeasonId { get; set; }
+
+    /// <summary>The badge to edit, null to create a new one.</summary>
+    [Parameter] public OneTimeBadgeDto? Badge { get; set; }
+
+    [Inject] private IBadgesStore BadgesStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<BadgeSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private string name = "";
+    private string description = "";
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(name) && !string.IsNullOrWhiteSpace(description);
+
+    protected override void OnInitialized()
+    {
+        if (Badge is null)
+            return;
+
+        name = Badge.Name;
+        description = Badge.Description;
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        var result = Badge is null
+            ? await BadgesStore.CreateOneTimeBadge(SeasonId, new CreateOneTimeBadgeModel(name.Trim(), description.Trim()))
+            : await BadgesStore.UpdateOneTimeBadge(Badge.Id, new UpdateOneTimeBadgeModel(name.Trim(), description.Trim()));
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+        return null;
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

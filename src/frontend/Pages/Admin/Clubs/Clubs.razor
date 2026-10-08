@@ -1,0 +1,165 @@
+@page "/admin/clubs"
+@using Bookennis.Client.Services.Store.Admin
+@using Bookennis.Shared.Controller.Admin
+@using Bookennis.Global.Intervals
+
+@implements IDisposable
+
+<PageTitle>@L["AdminPanel"] - @L["Clubs"]</PageTitle>
+
+<div class="d-flex flex-wrap justify-space-between align-center mb-5 gap-3">
+    <div class="accent-border-left">
+        <MudText Typo="Typo.h5">@L["Clubs"]</MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => showCreateDialog = true)" StartIcon="@Icons.Material.Filled.Add">
+        @L["AddClub"]
+    </MudButton>
+</div>
+
+@if (!AdminStore.ClubsLoaded)
+{
+    <div class="d-flex justify-center pa-8">
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    </div>
+}
+else
+{
+    <MudTable Items="@AdminStore.Clubs" Hover="true" OnRowClick="RowClicked" T="AdminClubResult" Elevation="0">
+        <HeaderContent>
+            <MudTh>@SharedLocale.Name</MudTh>
+            <MudTh>@SharedLocale.Members</MudTh>
+            <MudTh>@L["PlayModes"]</MudTh>
+            <MudTh Style="width: 80px;">@L["Actions"]</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="@SharedLocale.Name">
+                <MudText Style="font-weight: 600;">@context.Name</MudText>
+            </MudTd>
+            <MudTd DataLabel="@SharedLocale.Members">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Primary">@context.MemberCount</MudChip>
+            </MudTd>
+            <MudTd DataLabel="@L["PlayModes"]">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Secondary">@context.PlayModeCount</MudChip>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                               OnClick="@(() => DeleteClub(context))" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@if (showCreateDialog)
+{
+    <MudDialog @bind-Visible="showCreateDialog">
+        <TitleContent>
+            <div class="d-flex align-center gap-2">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Primary" />
+                <MudText Typo="Typo.h6">@L["CreateClub"]</MudText>
+            </div>
+        </TitleContent>
+        <DialogContent>
+            <div class="d-flex flex-column gap-3">
+                <MudTextField @bind-Value="newClubName" Label="@L["ClubName"]" Required="true" Variant="Variant.Outlined" />
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTimePicker @bind-Time="openStart" Label="@L["OpeningStart"]" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTimePicker @bind-Time="openEnd" Label="@L["OpeningEnd"]" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTimePicker @bind-Time="primeStart" Label="@L["PrimeTimeStart"]" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTimePicker @bind-Time="primeEnd" Label="@L["PrimeTimeEnd"]" Variant="Variant.Outlined" />
+                    </MudItem>
+                </MudGrid>
+            </div>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Variant="Variant.Text" OnClick="@(() => showCreateDialog = false)">@SharedLocale.Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateClub">@L["Create"]</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+    [Inject] private IAdminStore AdminStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
+
+    private bool showCreateDialog;
+    private string newClubName = "";
+    private TimeSpan? openStart = new TimeSpan(8, 0, 0);
+    private TimeSpan? openEnd = new TimeSpan(22, 0, 0);
+    private TimeSpan? primeStart = new TimeSpan(17, 0, 0);
+    private TimeSpan? primeEnd = new TimeSpan(21, 0, 0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        AdminStore.OnClubsChanged += StateHasChanged;
+        await AdminStore.LoadClubs();
+    }
+
+    private void RowClicked(TableRowClickEventArgs<AdminClubResult> args)
+    {
+        NavigationManager.NavigateTo($"/admin/clubs/{args.Item!.Id}");
+    }
+
+    private async Task CreateClub()
+    {
+        if (string.IsNullOrWhiteSpace(newClubName) || openStart is null || openEnd is null || primeStart is null || primeEnd is null)
+        {
+            Snackbar.Add(L["FillAllFields"], Severity.Warning);
+            return;
+        }
+
+        var clubId = await AdminStore.CreateClub(new CreateClubRequest
+        {
+            Name = newClubName,
+            OpeningHours = new TimeOnlyInterval(TimeOnly.FromTimeSpan(openStart.Value), TimeOnly.FromTimeSpan(openEnd.Value)),
+            PrimeTimeHours = new TimeOnlyInterval(TimeOnly.FromTimeSpan(primeStart.Value), TimeOnly.FromTimeSpan(primeEnd.Value))
+        });
+
+        if (clubId is not null)
+        {
+            showCreateDialog = false;
+            Snackbar.Add(L["ClubCreated"], Severity.Success);
+            NavigationManager.NavigateTo($"/admin/clubs/{clubId}");
+        }
+        else
+        {
+            Snackbar.Add(L["FailedCreateClub"], Severity.Error);
+        }
+    }
+
+    private async Task DeleteClub(AdminClubResult club)
+    {
+        var result = await DialogService.ShowMessageBox(
+            L["ConfirmDeletion"],
+            string.Format(L["DeleteClubConfirm"], club.Name),
+            yesText: SharedLocale.Delete, cancelText: SharedLocale.Cancel);
+
+        if (result == true)
+        {
+            var success = await AdminStore.DeleteClub(club.Id);
+            if (success)
+            {
+                Snackbar.Add(L["ClubDeleted"], Severity.Success);
+                await AdminStore.LoadClubs();
+            }
+            else
+            {
+                Snackbar.Add(L["FailedDeleteClub"], Severity.Error);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        AdminStore.OnClubsChanged -= StateHasChanged;
+    }
+}

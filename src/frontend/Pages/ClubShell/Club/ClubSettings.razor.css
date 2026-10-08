@@ -1,0 +1,74 @@
+.club-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.club-settings__nav {
+    position: sticky;
+    top: 64px;
+    z-index: 4;
+    display: flex;
+    gap: 8px;
+    padding: 6px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mud-palette-surface) 88%, transparent);
+    border: 1px solid var(--mud-palette-lines-default);
+    backdrop-filter: blur(8px);
+    overflow-x: auto;
+}
+
+.club-settings__nav a {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-primary);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+}
+
+.club-settings__nav a:hover {
+    background: var(--mud-palette-background-gray);
+}
+
+.club-settings__anchor {
+    height: 100%;
+    scroll-margin-top: 128px;
+}
+
+.season-aside__caption {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.season-aside__value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.season-aside__text {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.season-aside__bar {
+    height: 6px;
+    margin-top: 12px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+}
+
+.season-aside__bar span {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: #A7F3D0;
+}

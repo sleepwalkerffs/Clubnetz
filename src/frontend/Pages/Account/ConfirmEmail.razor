@@ -1,0 +1,79 @@
+@page "/account/confirmEmail";
+@layout NotAuthorizedLayout
+
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Account
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.HttpClients
+@using Bookennis.Client.Services.HttpClients.Account
+@using Bookennis.Client.Shared
+@using Bookennis.Client.Utils
+
+<PageTitle>@Locale["ConfirmEmail"]</PageTitle>
+
+@if (processing)
+{
+    <AuthShell Emoji="⏳" Title="@Locale["ConfirmEmail"]" Subtitle="@Locale["ConfirmEmailProcessing"]" ShowFeatures="false">
+        <div class="d-flex justify-center">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        </div>
+    </AuthShell>
+}
+else if (success)
+{
+    <AuthShell Emoji="🎉" Title="@Locale["ConfirmEmail_SuccessTitle"]" Subtitle="@Locale["ConfirmEmail_SuccessText"]">
+        <MudButton Href="account/login" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large">
+            @Locale["GoToLogin"]
+        </MudButton>
+    </AuthShell>
+}
+else
+{
+    <AuthShell Emoji="⚠️" Title="@Locale["ConfirmEmail_FailedTitle"]" Subtitle="@Locale["ConfirmEmail_FailedText"]" ShowFeatures="false">
+        <ChildContent>
+            <MudButton Href="account/forgot-password" Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true">
+                @Locale["ConfirmEmail_ResetInstead"]
+            </MudButton>
+        </ChildContent>
+        <Footer>
+            <MudLink Href="account/login" Underline="Underline.Hover" Color="Color.Primary">@Locale["BackToLogin"]</MudLink>
+        </Footer>
+    </AuthShell>
+}
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Email { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Token { get; set; }
+
+    // The router re-creates the page while the auth state settles on startup, so all instances share one request
+    private static readonly Dictionary<string, Task<HttpResult>> confirmations = [];
+
+    [Inject]
+    private IAccountHttpClient AccountHttpClient { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<AccountLocale> Locale { get; set; } = null!;
+
+    private bool processing = true;
+    private bool success;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Token))
+        {
+            processing = false;
+            return;
+        }
+
+        if (!confirmations.TryGetValue(Token, out var confirmation))
+            confirmations[Token] = confirmation = AccountHttpClient.ConfirmEmail(Email, Token);
+
+        var response = await confirmation;
+        success = response.Success;
+        processing = false;
+    }
+}

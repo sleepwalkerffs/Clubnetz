@@ -1,0 +1,16 @@
+﻿<MudBreakpointProvider>
+    <MudHidden Breakpoint="Breakpoint.Xs" Invert="true">
+        @ScreenXs
+    </MudHidden>
+    <MudHidden Breakpoint="Breakpoint.Xs">
+        @ScreenDefault
+    </MudHidden>
+</MudBreakpointProvider>
+
+@code {
+    [Parameter]
+    public RenderFragment? ScreenXs { get; set; }
+
+    [Parameter]
+    public RenderFragment? ScreenDefault { get; set; }
+}

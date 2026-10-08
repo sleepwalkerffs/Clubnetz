@@ -1,0 +1,370 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="MembersSubtitle" xml:space="preserve">
+    <value>Mitglieder finden, Saisonen prüfen und E-Mails für Aussendungen kopieren</value>
+  </data>
+  <data name="MembersChip" xml:space="preserve">
+    <value>{0} Mitglieder</value>
+  </data>
+  <data name="ActiveChip" xml:space="preserve">
+    <value>{0} diese Saison</value>
+  </data>
+  <data name="NewChip" xml:space="preserve">
+    <value>{0} neu</value>
+  </data>
+  <data name="LapsedChip" xml:space="preserve">
+    <value>{0} noch nicht zurück</value>
+  </data>
+  <data name="CopyCaption" xml:space="preserve">
+    <value>Aktuelle Liste</value>
+  </data>
+  <data name="ResultCount" xml:space="preserve">
+    <value>{0} Mitglieder</value>
+  </data>
+  <data name="CopyTextFiltered" xml:space="preserve">
+    <value>Kopiere die E-Mails aller Mitglieder, die dem Filter entsprechen</value>
+  </data>
+  <data name="CopyTextAll" xml:space="preserve">
+    <value>Kopiere die E-Mails aller Mitglieder</value>
+  </data>
+  <data name="CopyEmails" xml:space="preserve">
+    <value>E-Mails kopieren</value>
+  </data>
+  <data name="CopyComma" xml:space="preserve">
+    <value>Mit Komma getrennt</value>
+  </data>
+  <data name="CopySemicolon" xml:space="preserve">
+    <value>Mit Strichpunkt getrennt (Outlook)</value>
+  </data>
+  <data name="CopyLines" xml:space="preserve">
+    <value>Eine pro Zeile</value>
+  </data>
+  <data name="MembersFound" xml:space="preserve">
+    <value>Mitglieder gefunden</value>
+  </data>
+  <data name="ClearFilters" xml:space="preserve">
+    <value>Filter zurücksetzen</value>
+  </data>
+  <data name="Sort_LastName" xml:space="preserve">
+    <value>Nachname</value>
+  </data>
+  <data name="Sort_FirstName" xml:space="preserve">
+    <value>Vorname</value>
+  </data>
+  <data name="Sort_Birthday" xml:space="preserve">
+    <value>Geburtstag</value>
+  </data>
+  <data name="Sort_ContactEmail" xml:space="preserve">
+    <value>E-Mail</value>
+  </data>
+  <data name="Sort_LastPlayed" xml:space="preserve">
+    <value>Zuletzt gespielt</value>
+  </data>
+  <data name="SortDirection" xml:space="preserve">
+    <value>Sortierrichtung ändern</value>
+  </data>
+  <data name="NoMembersFound" xml:space="preserve">
+    <value>Keine Mitglieder entsprechen diesen Filtern.</value>
+  </data>
+  <data name="Age" xml:space="preserve">
+    <value>Alter</value>
+  </data>
+  <data name="Seasons" xml:space="preserve">
+    <value>Saisonen</value>
+  </data>
+  <data name="LastPlayed" xml:space="preserve">
+    <value>Zuletzt gespielt</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Bearbeiten</value>
+  </data>
+  <data name="Family" xml:space="preserve">
+    <value>Familie</value>
+  </data>
+  <data name="AgeGroup_Kids" xml:space="preserve">
+    <value>Kinder (≤ 12)</value>
+  </data>
+  <data name="AgeGroup_Teenagers" xml:space="preserve">
+    <value>Jugendliche (13–17)</value>
+  </data>
+  <data name="AgeGroup_Adults" xml:space="preserve">
+    <value>Erwachsene (18–34)</value>
+  </data>
+  <data name="AgeGroup_Seniors" xml:space="preserve">
+    <value>Senioren (35+)</value>
+  </data>
+  <data name="YearsShort" xml:space="preserve">
+    <value>J.</value>
+  </data>
+  <data name="QuickEdit" xml:space="preserve">
+    <value>Schnell bearbeiten</value>
+  </data>
+  <data name="Range" xml:space="preserve">
+    <value>{0}–{1} von {2}</value>
+  </data>
+  <data name="PerPage" xml:space="preserve">
+    <value>Pro Seite</value>
+  </data>
+  <data name="NoEmailsToCopy" xml:space="preserve">
+    <value>Keines dieser Mitglieder hat eine E-Mail-Adresse.</value>
+  </data>
+  <data name="EmailsCopied" xml:space="preserve">
+    <value>{0} E-Mails in die Zwischenablage kopiert</value>
+  </data>
+  <data name="EmailsCopiedWithMissing" xml:space="preserve">
+    <value>{0} E-Mails kopiert – {1} Mitglieder haben keine eigene oder teilen sich eine</value>
+  </data>
+  <data name="EditMember" xml:space="preserve">
+    <value>Mitglied bearbeiten</value>
+  </data>
+  <data name="NoEmail" xml:space="preserve">
+    <value>Keine E-Mail</value>
+  </data>
+  <data name="Enrolled" xml:space="preserve">
+    <value>eingeschrieben</value>
+  </data>
+  <data name="NotEnrolled" xml:space="preserve">
+    <value>nicht eingeschrieben</value>
+  </data>
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>Nach Name oder E-Mail suchen</value>
+  </data>
+  <data name="Filters" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="QuickFilters" xml:space="preserve">
+    <value>Schnellfilter</value>
+  </data>
+  <data name="SeasonsFilter" xml:space="preserve">
+    <value>Saisonen</value>
+  </data>
+  <data name="SeasonsFilterHint" xml:space="preserve">
+    <value>Tippe auf eine Saison: ✓ eingeschrieben, ✕ nicht eingeschrieben – z. B. ✓ letzte und ✕ diese Saison zeigt, wer noch nicht zurück ist.</value>
+  </data>
+  <data name="NoBookingsInSeasonChip" xml:space="preserve">
+    <value>Keine Buchung in {0}</value>
+  </data>
+  <data name="AgeGroup" xml:space="preserve">
+    <value>Altersgruppe</value>
+  </data>
+  <data name="Gender" xml:space="preserve">
+    <value>Geschlecht</value>
+  </data>
+  <data name="Gender_Male" xml:space="preserve">
+    <value>Männlich</value>
+  </data>
+  <data name="Gender_Female" xml:space="preserve">
+    <value>Weiblich</value>
+  </data>
+  <data name="Gender_Diverse" xml:space="preserve">
+    <value>Divers</value>
+  </data>
+  <data name="Email_Any" xml:space="preserve">
+    <value>Alle</value>
+  </data>
+  <data name="Email_With" xml:space="preserve">
+    <value>Mit E-Mail</value>
+  </data>
+  <data name="Email_Without" xml:space="preserve">
+    <value>Ohne E-Mail</value>
+  </data>
+  <data name="PresetActive" xml:space="preserve">
+    <value>Diese Saison</value>
+  </data>
+  <data name="PresetNew" xml:space="preserve">
+    <value>Neu in dieser Saison</value>
+  </data>
+  <data name="PresetLapsed" xml:space="preserve">
+    <value>Letzte Saison, diese nicht</value>
+  </data>
+  <data name="PresetNotEnrolled" xml:space="preserve">
+    <value>Diese Saison nicht eingeschrieben</value>
+  </data>
+  <data name="PresetNoBookings" xml:space="preserve">
+    <value>Eingeschrieben, nie gespielt</value>
+  </data>
+  <data name="PresetLastSeason" xml:space="preserve">
+    <value>Letzte Saison</value>
+  </data>
+  <data name="PresetWithoutEmail" xml:space="preserve">
+    <value>Ohne E-Mail</value>
+  </data>
+  <data name="SeasonRule_Any" xml:space="preserve">
+    <value>Egal – tippen, um nur eingeschriebene Mitglieder zu zeigen</value>
+  </data>
+  <data name="SeasonRule_In" xml:space="preserve">
+    <value>Eingeschrieben – tippen, um nur nicht eingeschriebene Mitglieder zu zeigen</value>
+  </data>
+  <data name="SeasonRule_NotIn" xml:space="preserve">
+    <value>Nicht eingeschrieben – tippen, um den Filter zu entfernen</value>
+  </data>
+  <data name="AgeYears" xml:space="preserve">
+    <value>{0} Jahre</value>
+  </data>
+  <data name="SeasonEnrollment" xml:space="preserve">
+    <value>Saisonen</value>
+  </data>
+  <data name="SeasonEnrollmentHint" xml:space="preserve">
+    <value>Mitglieder können nur in Saisonen buchen, in denen sie eingeschrieben sind</value>
+  </data>
+  <data name="BookingsPerWeek" xml:space="preserve">
+    <value>Buchungen pro Woche</value>
+  </data>
+  <data name="BookingsPerWeekHint" xml:space="preserve">
+    <value>Wie viele kommende Buchungen das Mitglied gleichzeitig haben darf</value>
+  </data>
+  <data name="PerWeek" xml:space="preserve">
+    <value>pro Woche</value>
+  </data>
+  <data name="MemberSaved" xml:space="preserve">
+    <value>{0} wurde gespeichert</value>
+  </data>
+  <data name="BackToMembers" xml:space="preserve">
+    <value>Mitglieder</value>
+  </data>
+  <data name="MemberEyebrow" xml:space="preserve">
+    <value>Mitglied · {0}</value>
+  </data>
+  <data name="EnrolledChip" xml:space="preserve">
+    <value>Eingeschrieben {0}</value>
+  </data>
+  <data name="NotEnrolledChip" xml:space="preserve">
+    <value>Nicht eingeschrieben {0}</value>
+  </data>
+  <data name="MemberSinceChip" xml:space="preserve">
+    <value>Mitglied seit {0}</value>
+  </data>
+  <data name="CopyEmail" xml:space="preserve">
+    <value>E-Mail kopieren</value>
+  </data>
+  <data name="ParentEmail" xml:space="preserve">
+    <value>E-Mail eines Elternteils</value>
+  </data>
+  <data name="TotalMatches" xml:space="preserve">
+    <value>Matches</value>
+  </data>
+  <data name="UpcomingHint" xml:space="preserve">
+    <value>+ {0} kommende</value>
+  </data>
+  <data name="TotalHours" xml:space="preserve">
+    <value>Stunden am Platz</value>
+  </data>
+  <data name="MatchesThisSeason" xml:space="preserve">
+    <value>Matches diese Saison</value>
+  </data>
+  <data name="SeasonsEnrolled" xml:space="preserve">
+    <value>Eingeschriebene Saisonen</value>
+  </data>
+  <data name="PlayingSinceHint" xml:space="preserve">
+    <value>spielt seit {0}</value>
+  </data>
+  <data name="RolesHint" xml:space="preserve">
+    <value>Rollen legen fest, was das Mitglied im Verein darf</value>
+  </data>
+  <data name="RoleRequired" xml:space="preserve">
+    <value>Das Mitglied braucht mindestens eine Rolle.</value>
+  </data>
+  <data name="PersonalData" xml:space="preserve">
+    <value>Persönliche Daten</value>
+  </data>
+  <data name="UnsavedChanges" xml:space="preserve">
+    <value>Ungespeicherte Änderungen</value>
+  </data>
+  <data name="Discard" xml:space="preserve">
+    <value>Verwerfen</value>
+  </data>
+  <data name="EmailCopied" xml:space="preserve">
+    <value>E-Mail kopiert</value>
+  </data>
+  <data name="NoSeasons" xml:space="preserve">
+    <value>Noch keine Saisonen – lege eine in den Vereinseinstellungen an.</value>
+  </data>
+  <data name="Current" xml:space="preserve">
+    <value>aktuell</value>
+  </data>
+  <data name="MatchesShort" xml:space="preserve">
+    <value>Matches</value>
+  </data>
+  <data name="NeverPlayed" xml:space="preserve">
+    <value>Nie gespielt</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Heute</value>
+  </data>
+  <data name="Yesterday" xml:space="preserve">
+    <value>Gestern</value>
+  </data>
+  <data name="DaysAgo" xml:space="preserve">
+    <value>vor {0} Tagen</value>
+  </data>
+  <data name="MonthsAgo" xml:space="preserve">
+    <value>vor {0} Monaten</value>
+  </data>
+  <data name="YearsAgo" xml:space="preserve">
+    <value>vor {0} Jahren</value>
+  </data>
+  <data name="MonthAgo" xml:space="preserve">
+    <value>vor einem Monat</value>
+  </data>
+  <data name="YearAgo" xml:space="preserve">
+    <value>vor einem Jahr</value>
+  </data>
+</root>

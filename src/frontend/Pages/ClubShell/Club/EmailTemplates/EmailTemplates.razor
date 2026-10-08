@@ -1,0 +1,138 @@
+@page "/clubs/{ClubId:int}/email-templates"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubEmailTemplates
+@using Bookennis.Client.Services.Store.ClubEmailTemplates
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.ClubEmailTemplates
+@using Bookennis.Shared.Controller.Shared
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+<PageTitle>@L["Title"]</PageTitle>
+
+@{
+    var templates = Store.Templates?.Templates ?? [];
+    var replyTo = Store.Templates?.Settings.ReplyToEmail;
+}
+
+<div class="email-page">
+    <AdminHero Emoji="✉️" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Title"]" Subtitle="@L["Subtitle"]">
+        <Chips>
+            <span class="hero-chip">✏️ @string.Format(L["CustomizedChip"], templates.Count(t => t.CustomizedLanguages.Count > 0), templates.Count)</span>
+            <span class="hero-chip">🌍 @L["LanguagesChip"]</span>
+        </Chips>
+        <Aside>
+            <div class="email-aside__caption">@L["AsideCaption"]</div>
+            <div class="email-aside__value">@(string.IsNullOrWhiteSpace(replyTo) ? L["AsideNotSet"] : replyTo)</div>
+            @if (string.IsNullOrWhiteSpace(replyTo))
+            {
+                <div class="email-aside__text">@L["AsideText"]</div>
+            }
+        </Aside>
+    </AdminHero>
+
+    <SectionCard Emoji="📨" Title="@L["EmailsTitle"]" Subtitle="@L["EmailsSubtitle"]">
+        @if (Store.Templates is null)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+        }
+        else
+        {
+            <div class="email-list">
+                @foreach (var template in templates)
+                {
+                    var customized = template.CustomizedLanguages.Count > 0;
+                    <a class="email-row" href="@($"/clubs/{ClubId}/email-templates/{template.Type}")">
+                        <span class="email-row__emoji" aria-hidden="true">@EmailTypeInfo.Emoji(template.Type)</span>
+                        <span class="email-row__text">
+                            <span class="email-row__title">@L[EmailTypeInfo.NameKey(template.Type)]</span>
+                            <span class="email-row__description">@L[EmailTypeInfo.DescriptionKey(template.Type)]</span>
+                        </span>
+                        <span class="email-row__status">
+                            @if (customized)
+                            {
+                                <span class="email-status email-status--custom">
+                                    @L["Customized"] · @string.Join(", ", template.CustomizedLanguages.Select(LanguageShort))
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="email-status">@L["Default"]</span>
+                            }
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="email-row__chevron" />
+                        </span>
+                    </a>
+                }
+            </div>
+        }
+    </SectionCard>
+
+    <SectionCard Emoji="🏠" Title="@L["DetailsTitle"]" Subtitle="@L["DetailsSubtitle"]">
+        <Actions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveSettings" Disabled="@(Store.IsSaving || !SettingsChanged)">@SharedLocale["Save"]</MudButton>
+        </Actions>
+        <ChildContent>
+            <div class="email-details">
+                <MudTextField @bind-Value="websiteUrl" Label="@L["WebsiteUrl"]" HelperText="@L["WebsiteUrlHelper"]" Variant="Variant.Outlined"
+                              InputType="InputType.Url" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Language"
+                              Immediate="true" MaxLength="500" />
+                <MudTextField @bind-Value="replyToEmail" Label="@L["ReplyToEmail"]" HelperText="@L["ReplyToEmailHelper"]" Variant="Variant.Outlined"
+                              InputType="InputType.Email" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Reply"
+                              Immediate="true" MaxLength="256" />
+            </div>
+        </ChildContent>
+    </SectionCard>
+</div>
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [Inject] private IClubEmailTemplatesStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubEmailTemplatesLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    private string? websiteUrl;
+    private string? replyToEmail;
+
+    private bool SettingsChanged => Store.Templates is { } templates
+                                    && (Normalize(websiteUrl) != templates.Settings.WebsiteUrl || Normalize(replyToEmail) != templates.Settings.ReplyToEmail);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnTemplatesChanged += OnChanged;
+        await Store.LoadTemplates();
+        websiteUrl = Store.Templates?.Settings.WebsiteUrl;
+        replyToEmail = Store.Templates?.Settings.ReplyToEmail;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private string LanguageShort(Language language) => language == Language.German ? "DE" : "EN";
+
+    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private async Task SaveSettings()
+    {
+        var response = await Store.UpdateSettings(new UpdateClubEmailSettingsModel
+        {
+            WebsiteUrl = Normalize(websiteUrl),
+            ReplyToEmail = Normalize(replyToEmail)
+        });
+
+        if (response.Success)
+            Snackbar.Add(L["DetailsSaved"], Severity.Success);
+        else
+            Snackbar.ShowErrorDetails(response, BackendLocale);
+    }
+
+    public void Dispose() => Store.OnTemplatesChanged -= OnChanged;
+}

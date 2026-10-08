@@ -1,0 +1,412 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Eyebrow" xml:space="preserve">
+    <value>Vereinseinstellungen</value>
+  </data>
+  <data name="Subtitle" xml:space="preserve">
+    <value>Öffnungszeiten, Saisonen, Plätze und Spielmodi deines Vereins</value>
+  </data>
+  <data name="PrimeTimeChip" xml:space="preserve">
+    <value>Primetime {0} – {1}</value>
+  </data>
+  <data name="CourtsChip" xml:space="preserve">
+    <value>{0} Plätze</value>
+  </data>
+  <data name="ClosedCourtsChip" xml:space="preserve">
+    <value>{0} gesperrt</value>
+  </data>
+  <data name="PlayModesChip" xml:space="preserve">
+    <value>{0} Spielmodi</value>
+  </data>
+  <data name="CurrentSeason" xml:space="preserve">
+    <value>Aktuelle Saison</value>
+  </data>
+  <data name="SeasonName" xml:space="preserve">
+    <value>Saison {0}</value>
+  </data>
+  <data name="NoActiveSeason" xml:space="preserve">
+    <value>Keine aktive Saison</value>
+  </data>
+  <data name="NoActiveSeasonHint" xml:space="preserve">
+    <value>Mitglieder können nur während einer Saison buchen – lege unten eine an.</value>
+  </data>
+  <data name="Sections" xml:space="preserve">
+    <value>Bereiche</value>
+  </data>
+  <data name="RulesTitle" xml:space="preserve">
+    <value>Öffnungszeiten &amp; Regeln</value>
+  </data>
+  <data name="RulesSubtitle" xml:space="preserve">
+    <value>Wann gebucht werden kann und wer in der Primetime spielen darf</value>
+  </data>
+  <data name="PrimeTime" xml:space="preserve">
+    <value>Primetime</value>
+  </data>
+  <data name="TimelineDescription" xml:space="preserve">
+    <value>Öffnungszeiten und Primetime eines Tages</value>
+  </data>
+  <data name="OpeningHours" xml:space="preserve">
+    <value>Öffnungszeiten</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>Von</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>Bis</value>
+  </data>
+  <data name="GracePeriod" xml:space="preserve">
+    <value>Kulanzzeit</value>
+  </data>
+  <data name="GracePeriodHint" xml:space="preserve">
+    <value>Wie viele Minuten nach Beginn noch gebucht oder storniert werden kann</value>
+  </data>
+  <data name="Minutes" xml:space="preserve">
+    <value>Minuten</value>
+  </data>
+  <data name="Enabled" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="Disabled" xml:space="preserve">
+    <value>Inaktiv</value>
+  </data>
+  <data name="PrimeTimeHint" xml:space="preserve">
+    <value>Die beliebtesten Stunden können erwachsenen Mitgliedern vorbehalten werden</value>
+  </data>
+  <data name="PrimeTimeWeekdays" xml:space="preserve">
+    <value>Wochentage</value>
+  </data>
+  <data name="RestrictChildren" xml:space="preserve">
+    <value>Keine Kinder in der Primetime</value>
+  </data>
+  <data name="RestrictChildrenHint" xml:space="preserve">
+    <value>Mitglieder unter {0} Jahren können die Primetime nicht buchen</value>
+  </data>
+  <data name="ChildAgeThreshold" xml:space="preserve">
+    <value>Altersgrenze</value>
+  </data>
+  <data name="Years" xml:space="preserve">
+    <value>Jahre</value>
+  </data>
+  <data name="RestrictGuests" xml:space="preserve">
+    <value>Keine Gäste in der Primetime</value>
+  </data>
+  <data name="RestrictGuestsHint" xml:space="preserve">
+    <value>Gästekarten können in der Primetime nicht verwendet werden</value>
+  </data>
+  <data name="UnsavedChanges" xml:space="preserve">
+    <value>Ungespeicherte Änderungen</value>
+  </data>
+  <data name="Discard" xml:space="preserve">
+    <value>Verwerfen</value>
+  </data>
+  <data name="InvalidOpeningHours" xml:space="preserve">
+    <value>Die Öffnungszeiten sind ungültig.</value>
+  </data>
+  <data name="InvalidPrimeTimeHours" xml:space="preserve">
+    <value>Die Primetime ist ungültig.</value>
+  </data>
+  <data name="PrimeTimeOutsideOpeningHours" xml:space="preserve">
+    <value>Die Primetime muss innerhalb der Öffnungszeiten liegen.</value>
+  </data>
+  <data name="RulesSaved" xml:space="preserve">
+    <value>Öffnungszeiten und Regeln gespeichert</value>
+  </data>
+  <data name="CourtsTitle" xml:space="preserve">
+    <value>Plätze</value>
+  </data>
+  <data name="CourtsSubtitle" xml:space="preserve">
+    <value>{0} Plätze – tippe auf einen Platz, um ihn umzubenennen oder zu sperren</value>
+  </data>
+  <data name="NoCourts" xml:space="preserve">
+    <value>Dieser Verein hat noch keine Plätze.</value>
+  </data>
+  <data name="MoveUp" xml:space="preserve">
+    <value>Nach oben</value>
+  </data>
+  <data name="MoveDown" xml:space="preserve">
+    <value>Nach unten</value>
+  </data>
+  <data name="CourtsHint" xml:space="preserve">
+    <value>Die Reihenfolge wird auf der Buchungsseite verwendet.</value>
+  </data>
+  <data name="ClosedUntil" xml:space="preserve">
+    <value>Gesperrt bis {0}</value>
+  </data>
+  <data name="ClosurePlanned" xml:space="preserve">
+    <value>Gesperrt ab {0}</value>
+  </data>
+  <data name="CourtOpen" xml:space="preserve">
+    <value>Offen</value>
+  </data>
+  <data name="EditCourtTitle" xml:space="preserve">
+    <value>Platz {0}</value>
+  </data>
+  <data name="PlayModesTitle" xml:space="preserve">
+    <value>Spielmodi</value>
+  </data>
+  <data name="PlayModesSubtitle" xml:space="preserve">
+    <value>Was Mitglieder buchen können und wie</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Hinzufügen</value>
+  </data>
+  <data name="NoPlayModes" xml:space="preserve">
+    <value>Noch keine Spielmodi.</value>
+  </data>
+  <data name="PlayersFixed" xml:space="preserve">
+    <value>{0} Spieler</value>
+  </data>
+  <data name="PlayersFlexible" xml:space="preserve">
+    <value>Beliebig viele Spieler</value>
+  </data>
+  <data name="DurationFlexible" xml:space="preserve">
+    <value>Beliebige Dauer</value>
+  </data>
+  <data name="QuotaFact" xml:space="preserve">
+    <value>max. {0} pro Saison</value>
+  </data>
+  <data name="FlagCharging" xml:space="preserve">
+    <value>Zählt als Match</value>
+  </data>
+  <data name="FlagRecurring" xml:space="preserve">
+    <value>Serien</value>
+  </data>
+  <data name="FlagOverbook" xml:space="preserve">
+    <value>Überbuchen</value>
+  </data>
+  <data name="FlagComment" xml:space="preserve">
+    <value>Kommentar</value>
+  </data>
+  <data name="AddPlayMode" xml:space="preserve">
+    <value>Neuer Spielmodus</value>
+  </data>
+  <data name="EditPlayModeTitle" xml:space="preserve">
+    <value>Spielmodus {0}</value>
+  </data>
+  <data name="DeletePlayModeConfirmation" xml:space="preserve">
+    <value>Möchtest du den Spielmodus „{0}“ wirklich löschen?</value>
+  </data>
+  <data name="PlayModeDeleted" xml:space="preserve">
+    <value>{0} wurde gelöscht</value>
+  </data>
+  <data name="PlayModeNamePlaceholder" xml:space="preserve">
+    <value>Neuer Spielmodus</value>
+  </data>
+  <data name="SectionBasics" xml:space="preserve">
+    <value>Name &amp; Farbe</value>
+  </data>
+  <data name="PlayModeNameRequired" xml:space="preserve">
+    <value>Ein Name ist erforderlich</value>
+  </data>
+  <data name="Color" xml:space="preserve">
+    <value>Farbe</value>
+  </data>
+  <data name="CustomColor" xml:space="preserve">
+    <value>Eigene Farbe</value>
+  </data>
+  <data name="SectionRules" xml:space="preserve">
+    <value>Regeln</value>
+  </data>
+  <data name="HasFixedPlayerCount" xml:space="preserve">
+    <value>Feste Spieleranzahl</value>
+  </data>
+  <data name="Players" xml:space="preserve">
+    <value>Spieler</value>
+  </data>
+  <data name="HasFixedDuration" xml:space="preserve">
+    <value>Feste Dauer</value>
+  </data>
+  <data name="OtherDuration" xml:space="preserve">
+    <value>Andere Dauer</value>
+  </data>
+  <data name="LimitPerSeason" xml:space="preserve">
+    <value>Limit pro Saison</value>
+  </data>
+  <data name="PerSeason" xml:space="preserve">
+    <value>pro Saison</value>
+  </data>
+  <data name="FlagChargingHint" xml:space="preserve">
+    <value>Zählt für das Buchungslimit, Abzeichen und die Rangliste</value>
+  </data>
+  <data name="FlagRecurringHint" xml:space="preserve">
+    <value>Mitglieder können wöchentliche Serien buchen</value>
+  </data>
+  <data name="FlagOverbookHint" xml:space="preserve">
+    <value>Darf sich mit anderen Buchungen überschneiden</value>
+  </data>
+  <data name="FlagCommentHint" xml:space="preserve">
+    <value>Mitglieder können einen Kommentar angeben</value>
+  </data>
+  <data name="SectionAccess" xml:space="preserve">
+    <value>Wer buchen darf</value>
+  </data>
+  <data name="AllowedRolesHint" xml:space="preserve">
+    <value>Nur Mitglieder mit einer dieser Rollen können diesen Spielmodus verwenden</value>
+  </data>
+  <data name="RoleRequired" xml:space="preserve">
+    <value>Wähle mindestens eine Rolle.</value>
+  </data>
+  <data name="PlayModeSaved" xml:space="preserve">
+    <value>{0} wurde gespeichert</value>
+  </data>
+  <data name="SeasonsTitle" xml:space="preserve">
+    <value>Saisonen</value>
+  </data>
+  <data name="SeasonsSubtitle" xml:space="preserve">
+    <value>Mitglieder buchen innerhalb einer Saison, in der sie eingeschrieben sind</value>
+  </data>
+  <data name="NoSeasons" xml:space="preserve">
+    <value>Noch keine Saisonen – lege die erste an.</value>
+  </data>
+  <data name="SeasonState_active" xml:space="preserve">
+    <value>Läuft</value>
+  </data>
+  <data name="SeasonState_past" xml:space="preserve">
+    <value>Beendet</value>
+  </data>
+  <data name="SeasonState_upcoming" xml:space="preserve">
+    <value>Geplant</value>
+  </data>
+  <data name="SeasonLength" xml:space="preserve">
+    <value>{0} Wochen · {1} Tage</value>
+  </data>
+  <data name="DaysLeft" xml:space="preserve">
+    <value>noch {0} Tage</value>
+  </data>
+  <data name="DayOf" xml:space="preserve">
+    <value>Tag {0} von {1}</value>
+  </data>
+  <data name="StartsIn" xml:space="preserve">
+    <value>beginnt in {0} Tagen</value>
+  </data>
+  <data name="SeasonsOverlap" xml:space="preserve">
+    <value>Überschneidung von {0} Tagen</value>
+  </data>
+  <data name="SeasonBreak" xml:space="preserve">
+    <value>{0} Tage Pause</value>
+  </data>
+  <data name="AddSeason" xml:space="preserve">
+    <value>Neue Saison</value>
+  </data>
+  <data name="EditSeasonTitle" xml:space="preserve">
+    <value>Saison {0}</value>
+  </data>
+  <data name="DeleteSeasonConfirmation" xml:space="preserve">
+    <value>Möchtest du die Saison {0} wirklich löschen? Einschreibungen und Abzeichen dieser Saison werden ebenfalls gelöscht.</value>
+  </data>
+  <data name="SuggestNextSeason" xml:space="preserve">
+    <value>{0} wie die letzte Saison übernehmen</value>
+  </data>
+  <data name="SeasonPeriod" xml:space="preserve">
+    <value>Zeitraum</value>
+  </data>
+  <data name="Weeks" xml:space="preserve">
+    <value>Wochen</value>
+  </data>
+  <data name="Days" xml:space="preserve">
+    <value>Tage</value>
+  </data>
+  <data name="Label" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="OverlapWarning" xml:space="preserve">
+    <value>Überschneidet sich mit der Saison {0} ({1} – {2}).</value>
+  </data>
+  <data name="SeasonHint" xml:space="preserve">
+    <value>Nach dem Anlegen einer Saison schreibst du die Mitglieder auf der Mitgliederseite ein.</value>
+  </data>
+  <data name="CourtNaming" xml:space="preserve">
+    <value>Bezeichnung</value>
+  </data>
+  <data name="CourtName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CourtNameRequired" xml:space="preserve">
+    <value>Ein Name ist erforderlich</value>
+  </data>
+  <data name="CourtAlias" xml:space="preserve">
+    <value>Kurzname</value>
+  </data>
+  <data name="CourtAliasRequired" xml:space="preserve">
+    <value>Ein Kurzname ist erforderlich</value>
+  </data>
+  <data name="CourtAliasHint" xml:space="preserve">
+    <value>Wird im Buchungsraster auf kleinen Bildschirmen angezeigt</value>
+  </data>
+  <data name="CourtClosure" xml:space="preserve">
+    <value>Gesperrt</value>
+  </data>
+  <data name="CourtClosureHint" xml:space="preserve">
+    <value>Während einer Sperre kann der Platz nicht gebucht werden, z. B. wegen Instandhaltung</value>
+  </data>
+  <data name="ClosedFrom" xml:space="preserve">
+    <value>Gesperrt ab</value>
+  </data>
+  <data name="ClosedTo" xml:space="preserve">
+    <value>Gesperrt bis</value>
+  </data>
+  <data name="ClosureEndBeforeStart" xml:space="preserve">
+    <value>Das Ende muss nach dem Beginn liegen.</value>
+  </data>
+  <data name="PlayersFixedOne" xml:space="preserve">
+    <value>{0} Spieler</value>
+  </data>
+</root>

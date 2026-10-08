@@ -1,0 +1,62 @@
+@page "/account/guestLogin";
+@layout NotAuthorizedLayout
+
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Account
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.HttpClients.Account
+@using Bookennis.Client.Shared
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Account
+
+<PageTitle>@Locale["GuestLogin"]</PageTitle>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public Guid? GuestCode { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? ClubId { get; set; }
+
+    [Inject]
+    private IAccountHttpClient AccountHttpClient { get; set; } = null!;
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<AccountLocale> Locale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+    [Inject]
+    private IAuthStateChanged AuthState { get; set; } = null!;
+
+    private bool ValidParameters => GuestCode != null && ClubId != null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ValidParameters)
+            return;
+
+        await LoginGuestAction();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task LoginGuestAction()
+    {
+        var response = await AccountHttpClient.LoginGuest(new LoginGuestRequest(GuestCode!.Value, ClubId!.Value));
+        if (!response.Success)
+        {
+            Snackbar.ShowErrorDetails(response, BackendLocale);
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            Snackbar.Add(Locale["ConfirmGuestLoginSuccess"], Severity.Success);
+            Navigation.NavigateTo("/");
+            AuthState.AuthStateChanged();
+            StateHasChanged();
+        }
+    }
+}

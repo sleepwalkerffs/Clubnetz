@@ -1,0 +1,203 @@
+.news-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+    max-width: 860px;
+}
+
+.news-detail__main,
+.news-detail__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+@media (min-width: 960px) {
+    .news-detail--manage {
+        grid-template-columns: minmax(0, 1fr) 320px;
+        max-width: 1200px;
+    }
+
+    .news-detail__aside {
+        position: sticky;
+        top: 80px;
+    }
+}
+
+.news-article {
+    padding: 24px;
+    border-radius: 18px;
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-top: 4px solid var(--bk-dark-indigo, #4F46E5);
+}
+
+.news-article--pinned {
+    border-top-color: var(--bk-dark-amber, #D97706);
+}
+
+.news-article__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.news-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+    background: var(--mud-palette-background-gray);
+}
+
+.news-tag--accent {
+    color: var(--bk-dark-amber, #B45309);
+    background: color-mix(in srgb, var(--bk-dark-amber, #D97706) 14%, transparent);
+}
+
+.news-tag--warn {
+    color: var(--bk-dark-red, #B91C1C);
+    background: color-mix(in srgb, var(--bk-dark-red, #DC2626) 12%, transparent);
+}
+
+.news-article__title {
+    margin: 0;
+    font-size: 1.7rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+}
+
+.news-article__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    margin: 8px 0 20px;
+    padding-bottom: 16px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.news-files {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.news-file {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.news-file:hover:not(:disabled),
+.news-file:focus-visible {
+    background: var(--mud-palette-background-gray);
+    border-color: var(--mud-palette-primary);
+    outline: none;
+}
+
+.news-file:disabled {
+    cursor: progress;
+}
+
+::deep .news-file__icon {
+    flex-shrink: 0;
+    color: var(--mud-palette-primary);
+}
+
+.news-file__text {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.news-file__name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.news-file__size {
+    font-size: 0.78rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+::deep .news-file__download {
+    flex-shrink: 0;
+    color: var(--mud-palette-text-secondary);
+}
+
+.news-manage {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.news-manage__email {
+    margin-bottom: 4px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--mud-palette-background-gray);
+}
+
+.news-manage__status {
+    font-weight: 700;
+}
+
+.news-manage__status--ok {
+    color: var(--bk-dark-green, #047857);
+}
+
+.news-manage__detail {
+    margin-top: 2px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.news-missing {
+    padding: 48px 16px;
+    text-align: center;
+}
+
+.news-missing__emoji {
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.news-missing__title {
+    margin-top: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+@media (max-width: 599px) {
+    .news-article {
+        padding: 16px;
+    }
+
+    .news-article__title {
+        font-size: 1.4rem;
+    }
+}

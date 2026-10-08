@@ -1,0 +1,120 @@
+.enrollment__empty {
+    padding: 12px 0;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.enrollment {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.enrollment__season {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--mud-palette-lines-inputs);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.enrollment__season:hover:not(:disabled) {
+    border-color: #059669;
+}
+
+.enrollment__season:focus-visible {
+    outline: 2px solid #059669;
+    outline-offset: 2px;
+}
+
+.enrollment__season:disabled {
+    cursor: default;
+    opacity: 0.6;
+}
+
+.enrollment__season--on {
+    border-color: #059669;
+    background: color-mix(in srgb, #059669 8%, var(--mud-palette-surface));
+}
+
+.enrollment__switch {
+    position: relative;
+    flex-shrink: 0;
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--mud-palette-lines-inputs);
+    transition: background 0.15s ease;
+}
+
+.enrollment__switch span {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease;
+}
+
+.enrollment__season--on .enrollment__switch {
+    background: #059669;
+}
+
+.enrollment__season--on .enrollment__switch span {
+    transform: translateX(16px);
+}
+
+.enrollment__text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.enrollment__label {
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.enrollment__live {
+    margin-left: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--bk-dark-red, #DC2626);
+}
+
+.enrollment__dates {
+    font-size: 0.74rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.enrollment__stats {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 0.74rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.enrollment__stats strong {
+    font-size: 0.95rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.enrollment__badges {
+    font-weight: 700;
+    color: var(--bk-dark-amber, #D97706);
+}

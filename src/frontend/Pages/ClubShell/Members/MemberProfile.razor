@@ -1,0 +1,32 @@
+@page "/clubs/{ClubId:int}/members/{MemberId:int}/profile"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Trophies
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.ClubProfile
+
+<PageTitle>@SharedLocale["MemberProfile"]</PageTitle>
+
+<PageHeader>
+    <Content>@SharedLocale["MemberProfile"]</Content>
+</PageHeader>
+
+<TrophyCaseView ClubId="@ClubId" MemberId="@MemberId"
+                Eyebrow="@(ClubProfileStore.SelectedClub is { } club ? string.Format(Locale["ProfileEyebrow"], club.ClubName) : SharedLocale["MemberProfile"].Value)" />
+
+@code {
+    [Parameter]
+    public int ClubId { get; set; }
+
+    [Parameter]
+    public int MemberId { get; set; }
+
+    [Inject]
+    private IClubProfileStore ClubProfileStore { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<TrophyLocale> Locale { get; set; } = null!;
+}

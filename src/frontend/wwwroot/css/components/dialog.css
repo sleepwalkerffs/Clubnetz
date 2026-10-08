@@ -1,0 +1,14 @@
+.mud-dialog {
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.15) !important;
+}
+
+.mud-dialog-actions {
+    padding: 20px 24px !important;
+    justify-content: flex-start !important;
+    gap: 12px;
+}
+
+.mud-dialog-title {
+    font-weight: 700 !important;
+}

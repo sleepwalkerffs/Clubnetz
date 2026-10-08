@@ -1,0 +1,70 @@
+.mud-button-filled.mud-button-filled-primary {
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.35) !important;
+    transition: all 0.2s ease !important;
+}
+
+.mud-button-filled.mud-button-filled-primary:hover {
+    box-shadow: 0 4px 16px rgba(5, 150, 105, 0.45) !important;
+    transform: translateY(-1px);
+}
+
+.mud-button-filled.mud-button-filled-secondary {
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
+    transition: all 0.2s ease !important;
+}
+
+.mud-button-filled.mud-button-filled-secondary:hover {
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4) !important;
+    transform: translateY(-1px);
+}
+
+.mud-button-outlined.mud-button-outlined-primary {
+    border: 1.5px solid var(--mud-palette-primary) !important;
+    transition: all 0.2s ease !important;
+}
+
+.mud-button-outlined.mud-button-outlined-primary:hover {
+    background-color: rgba(5, 150, 105, 0.06) !important;
+}
+
+.mud-button-outlined.mud-button-outlined-secondary {
+    border: 1.5px solid var(--mud-palette-gray-light) !important;
+    color: var(--mud-palette-text-primary) !important;
+    transition: all 0.2s ease !important;
+}
+
+.mud-button-outlined.mud-button-outlined-secondary:hover {
+    border-color: var(--mud-palette-primary) !important;
+    color: var(--mud-palette-primary) !important;
+    background-color: rgba(5, 150, 105, 0.04) !important;
+}
+
+.mud-button-filled.mud-button-filled-primary,
+.mud-button-outlined.mud-button-outlined-secondary,
+.mud-button-outlined.mud-button-outlined-primary {
+    height: 42px !important;
+}
+
+.mud-button-filled.mud-button-filled-error {
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+    transition: all 0.2s ease !important;
+}
+
+.mud-button-filled.mud-button-filled-error:hover {
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4) !important;
+    transform: translateY(-1px);
+}
+
+.mud-button {
+    min-width: 100px !important;
+}
+
+.mud-fab-mini,
+.mud-fab-small {
+    transition: all 0.2s ease !important;
+}
+
+.mud-fab-mini:hover,
+.mud-fab-small:hover {
+    transform: scale(1.08);
+}

@@ -1,0 +1,166 @@
+@page "/clubs/{ClubId:int}/leaderboard"
+@layout ClubWithStoreLayout
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Leaderboards
+@using Bookennis.Client.Pages.ClubShell.Leaderboards.Components
+@using Bookennis.Client.Services.Store.Leaderboards
+@using Bookennis.Shared.Controller.Leaderboards
+
+@implements IDisposable
+
+<PageTitle>@Locale["Leaderboard"]</PageTitle>
+
+<PageHeader>
+    <Content>@Locale["Leaderboard"]</Content>
+</PageHeader>
+
+@if (LeaderboardStore.Leaderboard is null)
+{
+    @if (LeaderboardStore.IsLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+}
+else
+{
+    var season = SelectedSeason;
+    var data = season?.Data ?? LeaderboardStore.Leaderboard.AllTime;
+    var title = season is null ? Locale["AllTime"].Value : string.Format(Locale["SeasonTitle"], season.StartDate.Year);
+
+    <div class="lb-page">
+        <ChoiceChips TItem="Scope" Items="@Scopes" Value="@selectedScope" ValueChanged="@(scope => selectedScope = scope)" TextFunc="@(scope => scope.Label)" />
+
+        <LeaderboardHero Data="@data" Title="@title" IsOptedOut="@(season?.IsOptedOut ?? false)" />
+
+        @if (data.TotalPlayers > 0)
+        {
+            <MudGrid Spacing="3">
+                <MudItem xs="6" md="3">
+                    <StatTile Icon="@Icons.Material.Filled.Groups" Color="#6366F1" Value="@data.TotalPlayers.ToString()" Label="@Locale["PlayersTile"]" />
+                </MudItem>
+                <MudItem xs="6" md="3">
+                    <StatTile Icon="@Icons.Material.Filled.Timer" Color="#059669" Value="@FormatHours(data.TotalHours)" Unit="@Locale["HoursUnit"]" Label="@Locale["HoursTile"]" />
+                </MudItem>
+                <MudItem xs="6" md="3">
+                    <StatTile Icon="@Icons.Material.Filled.SportsTennis" Color="#F97316" Value="@data.TotalMatches.ToString()" Label="@Locale["MatchesTile"]" />
+                </MudItem>
+                <MudItem xs="6" md="3">
+                    <StatTile Icon="@Icons.Material.Filled.Equalizer" Color="#D97706" Value="@FormatHours(data.TotalHours / data.TotalPlayers)" Unit="@Locale["HoursUnit"]" Label="@Locale["AverageTile"]" />
+                </MudItem>
+            </MudGrid>
+        }
+
+        @if (data.Entries.Count == 0)
+        {
+            <div class="lb-empty">
+                <div class="lb-empty__emoji" aria-hidden="true">🏆</div>
+                <div class="lb-empty__title">@Locale["EmptyTitle"]</div>
+                <div class="lb-empty__text">@Locale["NoDataAvailable"]</div>
+            </div>
+        }
+        else
+        {
+            <SectionCard Emoji="🏆" Title="@Locale["TopPlayers"]" Subtitle="@Locale["TopPlayersSubtitle"]">
+                <LeaderboardPodium Entries="@data.Entries" OnSelect="NavigateToProfile" />
+            </SectionCard>
+
+            @if (data.Entries.Count > 3 || OwnEntryBelowList(data) is not null)
+            {
+                <SectionCard Emoji="📋" Title="@Locale["Ranking"]" Subtitle="@string.Format(Locale["RankingSubtitle"], data.Entries.Count)">
+                    @{ var maxHours = data.Entries[0].TotalHours; }
+                    @foreach (var entry in data.Entries.Skip(3))
+                    {
+                        <LeaderboardRow Entry="@entry" MaxHours="@maxHours" OnSelect="NavigateToProfile" />
+                    }
+
+                    @if (OwnEntryBelowList(data) is { } ownEntry)
+                    {
+                        <div class="lb-gap" aria-hidden="true">⋯</div>
+                        <LeaderboardRow Entry="@ownEntry" MaxHours="@maxHours" OnSelect="NavigateToProfile" />
+                    }
+                </SectionCard>
+            }
+        }
+
+        @if (season is not null)
+        {
+            <SectionCard Emoji="🙈" Title="@Locale["Privacy"]" Subtitle="@Locale["PrivacySubtitle"]">
+                <MudSwitch T="bool"
+                           Value="@season.IsOptedOut"
+                           ValueChanged="@(_ => LeaderboardStore.ToggleOptOut(season.SeasonId))"
+                           Disabled="@LeaderboardStore.IsSaving"
+                           Color="Color.Warning"
+                           Label="@Locale["OptOutLabel"]" />
+            </SectionCard>
+        }
+    </div>
+}
+
+@code {
+    private sealed record Scope(int? SeasonId, string Label);
+
+    [Parameter]
+    public int ClubId { get; set; }
+
+    [Inject]
+    private ILeaderboardStore LeaderboardStore { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<LeaderboardLocale> Locale { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private Scope? selectedScope;
+
+    private List<Scope> Scopes =>
+    [
+        .. (LeaderboardStore.Leaderboard?.SeasonLeaderboards ?? [])
+            .Select(s => new Scope(s.SeasonId, string.Format(Locale["SeasonTitle"], s.StartDate.Year))),
+        new Scope(null, Locale["AllTime"]),
+    ];
+
+    private SeasonLeaderboardResult? SelectedSeason => selectedScope?.SeasonId is { } seasonId
+        ? LeaderboardStore.Leaderboard?.SeasonLeaderboards.FirstOrDefault(s => s.SeasonId == seasonId)
+        : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        LeaderboardStore.OnLeaderboardChanged += OnLeaderboardChanged;
+        await LeaderboardStore.LoadLeaderboard();
+        SelectDefaultScope();
+    }
+
+    private void OnLeaderboardChanged()
+    {
+        SelectDefaultScope();
+        StateHasChanged();
+    }
+
+    // The running season is the most interesting one, all-time is the fallback
+    private void SelectDefaultScope()
+    {
+        if (selectedScope is not null || LeaderboardStore.Leaderboard is null)
+            return;
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var seasons = LeaderboardStore.Leaderboard.SeasonLeaderboards;
+        var season = seasons.FirstOrDefault(s => s.StartDate <= today && today <= s.EndDate) ?? seasons.FirstOrDefault();
+        selectedScope = Scopes.First(scope => scope.SeasonId == season?.SeasonId);
+    }
+
+    private static LeaderboardEntry? OwnEntryBelowList(LeaderboardData data)
+        => data.CurrentMemberEntry is { } own && data.Entries.All(e => e.MemberId != own.MemberId) ? own : null;
+
+    private static string FormatHours(double hours) => hours.ToString("0.#", CultureInfo.CurrentCulture);
+
+    private void NavigateToProfile(LeaderboardEntry entry)
+        => NavigationManager.NavigateTo($"/clubs/{ClubId}/members/{entry.MemberId}/profile");
+
+    public void Dispose()
+    {
+        LeaderboardStore.OnLeaderboardChanged -= OnLeaderboardChanged;
+    }
+}

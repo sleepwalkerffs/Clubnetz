@@ -1,0 +1,11 @@
+.delete-account__list {
+    margin: 0 0 12px;
+    padding-left: 20px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--mud-palette-text-primary);
+}
+
+.delete-account__list li + li {
+    margin-top: 4px;
+}

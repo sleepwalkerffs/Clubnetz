@@ -1,0 +1,76 @@
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Services.AppVersion
+@implements IDisposable
+
+@* Offers a reload when the server runs a newer build than this client, and loads the new
+   build on the next navigation. Rendered once by BaseLayout. *@
+
+@code {
+    private const string SnackbarKey = "app-update";
+
+    [Inject] private IAppVersionService AppVersionService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> Locale { get; set; } = null!;
+
+    private IDisposable? locationChangingRegistration;
+    private bool updatePending;
+
+    protected override void OnInitialized()
+    {
+        AppVersionService.OnUpdateAvailable += UpdateAvailable;
+        locationChangingRegistration = NavigationManager.RegisterLocationChangingHandler(OnLocationChanging);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && AppVersionService.NewerServerVersion is not null)
+            await OfferUpdate();
+    }
+
+    private void UpdateAvailable() => _ = InvokeAsync(OfferUpdate);
+
+    private async Task OfferUpdate()
+    {
+        if (AppVersionService.NewerServerVersion is not { } serverVersion)
+            return;
+
+        // Already reloaded for this version and it still differs: don't ask (or reload) again
+        if (await JSRuntime.InvokeAsync<bool>("App.appUpdate.wasReloadedFor", serverVersion))
+            return;
+
+        updatePending = true;
+        Snackbar.Add(Locale["UpdateAvailable"], Severity.Info, config =>
+        {
+            config.RequireInteraction = true;
+            config.ShowCloseIcon = true;
+            config.Action = Locale["UpdateReload"];
+            config.ActionColor = Color.Inherit;
+            config.ActionVariant = Variant.Outlined;
+            config.OnClick = _ => Reload(url: null).AsTask();
+        }, SnackbarKey);
+    }
+
+    // Leaving the page anyway, so nothing typed is lost: load the target with the new build
+    private async ValueTask OnLocationChanging(LocationChangingContext context)
+    {
+        if (!updatePending)
+            return;
+
+        context.PreventNavigation();
+        await Reload(NavigationManager.ToAbsoluteUri(context.TargetLocation).ToString());
+    }
+
+    private ValueTask Reload(string? url)
+    {
+        updatePending = false;
+        return JSRuntime.InvokeVoidAsync("App.appUpdate.reload", AppVersionService.NewerServerVersion, url);
+    }
+
+    public void Dispose()
+    {
+        AppVersionService.OnUpdateAvailable -= UpdateAvailable;
+        locationChangingRegistration?.Dispose();
+    }
+}

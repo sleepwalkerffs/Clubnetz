@@ -1,0 +1,23 @@
+.matrix-wrapper {
+    overflow-x: auto;
+}
+
+.pair-matrix {
+    border-collapse: collapse;
+}
+
+.pair-matrix th,
+.pair-matrix td {
+    border: 1px solid var(--mud-palette-lines-default);
+    text-align: center;
+    padding: 4px 8px;
+    min-width: 40px;
+}
+
+.pair-matrix th {
+    white-space: nowrap;
+}
+
+.pair-matrix .diagonal {
+    background: var(--mud-palette-action-disabled-background);
+}

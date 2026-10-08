@@ -1,0 +1,87 @@
+@using Bookennis.Client.Components.Booking
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Services.Store.Badges
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.OneTimeBadges
+
+<BaseDialog CanSubmit="true" SubmitFunc="Submit" SubmitCaption=@SharedLocale["Save"] CancelFunc="Cancel" CancelCaption=@SharedLocale["Cancel"]>
+    <div class="mud-width-full">
+        <PlayerSelection @ref="playerSelection" AvailablePlayers="@AvailablePlayers" InitialPlayers="@initialPlayers" FixedPlayer="@((PlayerResult?)null)" />
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter]
+    public int OneTimeBadgeId { get; set; }
+
+    [Parameter]
+    public List<PlayerResult> AvailablePlayers { get; set; } = [];
+
+    [Parameter]
+    public List<OneTimeBadgeAwardeeDto> CurrentAwardees { get; set; } = [];
+
+    [Inject]
+    private IBadgesStore BadgesStore { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private PlayerSelection playerSelection = null!;
+    private List<PlayerResult> initialPlayers = [];
+
+    protected override void OnInitialized()
+    {
+        initialPlayers = CurrentAwardees
+            .Select(a => AvailablePlayers.FirstOrDefault(p => p.MemberId == a.MemberId) ?? new PlayerResult(a.MemberId, a.FirstName, a.LastName, false))
+            .ToList();
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        var selectedMemberIds = playerSelection.SelectedPlayers.Select(p => p.MemberId).ToHashSet();
+        var originalMemberIds = CurrentAwardees.Select(a => a.MemberId).ToHashSet();
+
+        var addedMemberIds = selectedMemberIds.Except(originalMemberIds).ToList();
+        var removedMemberIds = originalMemberIds.Except(selectedMemberIds).ToList();
+
+        if (addedMemberIds.Count > 0)
+        {
+            var awardResult = await BadgesStore.AwardOneTimeBadge(OneTimeBadgeId, addedMemberIds);
+            if (!awardResult.Success)
+            {
+                Snackbar.ShowErrorDetails(awardResult, BackendLocale);
+                return null;
+            }
+        }
+
+        foreach (var memberId in removedMemberIds)
+        {
+            var revokeResult = await BadgesStore.RevokeOneTimeBadge(OneTimeBadgeId, memberId);
+            if (!revokeResult.Success)
+            {
+                Snackbar.ShowErrorDetails(revokeResult, BackendLocale);
+                return null;
+            }
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+        return null;
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

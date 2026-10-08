@@ -1,0 +1,180 @@
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Navigation
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.HttpClients.Account
+@using Bookennis.Client.Services.Store.Badges
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Profile
+@using Bookennis.Client.Services.Store.Push
+@using Bookennis.Client.Services.UserAccessor
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Shared.Controller.Shared
+@using System.Globalization
+
+@implements IDisposable
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <AuthorizeView>
+        <Authorized>
+            <div class="bookennis-nav-profile pa-4">
+                <div class="d-flex align-center gap-3">
+                    <div @onclick="@NavigateToProfile">
+                        <UserAvatar FirstName="@(UserDataAccessor.FirstName ?? "")" LastName="@(UserDataAccessor.LastName ?? "")" ProfilePictureUrl="@ProfileStore.ProfilePictureUrl" BadgeImageUrl="@BadgesStore.MyDisplayBadgeImageUrl" BadgeLevel="@BadgesStore.MyDisplayBadgeLevel" Size="Size.Large" Class="cursor-pointer" AvatarClass="bookennis-nav-avatar" />
+                    </div>
+                    <div class="d-flex flex-column">
+                        <MudText Typo="Typo.subtitle2" Style="color: #FFFFFF;">@context.User.Identity?.Name</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #6EE7B7;">@Locale["SelectedClub"]</MudText>
+                        <MudText Typo="Typo.caption" Style="color: #A7F3D0;">@(ClubProfileStore.SelectedClub?.ClubName)</MudText>
+                    </div>
+                </div>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+
+    <div class="pa-2">
+        <MudNavMenu Bordered="true" Rounded="true" Color="Color.Primary">
+            @if (ClubProfileStore.SelectedClub is null)
+            {
+                <MudNavLink Match="NavLinkMatch.All" Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            }
+            else
+            {
+                @* My Club is the start page of a club, it is also served under /clubs/{id} *@
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/my-club")" Icon="@Icons.Material.Filled.Home">@Locale["MyClub"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/booking?Start={DateOnly.FromDateTime(DateTime.Today).ToString(CultureInfo.InvariantCulture)}&End={DateOnly.FromDateTime(DateTime.Today.AddDays(6)).ToString(CultureInfo.InvariantCulture)}")"
+                            Icon="@Icons.Material.Filled.SportsTennis">@Locale["Book"]</MudNavLink>
+
+                @if (!ClubProfileStore.Roles.Contains(MemberRole.Guest))
+                {
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/news")"
+                                Icon="@Icons.Material.Filled.Campaign">@Locale["News"]</MudNavLink>
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/calendar")"
+                                Icon="@Icons.Material.Filled.CalendarMonth">@Locale["Calendar"]</MudNavLink>
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/statistics")"
+                                Icon="@Icons.Material.Filled.BarChart">@Locale["Statistics"]</MudNavLink>
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/leaderboard")"
+                                Icon="@Icons.Material.Filled.EmojiEvents">@Locale["Leaderboard"]</MudNavLink>
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/subscription-planner")"
+                                Icon="@Icons.Material.Filled.EventRepeat">@Locale["SubscriptionPlanner"]</MudNavLink>
+                }
+
+                @if (ClubProfileStore.Roles.Contains(MemberRole.Admin))
+                {
+                    <MudNavGroup Title="@Locale["Admin"]" Icon="@Icons.Material.Filled.Settings" ExpandIcon="@Icons.Material.Filled.KeyboardArrowDown">
+                        <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/profile")" Icon="@Icons.Material.Filled.Handyman">@Locale["ClubSettings"]</MudNavLink>
+                        <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/court-blockings")" Icon="@Icons.Material.Filled.Lock">@Locale["CourtBlockings"]</MudNavLink>
+                        <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/members")" Icon="@Icons.Material.Filled.Groups2">@Locale["Members"]</MudNavLink>
+                        <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/badge-settings")" Icon="@Icons.Material.Filled.EmojiEvents">@SharedLocale["BadgeSettings"]</MudNavLink>
+                        <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/email-templates")" Icon="@Icons.Material.Filled.MarkEmailRead">@Locale["EmailTemplates"]</MudNavLink>
+                        <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/club-statistics")" Icon="@Icons.Material.Filled.Analytics">@Locale["ClubStatistics"]</MudNavLink>
+                    </MudNavGroup>
+                }
+                else if (ClubProfileStore.Roles.Contains(MemberRole.SportsDirector) || ClubProfileStore.Roles.Contains(MemberRole.YouthSportsDirector))
+                {
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/badge-settings")" Icon="@Icons.Material.Filled.EmojiEvents">@SharedLocale["BadgeSettings"]</MudNavLink>
+                }
+
+                @* Admins find it in the admin group *@
+                @if ((ClubProfileStore.Roles.Contains(MemberRole.Maintainer) || ClubProfileStore.Roles.Contains(MemberRole.SportsDirector)) && !ClubProfileStore.Roles.Contains(MemberRole.Admin))
+                {
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/court-blockings")" Icon="@Icons.Material.Filled.Lock">@Locale["CourtBlockings"]</MudNavLink>
+                }
+
+                @if (ClubProfileStore.Roles.Contains(MemberRole.Treasurer))
+                {
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/guests")" Icon="@Icons.Material.Filled.Person">@SharedLocale["Guests"]</MudNavLink>
+                }
+            }
+            <AuthorizeView>
+                <Authorized>
+                    <AuthorizeView Roles="Administrator">
+                        <Authorized Context="adminContext">
+                            <MudNavLink Href="/admin/users" Icon="@Icons.Material.Filled.SupervisedUserCircle">Admin Panel</MudNavLink>
+                        </Authorized>
+                    </AuthorizeView>
+                    <MudDivider Class="my-2" Style="border-color: rgba(110, 231, 183, 0.15);" />
+                    <MudNavLink OnClick="@LogoutUser" Icon="@Icons.Material.Filled.Logout">@Locale["Logout"]</MudNavLink>
+                </Authorized>
+                <NotAuthorized>
+                    <MudNavLink Href="/account/login" Icon="@Icons.Material.Filled.Login">
+                        @Locale["Login"]
+                    </MudNavLink>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudNavMenu>
+        <LegalLinks OnDarkBackground="true" Class="mt-4 mb-2" />
+    </div>
+</div>
+
+@code {
+
+    [Inject]
+    private IAccountHttpClient AccountHttpClient { get; set; } = null!;
+    [Inject]
+    private IAuthStateChanged AuthState { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject]
+    private IClaimsUserDataAccessor UserDataAccessor { get; set; } = null!;
+    [Inject]
+    private IProfileStore ProfileStore { get; set; } = null!;
+    [Inject]
+    private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject]
+    private IBadgesStore BadgesStore { get; set; } = null!;
+    [Inject]
+    private IPushStore PushStore { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<NavigationLocale> Locale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private bool collapseNavMenu = true;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ClubProfileStore.OnClubProfileChanged += OnClubProfileChanged;
+        BadgesStore.OnMyDisplayBadgeChanged += StateHasChanged;
+    }
+
+    private async void OnClubProfileChanged()
+    {
+        StateHasChanged();
+        if (ClubProfileStore.MemberId > 0)
+        {
+            try
+            {
+                await BadgesStore.LoadMyDisplayBadge(ClubProfileStore.MemberId);
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected: a newer load superseded this one
+            }
+        }
+    }
+
+    private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
+
+    private void NavigateToProfile() => NavigationManager.NavigateToProfile();
+
+    private async Task LogoutUser()
+    {
+        // While still signed in: this device must not get the notifications of the user who leaves
+        await PushStore.DetachDevice();
+
+        var result = await AccountHttpClient.LogoutUser();
+        if (result.Success)
+        {
+            AuthState.AuthStateChanged();
+            NavigationManager.NavigateToLogin();
+        }
+    }
+
+    public void Dispose()
+    {
+        ClubProfileStore.OnClubProfileChanged -= OnClubProfileChanged;
+        BadgesStore.OnMyDisplayBadgeChanged -= StateHasChanged;
+    }
+}

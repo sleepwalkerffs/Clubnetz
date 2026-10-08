@@ -1,0 +1,66 @@
+services:
+  postgres:
+    image: postgres:16
+    command: -cmax_connections=500
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bookennis
+      TZ: 'GMT+0'
+      PGTZ: 'GMT+0'
+    ports:
+        - 8432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  postgres_test:
+    image: postgres:16
+    command: -c max_connections=500
+    ports:
+      - "5432:5432"
+    volumes:
+      - type: tmpfs
+        target: /var/lib/postgresql/data
+      - type: tmpfs
+        target: /dev/shm
+    environment:
+      POSTGRES_PASSWORD: developer
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment: 
+      PGADMIN_DEFAULT_EMAIL: "developer@bookennis.com"
+      PGADMIN_DEFAULT_PASSWORD: developer
+    ports:
+      - "5480:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ${PGADMIN_STORAGE_VOLUME}:/var/lib/pgadmin/storage
+    
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
+
+  mailpit:
+    image: axllent/mailpit:v1.20
+    volumes:
+      - mailpit-data:/data
+    ports:
+      - "5180:8025"
+      - "5125:1025"
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_MAX_AGE: 30d
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+
+volumes:
+  pgadmin-data:
+  postgres-data:
+  mailpit-data:
+
+networks:
+  default:
+    attachable: true

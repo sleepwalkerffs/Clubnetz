@@ -1,0 +1,46 @@
+@using Bookennis.Client.Components.BookingHistory
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.MyClub
+@using Bookennis.Shared.Controller.Booking.Shared
+
+<SectionCard Emoji="📅" Title="@Locale["UpcomingMatches"]"
+             Subtitle="@(Bookings.Count == 0 ? Locale["UpcomingMatchesEmptySubtitle"] : string.Format(Locale["UpcomingMatchesSubtitle"], Bookings.Count))">
+    <Actions>
+        <MudButton Href="@MyClubHelpers.BookingUrl(ClubId)" Variant="Variant.Text" Size="Size.Small" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add">
+            @Locale["Book"]
+        </MudButton>
+    </Actions>
+    <ChildContent>
+        @if (IsLoading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (Bookings.Count == 0)
+        {
+            <div class="upcoming-empty">
+                <span class="upcoming-empty__emoji" aria-hidden="true">🗓️</span>
+                <span>@Locale["NoUpcomingMatches"]</span>
+            </div>
+        }
+        else
+        {
+            @foreach (var booking in Bookings)
+            {
+                <BookingListItem Booking="@booking" ClubId="@ClubId" CourtName="@GetCourtName(booking.CourtId)"
+                                 OwnMemberId="@MemberId" ShowMonth="true"
+                                 Tag="@MyClubHelpers.Countdown(Locale, booking.Interval.From)" />
+            }
+        }
+    </ChildContent>
+</SectionCard>
+
+@code {
+    [Parameter, EditorRequired] public List<BookingResult> Bookings { get; set; } = null!;
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+    [Parameter, EditorRequired] public int MemberId { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter, EditorRequired] public Func<int, string> GetCourtName { get; set; } = null!;
+
+    [Inject] private IStringLocalizer<MyClubLocale> Locale { get; set; } = null!;
+}

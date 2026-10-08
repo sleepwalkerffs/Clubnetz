@@ -1,0 +1,50 @@
+@page "/"
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.Store.Profile
+@using Microsoft.AspNetCore.Authorization
+
+@implements IDisposable
+
+@attribute [Authorize]
+
+<PageTitle>Index</PageTitle>
+
+@if (noClubAssigned)
+{
+    <h2>No club assinged</h2>
+}
+
+@code {
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Inject]
+    private IProfileStore ProfileStore { get; set; } = null!;
+
+    private bool noClubAssigned;
+
+    public void NavigateToFavouriteClub()
+    {
+        if(ProfileStore.HasClubsAssigned)
+            NavigationManager.NavigateToClub(ProfileStore.FavoriteClubId);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ProfileStore.OnProfileChanged += NavigateToFavouriteClub;
+
+        if (await ProfileStore.WaitUntilLoaded())
+            await ProfileStore.LoadProfileAsync();
+
+        if (!ProfileStore.IsProfileLoaded)
+            NavigationManager.NavigateToInternalError();
+
+        NavigateToFavouriteClub();
+        noClubAssigned = true;
+    }
+
+    public void Dispose()
+    {
+        ProfileStore.OnProfileChanged -= NavigateToFavouriteClub;
+    }
+}

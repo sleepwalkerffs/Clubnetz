@@ -1,0 +1,244 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="MyClub" xml:space="preserve">
+    <value>Mein Klub</value>
+  </data>
+  <data name="GreetingMorning" xml:space="preserve">
+    <value>Guten Morgen, {0}!</value>
+  </data>
+  <data name="GreetingAfternoon" xml:space="preserve">
+    <value>Hallo, {0}!</value>
+  </data>
+  <data name="GreetingEvening" xml:space="preserve">
+    <value>Guten Abend, {0}!</value>
+  </data>
+  <data name="TaglineStreak" xml:space="preserve">
+    <value>{0} Wochen in Folge am Platz – halte die Serie am Leben! 🔥</value>
+  </data>
+  <data name="TaglineMissYou" xml:space="preserve">
+    <value>Dein letztes Spiel ist {0} Tage her – der Platz vermisst dich!</value>
+  </data>
+  <data name="TaglineReady" xml:space="preserve">
+    <value>Dein nächstes Spiel ist schon gebucht. Auf geht's!</value>
+  </data>
+  <data name="TaglineDefault" xml:space="preserve">
+    <value>Bereit für dein nächstes Spiel?</value>
+  </data>
+  <data name="EnrolledChip" xml:space="preserve">
+    <value>Saison {0} aktiv</value>
+  </data>
+  <data name="NotEnrolledChip" xml:space="preserve">
+    <value>Nicht für Saison {0} freigeschaltet</value>
+  </data>
+  <data name="PlayingSinceChip" xml:space="preserve">
+    <value>Spielt seit {0}</value>
+  </data>
+  <data name="NextMatch" xml:space="preserve">
+    <value>Nächstes Spiel</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Heute</value>
+  </data>
+  <data name="Tomorrow" xml:space="preserve">
+    <value>Morgen</value>
+  </data>
+  <data name="InDays" xml:space="preserve">
+    <value>In {0} Tagen</value>
+  </data>
+  <data name="WithPlayers" xml:space="preserve">
+    <value>mit {0}</value>
+  </data>
+  <data name="NoMatchPlanned" xml:space="preserve">
+    <value>Noch kein Spiel geplant</value>
+  </data>
+  <data name="BookCourt" xml:space="preserve">
+    <value>Platz buchen</value>
+  </data>
+  <data name="FavouritePartner" xml:space="preserve">
+    <value>Lieblingspartner</value>
+  </data>
+  <data name="MatchesTogether" xml:space="preserve">
+    <value>{0} Spiele zusammen</value>
+  </data>
+  <data name="FavouriteDay" xml:space="preserve">
+    <value>Lieblingstag</value>
+  </data>
+  <data name="MostlyAt" xml:space="preserve">
+    <value>meist um {0}</value>
+  </data>
+  <data name="FavouriteCourt" xml:space="preserve">
+    <value>Lieblingsplatz</value>
+  </data>
+  <data name="ShareOfMatches" xml:space="preserve">
+    <value>{0}% deiner Spiele</value>
+  </data>
+  <data name="MorePlayedThan" xml:space="preserve">
+    <value>Diese Saison hast du mehr gespielt als {0} der Mitglieder</value>
+  </data>
+  <data name="Account" xml:space="preserve">
+    <value>Konto</value>
+  </data>
+  <data name="AccountSubtitle" xml:space="preserve">
+    <value>Deine Mitgliedschaft auf einen Blick</value>
+  </data>
+  <data name="EditProfile" xml:space="preserve">
+    <value>Profil bearbeiten</value>
+  </data>
+  <data name="Birthday" xml:space="preserve">
+    <value>Geburtstag</value>
+  </data>
+  <data name="YearsOld" xml:space="preserve">
+    <value>{0} Jahre</value>
+  </data>
+  <data name="HappyBirthday" xml:space="preserve">
+    <value>Alles Gute zum Geburtstag!</value>
+  </data>
+  <data name="BookingsPerWeek" xml:space="preserve">
+    <value>Buchungen pro Woche</value>
+  </data>
+  <data name="BookingsPerWeekValue" xml:space="preserve">
+    <value>{0} pro Woche</value>
+  </data>
+  <data name="Seasons" xml:space="preserve">
+    <value>Saisonen</value>
+  </data>
+  <data name="Enrolled" xml:space="preserve">
+    <value>Freigeschaltet</value>
+  </data>
+  <data name="NotEnrolled" xml:space="preserve">
+    <value>Nicht freigeschaltet</value>
+  </data>
+  <data name="MatchesToNextBadge" xml:space="preserve">
+    <value>Noch {0} Spiele bis {1}</value>
+  </data>
+  <data name="Matches" xml:space="preserve">
+    <value>Spiele</value>
+  </data>
+  <data name="PercentReached" xml:space="preserve">
+    <value>{0}% geschafft</value>
+  </data>
+  <data name="CollectedThisSeason" xml:space="preserve">
+    <value>Diese Saison gesammelt</value>
+  </data>
+  <data name="SeasonAtAGlance" xml:space="preserve">
+    <value>Deine Saison auf einen Blick</value>
+  </data>
+  <data name="SeasonLabel" xml:space="preserve">
+    <value>Saison {0}</value>
+  </data>
+  <data name="AllStatistics" xml:space="preserve">
+    <value>Alle Statistiken</value>
+  </data>
+  <data name="NoMatchesThisSeasonTitle" xml:space="preserve">
+    <value>Deine Saison beginnt jetzt</value>
+  </data>
+  <data name="NoMatchesThisSeason" xml:space="preserve">
+    <value>Spiel dein erstes Spiel und hier erscheinen deine Saison-Statistiken.</value>
+  </data>
+  <data name="MatchesThisSeason" xml:space="preserve">
+    <value>Spiele diese Saison</value>
+  </data>
+  <data name="ClubAverageHint" xml:space="preserve">
+    <value>Klub-Schnitt {0}</value>
+  </data>
+  <data name="HoursUnit" xml:space="preserve">
+    <value>h</value>
+  </data>
+  <data name="OnCourt" xml:space="preserve">
+    <value>Am Platz</value>
+  </data>
+  <data name="AverageMinutesHint" xml:space="preserve">
+    <value>Ø {0} Min. pro Spiel</value>
+  </data>
+  <data name="WeeksUnit" xml:space="preserve">
+    <value>Wochen</value>
+  </data>
+  <data name="CurrentStreak" xml:space="preserve">
+    <value>Aktuelle Serie</value>
+  </data>
+  <data name="BestStreakHint" xml:space="preserve">
+    <value>Rekord: {0} Wochen</value>
+  </data>
+  <data name="LeaderboardRank" xml:space="preserve">
+    <value>Platz in der Rangliste</value>
+  </data>
+  <data name="RankFirstHint" xml:space="preserve">
+    <value>👑 Spitze im Klub!</value>
+  </data>
+  <data name="RankPodiumHint" xml:space="preserve">
+    <value>🏅 Auf dem Podest</value>
+  </data>
+  <data name="UpcomingMatches" xml:space="preserve">
+    <value>Nächste Spiele</value>
+  </data>
+  <data name="UpcomingMatchesSubtitle" xml:space="preserve">
+    <value>{0} gebucht</value>
+  </data>
+  <data name="UpcomingMatchesEmptySubtitle" xml:space="preserve">
+    <value>Noch nichts gebucht</value>
+  </data>
+  <data name="NoUpcomingMatches" xml:space="preserve">
+    <value>Keine geplanten Spiele – Zeit, einen Platz zu buchen!</value>
+  </data>
+  <data name="Book" xml:space="preserve">
+    <value>Buchen</value>
+  </data>
+</root>

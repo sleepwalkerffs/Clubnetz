@@ -1,0 +1,84 @@
+@using System.ComponentModel.DataAnnotations
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Account
+@using Bookennis.Client.Services.Store.Profile
+@using Bookennis.Client.Utils
+
+<BaseDialog Title="@Locale["ChangeEmail"]"
+            SubmitFunc="Submit"
+            SubmitCaption="@Locale["SendConfirmationLink"]"
+            CancelFunc="Cancel"
+            CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@saving">
+    <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">@Locale["ChangeEmail_Description"]</MudText>
+    <EditForm EditContext="@context">
+        <DataAnnotationsValidator />
+        <div class="d-flex flex-column gap-3">
+            <MudTextField Variant="Variant.Outlined" T="string" Label="@Locale["CurrentEmail"]" Value="@CurrentEmail" ReadOnly="true" />
+            <MudTextField Variant="Variant.Outlined" T="string" Label="@Locale["NewEmail"]" InputType="InputType.Email"
+                          @bind-Value="model.NewEmail" For="@(() => model.NewEmail)"
+                          UserAttributes="@(new() { ["autocomplete"] = "email" })" />
+            <PasswordField TType="string" Label="@Locale["CurrentPassword"]" AutoComplete="current-password"
+                           HelperText="@Locale["ChangeEmail_PasswordHelper"]"
+                           @bind-Value="model.CurrentPassword" For="@(() => model.CurrentPassword)" />
+        </div>
+    </EditForm>
+</BaseDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public string? CurrentEmail { get; set; }
+
+    [Inject] private IProfileStore ProfileStore { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private readonly ChangeEmailForm model = new();
+    private EditContext context = null!;
+    private bool saving;
+
+    protected override void OnInitialized() => context = new EditContext(model);
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (!context.Validate())
+            return null;
+
+        var newEmail = model.NewEmail!.Trim();
+        saving = true;
+        StateHasChanged();
+        try
+        {
+            var result = await ProfileStore.RequestEmailChange(model.CurrentPassword!, newEmail);
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return null;
+            }
+
+            return DialogResult.Ok(newEmail);
+        }
+        finally
+        {
+            saving = false;
+            StateHasChanged();
+        }
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+
+    private class ChangeEmailForm
+    {
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "EmailValidation"),
+         EmailAddress(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "EmailValidation")]
+        public string? NewEmail { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "PasswordValidation")]
+        public string? CurrentPassword { get; set; }
+    }
+}

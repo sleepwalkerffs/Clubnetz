@@ -1,0 +1,247 @@
+@page "/account/register";
+@layout NotAuthorizedLayout
+
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Account
+@using Bookennis.Client.Services.HttpClients.Account
+@using Bookennis.Client.Shared
+@using System.ComponentModel.DataAnnotations
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Shared
+@using Bookennis.Client.Components.Shared.Buttons
+
+@implements IDisposable
+
+<PageTitle>@Locale["Register"]</PageTitle>
+
+@if (registeredEmail is not null)
+{
+    <AuthShell Emoji="📬"
+               Title="@Locale["CheckInbox_Title"]"
+               Subtitle="@string.Format(Locale["Register_CheckInbox"], registeredEmail)"
+               ShowFeatures="false">
+        <ChildContent>
+            <MudAlert Severity="Severity.Info" Variant="Variant.Text" Dense="true">@Locale["CheckInbox_Spam"]</MudAlert>
+            <MudButton Href="account/login" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large" Class="mt-6">
+                @Locale["GoToLogin"]
+            </MudButton>
+        </ChildContent>
+    </AuthShell>
+}
+else
+{
+    <AuthShell Title="@Locale["Register_Title"]" Subtitle="@Locale["Register_Subtitle"]">
+        <ChildContent>
+            <EditForm EditContext="@context" OnValidSubmit="Submit">
+                <DataAnnotationsValidator />
+
+                <div class="register-section">
+                    <div class="register-section__title">
+                        <span class="register-section__step">1</span>@Locale["Register_AboutYou"]
+                    </div>
+                    <div class="register-grid">
+                        <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Firstname"] @bind-Value="model.FirstName" For="@(() => model.FirstName)"
+                                      UserAttributes="@(new() { ["autocomplete"] = "given-name" })" />
+                        <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Lastname"] @bind-Value="model.LastName" For="@(() => model.LastName)"
+                                      UserAttributes="@(new() { ["autocomplete"] = "family-name" })" />
+                        <MudSelect T="int" Label=@SharedLocale["Gender"] Variant="Variant.Outlined" @bind-Value="model.Gender" For="@(() => model.Gender)">
+                            <MudSelectItem T="int" Value="0">@SharedLocale["Mr"].</MudSelectItem>
+                            <MudSelectItem T="int" Value="1">@SharedLocale["Mrs"].</MudSelectItem>
+                            <MudSelectItem T="int" Value="2">@SharedLocale["None"]</MudSelectItem>
+                        </MudSelect>
+                        <MudDatePicker PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" Label=@SharedLocale["Birthday"] @bind-Date="model.Birthday" For="(() => model.Birthday)" DateFormat="dd.MM.yyyy" />
+                    </div>
+                </div>
+
+                <div class="register-section">
+                    <div class="register-section__title">
+                        <span class="register-section__step">2</span>@Locale["Register_LoginDetails"]
+                    </div>
+                    <div class="d-flex flex-column gap-3">
+                        <MudTextField Variant="Variant.Outlined" T="string" Label=@Locale["Email"] InputType="InputType.Email" @bind-Value="model.Email" For="@(() => model.Email)"
+                                      HelperText="@Locale["Register_EmailHelper"]"
+                                      UserAttributes="@(new() { ["autocomplete"] = "email" })" />
+                        <PasswordField TType="string"
+                                       Label=@Locale["Password"]
+                                       Immediate="true"
+                                       AutoComplete="new-password"
+                                       @bind-Value="model.Password"
+                                       For="@(() => model.Password)" />
+                        <PasswordRequirements Password="@model.Password" />
+                        <PasswordField TType="string"
+                                       Label=@Locale["RepeatPassword"]
+                                       AutoComplete="new-password"
+                                       @bind-Value="model.Password2"
+                                       For="@(() => model.Password2)" />
+                    </div>
+                </div>
+
+                <div class="register-address">
+                <MudExpansionPanels Elevation="0">
+                    <MudExpansionPanel>
+                        <TitleContent>
+                            <div class="d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Outlined.Home" Size="Size.Small" />
+                                <span class="register-address__title">@SharedLocale["Address"]</span>
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Default">@Locale["Optional"]</MudChip>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudText Typo="Typo.body2" Class="mb-3 mud-text-secondary">@Locale["Register_AddressHint"]</MudText>
+                            <div class="register-grid">
+                                <div class="register-grid__full">
+                                    <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Street"] @bind-Value="model.Street" For="@(() => model.Street)"
+                                                  UserAttributes="@(new() { ["autocomplete"] = "street-address" })" />
+                                </div>
+                                <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["ZipCode"] @bind-Value="model.ZipCode" For="@(() => model.ZipCode)"
+                                              UserAttributes="@(new() { ["autocomplete"] = "postal-code" })" />
+                                <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["City"] @bind-Value="model.City" For="@(() => model.City)"
+                                              UserAttributes="@(new() { ["autocomplete"] = "address-level2" })" />
+                                <div class="register-grid__full">
+                                    <MudSelect T="int" Label=@SharedLocale["Country"] Variant="Variant.Outlined" @bind-Value="model.Country" For="@(() => model.Country)">
+                                        <MudSelectItem T="int" Value="0">@SharedLocale["Austria"]</MudSelectItem>
+                                        <MudSelectItem T="int" Value="1">@SharedLocale["Germany"]</MudSelectItem>
+                                        <MudSelectItem T="int" Value="2">@SharedLocale["Switzerland"]</MudSelectItem>
+                                    </MudSelect>
+                                </div>
+                            </div>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+                </div>
+
+                <div class="register-consent">
+                    <MudCheckBox T="bool" @bind-Value="model.AcceptPrivacyPolicy" Color="Color.Primary" Dense="true">
+                        <span class="register-consent__text">
+                            @Locale["Register_PrivacyConsent_Before"]
+                            <a href="legal/privacy" target="_blank" @onclick:stopPropagation="true">@Locale["Register_PrivacyConsent_Link"]</a>
+                            @Locale["Register_PrivacyConsent_After"]
+                        </span>
+                    </MudCheckBox>
+                    <ValidationMessage For="@(() => model.AcceptPrivacyPolicy)" class="register-consent__error" />
+                </div>
+
+                <LoadButton ButtonType="ButtonType.Submit"
+                            FullWidth="true"
+                            Size="Size.Large"
+                            Variant="Variant.Filled"
+                            Color="Color.Primary"
+                            Loading="@processing"
+                            Disabled="@processing"
+                            Class="mt-4">
+                    @Locale["CreateFreeAccount"]
+                </LoadButton>
+                <MudText Typo="Typo.caption" Align="Align.Center" Class="d-block mt-2 mud-text-secondary">@Locale["Register_FreeHint"]</MudText>
+            </EditForm>
+        </ChildContent>
+        <Footer>
+            <span>@Locale["Register_HaveAccount"] <MudLink Href="account/login" Underline="Underline.Hover" Color="Color.Primary">@Locale["Login"]</MudLink></span>
+        </Footer>
+    </AuthShell>
+}
+
+@code {
+    [Inject]
+    private IAccountHttpClient AccountHttpClient { get; set; } = null!;
+    [Inject]
+    private ISnackbar snackbar { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<AccountLocale> Locale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private EditContext context = null!;
+    private RegisterUserForm model = new();
+    private ValidationMessageStore messageStore = null!;
+    private bool processing = false;
+    private string? registeredEmail;
+
+    protected override void OnInitialized()
+    {
+        context = new EditContext(model);
+        context.OnValidationRequested += HandleValidationRequested;
+        messageStore = new ValidationMessageStore(context);
+    }
+
+    public async Task Submit()
+    {
+        processing = true;
+        try
+        {
+            model.Birthday = DateTime.SpecifyKind(model.Birthday!.Value, DateTimeKind.Utc);
+            var email = model.Email!.Trim();
+            var response = await AccountHttpClient.RegisterUser(new(model.FirstName!, model.LastName!, DateOnly.FromDateTime(model.Birthday.Value), email, email, model.Password!, (Gender)model.Gender, model.Street, model.City, model.ZipCode, (Country)model.Country, model.AcceptPrivacyPolicy));
+            if (!response.Success)
+            {
+                snackbar.ShowErrorDetails(response, BackendLocale);
+                return;
+            }
+
+            registeredEmail = email;
+        }
+        finally
+        {
+            processing = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
+    {
+        messageStore.Clear();
+        if (!model.AcceptPrivacyPolicy)
+            messageStore.Add(() => model.AcceptPrivacyPolicy, Locale["Register_PrivacyConsent_Validation"]);
+
+        if (model.Password == null)
+            return;
+
+        foreach (var error in PasswordValidation.ValidatePassword(model.Password, Locale))
+        {
+            messageStore.Add(() => model.Password, error);
+        }
+    }
+
+    private class RegisterUserForm
+    {
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "FirstnameValidation")]
+        public string? FirstName { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "LastnameValidation")]
+        public string? LastName { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "BirthdayValidation")]
+        public DateTime? Birthday { get; set; } = DateTime.Today.AddYears(-20);
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "EmailValidation"),
+         EmailAddress(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "EmailValidation")]
+        public string? Email { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "PasswordValidation"),
+         StringLength(PasswordValidation.MaxLength, MinimumLength = PasswordValidation.MinLength, ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "PasswordLength")]
+        public string? Password { get; set; }
+
+        [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "PasswordValidation")]
+        [Compare(nameof(Password), ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "Password2Validation")]
+        public string? Password2 { get; set; }
+
+        public int Gender { get; set; }
+
+        public string? Street { get; set; }
+
+        public string? City { get; set; }
+
+        public string? ZipCode { get; set; }
+
+        public int Country { get; set; }
+
+        public bool AcceptPrivacyPolicy { get; set; }
+    }
+
+    public void Dispose()
+    {
+        context.OnValidationRequested -= HandleValidationRequested;
+    }
+}

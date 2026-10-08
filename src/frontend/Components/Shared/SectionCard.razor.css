@@ -1,0 +1,48 @@
+.section-card {
+    height: 100%;
+    padding: 16px;
+    border-radius: 18px;
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.section-card__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.section-card__emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 1.3rem;
+    background: var(--mud-palette-background-gray);
+}
+
+.section-card__heading {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.section-card__title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.section-card__subtitle {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.section-card__actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}

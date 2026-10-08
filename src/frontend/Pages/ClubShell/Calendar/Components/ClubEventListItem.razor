@@ -1,0 +1,63 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.Calendar
+@using Bookennis.Shared.Controller.ClubEvents
+
+<a class="event-item @(IsPast ? "event-item--past" : null)" href="@ClubEventHelpers.EventUrl(ClubId, Event.Id)"
+   style="--event-color: @ClubEventHelpers.Color(Event.Category)">
+    <div class="event-item__date">
+        <span class="event-item__weekday">@Event.StartDate.ToString("ddd", CultureInfo.CurrentCulture)</span>
+        <span class="event-item__day">@Event.StartDate.Day</span>
+        <span class="event-item__month">@Event.StartDate.ToString("MMM", CultureInfo.CurrentCulture)</span>
+    </div>
+
+    <div class="event-item__body">
+        <div class="event-item__title">
+            <span aria-hidden="true">@ClubEventHelpers.Emoji(Event.Category)</span> @Event.Title
+        </div>
+        <div class="event-item__meta">
+            @if (Event.EndDate is not null)
+            {
+                <span>@ClubEventHelpers.FormatDateRange(Locale, Event.StartDate, Event.EndDate)</span>
+                <span aria-hidden="true">·</span>
+            }
+            <span>@ClubEventHelpers.FormatTime(Locale, Event.StartTime, Event.EndTime)</span>
+            @if (!string.IsNullOrWhiteSpace(Event.Location))
+            {
+                <span aria-hidden="true">·</span>
+                <span class="event-item__location">📍 @Event.Location</span>
+            }
+        </div>
+        <div class="event-item__chips">
+            @if (ShowCountdown && !IsPast)
+            {
+                <span class="event-chip event-chip--accent">@ClubEventHelpers.Countdown(Locale, Event.StartDate, Event.LastDate)</span>
+            }
+            @if (Event.MyHeadCount is { } myHeadCount)
+            {
+                <span class="event-chip event-chip--ok">✅ @string.Format(Locale["YoureIn"], myHeadCount)</span>
+            }
+            @if (Event.RegistrationEnabled)
+            {
+                <span class="event-chip">
+                    👥 @(Event.MaxParticipants is { } max ? $"{Event.TotalHeadCount} / {max}" : Event.TotalHeadCount.ToString())
+                </span>
+                @if (Event.MaxParticipants is { } limit && Event.TotalHeadCount >= limit && Event.MyHeadCount is null && !IsPast)
+                {
+                    <span class="event-chip event-chip--warn">@Locale["Full"]</span>
+                }
+            }
+        </div>
+    </div>
+
+    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Class="event-item__chevron" />
+</a>
+
+@code {
+    [Parameter, EditorRequired] public ClubEventSummaryDto Event { get; set; } = null!;
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+    [Parameter] public bool ShowCountdown { get; set; }
+
+    [Inject] private IStringLocalizer<CalendarLocale> Locale { get; set; } = null!;
+
+    private bool IsPast => Event.LastDate < DateOnly.FromDateTime(DateTime.Today);
+}
