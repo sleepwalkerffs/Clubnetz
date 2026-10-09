@@ -52,7 +52,7 @@
     <value>Last updated: {0}</value>
   </data>
   <data name="NotConfigured" xml:space="preserve">
-    <value>The operator details have not been configured yet (section "Legal" in wwwroot/appsettings.json).</value>
+    <value>The operator details have not been configured yet (section "Legal" of the server settings).</value>
   </data>
   <data name="Operator" xml:space="preserve">
     <value>Operator</value>

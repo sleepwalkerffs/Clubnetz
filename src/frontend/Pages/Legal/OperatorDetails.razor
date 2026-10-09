@@ -1,5 +1,6 @@
 @using Bookennis.Client.Localization.Pages.Legal
-@using Bookennis.Client.Services.Legal
+@using Bookennis.Client.Services.Store.Legal
+@using Bookennis.Shared.Controller.Legal
 
 @* Name, address and contact of the operator from the Legal settings. Empty lines are skipped. *@
 <address class="legal-address">
@@ -30,8 +31,13 @@
 </address>
 
 @code {
-    [Inject] private LegalSettings Settings { get; set; } = null!;
+    private static readonly GetLegalSettingsResult Empty = new();
+
+    [Inject] private ILegalStore LegalStore { get; set; } = null!;
     [Inject] private IStringLocalizer<LegalLocale> Locale { get; set; } = null!;
 
+    private GetLegalSettingsResult Settings => LegalStore.Settings ?? Empty;
     private string ZipAndCity => $"{Settings.ZipCode} {Settings.City}".Trim();
+
+    protected override Task OnInitializedAsync() => LegalStore.Load();
 }

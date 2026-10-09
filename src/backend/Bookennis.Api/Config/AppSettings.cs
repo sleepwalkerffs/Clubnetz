@@ -19,6 +19,8 @@ public class AppSettings
 
     public PushSettings Push { get; set; } = new();
 
+    public LegalSettings Legal { get; set; } = new();
+
     public static IReadOnlyList<CultureInfo> SupportedCultures
         => new[] { "de-AT", "en-AT" }
           .Select(c => new CultureInfo(c))

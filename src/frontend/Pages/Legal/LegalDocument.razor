@@ -1,5 +1,5 @@
 @using Bookennis.Client.Localization.Pages.Legal
-@using Bookennis.Client.Services.Legal
+@using Bookennis.Client.Services.Store.Legal
 
 @* Frame of the legal pages (imprint, privacy policy): back button, title, operator hint and the sections. Readable line length on desktop. *@
 <article class="legal-document">
@@ -17,7 +17,7 @@
         <p class="legal-document__updated">@string.Format(Locale["LastUpdated"], LastUpdated.ToString("d"))</p>
     </header>
 
-    @if (!Settings.IsConfigured)
+    @if (LegalStore.IsNotConfigured)
     {
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-4">@Locale["NotConfigured"]</MudAlert>
     }
@@ -32,13 +32,15 @@
     public static readonly DateOnly LastUpdated = new(2026, 10, 2);
 
     [Inject] private IStringLocalizer<LegalLocale> Locale { get; set; } = null!;
-    [Inject] private LegalSettings Settings { get; set; } = null!;
+    [Inject] private ILegalStore LegalStore { get; set; } = null!;
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
 
     [Parameter, EditorRequired] public string Title { get; set; } = null!;
     [Parameter, EditorRequired] public string Emoji { get; set; } = null!;
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    protected override Task OnInitializedAsync() => LegalStore.Load();
 
     private async Task GoBack()
     {

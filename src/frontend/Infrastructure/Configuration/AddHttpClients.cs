@@ -19,6 +19,7 @@ using Bookennis.Client.Services.HttpClients.ClubEvents;
 using Bookennis.Client.Services.HttpClients.CourtBlockings;
 using Bookennis.Client.Services.HttpClients.SubscriptionPlans;
 using Bookennis.Client.Services.HttpClients.ClubEmailTemplates;
+using Bookennis.Client.Services.HttpClients.Legal;
 using Bookennis.Client.Services.HttpClients.Push;
 
 namespace Bookennis.Client.Infrastructure.Configuration;
@@ -69,6 +70,16 @@ public static class AddHttpClients
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
                     client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + "Push/");
+                }
+            );
+
+        services
+            .AddHttpClient<ILegalHttpClient, LegalHttpClient>(
+                (serviceProvider, client) =>
+                {
+                    var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
+                    client.AddDefaultHeaders();
+                    client.BaseAddress = new Uri(apiUrl!);
                 }
             );
 

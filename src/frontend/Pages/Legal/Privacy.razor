@@ -1,7 +1,7 @@
 @page "/legal/privacy"
 @layout NoNavigationLayout
 @using Bookennis.Client.Localization.Pages.Legal
-@using Bookennis.Client.Services.Legal
+@using Bookennis.Client.Services.Store.Legal
 @using Bookennis.Client.Shared
 
 <PageTitle>@Locale["Privacy"]</PageTitle>
@@ -16,11 +16,11 @@
 
     <LegalSection Title="@Locale["Privacy_Data_Title"]" Text="@Locale["Privacy_Data_Body"]" />
     <LegalSection Title="@Locale["Privacy_Purpose_Title"]" Text="@Locale["Privacy_Purpose_Body"]" />
-    <LegalSection Title="@Locale["Privacy_Recipients_Title"]" Text="@string.Format(Locale["Privacy_Recipients_Body"], OrDash(Settings.HostingProvider), OrDash(Settings.EmailProvider))" />
+    <LegalSection Title="@Locale["Privacy_Recipients_Title"]" Text="@string.Format(Locale["Privacy_Recipients_Body"], OrDash(LegalStore.Settings?.HostingProvider), OrDash(LegalStore.Settings?.EmailProvider))" />
     <LegalSection Title="@Locale["Privacy_Children_Title"]" Text="@Locale["Privacy_Children_Body"]" />
     <LegalSection Title="@Locale["Privacy_Cookies_Title"]" Text="@Locale["Privacy_Cookies_Body"]" />
     <LegalSection Title="@Locale["Privacy_Retention_Title"]" Text="@Locale["Privacy_Retention_Body"]" />
-    <LegalSection Title="@Locale["Privacy_Rights_Title"]" Text="@string.Format(Locale["Privacy_Rights_Body"], OrDash(Settings.Email))" />
+    <LegalSection Title="@Locale["Privacy_Rights_Title"]" Text="@string.Format(Locale["Privacy_Rights_Body"], OrDash(LegalStore.Settings?.Email))" />
     <LegalSection Title="@Locale["Privacy_Complaint_Title"]" Text="@Locale["Privacy_Complaint_Body"]" />
 
     <LegalSection>
@@ -30,7 +30,9 @@
 
 @code {
     [Inject] private IStringLocalizer<LegalLocale> Locale { get; set; } = null!;
-    [Inject] private LegalSettings Settings { get; set; } = null!;
+    [Inject] private ILegalStore LegalStore { get; set; } = null!;
+
+    protected override Task OnInitializedAsync() => LegalStore.Load();
 
     private static string OrDash(string? value) => string.IsNullOrWhiteSpace(value) ? "–" : value;
 }

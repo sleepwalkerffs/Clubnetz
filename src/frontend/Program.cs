@@ -3,7 +3,6 @@ using Bookennis.Client;
 using Bookennis.Client.Infrastructure.Configuration;
 using Bookennis.Client.Services;
 using Bookennis.Client.Services.AppVersion;
-using Bookennis.Client.Services.Legal;
 using Bookennis.Client.Services.Theme;
 using Bookennis.Client.Services.UserAccessor;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -27,7 +26,6 @@ builder.Services.ConfigureHttpClients();
 builder.Services.AddLocalization();
 builder.ConfigureStores();
 builder.Services.AddSingleton<IThemeService, ThemeService>();
-builder.Services.AddSingleton(LegalSettings.FromConfiguration(builder.Configuration.GetSection("Legal")));
 
 builder.Services.AddMudServices(config =>
 {

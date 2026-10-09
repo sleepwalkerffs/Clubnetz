@@ -52,7 +52,7 @@
     <value>Stand: {0}</value>
   </data>
   <data name="NotConfigured" xml:space="preserve">
-    <value>Die Angaben zum Betreiber sind noch nicht hinterlegt (Abschnitt "Legal" in wwwroot/appsettings.json).</value>
+    <value>Die Angaben zum Betreiber sind noch nicht hinterlegt (Abschnitt "Legal" der Servereinstellungen).</value>
   </data>
   <data name="Operator" xml:space="preserve">
     <value>Betreiber</value>
