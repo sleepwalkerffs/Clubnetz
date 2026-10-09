@@ -241,7 +241,9 @@ else
         SelectedDate = SelectedDay is { } day && day >= Start && day <= End ? day : Start;
 
         // Bookings do not depend on the other data, so everything is loaded in parallel
-        var loadMember = MembersStore.LoadedMemberId(ClubProfileStore.MemberId) ? Task.CompletedTask : MembersStore.LoadMember(ClubProfileStore.MemberId);
+        // Support mode has no member (and no family), the plan is shown without own bookings
+        var isSupportMode = ClubProfileStore.IsSupportMode;
+        var loadMember = isSupportMode || MembersStore.LoadedMemberId(ClubProfileStore.MemberId) ? Task.CompletedTask : MembersStore.LoadMember(ClubProfileStore.MemberId);
         await Task.WhenAll(
             ClubProfileStore.LoadBookingOptions(),
             ClubStore.LoadCourts(),
@@ -251,14 +253,15 @@ else
             loadMember,
             LoadBookings());
 
-        if (MembersStore.MemberDetail?.FamilyId is not null && !FamilyStore.LoadedForFamilyId(MembersStore.MemberDetail.FamilyId.Value))
-            await FamilyStore.LoadFamily(MembersStore.MemberDetail.FamilyId.Value);
+        var familyId = isSupportMode ? null : MembersStore.MemberDetail?.FamilyId;
+        if (familyId is not null && !FamilyStore.LoadedForFamilyId(familyId.Value))
+            await FamilyStore.LoadFamily(familyId.Value);
 
         Courts = ClubStore.Courts;
         Players = ClubStore.ClubPlayers.Union(ClubStore.GuestPlayers).ToList();
         MemberId = ClubProfileStore.MemberId;
         AllowedPlaymodes = ClubStore.PlayModes.Where(mode => mode.AllowedRoles.Any(ClubProfileStore.Roles.Contains)).ToList();
-        MemberChildren = FamilyStore.Family?.Children.ConvertAll(child => new PlayerResult(child.MemberId, child.FirstName, child.LastName, false)) ?? [];
+        MemberChildren = familyId is null ? [] : FamilyStore.Family?.Children.ConvertAll(child => new PlayerResult(child.MemberId, child.FirstName, child.LastName, false)) ?? [];
 
         loaded = true;
     }

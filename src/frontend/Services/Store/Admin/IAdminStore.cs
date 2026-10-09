@@ -1,12 +1,18 @@
 using Bookennis.Client.Services.HttpClients;
+using Bookennis.Client.Services.Store.Base;
 using Bookennis.Shared.Controller.Admin;
 using Bookennis.Shared.Utils.Paging;
 using Bookennis.Shared.Utils.Sorting;
 
 namespace Bookennis.Client.Services.Store.Admin;
 
-public interface IAdminStore
+public interface IAdminStore : ISemaphoreStore
 {
+    // Overview
+    public event Action? OnOverviewChanged;
+    public AdminOverviewResult? Overview { get; }
+    public Task LoadOverview();
+
     // Users
     public event Action? OnUsersChanged;
     public event Action? OnUserDetailChanged;

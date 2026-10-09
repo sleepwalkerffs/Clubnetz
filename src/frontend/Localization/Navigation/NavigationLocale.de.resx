@@ -177,4 +177,22 @@
   <data name="CourtBlockings" xml:space="preserve">
     <value>Platzsperren</value>
   </data>
+  <data name="AdminPanel" xml:space="preserve">
+    <value>Admin-Bereich</value>
+  </data>
+  <data name="BookingPlan" xml:space="preserve">
+    <value>Belegungsplan</value>
+  </data>
+  <data name="SupportMode" xml:space="preserve">
+    <value>Support-Modus</value>
+  </data>
+  <data name="SupportModeTitle" xml:space="preserve">
+    <value>Support-Modus: {0}</value>
+  </data>
+  <data name="SupportModeText" xml:space="preserve">
+    <value>Du verwaltest diesen Verein als Plattform-Administrator. Deine Änderungen gelten sofort für den Verein.</value>
+  </data>
+  <data name="SupportModeExit" xml:space="preserve">
+    <value>Zurück zum Admin-Bereich</value>
+  </data>
 </root>

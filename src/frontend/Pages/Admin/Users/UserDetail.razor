@@ -1,4 +1,6 @@
 @page "/admin/users/{UserId:int}"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Services
 @using Bookennis.Client.Services.Store.Admin
 @using Bookennis.Shared.Controller.Admin
@@ -6,140 +8,157 @@
 
 @implements IDisposable
 
-<PageTitle>@L["AdminPanel"] - @AdminStore.UserDetail?.FullName</PageTitle>
+<PageTitle>@L["AdminPanel"] - @User?.FullName</PageTitle>
 
-@if (AdminStore.UserDetail is null)
+@if (User is null)
 {
-    <div class="d-flex justify-center pa-8">
-        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-    </div>
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
 }
 else
 {
-    var user = AdminStore.UserDetail;
+    var user = User;
 
-    <div class="d-flex flex-wrap align-center gap-3 mb-5">
-        <MudIcon Icon="@Icons.Material.Filled.Person" Color="Color.Primary" />
-        <div class="accent-border-left">
-            <MudText Typo="Typo.h5">@user.FullName</MudText>
-        </div>
-    </div>
+    <div class="admin-page">
+        <AdminHero Eyebrow="@L["UserEyebrow"]" Title="@user.FullName" Subtitle="@user.Email">
+            <Media>
+                <UserAvatar FirstName="@user.FirstName" LastName="@user.LastName" Size="Size.Large" />
+            </Media>
+            <Chips>
+                @if (user.EmailConfirmed)
+                {
+                    <span class="hero-chip hero-chip--ok">✅ @L["EmailConfirmed"]</span>
+                }
+                else
+                {
+                    <span class="hero-chip hero-chip--warn">✉️ @L["Unconfirmed"]</span>
+                }
+                <span class="hero-chip">🗓️ @string.Format(L["RegisteredOn"], user.RegisteredAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))</span>            </Chips>
+        </AdminHero>
 
-    <div class="d-flex flex-column gap-4">
-        <MudPaper Class="pa-4 pa-sm-5" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-            <MudText Typo="Typo.h6" Class="mb-3">@L["EditUser"]</MudText>
-            <MudGrid>
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="firstName" Label="@SharedLocale.Firstname" Required="true" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="lastName" Label="@SharedLocale.Lastname" Required="true" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudDatePicker @bind-Date="birthday" Label="@SharedLocale.Birthday" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudSelect @bind-Value="gender" Label="@SharedLocale.Gender" Variant="Variant.Outlined">
-                        @foreach (Gender g in Enum.GetValues<Gender>())
-                        {
-                            <MudSelectItem Value="g">@g</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12">
-                    <MudText Typo="Typo.subtitle1" Class="mt-2 mb-1"><strong>@SharedLocale.Address</strong></MudText>
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="street" Label="@SharedLocale.Street" Required="true" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="city" Label="@SharedLocale.City" Required="true" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="zipCode" Label="@SharedLocale.ZipCode" Required="true" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudSelect @bind-Value="country" Label="@SharedLocale.Country" Variant="Variant.Outlined">
-                        @foreach (Country c in Enum.GetValues<Country>())
-                        {
-                            <MudSelectItem Value="c">@c</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveUser" StartIcon="@Icons.Material.Filled.Save" FullWidth="true" Class="d-sm-none">@L["SaveChanges"]</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveUser" StartIcon="@Icons.Material.Filled.Save" Class="d-none d-sm-flex">@L["SaveChanges"]</MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
-
-        <MudPaper Class="pa-4 pa-sm-5" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-            <MudText Typo="Typo.h6" Class="mb-3">@L["EmailManagement"]</MudText>
-            <div class="d-flex flex-column gap-2 mb-3">
-                <MudText Typo="Typo.body2">@L["CurrentEmail"]: <strong>@user.Email</strong></MudText>
-                <div class="d-flex align-center gap-2">
-                    <MudText Typo="Typo.body2">@L["Confirmed"]:</MudText>
-                    @if (user.EmailConfirmed)
+        <SectionCard Emoji="🎾" Title="@L["Clubs"]" Subtitle="@L["ClubsOfUserSubtitle"]">
+            @if (user.Clubs.Count == 0)
+            {
+                <div class="admin-text">@L["NoClubs"]</div>
+            }
+            else
+            {
+                <div class="admin-list">
+                    @foreach (var club in user.Clubs)
                     {
-                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">@L["Yes"]</MudChip>
-                    }
-                    else
-                    {
-                        <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Text">@L["No"]</MudChip>
+                        <div class="admin-row" @key="club.MemberId">
+                            <div class="admin-row__main">
+                                <a class="admin-row__title" href="@($"/admin/clubs/{club.ClubId}")">@club.ClubName</a>
+                                <div class="admin-chips mt-1">
+                                    @if (club.IsGuest)
+                                    {
+                                        <span class="admin-chip admin-chip--info">🎟️ @L["Guest"]</span>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var role in club.Roles)
+                                        {
+                                            <span class="@($"admin-chip {(role == MemberRole.Admin ? "admin-chip--ok" : null)}")">@SharedLocale[$"Role_{role}"]</span>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                            <div class="admin-row__aside">
+                                @if (!club.IsGuest)
+                                {
+                                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Person"
+                                               OnClick="@(() => NavigationManager.NavigateTo($"/clubs/{club.ClubId}/members/{club.MemberId}", forceLoad: true))">
+                                        @L["OpenMember"]
+                                    </MudButton>
+                                }
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Login"
+                                           OnClick="@(() => NavigationManager.OpenClubAsAdministrator(club.ClubId))">
+                                    @L["OpenClub"]
+                                </MudButton>
+                            </div>
+                        </div>
                     }
                 </div>
-            </div>
-            @if (!user.EmailConfirmed)
-            {
-                <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ResendConfirmation" StartIcon="@Icons.Material.Filled.Email" Class="mb-3" FullWidth="true">
-                    @L["ResendConfirmationEmail"]
-                </MudButton>
             }
-            <MudGrid>
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="newEmail" Label="@L["NewEmail"]" InputType="InputType.Email" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="6" Class="d-flex align-end">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="ChangeEmail" StartIcon="@Icons.Material.Filled.AlternateEmail" FullWidth="true" Class="d-sm-none">
-                        @L["ChangeEmail"]
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="ChangeEmail" StartIcon="@Icons.Material.Filled.AlternateEmail" Class="d-none d-sm-flex mb-1">
-                        @L["ChangeEmail"]
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
+        </SectionCard>
 
-        <MudPaper Class="pa-4 pa-sm-5" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-            <MudText Typo="Typo.h6" Class="mb-3">@L["Password"]</MudText>
-            <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ResetPassword" StartIcon="@Icons.Material.Filled.LockReset" FullWidth="true" Class="d-sm-none">
-                @L["SendPasswordResetLink"]
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ResetPassword" StartIcon="@Icons.Material.Filled.LockReset" Class="d-none d-sm-flex">
-                @L["SendPasswordResetLink"]
-            </MudButton>
-        </MudPaper>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" lg="7">
+                <SectionCard Emoji="🪪" Title="@L["PersonalData"]" Subtitle="@L["PersonalDataSubtitle"]">
+                    <div class="admin-fields">
+                        <MudTextField @bind-Value="firstName" Label="@SharedLocale["Firstname"]" Required="true" Variant="Variant.Outlined" />
+                        <MudTextField @bind-Value="lastName" Label="@SharedLocale["Lastname"]" Required="true" Variant="Variant.Outlined" />
+                        <MudDatePicker @bind-Date="birthday" Label="@SharedLocale["Birthday"]" Variant="Variant.Outlined" PickerVariant="PickerVariant.Dialog" DateFormat="dd.MM.yyyy" />
+                        <MudSelect T="Gender" @bind-Value="gender" Label="@SharedLocale["Gender"]" Variant="Variant.Outlined">
+                            <MudSelectItem T="Gender" Value="Gender.Male">@SharedLocale["Mr"]</MudSelectItem>
+                            <MudSelectItem T="Gender" Value="Gender.Female">@SharedLocale["Mrs"]</MudSelectItem>
+                            <MudSelectItem T="Gender" Value="Gender.Diverse">@SharedLocale["None"]</MudSelectItem>
+                        </MudSelect>
+                        <div class="admin-fields__full">
+                            <MudTextField @bind-Value="street" Label="@SharedLocale["Street"]" Variant="Variant.Outlined" />
+                        </div>
+                        <MudTextField @bind-Value="zipCode" Label="@SharedLocale["ZipCode"]" Variant="Variant.Outlined" />
+                        <MudTextField @bind-Value="city" Label="@SharedLocale["City"]" Variant="Variant.Outlined" />
+                        <div class="admin-fields__full">
+                            <MudSelect T="Country" @bind-Value="country" Label="@SharedLocale["Country"]" Variant="Variant.Outlined">
+                                <MudSelectItem T="Country" Value="Country.Austria">@SharedLocale["Austria"]</MudSelectItem>
+                                <MudSelectItem T="Country" Value="Country.Germany">@SharedLocale["Germany"]</MudSelectItem>
+                                <MudSelectItem T="Country" Value="Country.Switzerland">@SharedLocale["Switzerland"]</MudSelectItem>
+                            </MudSelect>
+                        </div>
+                    </div>
+                    <div class="admin-actions">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveUser" StartIcon="@Icons.Material.Filled.Save">@L["SaveChanges"]</MudButton>
+                    </div>
+                </SectionCard>
+            </MudItem>
 
-        <MudPaper Class="pa-4 pa-sm-5" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-            <MudText Typo="Typo.h6" Class="mb-3">@L["Impersonation"]</MudText>
-            <MudText Typo="Typo.body2" Class="mb-3">@L["ImpersonateDescription"]</MudText>
-            <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ImpersonateUser" StartIcon="@Icons.Material.Filled.SwitchAccount" FullWidth="true" Class="d-sm-none">
-                @L["Impersonate"]
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ImpersonateUser" StartIcon="@Icons.Material.Filled.SwitchAccount" Class="d-none d-sm-flex">
-                @L["Impersonate"]
-            </MudButton>
-        </MudPaper>
+            <MudItem xs="12" lg="5">
+                <div class="d-flex flex-column gap-4">
+                    <SectionCard Emoji="✉️" Title="@L["EmailManagement"]" Subtitle="@L["EmailSubtitle"]">
+                        <div class="admin-chips mb-3">
+                            <span class="admin-chip">@user.Email</span>
+                            @if (user.EmailConfirmed)
+                            {
+                                <span class="admin-chip admin-chip--ok">✅ @L["EmailConfirmed"]</span>
+                            }
+                            else
+                            {
+                                <span class="admin-chip admin-chip--warn">@L["Unconfirmed"]</span>
+                            }
+                        </div>
+                        <MudTextField @bind-Value="newEmail" Label="@L["NewEmail"]" InputType="InputType.Email" Variant="Variant.Outlined" HelperText="@L["ChangeEmailHint"]" />
+                        <div class="admin-actions">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ChangeEmail" StartIcon="@Icons.Material.Filled.AlternateEmail">@L["ChangeEmail"]</MudButton>
+                            @if (!user.EmailConfirmed)
+                            {
+                                <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ResendConfirmation" StartIcon="@Icons.Material.Filled.Email">@L["ResendConfirmationEmail"]</MudButton>
+                            }
+                        </div>
+                    </SectionCard>
 
-        <MudPaper Class="pa-4 pa-sm-5" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter); border-color: var(--mud-palette-error);">
-            <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Error">@L["DangerZone"]</MudText>
-            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteUser" StartIcon="@Icons.Material.Filled.DeleteForever" FullWidth="true" Class="d-sm-none">
-                @L["DeleteUser"]
-            </MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteUser" StartIcon="@Icons.Material.Filled.DeleteForever" Class="d-none d-sm-flex">
-                @L["DeleteUser"]
-            </MudButton>
-        </MudPaper>
+                    <SectionCard Emoji="🔑" Title="@L["Password"]">
+                        <div class="admin-text">@L["PasswordHint"]</div>
+                        <div class="admin-actions">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ResetPassword" StartIcon="@Icons.Material.Filled.LockReset">@L["SendPasswordResetLink"]</MudButton>
+                        </div>
+                    </SectionCard>
+
+                    <SectionCard Emoji="🎭" Title="@L["Impersonation"]">
+                        <div class="admin-text">@L["ImpersonateDescription"]</div>
+                        <div class="admin-actions">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ImpersonateUser" StartIcon="@Icons.Material.Filled.SwitchAccount">@L["Impersonate"]</MudButton>
+                        </div>
+                    </SectionCard>
+
+                    <SectionCard Emoji="⚠️" Title="@L["DangerZone"]" Class="admin-danger">
+                        <div class="admin-text">@L["DeleteUserHint"]</div>
+                        <div class="admin-actions">
+                            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteUser" StartIcon="@Icons.Material.Filled.DeleteForever">@L["DeleteUser"]</MudButton>
+                        </div>
+                    </SectionCard>
+                </div>
+            </MudItem>
+        </MudGrid>
     </div>
 }
 
@@ -151,17 +170,20 @@ else
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
-    [Inject] private IAuthStateChanged AuthStateChanged { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
 
     private string firstName = "";
     private string lastName = "";
     private DateTime? birthday;
     private Gender gender;
-    private string street = "";
-    private string city = "";
-    private string zipCode = "";
+    private string? street;
+    private string? city;
+    private string? zipCode;
     private Country country;
     private string newEmail = "";
+
+    // The store keeps the user that was opened last
+    private AdminUserDetailResult? User => AdminStore.UserDetail?.Id == UserId ? AdminStore.UserDetail : null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -171,25 +193,25 @@ else
 
     private void OnUserDetailChanged()
     {
-        if (AdminStore.UserDetail is not null)
+        if (User is { } user)
         {
-            firstName = AdminStore.UserDetail.FirstName;
-            lastName = AdminStore.UserDetail.LastName;
-            birthday = AdminStore.UserDetail.Birthday.ToDateTime(TimeOnly.MinValue);
-            gender = AdminStore.UserDetail.Gender;
-            street = AdminStore.UserDetail.Street;
-            city = AdminStore.UserDetail.City;
-            zipCode = AdminStore.UserDetail.ZipCode;
-            country = AdminStore.UserDetail.Country;
+            firstName = user.FirstName;
+            lastName = user.LastName;
+            birthday = user.Birthday.ToDateTime(TimeOnly.MinValue);
+            gender = user.Gender;
+            street = user.Street;
+            city = user.City;
+            zipCode = user.ZipCode;
+            country = user.Country;
         }
-        StateHasChanged();
+
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task SaveUser()
     {
-        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) || birthday is null
-            || string.IsNullOrWhiteSpace(street) || string.IsNullOrWhiteSpace(city)
-            || string.IsNullOrWhiteSpace(zipCode))
+        // The address is optional, like everywhere else
+        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) || birthday is null)
         {
             Snackbar.Add(L["FillRequiredFields"], Severity.Warning);
             return;
@@ -257,20 +279,19 @@ else
         var result = await DialogService.ShowMessageBox(
             L["ConfirmDeletion"],
             L["DeleteUserConfirm"],
-            yesText: SharedLocale.Delete, cancelText: SharedLocale.Cancel);
+            yesText: SharedLocale["Delete"], cancelText: SharedLocale["Cancel"]);
 
-        if (result == true)
+        if (result != true)
+            return;
+
+        if (await AdminStore.DeleteUser(UserId))
         {
-            var success = await AdminStore.DeleteUser(UserId);
-            if (success)
-            {
-                Snackbar.Add(L["UserDeleted"], Severity.Success);
-                NavigationManager.NavigateTo("/admin/users");
-            }
-            else
-            {
-                Snackbar.Add(L["FailedDeleteUser"], Severity.Error);
-            }
+            Snackbar.Add(L["UserDeleted"], Severity.Success);
+            NavigationManager.NavigateTo("/admin/users");
+        }
+        else
+        {
+            Snackbar.Add(L["FailedDeleteUser"], Severity.Error);
         }
     }
 
@@ -279,25 +300,21 @@ else
         var result = await DialogService.ShowMessageBox(
             L["Impersonate"],
             L["ImpersonateConfirm"],
-            yesText: L["Confirm"], cancelText: SharedLocale.Cancel);
+            yesText: L["Confirm"], cancelText: SharedLocale["Cancel"]);
 
-        if (result == true)
+        if (result != true)
+            return;
+
+        if (await AdminStore.ImpersonateUser(UserId))
         {
-            var success = await AdminStore.ImpersonateUser(UserId);
-            if (success)
-            {
-                Snackbar.Add(L["ImpersonationSuccess"], Severity.Success);
-                NavigationManager.NavigateTo("/", forceLoad: true);
-            }
-            else
-            {
-                Snackbar.Add(L["FailedImpersonate"], Severity.Error);
-            }
+            Snackbar.Add(L["ImpersonationSuccess"], Severity.Success);
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        }
+        else
+        {
+            Snackbar.Add(L["FailedImpersonate"], Severity.Error);
         }
     }
 
-    public void Dispose()
-    {
-        AdminStore.OnUserDetailChanged -= OnUserDetailChanged;
-    }
+    public void Dispose() => AdminStore.OnUserDetailChanged -= OnUserDetailChanged;
 }

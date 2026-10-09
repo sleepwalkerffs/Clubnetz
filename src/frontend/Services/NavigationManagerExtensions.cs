@@ -34,7 +34,16 @@ public static class NavigationManagerExtensions
     public static void NavigateToClubEvent(this NavigationManager nav, int clubId, int clubEventId) => nav.NavigateTo($"/clubs/{clubId}/calendar/{clubEventId}");
     public static void NavigateToBooking(this NavigationManager nav, int clubId, int bookingEntryId) => nav.NavigateTo($"/clubs/{clubId}/booking/{bookingEntryId}");
     public static void NavigateToMember(this NavigationManager nav, int clubId, int memberId) => nav.NavigateTo($"/clubs/{clubId}/members/{memberId}");
-    public static void NavigateToAdmin(this NavigationManager nav) => nav.NavigateTo("/admin/users");
+    public static void NavigateToAdmin(this NavigationManager nav) => nav.NavigateTo("/admin");
     public static void NavigateToAdminUser(this NavigationManager nav, int userId) => nav.NavigateTo($"/admin/users/{userId}");
     public static void NavigateToAdminClub(this NavigationManager nav, int clubId) => nav.NavigateTo($"/admin/clubs/{clubId}");
+
+    /// <summary>
+    /// Opens a club as application administrator (support mode, also for clubs the administrator is not a member of).
+    /// The page is loaded from scratch, because the stores still hold the data of the club that was open before.
+    /// </summary>
+    public static void OpenClubAsAdministrator(this NavigationManager nav, int clubId) => nav.NavigateTo($"/clubs/{clubId}/profile", forceLoad: true);
+
+    /// <summary>Leaves the support mode, see <see cref="OpenClubAsAdministrator"/> for the reload.</summary>
+    public static void LeaveSupportMode(this NavigationManager nav, int clubId) => nav.NavigateTo($"/admin/clubs/{clubId}", forceLoad: true);
 }

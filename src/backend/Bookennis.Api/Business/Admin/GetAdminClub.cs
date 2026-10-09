@@ -21,8 +21,18 @@ public record GetAdminClub(int ClubId) : IQuery<AdminClubDetailResult>
                 .AsNoTracking()
                 .SingleOrDefaultAsync(c => c.Id == request.ClubId, cancellationToken) ?? throw new EntityNotFoundException(typeof(Domain.Clubs.Club), request.ClubId);
 
+            var now = DateTimeOffset.UtcNow;
+            var since = now.AddDays(-AdminClubQueryExtensions.ActivityDays);
+            var admins = await context.GetClubAdmins(club.Id, cancellationToken);
+
             return new AdminClubDetailResult
             {
+                MemberCount = await context.ClubMembers.CountAsync(m => m.ClubId == club.Id, cancellationToken),
+                GuestCount = await context.GuestMembers.CountAsync(m => m.ClubId == club.Id, cancellationToken),
+                CourtCount = await context.Courts.CountAsync(c => c.ClubId == club.Id, cancellationToken),
+                BookingsLast30Days = await context.Bookings.CountAsync(b => b.ClubId == club.Id && b.Interval.From >= since && b.Interval.From <= now, cancellationToken),
+                CreatedAt = club.Metadata.Created,
+                Admins = admins.GetValueOrDefault(club.Id) ?? [],
                 Id = club.Id,
                 Name = club.Name,
                 OpeningHours = club.OpeningHours,

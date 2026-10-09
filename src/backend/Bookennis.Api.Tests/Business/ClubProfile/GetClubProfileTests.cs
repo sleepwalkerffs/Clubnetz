@@ -1,6 +1,7 @@
 using Bookennis.Api.Business.ClubProfile;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Members;
+using Bookennis.Domain.User;
 using FluentAssertions;
 using Xunit;
 
@@ -19,6 +20,61 @@ public class GetClubProfileTests(TestFixture fixture) : TestBase(fixture)
         result.MemberId.Should().BeGreaterThan(0);
         result.Role.Should().NotBeEmpty();
     }
+
+    [Fact]
+    public async Task GetClubProfile_Member_IsNotInSupportMode()
+    {
+        var (userId, clubId) = Query(ctx => (ctx.TestData().User.Id, ctx.TestData().Club.Id));
+
+        // An application administrator who is a member of the club gets the profile of the member
+        var result = await SendAsync(new GetClubProfile(userId, false, clubId));
+
+        result.IsSupportMode.Should().BeFalse();
+        result.MemberId.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task GetClubProfile_AdministratorWithoutMember_ReturnsSupportProfile()
+    {
+        var (userId, clubId) = await AddUserWithoutMember();
+
+        var result = await SendAsync(new GetClubProfile(userId, false, clubId));
+
+        result.IsSupportMode.Should().BeTrue();
+        result.ClubName.Should().Be("TestClub");
+        result.MemberId.Should().Be(0);
+        result.Role.Should().BeEquivalentTo([Bookennis.Shared.Controller.Shared.MemberRole.Admin]);
+    }
+
+    [Fact]
+    public async Task GetClubProfile_UserWithoutMember_Throws()
+    {
+        var (userId, _) = await AddUserWithoutMember();
+
+        var act = () => SendAsync(new GetClubProfile(userId, false));
+
+        await act.Should().ThrowAsync<Fusonic.Extensions.Common.Entities.EntityNotFoundException>();
+    }
+
+    [Fact]
+    public async Task GetClubProfile_SupportMode_UnknownClub_Throws()
+    {
+        var (userId, _) = await AddUserWithoutMember();
+
+        var act = () => SendAsync(new GetClubProfile(userId, false, 999999));
+
+        await act.Should().ThrowAsync<Fusonic.Extensions.Common.Entities.EntityNotFoundException>();
+    }
+
+    private Task<(int UserId, int ClubId)> AddUserWithoutMember()
+        => QueryAsync(async ctx =>
+        {
+            var user = new User("support@bookennis.com", "support@bookennis.com", "Sup", "Port", new DateOnly(1990, 1, 1), Gender.Male, "Support St 1", "Vienna", "1010", Country.Austria);
+            ctx.Add(user);
+            await ctx.SaveChangesAsync();
+
+            return (user.Id, ctx.TestData().Club.Id);
+        });
 
     [Fact]
     public async Task GetClubProfile_DualMembership_NormalSession_ReturnsClubMember()

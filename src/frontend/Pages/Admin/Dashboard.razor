@@ -1,0 +1,130 @@
+@page "/admin"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Pages.Admin.Clubs
+@using Bookennis.Client.Services.Store.Admin
+
+@implements IDisposable
+
+<PageTitle>@L["AdminPanel"]</PageTitle>
+
+<div class="admin-page">
+    <AdminHero Emoji="🛠️" Eyebrow="Clubnetz" Title="@L["PlatformAdministration"]" Subtitle="@L["DashboardSubtitle"]">
+        <Chips>
+            @if (AdminStore.Overview is { } chips)
+            {
+                <span class="hero-chip">🎾 @string.Format(L["ClubsChip"], chips.ClubCount)</span>
+                <span class="hero-chip">👤 @string.Format(L["UsersChip"], chips.UserCount)</span>
+                <span class="hero-chip">📅 @string.Format(L["BookingsChip"], chips.BookingsLast30Days)</span>
+            }
+        </Chips>
+    </AdminHero>
+
+    @if (AdminStore.Overview is null)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        var overview = AdminStore.Overview;
+
+        <MudGrid Spacing="3">
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.SportsTennis" Color="#059669"
+                          Value="@overview.ClubCount.ToString()" Label="@L["Clubs"]"
+                          Hint="@(overview.ClubsWithoutActiveSeason > 0 ? string.Format(L["Tile_ClubsHint"], overview.ClubsWithoutActiveSeason) : L["Tile_ClubsHintOk"].Value)" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.People" Color="#6366F1"
+                          Value="@overview.UserCount.ToString()" Label="@L["Users"]"
+                          Hint="@string.Format(L["Tile_UsersHint"], overview.NewUsersLast30Days)" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.MarkEmailUnread" Color="#D97706"
+                          Value="@overview.UnconfirmedUserCount.ToString()" Label="@L["Tile_Unconfirmed"]" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.EventAvailable" Color="#0D9488"
+                          Value="@overview.BookingsLast30Days.ToString()" Label="@L["Tile_Bookings"]"
+                          Hint="@string.Format(L["Tile_BookingsHint"], overview.UpcomingBookings)" />
+            </MudItem>
+        </MudGrid>
+
+        <SectionCard Emoji="🎾" Title="@L["Clubs"]" Subtitle="@L["ClubsCardSubtitle"]">
+            <Actions>
+                <MudButton Href="/admin/clubs" Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ChevronRight">@L["AllClubs"]</MudButton>
+            </Actions>
+            <ChildContent>
+                @if (!AdminStore.ClubsLoaded)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                }
+                else if (AdminStore.Clubs.Count == 0)
+                {
+                    <div class="admin-empty">
+                        <div class="admin-empty__emoji" aria-hidden="true">🌱</div>
+                        <div>@L["NoClubsFound"]</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="admin-club-grid">
+                        @foreach (var club in AdminStore.Clubs.OrderByDescending(c => c.BookingsLast30Days).ThenByDescending(c => c.MemberCount).Take(MaxClubs))
+                        {
+                            <AdminClubCard Club="@club" />
+                        }
+                    </div>
+                }
+            </ChildContent>
+        </SectionCard>
+
+        <SectionCard Emoji="🆕" Title="@L["NewUsers"]" Subtitle="@L["NewUsersSubtitle"]">
+            <Actions>
+                <MudButton Href="/admin/users" Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ChevronRight">@L["AllUsers"]</MudButton>
+            </Actions>
+            <ChildContent>
+                <div class="admin-list">
+                    @foreach (var user in overview.RecentUsers)
+                    {
+                        <a class="admin-row" href="@($"/admin/users/{user.Id}")">
+                            <div class="admin-row__main">
+                                <div class="admin-row__title">@user.FullName</div>
+                                <div class="admin-row__text">@user.Email</div>
+                            </div>
+                            <div class="admin-row__aside">
+                                @if (!user.EmailConfirmed)
+                                {
+                                    <span class="admin-chip admin-chip--warn">✉️ @L["Unconfirmed"]</span>
+                                }
+                                <span class="admin-chip">@user.RegisteredAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture)</span>
+                            </div>
+                        </a>
+                    }
+                </div>
+            </ChildContent>
+        </SectionCard>
+    }
+</div>
+
+@code {
+    // The overview shows the most active clubs, the clubs page all of them
+    private const int MaxClubs = 6;
+
+    [Inject] private IAdminStore AdminStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AdminStore.OnOverviewChanged += OnChanged;
+        AdminStore.OnClubsChanged += OnChanged;
+        await Task.WhenAll(AdminStore.LoadOverview(), AdminStore.LoadClubs());
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        AdminStore.OnOverviewChanged -= OnChanged;
+        AdminStore.OnClubsChanged -= OnChanged;
+    }
+}

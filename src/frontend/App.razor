@@ -74,6 +74,22 @@
             // Keeps the push subscription of this device registered for the signed-in user
             _ = PushStore.Load();
 
+            // Application administrators open clubs they are not a member of (support mode) and the admin panel without a club
+            var isAdministrator = state.User.IsInRole("Administrator");
+            var supportClubId = isAdministrator && GetClubIdFromUri() is { } openedClubId && !ProfileStore.IsClubAssigned(openedClubId)
+                ? openedClubId
+                : (int?)null;
+
+            if (supportClubId is not null)
+            {
+                TenantProvider.SetCurrentClub(supportClubId.Value);
+                await ClubProfileStore.LoadClubProfile(supportClubId.Value);
+                return;
+            }
+
+            if (isAdministrator && !ProfileStore.HasClubsAssigned && IsAdminPanel())
+                return;
+
             if (!ProfileStore.HasClubsAssigned)
             {
                 var dialogResult = await DialogService.ShowAsync<SelectClubDialog>(SharedLocale["SelectClub"],
@@ -115,6 +131,9 @@
             }
         }
     }
+
+    private bool IsAdminPanel()
+        => new Uri(NavigationManager.Uri).AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries) is ["admin", ..];
 
     private int? GetClubIdFromUri()
     {

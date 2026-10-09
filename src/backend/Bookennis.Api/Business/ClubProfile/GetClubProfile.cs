@@ -5,7 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.ClubProfile;
 
-public record GetClubProfile(int UserId, bool IsGuestSession) : IQuery<GetClubProfileResult>
+/// <summary>
+/// <see cref="SupportClubId"/> is set for application administrators: the club they opened. If they are not a member
+/// of it, they get a profile without a member, with the rights of a club admin (support mode).
+/// </summary>
+public record GetClubProfile(int UserId, bool IsGuestSession, int? SupportClubId = null) : IQuery<GetClubProfileResult>
 {
     public class Handler(AppDbContext context) : IRequestHandler<GetClubProfile, GetClubProfileResult>
     {
@@ -37,6 +41,19 @@ public record GetClubProfile(int UserId, bool IsGuestSession) : IQuery<GetClubPr
                                   MemberId = member.Id,
                                   Role = member.UserRoles.Select(x => (Bookennis.Shared.Controller.Shared.MemberRole)x).ToArray(),
                               }).FirstOrDefaultAsync(cancellationToken);
+
+            if (result is null && request.SupportClubId is { } supportClubId)
+            {
+                result = await context.Clubs
+                    .Where(club => club.Id == supportClubId)
+                    .Select(club => new GetClubProfileResult
+                    {
+                        ClubName = club.Name,
+                        MemberId = 0,
+                        Role = new[] { Bookennis.Shared.Controller.Shared.MemberRole.Admin },
+                        IsSupportMode = true,
+                    }).FirstOrDefaultAsync(cancellationToken);
+            }
 
             return result ?? throw new Fusonic.Extensions.Common.Entities.EntityNotFoundException();
         }

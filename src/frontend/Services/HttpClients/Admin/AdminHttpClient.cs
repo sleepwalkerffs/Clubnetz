@@ -11,6 +11,10 @@ namespace Bookennis.Client.Services.HttpClients.Admin;
 
 public class AdminHttpClient(HttpClient httpClient, JsonSerializerOptions jsonOptions) : IAdminHttpClient
 {
+    // Overview
+    public async Task<HttpResult<AdminOverviewResult>> GetOverview(CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync("Overview", cancellationToken)).AsHttpResult<AdminOverviewResult>(jsonOptions, cancellationToken);
+
     // Users
     public async Task<HttpResult<GetAdminUsersResult>> GetUsers(PaginationParameters pagination, SortParameters? sort, string? searchTerm, CancellationToken cancellationToken = default)
     {

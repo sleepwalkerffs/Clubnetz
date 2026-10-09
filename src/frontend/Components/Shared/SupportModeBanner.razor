@@ -1,0 +1,33 @@
+@using Bookennis.Client.Localization.Navigation
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.Store.ClubProfile
+
+@implements IDisposable
+
+@* Application administrators who opened a club they are not a member of: makes clear whose club they are changing *@
+@if (ClubProfileStore.SelectedClub is { IsSupportMode: true } club)
+{
+    <div class="support-banner" role="status">
+        <span class="support-banner__emoji" aria-hidden="true">🛟</span>
+        <div class="support-banner__body">
+            <div class="support-banner__title">@string.Format(Locale["SupportModeTitle"], club.ClubName)</div>
+            <div class="support-banner__text">@Locale["SupportModeText"]</div>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" StartIcon="@Icons.Material.Filled.AdminPanelSettings"
+                   OnClick="@(() => NavigationManager.LeaveSupportMode(club.ClubId))" Class="support-banner__button">
+            @Locale["SupportModeExit"]
+        </MudButton>
+    </div>
+}
+
+@code {
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IStringLocalizer<NavigationLocale> Locale { get; set; } = null!;
+
+    protected override void OnInitialized() => ClubProfileStore.OnClubProfileChanged += OnClubProfileChanged;
+
+    private void OnClubProfileChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ClubProfileStore.OnClubProfileChanged -= OnClubProfileChanged;
+}

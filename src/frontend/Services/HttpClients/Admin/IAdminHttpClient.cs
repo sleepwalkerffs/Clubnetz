@@ -6,6 +6,9 @@ namespace Bookennis.Client.Services.HttpClients.Admin;
 
 public interface IAdminHttpClient
 {
+    // Overview
+    public Task<HttpResult<AdminOverviewResult>> GetOverview(CancellationToken cancellationToken = default);
+
     // Users
     public Task<HttpResult<GetAdminUsersResult>> GetUsers(PaginationParameters pagination, SortParameters? sort, string? searchTerm, CancellationToken cancellationToken = default);
     public Task<HttpResult<GetAdminUsersResult>> SearchUsers(string searchTerm, CancellationToken cancellationToken = default);

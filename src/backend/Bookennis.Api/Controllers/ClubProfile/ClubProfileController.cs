@@ -12,10 +12,11 @@ namespace Bookennis.Api.Controllers.ClubProfile;
 public class ClubProfileController(IMediator mediator, IUserAccessor userAccessor) : ClubControllerBase
 {
     [HttpGet]
-    public Task<GetClubProfileResult> GetClubProfile(CancellationToken cancellationToken)
+    public Task<GetClubProfileResult> GetClubProfile([FromRoute] int clubId, CancellationToken cancellationToken)
     {
         var isGuestSession = HttpContext.User.FindFirst("guest_session")?.Value == "true";
-        return mediator.Send(new GetClubProfile(userAccessor.GetUserId(), isGuestSession), cancellationToken);
+        var supportClubId = HttpContext.User.IsAdministrator() ? clubId : (int?)null;
+        return mediator.Send(new GetClubProfile(userAccessor.GetUserId(), isGuestSession, supportClubId), cancellationToken);
     }
 
     [HttpGet("BookingOptions")]

@@ -177,4 +177,22 @@
   <data name="CourtBlockings" xml:space="preserve">
     <value>Court blockings</value>
   </data>
+  <data name="AdminPanel" xml:space="preserve">
+    <value>Admin panel</value>
+  </data>
+  <data name="BookingPlan" xml:space="preserve">
+    <value>Booking plan</value>
+  </data>
+  <data name="SupportMode" xml:space="preserve">
+    <value>Support mode</value>
+  </data>
+  <data name="SupportModeTitle" xml:space="preserve">
+    <value>Support mode: {0}</value>
+  </data>
+  <data name="SupportModeText" xml:space="preserve">
+    <value>You are managing this club as platform administrator. Your changes apply to the club right away.</value>
+  </data>
+  <data name="SupportModeExit" xml:space="preserve">
+    <value>Back to admin panel</value>
+  </data>
 </root>

@@ -15,4 +15,10 @@ public record AdminClubDetailResult
     public required bool IsAtpClub { get; init; }
     public required List<PlayModeDto> PlayModes { get; init; }
     public required List<AdminSeasonResult> Seasons { get; init; }
+    public int MemberCount { get; init; }
+    public int GuestCount { get; init; }
+    public int CourtCount { get; init; }
+    public int BookingsLast30Days { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public List<AdminClubContact> Admins { get; init; } = [];
 }

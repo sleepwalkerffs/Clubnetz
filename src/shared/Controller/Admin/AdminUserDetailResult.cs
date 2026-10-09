@@ -17,4 +17,17 @@ public record AdminUserDetailResult
     public required string City { get; init; }
     public required string ZipCode { get; init; }
     public required Country Country { get; init; }
+    public DateTime RegisteredAt { get; init; }
+
+    /// <summary>The clubs the user belongs to, as club member or as guest.</summary>
+    public List<AdminUserClubResult> Clubs { get; init; } = [];
+}
+
+public record AdminUserClubResult
+{
+    public required int ClubId { get; init; }
+    public required string ClubName { get; init; }
+    public required int MemberId { get; init; }
+    public required MemberRole[] Roles { get; init; }
+    public required bool IsGuest { get; init; }
 }

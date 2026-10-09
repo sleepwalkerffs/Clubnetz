@@ -1,84 +1,110 @@
 @page "/admin/users"
+@using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Services.Store.Admin
-@using Bookennis.Shared.Controller.Admin
 @using Bookennis.Shared.Utils.Paging
 
 @implements IDisposable
 
 <PageTitle>@L["AdminPanel"] - @L["Users"]</PageTitle>
 
-<MudTable ServerData="@ServerReload"
-          @ref="table"
-          OnRowClick="@RowClicked"
-          Dense="true"
-          Hover="true"
-          T="AdminUserResult">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">@L["Users"]</MudText>
-        <MudSpacer />
-        <MudTextField T="string" DebounceInterval="300" @bind-Value="searchString" OnDebounceIntervalElapsed="table.ReloadServerData"
-                      Placeholder="@L["Search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Variant="Variant.Outlined" />
-    </ToolBarContent>
-    <HeaderContent>
-        <MudTh><MudTableSortLabel SortLabel="LastName" T="AdminUserResult">@SharedLocale.Lastname</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortLabel="FirstName" T="AdminUserResult">@SharedLocale.Firstname</MudTableSortLabel></MudTh>
-        <MudTh>@SharedLocale.Email</MudTh>
-        <MudTh>@L["EmailConfirmed"]</MudTh>
-        <MudTh>@SharedLocale.Birthday</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="@SharedLocale.Lastname">@context.LastName</MudTd>
-        <MudTd DataLabel="@SharedLocale.Firstname">@context.FirstName</MudTd>
-        <MudTd DataLabel="@SharedLocale.Email">@context.Email</MudTd>
-        <MudTd DataLabel="@L["EmailConfirmed"]">
-            @if (context.EmailConfirmed)
-            {
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
-            }
-            else
-            {
-                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small" />
-            }
-        </MudTd>
-        <MudTd DataLabel="@SharedLocale.Birthday">@context.Birthday.ToString("d")</MudTd>
-    </RowTemplate>
-    <PagerContent>
-        <MudTablePager />
-    </PagerContent>
-</MudTable>
+<div class="admin-page">
+    <AdminHero Emoji="👤" Eyebrow="@L["PlatformAdministration"]" Title="@L["Users"]" Subtitle="@L["UsersSubtitle"]" />
+
+    <div class="admin-toolbar">
+        <MudTextField T="string" @bind-Value="searchString" DebounceInterval="300" OnDebounceIntervalElapsed="OnSearchChanged" Clearable="true"
+                      OnClearButtonClick="OnSearchCleared" Placeholder="@L["SearchUsers"]" Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" Variant="Variant.Outlined" Margin="Margin.Dense" Class="admin-toolbar__search" />
+        @if (AdminStore.UsersLoaded)
+        {
+            <div class="admin-toolbar__count">@string.Format(L["UsersChip"], AdminStore.TotalUsers)</div>
+        }
+    </div>
+
+    <div class="admin-list-card">
+        @if (AdminStore.IsLoading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+
+        @if (AdminStore.UsersLoaded && AdminStore.Users.Count == 0)
+        {
+            <div class="admin-empty">
+                <div class="admin-empty__emoji" aria-hidden="true">🔍</div>
+                <div>@L["NoUsersFound"]</div>
+            </div>
+        }
+        else
+        {
+            <div class="admin-list">
+                @foreach (var user in AdminStore.Users)
+                {
+                    <a class="admin-row" href="@($"/admin/users/{user.Id}")" @key="user.Id">
+                        <UserAvatar FirstName="@user.FirstName" LastName="@user.LastName" Color="Color.Primary" />
+                        <div class="admin-row__main">
+                            <div class="admin-row__title">@user.LastName @user.FirstName</div>
+                            <div class="admin-row__text">@user.Email</div>
+                        </div>
+                        <div class="admin-row__aside">
+                            @if (!user.EmailConfirmed)
+                            {
+                                <span class="admin-chip admin-chip--warn">✉️ @L["Unconfirmed"]</span>
+                            }
+                            <span class="admin-chip">🎂 @user.Birthday.ToString("d")</span>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+
+    @if (PageCount > 1)
+    {
+        <div class="d-flex justify-center">
+            <MudPagination Count="@PageCount" Selected="@currentPage" SelectedChanged="OnPageChanged" Color="Color.Primary" Variant="Variant.Text" />
+        </div>
+    }
+</div>
 
 @code {
+    private const int PageSize = 25;
+
     [Inject] private IAdminStore AdminStore { get; set; } = null!;
-    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
 
-    private MudTable<AdminUserResult> table = null!;
     private string? searchString;
+    private int currentPage = 1;
 
-    protected override void OnInitialized()
+    private int PageCount => (int)Math.Ceiling((double)AdminStore.TotalUsers / PageSize);
+
+    protected override async Task OnInitializedAsync()
     {
-        AdminStore.OnUsersChanged += StateHasChanged;
+        AdminStore.OnUsersChanged += OnChanged;
+        await LoadUsers();
     }
 
-    private async Task<TableData<AdminUserResult>> ServerReload(TableState state, CancellationToken cancellationToken)
-    {
-        var pagination = new PaginationParameters { Page = state.Page + 1, PageSize = state.PageSize, EnablePaging = true };
-        await AdminStore.LoadUsers(pagination, null, searchString);
+    private Task LoadUsers()
+        => AdminStore.LoadUsers(new PaginationParameters { Page = currentPage, PageSize = PageSize, EnablePaging = true }, null, string.IsNullOrWhiteSpace(searchString) ? null : searchString.Trim());
 
-        return new TableData<AdminUserResult>
-        {
-            Items = AdminStore.Users,
-            TotalItems = AdminStore.TotalUsers
-        };
+    private Task OnSearchChanged(string _)
+    {
+        currentPage = 1;
+        return LoadUsers();
     }
 
-    private void RowClicked(TableRowClickEventArgs<AdminUserResult> args)
+    private Task OnSearchCleared()
     {
-        NavigationManager.NavigateTo($"/admin/users/{args.Item!.Id}");
+        searchString = null;
+        currentPage = 1;
+        return LoadUsers();
     }
 
-    public void Dispose()
+    private Task OnPageChanged(int selectedPage)
     {
-        AdminStore.OnUsersChanged -= StateHasChanged;
+        currentPage = selectedPage;
+        return LoadUsers();
     }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => AdminStore.OnUsersChanged -= OnChanged;
 }

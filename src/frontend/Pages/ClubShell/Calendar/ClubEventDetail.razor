@@ -109,7 +109,11 @@ else
 
                     @if (clubEvent.RegistrationEnabled)
                     {
-                        <RegistrationForm Event="@clubEvent" />
+                        @* Registering needs a member, support mode has none (the participants are listed below) *@
+                        @if (!ClubProfileStore.IsSupportMode)
+                        {
+                            <RegistrationForm Event="@clubEvent" />
+                        }
                     }
                     else if (string.IsNullOrWhiteSpace(clubEvent.DescriptionHtml))
                     {

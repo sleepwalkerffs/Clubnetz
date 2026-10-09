@@ -23,7 +23,7 @@
                     </div>
                     <div class="d-flex flex-column">
                         <MudText Typo="Typo.subtitle2" Style="color: #FFFFFF;">@context.User.Identity?.Name</MudText>
-                        <MudText Typo="Typo.body2" Style="color: #6EE7B7;">@Locale["SelectedClub"]</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #6EE7B7;">@Locale[ClubProfileStore.IsSupportMode ? "SupportMode" : "SelectedClub"]</MudText>
                         <MudText Typo="Typo.caption" Style="color: #A7F3D0;">@(ClubProfileStore.SelectedClub?.ClubName)</MudText>
                     </div>
                 </div>
@@ -36,6 +36,21 @@
             @if (ClubProfileStore.SelectedClub is null)
             {
                 <MudNavLink Match="NavLinkMatch.All" Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            }
+            else if (ClubProfileStore.IsSupportMode)
+            {
+                @* No member, so no personal pages: everything a club admin manages, the club settings are the start page *@
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/profile")" Icon="@Icons.Material.Filled.Handyman">@Locale["ClubSettings"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/members")" Icon="@Icons.Material.Filled.Groups2">@Locale["Members"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/guests")" Icon="@Icons.Material.Filled.Person">@SharedLocale["Guests"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/booking?Start={DateOnly.FromDateTime(DateTime.Today).ToString(CultureInfo.InvariantCulture)}&End={DateOnly.FromDateTime(DateTime.Today.AddDays(6)).ToString(CultureInfo.InvariantCulture)}")"
+                            Icon="@Icons.Material.Filled.SportsTennis">@Locale["BookingPlan"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/court-blockings")" Icon="@Icons.Material.Filled.Lock">@Locale["CourtBlockings"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/news")" Icon="@Icons.Material.Filled.Campaign">@Locale["News"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/calendar")" Icon="@Icons.Material.Filled.CalendarMonth">@Locale["Calendar"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/badge-settings")" Icon="@Icons.Material.Filled.EmojiEvents">@SharedLocale["BadgeSettings"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/email-templates")" Icon="@Icons.Material.Filled.MarkEmailRead">@Locale["EmailTemplates"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/club-statistics")" Icon="@Icons.Material.Filled.Analytics">@Locale["ClubStatistics"]</MudNavLink>
             }
             else
             {
@@ -95,7 +110,7 @@
                 <Authorized>
                     <AuthorizeView Roles="Administrator">
                         <Authorized Context="adminContext">
-                            <MudNavLink Href="/admin/users" Icon="@Icons.Material.Filled.SupervisedUserCircle">Admin Panel</MudNavLink>
+                            <MudNavLink Href="/admin" Icon="@Icons.Material.Filled.AdminPanelSettings">@Locale["AdminPanel"]</MudNavLink>
                         </Authorized>
                     </AuthorizeView>
                     <MudDivider Class="my-2" Style="border-color: rgba(110, 231, 183, 0.15);" />

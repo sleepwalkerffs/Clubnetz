@@ -23,7 +23,7 @@ public class UsersController(IMediator mediator) : ControllerBase
 
     [HttpPut("{userId:int}")]
     public Task UpdateUser(int userId, UpdateAdminUserRequest request, CancellationToken cancellationToken)
-        => mediator.Send(new UpdateAdminUser(userId, request.FirstName, request.LastName, request.Birthday, (Gender)request.Gender, request.Street, request.City, request.ZipCode, (Domain.User.Country)request.Country), cancellationToken);
+        => mediator.Send(new UpdateAdminUser(userId, request.FirstName, request.LastName, request.Birthday, (Gender)request.Gender, request.Street ?? string.Empty, request.City ?? string.Empty, request.ZipCode ?? string.Empty, (Domain.User.Country)request.Country), cancellationToken);
 
     [HttpDelete("{userId:int}")]
     public Task DeleteUser(int userId, CancellationToken cancellationToken)

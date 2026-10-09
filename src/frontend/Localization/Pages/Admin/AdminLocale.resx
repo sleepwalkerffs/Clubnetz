@@ -464,4 +464,187 @@
   <data name="FailedImpersonate" xml:space="preserve">
     <value>Failed to impersonate user.</value>
   </data>
+  <data name="Overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="PlatformAdministration" xml:space="preserve">
+    <value>Platform administration</value>
+  </data>
+  <data name="BackToApp" xml:space="preserve">
+    <value>Back to my club</value>
+  </data>
+  <data name="BackgroundJobs" xml:space="preserve">
+    <value>Background jobs</value>
+  </data>
+  <data name="DashboardSubtitle" xml:space="preserve">
+    <value>All clubs and users of this Clubnetz installation at a glance.</value>
+  </data>
+  <data name="ClubsChip" xml:space="preserve">
+    <value>{0} clubs</value>
+  </data>
+  <data name="UsersChip" xml:space="preserve">
+    <value>{0} users</value>
+  </data>
+  <data name="BookingsChip" xml:space="preserve">
+    <value>{0} bookings in 30 days</value>
+  </data>
+  <data name="Tile_ClubsHint" xml:space="preserve">
+    <value>{0} without an active season</value>
+  </data>
+  <data name="Tile_ClubsHintOk" xml:space="preserve">
+    <value>all with an active season</value>
+  </data>
+  <data name="Tile_UsersHint" xml:space="preserve">
+    <value>+{0} in the last 30 days</value>
+  </data>
+  <data name="Tile_Unconfirmed" xml:space="preserve">
+    <value>Unconfirmed emails</value>
+  </data>
+  <data name="Tile_Bookings" xml:space="preserve">
+    <value>Bookings in 30 days</value>
+  </data>
+  <data name="Tile_BookingsHint" xml:space="preserve">
+    <value>{0} upcoming</value>
+  </data>
+  <data name="ClubsCardSubtitle" xml:space="preserve">
+    <value>Open a club to manage it like its admin</value>
+  </data>
+  <data name="AllClubs" xml:space="preserve">
+    <value>All clubs</value>
+  </data>
+  <data name="NewUsers" xml:space="preserve">
+    <value>New users</value>
+  </data>
+  <data name="NewUsersSubtitle" xml:space="preserve">
+    <value>The latest registrations</value>
+  </data>
+  <data name="AllUsers" xml:space="preserve">
+    <value>All users</value>
+  </data>
+  <data name="OpenClub" xml:space="preserve">
+    <value>Open club</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="NoActiveSeason" xml:space="preserve">
+    <value>No active season</value>
+  </data>
+  <data name="NoAdmin" xml:space="preserve">
+    <value>No club admin</value>
+  </data>
+  <data name="MembersCount" xml:space="preserve">
+    <value>{0} members</value>
+  </data>
+  <data name="CourtsCount" xml:space="preserve">
+    <value>{0} courts</value>
+  </data>
+  <data name="GuestsCount" xml:space="preserve">
+    <value>{0} guests</value>
+  </data>
+  <data name="BookingsCount" xml:space="preserve">
+    <value>{0} bookings / 30 days</value>
+  </data>
+  <data name="ClubsSubtitle" xml:space="preserve">
+    <value>Create clubs and open them in support mode to help their admins.</value>
+  </data>
+  <data name="SearchClubs" xml:space="preserve">
+    <value>Search clubs or admins</value>
+  </data>
+  <data name="NoClubsFound" xml:space="preserve">
+    <value>No clubs found</value>
+  </data>
+  <data name="UsersSubtitle" xml:space="preserve">
+    <value>Find accounts, fix emails and passwords, and see which clubs a person belongs to.</value>
+  </data>
+  <data name="SearchUsers" xml:space="preserve">
+    <value>Search by name or email</value>
+  </data>
+  <data name="NoUsersFound" xml:space="preserve">
+    <value>No users found</value>
+  </data>
+  <data name="Unconfirmed" xml:space="preserve">
+    <value>Unconfirmed</value>
+  </data>
+  <data name="RegisteredOn" xml:space="preserve">
+    <value>Registered on {0}</value>
+  </data>
+  <data name="ClubEyebrow" xml:space="preserve">
+    <value>Club</value>
+  </data>
+  <data name="ClubSince" xml:space="preserve">
+    <value>Since {0}</value>
+  </data>
+  <data name="SupportCardTitle" xml:space="preserve">
+    <value>Manage this club</value>
+  </data>
+  <data name="SupportCardText" xml:space="preserve">
+    <value>Opens the club with the rights of a club admin: settings, courts, seasons, members, badges, emails, news and events. A banner shows that you are in support mode.</value>
+  </data>
+  <data name="ClubAdminsTitle" xml:space="preserve">
+    <value>Club admins</value>
+  </data>
+  <data name="ClubAdminsSubtitle" xml:space="preserve">
+    <value>Your contacts in this club</value>
+  </data>
+  <data name="NoAdminsHint" xml:space="preserve">
+    <value>This club has no admin yet. Add a person as club admin below.</value>
+  </data>
+  <data name="AddPersonTitle" xml:space="preserve">
+    <value>Add a person</value>
+  </data>
+  <data name="AddPersonSubtitle" xml:space="preserve">
+    <value>Makes an existing user a member of this club, e.g. its first admin</value>
+  </data>
+  <data name="AddAsAdmin" xml:space="preserve">
+    <value>Add as club admin</value>
+  </data>
+  <data name="PlatformSettingsTitle" xml:space="preserve">
+    <value>Platform settings</value>
+  </data>
+  <data name="PlatformSettingsSubtitle" xml:space="preserve">
+    <value>Only platform administrators can change these</value>
+  </data>
+  <data name="DeleteClub" xml:space="preserve">
+    <value>Delete club</value>
+  </data>
+  <data name="DeleteClubHint" xml:space="preserve">
+    <value>Deletes the club with all its members, bookings and settings. This cannot be undone.</value>
+  </data>
+  <data name="UserEyebrow" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="ClubsOfUserSubtitle" xml:space="preserve">
+    <value>The memberships of this person</value>
+  </data>
+  <data name="NoClubs" xml:space="preserve">
+    <value>Not a member of any club.</value>
+  </data>
+  <data name="Guest" xml:space="preserve">
+    <value>Guest</value>
+  </data>
+  <data name="OpenMember" xml:space="preserve">
+    <value>Open member</value>
+  </data>
+  <data name="PersonalData" xml:space="preserve">
+    <value>Personal data</value>
+  </data>
+  <data name="PersonalDataSubtitle" xml:space="preserve">
+    <value>Name, birthday and address</value>
+  </data>
+  <data name="EmailSubtitle" xml:space="preserve">
+    <value>Sign-in address of the account</value>
+  </data>
+  <data name="ChangeEmailHint" xml:space="preserve">
+    <value>The new address has to be confirmed via a link before it is used.</value>
+  </data>
+  <data name="PasswordHint" xml:space="preserve">
+    <value>Sends the user an email with a link to set a new password.</value>
+  </data>
+  <data name="DeleteUserHint" xml:space="preserve">
+    <value>Deletes the account with all its memberships. This cannot be undone.</value>
+  </data>
+  <data name="ClubDetailLoadFailed" xml:space="preserve">
+    <value>The club could not be loaded.</value>
+  </data>
 </root>

@@ -12,13 +12,16 @@
     <MudText Typo="Typo.h1" Style="color: inherit;">@L["AdminPanel"]</MudText>
     <MudSpacer />
     <ThemeToggle />
-    <MudIconButton Icon="@Icons.Material.Filled.Home" Color="Color.Inherit" Href="/" />
+    <MudTooltip Text="@L["BackToApp"]">
+        <MudIconButton Icon="@Icons.Material.Filled.Home" Color="Color.Inherit" Href="/" aria-label="@L["BackToApp"]" />
+    </MudTooltip>
 </MudAppBar>
 <MudDrawer @bind-Open="drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2" Class="bookennis-drawer">
     <AdminNavMenu />
 </MudDrawer>
 <MudMainContent Class="bookennis-main-content">
-    <div class="pa-4 pa-sm-6">
+    @* The styles shared by all admin pages are in AdminLayout.razor.css *@
+    <div class="pa-4 pa-sm-6 admin-shell">
         @Body
     </div>
 </MudMainContent>

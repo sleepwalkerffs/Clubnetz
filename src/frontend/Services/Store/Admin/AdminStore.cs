@@ -9,6 +9,21 @@ namespace Bookennis.Client.Services.Store.Admin;
 
 public class AdminStore(IAdminHttpClient adminHttpClient) : SemaphoreStore, IAdminStore
 {
+    // Overview
+    public event Action? OnOverviewChanged;
+    public AdminOverviewResult? Overview { get; private set; }
+
+    public Task LoadOverview()
+        => RunInLoadingContextAsync(async cancellationToken =>
+        {
+            var result = await adminHttpClient.GetOverview(cancellationToken);
+            if (result is { Success: true, Dto: not null })
+            {
+                Overview = result.Dto;
+                OnOverviewChanged?.Invoke();
+            }
+        }, nameof(LoadOverview));
+
     // Users
     public event Action? OnUsersChanged;
     public event Action? OnUserDetailChanged;

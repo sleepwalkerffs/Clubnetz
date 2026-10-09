@@ -1,720 +1,199 @@
 @page "/admin/clubs/{ClubId:int}"
-@using Bookennis.Client.Localization
-@using Bookennis.Client.Services.HttpClients
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Navigation
+@using Bookennis.Client.Services
 @using Bookennis.Client.Services.Store.Admin
-@using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Admin
-@using Bookennis.Shared.Controller.Booking.Shared
-@using Bookennis.Shared.Controller.Families
 @using Bookennis.Shared.Controller.Shared
-@using Bookennis.Global.Intervals
-@using Bookennis.Shared.Utils.Paging
-@using MudBlazor.Utilities
-
-@inject IJSRuntime JS
 
 @implements IDisposable
 
-<PageTitle>@L["AdminPanel"] - @AdminStore.ClubDetail?.Name</PageTitle>
+<PageTitle>@L["AdminPanel"] - @Club?.Name</PageTitle>
 
-@if (AdminStore.ClubDetail is null)
+@if (Club is null)
 {
-    <div class="d-flex justify-center pa-8">
-        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-    </div>
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
 }
 else
 {
-    var club = AdminStore.ClubDetail;
+    var club = Club;
+    var hasActiveSeason = club.Seasons.Any(s => s.IsActive);
 
-    <div class="d-flex flex-wrap align-center gap-3 mb-5">
-        <MudIcon Icon="@Icons.Material.Filled.SportsTennis" Color="Color.Primary" />
-        <div class="accent-border-left">
-            <MudText Typo="Typo.h5">@club.Name</MudText>
-        </div>
-    </div>
-
-    <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Class="mb-4"
-             PanelClass="pa-4 pa-sm-5" Color="Color.Primary" SliderColor="Color.Primary">
-        <MudTabPanel Text="@SharedLocale.Settings" Icon="@Icons.Material.Filled.Settings">
-            <MudGrid>
-                <MudItem xs="12" sm="6">
-                    <MudTextField @bind-Value="clubName" Label="@L["ClubName"]" Required="true" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="3">
-                    <MudTimePicker @bind-Time="openStart" Label="@L["OpeningStart"]" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="3">
-                    <MudTimePicker @bind-Time="openEnd" Label="@L["OpeningEnd"]" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="3">
-                    <MudTimePicker @bind-Time="primeStart" Label="@L["PrimeTimeStart"]" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="3">
-                    <MudTimePicker @bind-Time="primeEnd" Label="@L["PrimeTimeEnd"]" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudNumericField @bind-Value="gracePeriod" Label="@L["BookingGracePeriod"]" Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="6" Class="d-flex align-center">
-                    <MudCheckBox @bind-Value="isAtpClub" Label="@L["IsAtpClub"]" Color="Color.Primary" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudText Typo="Typo.subtitle1" Class="mb-2" Style="font-weight: 600;">@L["PrimeTimeSettings"]</MudText>
-                </MudItem>
-                <MudItem xs="12" sm="4" Class="d-flex align-center">
-                    <MudCheckBox @bind-Value="primeTimeEnabled" Label="@L["PrimeTimeEnabled"]" Color="Color.Primary" />
-                </MudItem>
-                <MudItem xs="12" sm="4" Class="d-flex align-center">
-                    <MudCheckBox @bind-Value="primeTimeRestrictChildren" Label="@L["PrimeTimeRestrictChildren"]" Color="Color.Primary" Disabled="@(!primeTimeEnabled)" />
-                </MudItem>
-                <MudItem xs="12" sm="4" Class="d-flex align-center">
-                    <MudCheckBox @bind-Value="primeTimeRestrictGuests" Label="@L["PrimeTimeRestrictGuests"]" Color="Color.Primary" Disabled="@(!primeTimeEnabled)" />
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudSelect T="DayOfWeek" Label="@L["PrimeTimeWeekdays"]" MultiSelection="true" @bind-SelectedValues="primeTimeWeekdays" Variant="Variant.Outlined" Disabled="@(!primeTimeEnabled)">
-                        @foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
-                        {
-                            <MudSelectItem Value="day">@System.Globalization.CultureInfo.CurrentUICulture.DateTimeFormat.GetDayName(day)</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudNumericField @bind-Value="primeTimeChildAgeThreshold" Label="@L["ChildAgeThreshold"]" Variant="Variant.Outlined" Disabled="@(!primeTimeEnabled || !primeTimeRestrictChildren)" />
-                </MudItem>
-                <MudItem xs="12">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveClub" StartIcon="@Icons.Material.Filled.Save">@L["SaveSettings"]</MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudTabPanel>
-
-        <MudTabPanel Text="@L["PlayModes"]" Icon="@Icons.Material.Filled.SportsScore">
-            <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
-                <MudText Typo="Typo.h6">@L["PlayModes"]</MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => OpenPlayModeEditor(new PlayModeEditModel()))"
-                           StartIcon="@Icons.Material.Filled.Add">
-                    @L["AddPlayMode"]
+    <div class="admin-page">
+        <AdminHero Emoji="🎾" Eyebrow="@L["ClubEyebrow"]" Title="@club.Name"
+                   Subtitle="@string.Format(L["ClubSince"], club.CreatedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))">
+            <Chips>
+                <span class="hero-chip">👥 @string.Format(L["MembersCount"], club.MemberCount)</span>
+                <span class="hero-chip">🎟️ @string.Format(L["GuestsCount"], club.GuestCount)</span>
+                <span class="hero-chip">🏟️ @string.Format(L["CourtsCount"], club.CourtCount)</span>
+                <span class="hero-chip">📅 @string.Format(L["BookingsCount"], club.BookingsLast30Days)</span>
+                @if (!hasActiveSeason)
+                {
+                    <span class="hero-chip hero-chip--warn">⛔ @L["NoActiveSeason"]</span>
+                }
+            </Chips>
+            <Aside>
+                <div class="admin-hero-aside__caption">@L["SupportCardTitle"]</div>
+                <div class="admin-hero-aside__text">@L["ClubsCardSubtitle"]</div>
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Login" Class="admin-hero-button"
+                           OnClick="@(() => NavigationManager.OpenClubAsAdministrator(ClubId))">
+                    @L["OpenClub"]
                 </MudButton>
+            </Aside>
+        </AdminHero>
+
+        <SectionCard Emoji="🛟" Title="@L["SupportCardTitle"]">
+            <div class="admin-text">@L["SupportCardText"]</div>
+            <div class="admin-quicklinks">
+                @foreach (var link in QuickLinks)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@link.Icon" OnClick="@(() => OpenInClub(link.Path))">
+                        @link.Title
+                    </MudButton>
+                }
             </div>
+        </SectionCard>
 
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <MudTable Items="@club.PlayModes" Hover="true" T="PlayModeDto" Elevation="0">
-                    <HeaderContent>
-                        <MudTh>@SharedLocale.Name</MudTh>
-                        <MudTh>@L["Color"]</MudTh>
-                        <MudTh>@L["Duration"]</MudTh>
-                        <MudTh>@L["Players"]</MudTh>
-                        <MudTh>@L["CanOverbook"]</MudTh>
-                        <MudTh>@L["MaxBookingsPerSeason"]</MudTh>
-                        <MudTh Style="width: 100px;">@L["Actions"]</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd><MudText Style="font-weight: 500;">@context.Name</MudText></MudTd>
-                        <MudTd><MudIcon Icon="@Icons.Material.Filled.Circle" Style="@($"color:{ArgbToHex(context.Color)}")" /></MudTd>
-                        <MudTd>@FormatDuration(context.FixedDuration)</MudTd>
-                        <MudTd>@context.FixedPlayerCount</MudTd>
-                        <MudTd>
-                            @if (context.CanOverbook)
-                            {
-                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">@L["Yes"]</MudChip>
-                            }
-                            else
-                            {
-                                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">@L["No"]</MudChip>
-                            }
-                        </MudTd>
-                        <MudTd>@(context.MaxBookingsPerSeason?.ToString() ?? "—")</MudTd>
-                        <MudTd>
-                            <div class="d-flex gap-1">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => OpenPlayModeEditor(EditPlayModeModel(context)))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeletePlayMode(context))" />
-                            </div>
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </MudHidden>
-
-            <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <div class="d-flex flex-column gap-3">
-                    @foreach (var pm in club.PlayModes)
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <SectionCard Emoji="🧑‍💼" Title="@L["ClubAdminsTitle"]" Subtitle="@L["ClubAdminsSubtitle"]">
+                    @if (club.Admins.Count == 0)
                     {
-                        <MudPaper Class="pa-4" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-                            <div class="d-flex justify-space-between align-center mb-2">
-                                <div class="d-flex align-center gap-2">
-                                    <MudIcon Icon="@Icons.Material.Filled.Circle" Style="@($"color:{ArgbToHex(pm.Color)}")" Size="Size.Small" />
-                                    <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">@pm.Name</MudText>
-                                </div>
-                                <div class="d-flex gap-1">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => OpenPlayModeEditor(EditPlayModeModel(pm)))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeletePlayMode(pm))" />
-                                </div>
-                            </div>
-                            <div class="d-flex flex-wrap gap-2">
-                                @if (pm.FixedDuration is not null)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Primary">@FormatDuration(pm.FixedDuration)</MudChip>
-                                }
-                                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Default">@L["Players"]: @pm.FixedPlayerCount</MudChip>
-                                @if (pm.CanOverbook)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Success">@L["CanOverbook"]</MudChip>
-                                }
-                                @if (pm.MaxBookingsPerSeason is not null)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Info">@L["MaxBookingsPerSeason"]: @pm.MaxBookingsPerSeason</MudChip>
-                                }
-                            </div>
-                        </MudPaper>
+                        <MudAlert Severity="Severity.Warning" Dense="true" Variant="Variant.Text">@L["NoAdminsHint"]</MudAlert>
                     }
-                </div>
-            </MudHidden>
-
-            @if (editingPlayMode is not null)
-            {
-                <MudPaper id="playmode-edit-panel" Class="pa-5 mt-5 bookennis-card-accent" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-                    <MudText Typo="Typo.h6" Class="mb-4">@(editingPlayMode.Id == 0 ? SharedLocale.Add : SharedLocale.Edit) @L["PlayMode"]</MudText>
-                    <MudGrid>
-                        <MudItem xs="12" sm="6"><MudTextField @bind-Value="editingPlayMode.Name" Label="@SharedLocale.Name" Required="true" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="3">
-                            <MudCheckBox @bind-Value="editingPlayMode.HasFixedPlayerCount" Label="@L["HasFixedPlayerCount"]" Color="Color.Primary" />
-                            @if (editingPlayMode.HasFixedPlayerCount)
+                    else
+                    {
+                        <div class="admin-list">
+                            @foreach (var admin in club.Admins)
                             {
-                                <MudNumericField @bind-Value="editingPlayMode.FixedPlayerCount" Label="@L["FixedPlayerCount"]" Variant="Variant.Outlined" Class="mt-2" />
+                                <a class="admin-row" href="@($"/admin/users/{admin.UserId}")">
+                                    <UserAvatar FirstName="@admin.FullName" LastName="" Color="Color.Primary" />
+                                    <div class="admin-row__main">
+                                        <div class="admin-row__title">@admin.FullName</div>
+                                        <div class="admin-row__text">@admin.Email</div>
+                                    </div>
+                                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                                </a>
                             }
-                        </MudItem>
-                        <MudItem xs="12" sm="3">
-                            <MudCheckBox @bind-Value="editingPlayMode.HasFixedDuration" Label="@L["HasFixedDuration"]" Color="Color.Primary" />
-                            @if (editingPlayMode.HasFixedDuration)
-                            {
-                                <MudTimePicker @bind-Time="editingPlayMode.Duration" Label="@L["Duration"]" Variant="Variant.Outlined" Class="mt-2" />
-                            }
-                        </MudItem>
-                        <MudItem xs="12" sm="6"><MudColorPicker @bind-Value="editingPlayMode.Color" Label="@L["Color"]" ShowAlpha="false" ColorPickerMode="ColorPickerMode.HEX" /></MudItem>
-                        <MudItem xs="12" sm="4"><MudCheckBox @bind-Value="editingPlayMode.CanOverbook" Label="@L["CanOverbook"]" Color="Color.Primary" /></MudItem>
-                        <MudItem xs="12" sm="4"><MudCheckBox @bind-Value="editingPlayMode.CommentAllowed" Label="@L["CommentAllowed"]" Color="Color.Primary" /></MudItem>
-                        <MudItem xs="12" sm="4"><MudCheckBox @bind-Value="editingPlayMode.IsChargingBookingSubscription" Label="@L["ChargesSubscription"]" Color="Color.Primary" /></MudItem>
-                        <MudItem xs="12" sm="4"><MudNumericField @bind-Value="editingPlayMode.MaxBookingsPerSeason" Label="@L["MaxBookingsPerSeason"]" Variant="Variant.Outlined" Min="1" /></MudItem>
-                        <MudItem xs="12">
-                            <div class="d-flex gap-3">
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SavePlayMode" StartIcon="@Icons.Material.Filled.Save">@SharedLocale.Save</MudButton>
-                                <MudButton Variant="Variant.Text" OnClick="@(() => editingPlayMode = null)">@SharedLocale.Cancel</MudButton>
-                            </div>
-                        </MudItem>
-                    </MudGrid>
-                </MudPaper>
-            }
-        </MudTabPanel>
+                        </div>
+                    }
+                </SectionCard>
+            </MudItem>
 
-        <MudTabPanel Text="@SharedLocale.Members" Icon="@Icons.Material.Filled.People">
-            <MudGrid Class="mb-4">
-                <MudItem xs="12" sm="6">
+            <MudItem xs="12" md="6">
+                <SectionCard Emoji="➕" Title="@L["AddPersonTitle"]" Subtitle="@L["AddPersonSubtitle"]">
                     <MudAutocomplete T="AdminUserResult" Label="@L["SearchUserByEmail"]" @bind-Value="selectedUser"
                                      SearchFunc="SearchUsers" MinCharacters="2" DebounceInterval="300"
                                      ToStringFunc="@(u => u is null ? string.Empty : $"{u.FullName} ({u.Email})")"
-                                     Dense="true" ResetValueOnEmptyText="true" Variant="Variant.Outlined">
+                                     ResetValueOnEmptyText="true" Variant="Variant.Outlined">
                         <ItemTemplate Context="user">
                             <MudText>@user.FullName</MudText>
-                            <MudText Typo="Typo.body2" Class="text-steel-50">@user.Email</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@user.Email</MudText>
                         </ItemTemplate>
                     </MudAutocomplete>
-                </MudItem>
-                <MudItem xs="12" sm="3" Class="d-flex align-end mb-1">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddMember" StartIcon="@Icons.Material.Filled.PersonAdd">
-                        @L["AddMember"]
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <MudTable ServerData="@MembersServerReload" @ref="membersTable" Hover="true" T="AdminClubMemberResult" Elevation="0">
-                    <ToolBarContent>
-                        <MudSpacer />
-                        <MudTextField T="string" DebounceInterval="300" @bind-Value="membersSearchString" OnDebounceIntervalElapsed="membersTable.ReloadServerData"
-                                      Placeholder="@L["Search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Variant="Variant.Outlined" />
-                    </ToolBarContent>
-                    <HeaderContent>
-                        <MudTh>@SharedLocale.Name</MudTh>
-                        <MudTh>@SharedLocale.Email</MudTh>
-                        <MudTh>@L["Roles"]</MudTh>
-                        <MudTh>@L["Seasons"]</MudTh>
-                        <MudTh Style="width: 100px;">@L["Actions"]</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd><MudText Style="font-weight: 500;">@context.FullName</MudText></MudTd>
-                        <MudTd>@context.Email</MudTd>
-                        <MudTd>
-                            @foreach (var role in context.Roles)
-                            {
-                                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Primary">@role</MudChip>
-                            }
-                        </MudTd>
-                        <MudTd>
-                            @{ var seasonNames = GetSeasonLabels(context.AllowedSeasonIds); }
-                            @if (seasonNames.Length > 0)
-                            {
-                                @foreach (var name in seasonNames)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">@name</MudChip>
-                                }
-                            }
-                            else
-                            {
-                                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">—</MudChip>
-                            }
-                        </MudTd>
-                        <MudTd>
-                            <div class="d-flex gap-1">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => EditMember(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                                               OnClick="@(() => RemoveMember(context))" />
-                            </div>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager />
-                    </PagerContent>
-                </MudTable>
-            </MudHidden>
-
-            <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <MudTextField T="string" DebounceInterval="300" @bind-Value="membersMobileSearchString" OnDebounceIntervalElapsed="OnMembersMobileSearchChanged"
-                              Placeholder="@L["Search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mb-4" Variant="Variant.Outlined" />
-                <div class="d-flex flex-column gap-3">
-                    @foreach (var member in AdminStore.ClubMembers)
-                    {
-                        <MudPaper Class="pa-4" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-                            <div class="d-flex justify-space-between align-center mb-2">
-                                <div>
-                                    <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">@member.FullName</MudText>
-                                    <MudText Typo="Typo.body2" Class="text-steel-50">@member.Email</MudText>
-                                </div>
-                                <div class="d-flex gap-1">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => EditMember(member))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => RemoveMember(member))" />
-                                </div>
-                            </div>
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach (var role in member.Roles)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Primary">@role</MudChip>
-                                }
-                                @{ var mobileSeasonNames = GetSeasonLabels(member.AllowedSeasonIds); }
-                                @if (mobileSeasonNames.Length > 0)
-                                {
-                                    @foreach (var name in mobileSeasonNames)
-                                    {
-                                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">@name</MudChip>
-                                    }
-                                }
-                            </div>
-                        </MudPaper>
-                    }
-                </div>
-                @if (AdminStore.TotalClubMembers > 0)
-                {
-                    <div class="d-flex justify-center mt-4">
-                        <MudPagination Count="@((int)Math.Ceiling((double)AdminStore.TotalClubMembers / membersMobilePageSize))"
-                                       Selected="membersMobilePage" SelectedChanged="OnMembersMobilePageChanged"
-                                       Color="Color.Primary" Variant="Variant.Text" />
+                    <MudCheckBox @bind-Value="addAsAdmin" Label="@L["AddAsAdmin"]" Color="Color.Primary" Class="mt-2" />
+                    <div class="admin-actions">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddMember" StartIcon="@Icons.Material.Filled.PersonAdd" Disabled="@(selectedUser is null)">
+                            @L["AddMember"]
+                        </MudButton>
                     </div>
-                }
-            </MudHidden>
+                </SectionCard>
+            </MudItem>
 
-            @if (editingMember is not null)
-            {
-                <MudPaper Class="pa-5 mt-5 bookennis-card-accent" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-                    <MudText Typo="Typo.h6" Class="mb-4">@L["EditMember"] — @editingMember.FullName</MudText>
-                    <MudGrid>
-                        <MudItem xs="12" sm="6">
-                            <MudSelect T="MemberRole" Label="@L["Roles"]" MultiSelection="true" @bind-SelectedValues="editingMember.Roles" Variant="Variant.Outlined">
-                                @foreach (MemberRole role in Enum.GetValues<MemberRole>())
-                                {
-                                    <MudSelectItem Value="role">@role</MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="12" sm="3">
-                            <MudNumericField @bind-Value="editingMember.BookingsPerWeek" Label="@L["BookingsPerWeek"]" Variant="Variant.Outlined" />
-                        </MudItem>
-                        <MudItem xs="12" sm="6">
-                            <MudSelect T="int" Label="@L["Seasons"]" MultiSelection="true" @bind-SelectedValues="editingMember.AllowedSeasonIds" Variant="Variant.Outlined"
-                                       ToStringFunc="@(id => GetSeasonLabel(id))">
-                                @if (AdminStore.ClubDetail?.Seasons is not null)
-                                {
-                                    @foreach (var season in AdminStore.ClubDetail.Seasons)
-                                    {
-                                        <MudSelectItem Value="season.Id">@($"{season.StartDate:d} — {season.EndDate:d}")</MudSelectItem>
-                                    }
-                                }
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="12">
-                            <div class="d-flex gap-3">
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveMember" StartIcon="@Icons.Material.Filled.Save">@SharedLocale.Save</MudButton>
-                                <MudButton Variant="Variant.Text" OnClick="@(() => editingMember = null)">@SharedLocale.Cancel</MudButton>
-                            </div>
-                        </MudItem>
-                    </MudGrid>
-                </MudPaper>
-            }
-        </MudTabPanel>
-
-        <MudTabPanel Text="@L["Courts"]" OnClick="LoadCourts" Icon="@Icons.Material.Filled.GridOn">
-            <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
-                <MudText Typo="Typo.h6">@L["Courts"]</MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => editingCourt = new CourtEditModel())"
-                           StartIcon="@Icons.Material.Filled.Add">
-                    @L["AddCourt"]
-                </MudButton>
-            </div>
-
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <MudTable Items="@AdminStore.Courts" Hover="true" T="AdminCourtResult" Elevation="0">
-                    <HeaderContent>
-                        <MudTh>@SharedLocale.Name</MudTh>
-                        <MudTh>@L["Alias"]</MudTh>
-                        <MudTh>@L["SortOrder"]</MudTh>
-                        <MudTh>@L["Inactive"]</MudTh>
-                        <MudTh Style="width: 100px;">@L["Actions"]</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd><MudText Style="font-weight: 500;">@context.Name</MudText></MudTd>
-                        <MudTd>@context.Alias</MudTd>
-                        <MudTd>@context.SortOrder</MudTd>
-                        <MudTd>
-                            @if (context.Inactive is not null)
-                            {
-                                <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">@($"{context.Inactive.From:g} — {context.Inactive.To:g}")</MudChip>
-                            }
-                            else
-                            {
-                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">@L["Active"]</MudChip>
-                            }
-                        </MudTd>
-                        <MudTd>
-                            <div class="d-flex gap-1">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => EditCourt(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteCourt(context))" />
-                            </div>
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </MudHidden>
-
-            <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <div class="d-flex flex-column gap-3">
-                    @foreach (var court in AdminStore.Courts)
-                    {
-                        <MudPaper Class="pa-4" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-                            <div class="d-flex justify-space-between align-center mb-2">
-                                <div>
-                                    <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">@court.Name</MudText>
-                                    <MudText Typo="Typo.body2" Class="text-steel-50">@court.Alias</MudText>
-                                </div>
-                                <div class="d-flex gap-1">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => EditCourt(court))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteCourt(court))" />
-                                </div>
-                            </div>
-                            <div class="d-flex flex-wrap gap-2">
-                                <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Default">@L["SortOrder"]: @court.SortOrder</MudChip>
-                                @if (court.Inactive is not null)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">@($"{court.Inactive.From:g} — {court.Inactive.To:g}")</MudChip>
-                                }
-                                else
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">@L["Active"]</MudChip>
-                                }
-                            </div>
-                        </MudPaper>
-                    }
-                </div>
-            </MudHidden>
-
-            @if (editingCourt is not null)
-            {
-                <MudPaper Class="pa-5 mt-5 bookennis-card-accent" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-                    <MudText Typo="Typo.h6" Class="mb-4">@(editingCourt.CourtId == 0 ? SharedLocale.Add : SharedLocale.Edit) @L["Court"]</MudText>
-                    <MudGrid>
-                        <MudItem xs="12" sm="6"><MudTextField @bind-Value="editingCourt.Name" Label="@SharedLocale.Name" Required="true" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="6"><MudTextField @bind-Value="editingCourt.Alias" Label="@L["Alias"]" Required="true" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="4"><MudNumericField @bind-Value="editingCourt.SortOrder" Label="@L["SortOrder"]" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="4"><MudDatePicker @bind-Date="editingCourt.InactiveFrom" Label="@L["InactiveFrom"]" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="4"><MudDatePicker @bind-Date="editingCourt.InactiveTo" Label="@L["InactiveTo"]" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12">
-                            <div class="d-flex gap-3">
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveCourt" StartIcon="@Icons.Material.Filled.Save">@SharedLocale.Save</MudButton>
-                                <MudButton Variant="Variant.Text" OnClick="@(() => editingCourt = null)">@SharedLocale.Cancel</MudButton>
-                            </div>
-                        </MudItem>
-                    </MudGrid>
-                </MudPaper>
-            }
-        </MudTabPanel>
-
-        <MudTabPanel Text="@L["Seasons"]" OnClick="LoadSeasons" Icon="@Icons.Material.Filled.CalendarMonth">
-            <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
-                <MudText Typo="Typo.h6">@L["Seasons"]</MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => editingSeason = new SeasonEditModel())"
-                           StartIcon="@Icons.Material.Filled.Add">
-                    @L["AddSeason"]
-                </MudButton>
-            </div>
-
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <MudTable Items="@AdminStore.Seasons" Hover="true" T="AdminSeasonResult" Elevation="0">
-                    <HeaderContent>
-                        <MudTh>@L["StartDate"]</MudTh>
-                        <MudTh>@L["EndDate"]</MudTh>
-                        <MudTh>@L["Status"]</MudTh>
-                        <MudTh Style="width: 100px;">@L["Actions"]</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>@context.StartDate.ToString("d")</MudTd>
-                        <MudTd>@context.EndDate.ToString("d")</MudTd>
-                        <MudTd>
-                            @if (context.IsActive)
-                            {
-                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">@L["Active"]</MudChip>
-                            }
-                            else
-                            {
-                                <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">@L["Inactive"]</MudChip>
-                            }
-                        </MudTd>
-                        <MudTd>
-                            <div class="d-flex gap-1">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => EditSeason(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteSeason(context))" />
-                            </div>
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </MudHidden>
-
-            <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <div class="d-flex flex-column gap-3">
-                    @foreach (var season in AdminStore.Seasons)
-                    {
-                        <MudPaper Class="pa-4" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-                            <div class="d-flex justify-space-between align-center mb-2">
-                                <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">@season.StartDate.ToString("d") — @season.EndDate.ToString("d")</MudText>
-                                <div class="d-flex gap-1">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => EditSeason(season))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteSeason(season))" />
-                                </div>
-                            </div>
-                            <div class="d-flex flex-wrap gap-2">
-                                @if (season.IsActive)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">@L["Active"]</MudChip>
-                                }
-                                else
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">@L["Inactive"]</MudChip>
-                                }
-                            </div>
-                        </MudPaper>
-                    }
-                </div>
-            </MudHidden>
-
-            @if (editingSeason is not null)
-            {
-                <MudPaper Class="pa-5 mt-5 bookennis-card-accent" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-                    <MudText Typo="Typo.h6" Class="mb-4">@(editingSeason.Id == 0 ? SharedLocale.Add : SharedLocale.Edit) @L["Season"]</MudText>
-                    <MudGrid>
-                        <MudItem xs="12" sm="6"><MudDatePicker @bind-Date="editingSeason.StartDate" Label="@L["StartDate"]" Required="true" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="6"><MudDatePicker @bind-Date="editingSeason.EndDate" Label="@L["EndDate"]" Required="true" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12">
-                            <div class="d-flex gap-3">
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveSeason" StartIcon="@Icons.Material.Filled.Save">@SharedLocale.Save</MudButton>
-                                <MudButton Variant="Variant.Text" OnClick="@(() => editingSeason = null)">@SharedLocale.Cancel</MudButton>
-                            </div>
-                        </MudItem>
-                    </MudGrid>
-                </MudPaper>
-            }
-        </MudTabPanel>
-
-        <MudTabPanel Text="@L["Families"]" OnClick="LoadFamilies" Icon="@Icons.Material.Filled.FamilyRestroom">
-            <MudTextField T="string" DebounceInterval="300" @bind-Value="familiesSearchString" OnDebounceIntervalElapsed="OnFamiliesSearchChanged"
-                          Placeholder="@L["Search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mb-4" Variant="Variant.Outlined" />
-
-            @if (AdminStore.Families.Count == 0)
-            {
-                <MudPaper Class="d-flex flex-column justify-center align-center pa-8" Elevation="0" Style="border: 2px dashed var(--mud-palette-gray-lighter);">
-                    <MudIcon Icon="@Icons.Material.Filled.FamilyRestroom" Size="Size.Large" Class="text-steel-30 mb-2" />
-                    <MudText Typo="Typo.body1" Class="text-steel-50">@L["NoFamiliesFound"]</MudText>
-                </MudPaper>
-            }
-            else
-            {
-                <div class="d-flex flex-column gap-4">
-                    @foreach (var family in AdminStore.Families)
-                    {
-                        <MudPaper Class="pa-4" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-                            <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">
-                                <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small" Class="mr-1" />
-                                @L["Family"] #@family.FamilyId
-                            </MudText>
-                            <MudDivider Class="my-3" />
-                            <MudText Typo="Typo.caption" Class="text-steel-50 mb-1">@L["Parents"]</MudText>
-                            @foreach (var parent in family.Parents)
-                            {
-                                <MudText Typo="Typo.body1" Class="ml-2 mb-1">@parent.FirstName @parent.LastName <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Default">#@parent.MemberId</MudChip></MudText>
-                            }
-                            <MudText Typo="Typo.caption" Class="text-steel-50 mt-3 mb-1">@L["Children"]</MudText>
-                            @foreach (var child in family.Children)
-                            {
-                                <div class="d-flex align-center ml-2 mb-1">
-                                    <MudText Typo="Typo.body1">@child.FirstName @child.LastName</MudText>
-                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Default">#@child.MemberId</MudChip>
-                                    @if (child.IsOwnedAccount)
-                                    {
-                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Color="Color.Info">@L["OwnedAccount"]</MudChip>
-                                    }
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary"
-                                                   OnClick="@(() => StartEditFamilyMember(child))" />
-                                </div>
-                            }
-                        </MudPaper>
-                    }
-                </div>
-                @if (AdminStore.TotalFamilies > 0)
-                {
-                    <div class="d-flex justify-center mt-4">
-                        <MudPagination Count="@((int)Math.Ceiling((double)AdminStore.TotalFamilies / familiesPageSize))"
-                                       Selected="familiesPage" SelectedChanged="OnFamiliesPageChanged"
-                                       Color="Color.Primary" Variant="Variant.Text" />
+            <MudItem xs="12" md="6">
+                <SectionCard Emoji="⚙️" Title="@L["PlatformSettingsTitle"]" Subtitle="@L["PlatformSettingsSubtitle"]">
+                    <MudTextField @bind-Value="clubName" Label="@L["ClubName"]" Required="true" Variant="Variant.Outlined" />
+                    <MudCheckBox @bind-Value="isAtpClub" Label="@L["IsAtpClub"]" Color="Color.Primary" Class="mt-2" />
+                    <div class="admin-actions">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveClub" StartIcon="@Icons.Material.Filled.Save">@L["SaveSettings"]</MudButton>
                     </div>
-                }
-            }
+                </SectionCard>
+            </MudItem>
 
-            @if (editingFamilyMember is not null)
-            {
-                <MudPaper Class="pa-5 mt-5 bookennis-card-accent" Elevation="0" Style="border: 1px solid var(--mud-palette-gray-lighter);">
-                    <MudText Typo="Typo.h6" Class="mb-4">@L["EditFamilyMember"]</MudText>
-                    <MudGrid>
-                        <MudItem xs="12" sm="6"><MudTextField @bind-Value="editingFamilyMember.FirstName" Label="@SharedLocale.Firstname" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="6"><MudTextField @bind-Value="editingFamilyMember.LastName" Label="@SharedLocale.Lastname" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="6"><MudDatePicker @bind-Date="editingFamilyMember.Birthday" Label="@SharedLocale.Birthday" Variant="Variant.Outlined" /></MudItem>
-                        <MudItem xs="12" sm="6">
-                            <MudSelect @bind-Value="editingFamilyMember.Gender" Label="@SharedLocale.Gender" Variant="Variant.Outlined">
-                                @foreach (Gender g in Enum.GetValues<Gender>())
-                                {
-                                    <MudSelectItem Value="g">@g</MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="12">
-                            <div class="d-flex gap-3">
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveFamilyMember" StartIcon="@Icons.Material.Filled.Save">@SharedLocale.Save</MudButton>
-                                <MudButton Variant="Variant.Text" OnClick="@(() => editingFamilyMember = null)">@SharedLocale.Cancel</MudButton>
-                            </div>
-                        </MudItem>
-                    </MudGrid>
-                </MudPaper>
-            }
-        </MudTabPanel>
-    </MudTabs>
+            <MudItem xs="12" md="6">
+                <SectionCard Emoji="⚠️" Title="@L["DangerZone"]" Class="admin-danger">
+                    <div class="admin-text">@L["DeleteClubHint"]</div>
+                    <div class="admin-actions">
+                        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteClub" StartIcon="@Icons.Material.Filled.DeleteForever">@L["DeleteClub"]</MudButton>
+                    </div>
+                </SectionCard>
+            </MudItem>
+        </MudGrid>
+    </div>
 }
 
 @code {
     [Parameter] public int ClubId { get; set; }
 
     [Inject] private IAdminStore AdminStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
-    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<NavigationLocale> NavigationLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
 
     private string clubName = "";
-    private TimeSpan? openStart;
-    private TimeSpan? openEnd;
-    private TimeSpan? primeStart;
-    private TimeSpan? primeEnd;
-    private int? gracePeriod;
     private bool isAtpClub;
-    private bool primeTimeEnabled = true;
-    private IEnumerable<DayOfWeek> primeTimeWeekdays = new HashSet<DayOfWeek>(PrimeTimeSettingsDto.DefaultWeekdays);
-    private bool primeTimeRestrictChildren = true;
-    private bool primeTimeRestrictGuests = true;
-    private int primeTimeChildAgeThreshold = 18;
-
-    private PlayModeEditModel? editingPlayMode;
     private AdminUserResult? selectedUser;
-    private MemberEditModel? editingMember;
-    private FamilyMemberEditModel? editingFamilyMember;
-    private CourtEditModel? editingCourt;
-    private SeasonEditModel? editingSeason;
+    private bool addAsAdmin;
 
-    // Members pagination
-    private MudTable<AdminClubMemberResult> membersTable = null!;
-    private string? membersSearchString;
-    private string? membersMobileSearchString;
-    private int membersMobilePage = 1;
-    private const int membersMobilePageSize = 10;
+    // The store keeps the club that was opened last
+    private AdminClubDetailResult? Club => AdminStore.ClubDetail?.Id == ClubId ? AdminStore.ClubDetail : null;
 
-    // Families pagination
-    private string? familiesSearchString;
-    private int familiesPage = 1;
-    private const int familiesPageSize = 10;
+    /// <summary>Pages of the club that are opened in support mode.</summary>
+    private (string Title, string Icon, string Path)[] QuickLinks =>
+    [
+        (NavigationLocale["ClubSettings"], Icons.Material.Filled.Handyman, "profile"),
+        (NavigationLocale["Members"], Icons.Material.Filled.Groups2, "members"),
+        (SharedLocale["Guests"], Icons.Material.Filled.Person, "guests"),
+        (NavigationLocale["CourtBlockings"], Icons.Material.Filled.Lock, "court-blockings"),
+        (NavigationLocale["News"], Icons.Material.Filled.Campaign, "news"),
+        (NavigationLocale["Calendar"], Icons.Material.Filled.CalendarMonth, "calendar"),
+        (SharedLocale["BadgeSettings"], Icons.Material.Filled.EmojiEvents, "badge-settings"),
+        (NavigationLocale["EmailTemplates"], Icons.Material.Filled.MarkEmailRead, "email-templates"),
+        (NavigationLocale["ClubStatistics"], Icons.Material.Filled.Analytics, "club-statistics"),
+    ];
 
     protected override async Task OnInitializedAsync()
     {
         AdminStore.OnClubDetailChanged += OnClubDetailChanged;
-        AdminStore.OnClubMembersChanged += StateHasChanged;
-        AdminStore.OnFamiliesChanged += StateHasChanged;
-        AdminStore.OnCourtsChanged += StateHasChanged;
-        AdminStore.OnSeasonsChanged += StateHasChanged;
         await AdminStore.LoadClub(ClubId);
     }
 
     private void OnClubDetailChanged()
     {
-        if (AdminStore.ClubDetail is not null)
+        if (Club is { } club)
         {
-            var c = AdminStore.ClubDetail;
-            clubName = c.Name;
-            openStart = c.OpeningHours.From.ToTimeSpan();
-            openEnd = c.OpeningHours.To.ToTimeSpan();
-            primeStart = c.PrimeTimeSettings.PrimeTimeHours.From.ToTimeSpan();
-            primeEnd = c.PrimeTimeSettings.PrimeTimeHours.To.ToTimeSpan();
-            gracePeriod = c.BookingGracePeriodInMinutes;
-            isAtpClub = c.IsAtpClub;
-            primeTimeEnabled = c.PrimeTimeSettings.IsEnabled;
-            primeTimeWeekdays = new HashSet<DayOfWeek>(c.PrimeTimeSettings.ApplicableWeekdays);
-            primeTimeRestrictChildren = c.PrimeTimeSettings.RestrictChildren;
-            primeTimeRestrictGuests = c.PrimeTimeSettings.RestrictGuests;
-            primeTimeChildAgeThreshold = c.PrimeTimeSettings.ChildAgeThreshold;
+            clubName = club.Name;
+            isAtpClub = club.IsAtpClub;
         }
-        StateHasChanged();
+
+        InvokeAsync(StateHasChanged);
     }
+
+    // A full page load, the stores still hold the data of the club that was open before
+    private void OpenInClub(string path) => NavigationManager.NavigateTo($"/clubs/{ClubId}/{path}", forceLoad: true);
 
     private async Task SaveClub()
     {
-        if (string.IsNullOrWhiteSpace(clubName) || openStart is null || openEnd is null || primeStart is null || primeEnd is null)
+        if (Club is not { } club)
+            return;
+
+        if (string.IsNullOrWhiteSpace(clubName))
         {
             Snackbar.Add(L["FillRequiredFields"], Severity.Warning);
             return;
         }
 
+        // Everything else is managed in the club itself and sent back unchanged
         var success = await AdminStore.UpdateClub(ClubId, new UpdateAdminClubRequest
         {
-            Name = clubName,
-            OpeningHours = new TimeOnlyInterval(TimeOnly.FromTimeSpan(openStart.Value), TimeOnly.FromTimeSpan(openEnd.Value)),
-            PrimeTimeSettings = new PrimeTimeSettingsDto
-            {
-                IsEnabled = primeTimeEnabled,
-                PrimeTimeHours = new TimeOnlyInterval(TimeOnly.FromTimeSpan(primeStart.Value), TimeOnly.FromTimeSpan(primeEnd.Value)),
-                ApplicableWeekdays = primeTimeWeekdays.ToArray(),
-                RestrictChildren = primeTimeRestrictChildren,
-                RestrictGuests = primeTimeRestrictGuests,
-                ChildAgeThreshold = primeTimeChildAgeThreshold
-            },
-            BookingGracePeriodInMinutes = gracePeriod,
+            Name = clubName.Trim(),
+            OpeningHours = club.OpeningHours,
+            PrimeTimeSettings = club.PrimeTimeSettings,
+            BookingGracePeriodInMinutes = club.BookingGracePeriodInMinutes,
             IsAtpClub = isAtpClub
         });
 
@@ -729,121 +208,8 @@ else
         }
     }
 
-    // PlayModes
-    private PlayModeEditModel EditPlayModeModel(PlayModeDto pm) => new()
-    {
-        Id = pm.Id,
-        Name = pm.Name,
-        HasFixedPlayerCount = pm.FixedPlayerCount is not null,
-        FixedPlayerCount = pm.FixedPlayerCount ?? 2,
-        HasFixedDuration = pm.FixedDuration is not null,
-        Duration = pm.FixedDuration ?? TimeSpan.FromHours(1),
-        Color = new MudColor(ArgbToHex(pm.Color)),
-        CanOverbook = pm.CanOverbook,
-        CommentAllowed = pm.CommentAllowed,
-        IsChargingBookingSubscription = pm.IsChargingBookingSubscription,
-        MaxBookingsPerSeason = pm.MaxBookingsPerSeason
-    };
-
-    private async Task OpenPlayModeEditor(PlayModeEditModel model)
-    {
-        editingPlayMode = model;
-        StateHasChanged();
-        await Task.Delay(50);
-        await JS.InvokeVoidAsync("eval", "document.getElementById('playmode-edit-panel')?.scrollIntoView({behavior:'smooth',block:'center'})");
-    }
-
-    private async Task SavePlayMode()
-    {
-        if (editingPlayMode is null || string.IsNullOrWhiteSpace(editingPlayMode.Name)) return;
-
-        var request = new AdminPlayModeRequest
-        {
-            Name = editingPlayMode.Name,
-            AllowedRoles = [MemberRole.User],
-            Color = MudColorToArgb(editingPlayMode.Color),
-            FixedPlayerCount = editingPlayMode.HasFixedPlayerCount ? editingPlayMode.FixedPlayerCount : null,
-            IsChargingBookingSubscription = editingPlayMode.IsChargingBookingSubscription,
-            FixedDuration = editingPlayMode.HasFixedDuration ? editingPlayMode.Duration : null,
-            CanOverbook = editingPlayMode.CanOverbook,
-            CommentAllowed = editingPlayMode.CommentAllowed,
-            MaxBookingsPerSeason = editingPlayMode.MaxBookingsPerSeason
-        };
-
-        bool success;
-        if (editingPlayMode.Id == 0)
-            success = await AdminStore.AddPlayMode(ClubId, request);
-        else
-            success = await AdminStore.UpdatePlayMode(ClubId, editingPlayMode.Id, request);
-
-        if (success)
-        {
-            editingPlayMode = null;
-            Snackbar.Add(L["PlayModeSaved"], Severity.Success);
-            await AdminStore.LoadClub(ClubId);
-        }
-        else
-        {
-            Snackbar.Add(L["FailedSavePlayMode"], Severity.Error);
-        }
-    }
-
-    private async Task DeletePlayMode(PlayModeDto pm)
-    {
-        var result = await DialogService.ShowMessageBox(L["Confirm"], string.Format(L["DeletePlayModeConfirm"], pm.Name), yesText: SharedLocale.Delete, cancelText: SharedLocale.Cancel);
-        if (result == true)
-        {
-            var success = await AdminStore.DeletePlayMode(ClubId, pm.Id);
-            if (success)
-            {
-                Snackbar.Add(L["PlayModeDeleted"], Severity.Success);
-                await AdminStore.LoadClub(ClubId);
-            }
-            else
-            {
-                Snackbar.Add(L["FailedDeletePlayMode"], Severity.Error);
-            }
-        }
-    }
-
-    // Members
-    private async Task<TableData<AdminClubMemberResult>> MembersServerReload(TableState state, CancellationToken cancellationToken)
-    {
-        var pagination = new PaginationParameters { Page = state.Page + 1, PageSize = state.PageSize, EnablePaging = true };
-        await AdminStore.LoadClubMembers(ClubId, pagination, membersSearchString);
-
-        return new TableData<AdminClubMemberResult>
-        {
-            Items = AdminStore.ClubMembers,
-            TotalItems = AdminStore.TotalClubMembers
-        };
-    }
-
-    private async Task OnMembersMobileSearchChanged()
-    {
-        membersMobilePage = 1;
-        await LoadMembersMobile();
-    }
-
-    private async Task OnMembersMobilePageChanged(int page)
-    {
-        membersMobilePage = page;
-        await LoadMembersMobile();
-    }
-
-    private async Task LoadMembersMobile()
-    {
-        var pagination = new PaginationParameters { Page = membersMobilePage, PageSize = membersMobilePageSize, EnablePaging = true };
-        await AdminStore.LoadClubMembers(ClubId, pagination, membersMobileSearchString);
-    }
-
     private async Task<IEnumerable<AdminUserResult>> SearchUsers(string searchTerm, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(searchTerm))
-            return [];
-
-        return await AdminStore.SearchUsers(searchTerm);
-    }
+        => string.IsNullOrWhiteSpace(searchTerm) ? [] : await AdminStore.SearchUsers(searchTerm);
 
     private async Task AddMember()
     {
@@ -856,14 +222,15 @@ else
         var success = await AdminStore.AddClubMember(ClubId, new AddClubMemberRequest
         {
             UserId = selectedUser.Id,
-            Roles = [MemberRole.User]
+            Roles = addAsAdmin ? [MemberRole.User, MemberRole.Admin] : [MemberRole.User]
         });
 
         if (success)
         {
             Snackbar.Add(L["MemberAdded"], Severity.Success);
             selectedUser = null;
-            await ReloadMembers();
+            addAsAdmin = false;
+            await AdminStore.LoadClub(ClubId);
         }
         else
         {
@@ -871,357 +238,26 @@ else
         }
     }
 
-    private async Task RemoveMember(AdminClubMemberResult member)
+    private async Task DeleteClub()
     {
-        var result = await DialogService.ShowMessageBox(L["Confirm"], string.Format(L["RemoveMemberConfirm"], member.FullName), yesText: L["Remove"], cancelText: SharedLocale.Cancel);
-        if (result == true)
-        {
-            var success = await AdminStore.RemoveClubMember(ClubId, member.MemberId);
-            if (success)
-            {
-                Snackbar.Add(L["MemberRemoved"], Severity.Success);
-                await ReloadMembers();
-            }
-            else
-            {
-                Snackbar.Add(L["FailedRemoveMember"], Severity.Error);
-            }
-        }
-    }
+        var result = await DialogService.ShowMessageBox(
+            L["ConfirmDeletion"],
+            string.Format(L["DeleteClubConfirm"], Club?.Name),
+            yesText: SharedLocale["Delete"], cancelText: SharedLocale["Cancel"]);
 
-    private void EditMember(AdminClubMemberResult member)
-    {
-        editingMember = new MemberEditModel
-        {
-            MemberId = member.MemberId,
-            FullName = member.FullName,
-            Roles = member.Roles.Select(r => r).ToHashSet(),
-            AllowedSeasonIds = member.AllowedSeasonIds.ToHashSet(),
-            BookingsPerWeek = member.BookingsPerWeek ?? 0,
-        };
-    }
+        if (result != true)
+            return;
 
-    private async Task SaveMember()
-    {
-        if (editingMember is null) return;
-
-        var success = await AdminStore.UpdateClubMember(ClubId, editingMember.MemberId, new UpdateClubMemberRequest
+        if (await AdminStore.DeleteClub(ClubId))
         {
-            Roles = editingMember.Roles.ToArray(),
-            AllowedSeasonIds = editingMember.AllowedSeasonIds.ToArray(),
-            BookingsPerWeek = editingMember.BookingsPerWeek,
-        });
-
-        if (success)
-        {
-            editingMember = null;
-            Snackbar.Add(L["MemberUpdated"], Severity.Success);
-            await ReloadMembers();
+            Snackbar.Add(L["ClubDeleted"], Severity.Success);
+            NavigationManager.NavigateTo("/admin/clubs");
         }
         else
         {
-            Snackbar.Add(L["FailedUpdateMember"], Severity.Error);
+            Snackbar.Add(L["FailedDeleteClub"], Severity.Error);
         }
     }
 
-    // Members reload helper
-    private async Task ReloadMembers()
-    {
-        if (membersTable is not null)
-            await membersTable.ReloadServerData();
-        else
-            await LoadMembersMobile();
-    }
-
-    // Families
-    private async Task LoadFamilies()
-    {
-        familiesPage = 1;
-        familiesSearchString = null;
-        await LoadFamiliesPage();
-    }
-
-    private async Task OnFamiliesSearchChanged()
-    {
-        familiesPage = 1;
-        await LoadFamiliesPage();
-    }
-
-    private async Task OnFamiliesPageChanged(int page)
-    {
-        familiesPage = page;
-        await LoadFamiliesPage();
-    }
-
-    private async Task LoadFamiliesPage()
-    {
-        var pagination = new PaginationParameters { Page = familiesPage, PageSize = familiesPageSize, EnablePaging = true };
-        await AdminStore.LoadClubFamilies(ClubId, pagination, familiesSearchString);
-    }
-
-    private void StartEditFamilyMember(FamilyChildDto child)
-    {
-        editingFamilyMember = new FamilyMemberEditModel
-        {
-            MemberId = child.MemberId,
-            FirstName = child.FirstName,
-            LastName = child.LastName,
-            Birthday = child.Birthday.ToDateTime(TimeOnly.MinValue),
-            Gender = child.Gender
-        };
-    }
-
-    private async Task SaveFamilyMember()
-    {
-        if (editingFamilyMember is null || string.IsNullOrWhiteSpace(editingFamilyMember.FirstName) || editingFamilyMember.Birthday is null) return;
-
-        var success = await AdminStore.UpdateFamilyMember(ClubId, editingFamilyMember.MemberId, new UpdateFamilyMemberRequest
-        {
-            FirstName = editingFamilyMember.FirstName,
-            LastName = editingFamilyMember.LastName,
-            Birthday = DateOnly.FromDateTime(editingFamilyMember.Birthday.Value),
-            Gender = editingFamilyMember.Gender
-        });
-
-        if (success)
-        {
-            editingFamilyMember = null;
-            Snackbar.Add(L["FamilyMemberUpdated"], Severity.Success);
-            await LoadFamiliesPage();
-        }
-        else
-        {
-            Snackbar.Add(L["FailedUpdateFamilyMember"], Severity.Error);
-        }
-    }
-
-    // Courts
-    private async Task LoadCourts()
-    {
-        await AdminStore.LoadClubCourts(ClubId);
-    }
-
-    // Seasons
-    private async Task LoadSeasons()
-    {
-        await AdminStore.LoadClubSeasons(ClubId);
-    }
-
-    private void EditSeason(AdminSeasonResult season)
-    {
-        editingSeason = new SeasonEditModel
-        {
-            Id = season.Id,
-            StartDate = season.StartDate.ToDateTime(TimeOnly.MinValue),
-            EndDate = season.EndDate.ToDateTime(TimeOnly.MinValue)
-        };
-    }
-
-    private async Task SaveSeason()
-    {
-        if (editingSeason is null || editingSeason.StartDate is null || editingSeason.EndDate is null) return;
-
-        var request = new AdminSeasonRequest
-        {
-            StartDate = DateOnly.FromDateTime(editingSeason.StartDate.Value),
-            EndDate = DateOnly.FromDateTime(editingSeason.EndDate.Value)
-        };
-
-        HttpResult response;
-        if (editingSeason.Id == 0)
-            response = await AdminStore.AddSeason(ClubId, request);
-        else
-            response = await AdminStore.UpdateSeason(ClubId, editingSeason.Id, request);
-
-        if (response.Success)
-        {
-            editingSeason = null;
-            Snackbar.Add(L["SeasonSaved"], Severity.Success);
-            await AdminStore.LoadClub(ClubId);
-            await AdminStore.LoadClubSeasons(ClubId);
-        }
-        else
-        {
-            Snackbar.ShowErrorDetails(response, BackendLocale);
-        }
-    }
-
-    private async Task DeleteSeason(AdminSeasonResult season)
-    {
-        var result = await DialogService.ShowMessageBox(L["Confirm"], string.Format(L["DeleteSeasonConfirm"], $"{season.StartDate:d} — {season.EndDate:d}"), yesText: SharedLocale.Delete, cancelText: SharedLocale.Cancel);
-        if (result == true)
-        {
-            var response = await AdminStore.DeleteSeason(ClubId, season.Id);
-            if (response.Success)
-            {
-                Snackbar.Add(L["SeasonDeleted"], Severity.Success);
-                await AdminStore.LoadClub(ClubId);
-                await AdminStore.LoadClubSeasons(ClubId);
-            }
-            else
-            {
-                Snackbar.ShowErrorDetails(response, BackendLocale);
-            }
-        }
-    }
-
-    private string GetSeasonLabel(int seasonId)
-    {
-        var season = AdminStore.ClubDetail?.Seasons?.FirstOrDefault(s => s.Id == seasonId);
-        return season is not null ? $"{season.StartDate:d} — {season.EndDate:d}" : seasonId.ToString();
-    }
-
-    private string[] GetSeasonLabels(int[] seasonIds)
-    {
-        if (AdminStore.ClubDetail?.Seasons is null) return [];
-        return seasonIds
-            .Select(id => AdminStore.ClubDetail.Seasons.FirstOrDefault(s => s.Id == id))
-            .Where(s => s is not null)
-            .Select(s => $"{s!.StartDate:d} — {s.EndDate:d}")
-            .ToArray();
-    }
-
-    private void EditCourt(AdminCourtResult court)
-    {
-        editingCourt = new CourtEditModel
-        {
-            CourtId = court.CourtId,
-            Name = court.Name,
-            Alias = court.Alias,
-            SortOrder = court.SortOrder,
-            InactiveFrom = court.Inactive?.From.DateTime,
-            InactiveTo = court.Inactive?.To.DateTime
-        };
-    }
-
-    private async Task SaveCourt()
-    {
-        if (editingCourt is null || string.IsNullOrWhiteSpace(editingCourt.Name) || string.IsNullOrWhiteSpace(editingCourt.Alias)) return;
-
-        DateTimeOffsetInterval? inactive = null;
-        if (editingCourt.InactiveFrom is not null && editingCourt.InactiveTo is not null)
-        {
-            inactive = new DateTimeOffsetInterval(
-                new DateTimeOffset(editingCourt.InactiveFrom.Value, TimeSpan.Zero),
-                new DateTimeOffset(editingCourt.InactiveTo.Value, TimeSpan.Zero));
-        }
-
-        var request = new AdminCourtRequest
-        {
-            Name = editingCourt.Name,
-            Alias = editingCourt.Alias,
-            SortOrder = editingCourt.SortOrder,
-            Inactive = inactive
-        };
-
-        bool success;
-        if (editingCourt.CourtId == 0)
-            success = await AdminStore.AddCourt(ClubId, request);
-        else
-            success = await AdminStore.UpdateCourt(ClubId, editingCourt.CourtId, request);
-
-        if (success)
-        {
-            editingCourt = null;
-            Snackbar.Add(L["CourtSaved"], Severity.Success);
-            await AdminStore.LoadClubCourts(ClubId);
-        }
-        else
-        {
-            Snackbar.Add(L["FailedSaveCourt"], Severity.Error);
-        }
-    }
-
-    private async Task DeleteCourt(AdminCourtResult court)
-    {
-        var result = await DialogService.ShowMessageBox(L["Confirm"], string.Format(L["DeleteCourtConfirm"], court.Name), yesText: SharedLocale.Delete, cancelText: SharedLocale.Cancel);
-        if (result == true)
-        {
-            var success = await AdminStore.DeleteCourt(ClubId, court.CourtId);
-            if (success)
-            {
-                Snackbar.Add(L["CourtDeleted"], Severity.Success);
-                await AdminStore.LoadClubCourts(ClubId);
-            }
-            else
-            {
-                Snackbar.Add(L["FailedDeleteCourt"], Severity.Error);
-            }
-        }
-    }
-
-    // Helpers
-    private static string FormatDuration(TimeSpan? duration) =>
-        duration is not null ? $"{(int)duration.Value.TotalHours:D2}:{duration.Value.Minutes:D2}" : "—";
-
-    // Color helpers
-    private static string ArgbToHex(int argb)
-    {
-        var color = System.Drawing.Color.FromArgb(argb);
-        return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
-    }
-
-    private static int MudColorToArgb(MudColor color)
-    {
-        return System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B).ToArgb();
-    }
-
-    public void Dispose()
-    {
-        AdminStore.OnClubDetailChanged -= OnClubDetailChanged;
-        AdminStore.OnClubMembersChanged -= StateHasChanged;
-        AdminStore.OnFamiliesChanged -= StateHasChanged;
-        AdminStore.OnCourtsChanged -= StateHasChanged;
-        AdminStore.OnSeasonsChanged -= StateHasChanged;
-    }
-
-    private class PlayModeEditModel
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = "";
-        public bool HasFixedPlayerCount { get; set; } = true;
-        public int FixedPlayerCount { get; set; } = 2;
-        public bool HasFixedDuration { get; set; } = true;
-        public TimeSpan? Duration { get; set; } = TimeSpan.FromHours(1);
-        public MudColor Color { get; set; } = new("#4CAF50");
-        public bool CanOverbook { get; set; }
-        public bool CommentAllowed { get; set; }
-        public bool IsChargingBookingSubscription { get; set; }
-        public int? MaxBookingsPerSeason { get; set; }
-    }
-
-    private class FamilyMemberEditModel
-    {
-        public int MemberId { get; set; }
-        public string FirstName { get; set; } = "";
-        public string LastName { get; set; } = "";
-        public DateTime? Birthday { get; set; }
-        public Gender Gender { get; set; }
-    }
-
-    private class CourtEditModel
-    {
-        public int CourtId { get; set; }
-        public string Name { get; set; } = "";
-        public string Alias { get; set; } = "";
-        public int SortOrder { get; set; }
-        public DateTime? InactiveFrom { get; set; }
-        public DateTime? InactiveTo { get; set; }
-    }
-
-    private class MemberEditModel
-    {
-        public int MemberId { get; set; }
-        public string FullName { get; set; } = "";
-        public IEnumerable<MemberRole> Roles { get; set; } = new HashSet<MemberRole>();
-        public IEnumerable<int> AllowedSeasonIds { get; set; } = new HashSet<int>();
-        public int BookingsPerWeek { get; set; }
-    }
-
-    private class SeasonEditModel
-    {
-        public int Id { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-    }
+    public void Dispose() => AdminStore.OnClubDetailChanged -= OnClubDetailChanged;
 }

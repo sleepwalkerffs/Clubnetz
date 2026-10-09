@@ -274,7 +274,7 @@
     public void Dispose() => ClubProfileStore.OnClubProfileChanged -= OnClubProfileChanged;
 
     // Guest cards are handed out by the club, only a real club membership can be ended here
-    private bool CanLeaveSelectedClub => ClubProfileStore.SelectedClub is not null && !ClubProfileStore.Roles.Contains(MemberRole.Guest);
+    private bool CanLeaveSelectedClub => ClubProfileStore.SelectedClub is not null && !ClubProfileStore.IsSupportMode && !ClubProfileStore.Roles.Contains(MemberRole.Guest);
 
     private async Task ExportData()
     {

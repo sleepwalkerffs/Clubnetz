@@ -16,6 +16,7 @@ public class ClubProfileStore(IClubProfileHttpClient clubProfileHttpClient) : Se
     public int MemberId => SelectedClub?.MemberId ?? throw new ArgumentException("No club selected");
     public MemberRole[] Roles => SelectedClub?.MemberRole ?? throw new ArgumentException("No club selected");
     public ClubProfileModel? SelectedClub { get; private set; }
+    public bool IsSupportMode => SelectedClub?.IsSupportMode ?? false;
     public GetBookingOptionsResult? BookingOptions { get; private set; }
 
     public Task LoadClubProfile(int clubId)
@@ -32,8 +33,8 @@ public class ClubProfileStore(IClubProfileHttpClient clubProfileHttpClient) : Se
                     ClubId = clubId,
                     MemberId = memberResponse.Dto.MemberId,
                     MemberRole = memberResponse.Dto.Role,
-                    ClubName = memberResponse.Dto.ClubName
-
+                    ClubName = memberResponse.Dto.ClubName,
+                    IsSupportMode = memberResponse.Dto.IsSupportMode
                 };
 
                 OnClubProfileChanged?.Invoke();

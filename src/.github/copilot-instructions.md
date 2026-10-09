@@ -448,6 +448,26 @@ The club posts news for its members: a title and a Markdown text, optionally pin
 - `RateLimitingConfiguration` adds per-IP fixed-window policies: `AuthenticationPolicy` (10/min: login, guest login, confirm email, reset password, change password, delete account) and `EmailPolicy` (5/15 min: register, forgot password, change email). Apply them with `[EnableRateLimiting(...)]` on anonymous or credential-checking endpoints. Rejections are 429 with an `ErrorCodeResponse` (`TooManyRequests`), which `SnackbarExtensions.ShowErrorDetails` localizes. The client IP comes from `X-Forwarded-For` (`UseForwardedHeaders`, rightmost entry only).
 - Swagger is only exposed in Development. `/health` is an anonymous health check (includes the database).
 
+## Admin Panel & Support Mode
+
+### Overview
+
+The operator of the installation (ASP.NET role `Administrator`, policy `ApplicationAdministrator`) supports the club admins. **Club features are never rebuilt in the admin panel**: the administrator opens the club itself and works in the same pages as its club admin (support mode). The admin panel (`/admin`) only holds what belongs to the platform.
+
+### Support mode
+
+- The backend lets application administrators pass every club policy (`ClubAuthorizationHandler` and the booking/play mode handlers succeed for `IsAdministrator()`), also for clubs they are not a member of.
+- `GetClubProfile` gets `SupportClubId` from the controller for administrators. Without a member in that club it returns `IsSupportMode = true`, `MemberId = 0` and the role `Admin`; with a member the administrator is treated as that member. The FE exposes it as `IClubProfileStore.IsSupportMode`.
+- `ClubWithStoreLayout` and `App.razor` let administrators open `/clubs/{id}/...` of any club. `NavMenu` then shows what a club admin manages (no My Club, statistics, leaderboard, subscription planner), `SupportModeBanner` (in `AuthorizedLayout`) shows whose club is being changed and leads back to the admin panel, and My Club redirects to the club settings.
+- **There is no member in support mode.** Handlers that are reachable for club admins must not require one: resolve it with `GetClubMemberId` (nullable, e.g. `CreatedByMemberId` stays `null`), never with `GetRequiredClubMemberId`. In the FE, guard everything that uses `ClubProfileStore.MemberId` (`MembersStore.LoadMember`, own bookings, the event registration form) with `IsSupportMode`.
+- Entering and leaving support mode is a full page load (`NavigationManager.OpenClubAsAdministrator` / `LeaveSupportMode`), because the stores still hold the data of the club that was open before.
+
+### Admin panel
+
+- `Pages/Admin` (`AdminLayout`, `@attribute [Authorize(Roles = "Administrator")]`): `Dashboard.razor` (`/admin`, `GetAdminOverview`), `Clubs/Clubs.razor` (cards with the club admins as contacts, create a club), `Clubs/ClubDetail.razor` (open the club, quick links into it, club admins, add an existing user as member or first admin, name and ATP flag, delete), `Users/Users.razor` and `Users/UserDetail.razor` (clubs of the user, personal data, email, password reset, impersonation, delete).
+- The styles shared by the admin pages (`admin-page`, `admin-row`, `admin-chip`, `admin-club-card`, `admin-fields`, ...) are in `AdminLayout.razor.css`; they reach the pages via `.admin-shell ::deep`.
+- `Controllers/Admin/ClubsController` still has endpoints for play modes, courts, seasons, members and families of a club (`Admin*` handlers). Except for adding a member the FE no longer uses them, these things are edited in support mode - don't add new ones.
+
 ## Privacy (GDPR) & Legal Pages
 
 - `Pages/Legal`: `/legal/imprint` and `/legal/privacy` (public, `NoNavigationLayout`), texts in `LegalLocale(.de).resx` (`LegalSection` renders lines starting with "- " as a list). The operator details differ per installation and are never committed: they come from the `Legal` section of the server settings (`AppSettings.Legal`, e.g. the environment variable `Legal__OperatorName`), are served by the anonymous `GET api/Legal` (`GetLegalSettings`) and loaded once by `ILegalStore`; the pages show a warning while the operator is not configured. Update `LegalDocument.LastUpdated` when the texts change. `LegalLinks` is shown in `AuthShell` and at the bottom of the `NavMenu`.
@@ -567,6 +587,7 @@ Members are notified about what happens to them by push notification and by emai
 
 ## Frontend Misc
 
+- Pickers with `PickerVariant.Dialog` inside a `MudDialog` only work because `app.css` drops the transform MudBlazor leaves on `.mud-dialog` after its opening animation (`animation-fill-mode: backwards`). Without it the picker is squeezed into the dialog and cut off on desktop. Don't add `transform`, `filter` or `backdrop-filter` to a dialog for the same reason.
 - `PlayerSelection.razor` search splits the input on whitespace; every term must match the start of the first or last name, so "first last" and "last first" both work.
 
 ## Dark Mode

@@ -34,6 +34,9 @@
     [CascadingParameter]
     RouteData? RouteData { get; set; }
 
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         if (!await ProfileStore.WaitUntilLoaded() || !ProfileStore.IsProfileLoaded)
@@ -48,7 +51,8 @@
         if (RouteData != null && RouteData.RouteValues.TryGetValue("ClubId", out var clubIdObj) && clubIdObj is int clubId)
             selectedClubId = clubId;
 
-        if (!ProfileStore.IsClubAssigned(selectedClubId))
+        // Application administrators may open every club (support mode)
+        if (!ProfileStore.IsClubAssigned(selectedClubId) && !await IsAdministrator())
         {
             NavigationManager.NavigateToAccessDenied();
             return;
@@ -63,4 +67,7 @@
         await ClubStore.LoadClubDetails();
         isClubLoaded = true;
     }
+
+    private async Task<bool> IsAdministrator()
+        => AuthenticationState is not null && (await AuthenticationState).User.IsInRole("Administrator");
 }

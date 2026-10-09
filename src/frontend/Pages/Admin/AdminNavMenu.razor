@@ -1,7 +1,24 @@
+<div class="bookennis-nav-profile pa-4">
+    <div class="d-flex align-center gap-3">
+        <MudAvatar Size="Size.Large" Class="bookennis-nav-avatar">
+            <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" />
+        </MudAvatar>
+        <div class="d-flex flex-column">
+            <MudText Typo="Typo.subtitle2" Style="color: #FFFFFF;">Clubnetz</MudText>
+            <MudText Typo="Typo.body2" Style="color: #6EE7B7;">@L["PlatformAdministration"]</MudText>
+        </div>
+    </div>
+</div>
+
 <div class="pa-2">
     <MudNavMenu Bordered="true" Rounded="true" Color="Color.Primary">
-        <MudNavLink Match="NavLinkMatch.Prefix" Href="/admin/users" Icon="@Icons.Material.Filled.People">@L["Users"]</MudNavLink>
+        <MudNavLink Match="NavLinkMatch.All" Href="/admin" Icon="@Icons.Material.Filled.Dashboard">@L["Overview"]</MudNavLink>
         <MudNavLink Match="NavLinkMatch.Prefix" Href="/admin/clubs" Icon="@Icons.Material.Filled.SportsTennis">@L["Clubs"]</MudNavLink>
+        <MudNavLink Match="NavLinkMatch.Prefix" Href="/admin/users" Icon="@Icons.Material.Filled.People">@L["Users"]</MudNavLink>
+        <MudDivider Class="my-2" Style="border-color: rgba(110, 231, 183, 0.15);" />
+        @* Served by the backend, not a page of the app *@
+        <MudNavLink Href="/hangfire" Target="_blank" Icon="@Icons.Material.Filled.Schedule">@L["BackgroundJobs"]</MudNavLink>
+        <MudNavLink Match="NavLinkMatch.All" Href="/" Icon="@Icons.Material.Filled.ArrowBack">@L["BackToApp"]</MudNavLink>
     </MudNavMenu>
 </div>
 

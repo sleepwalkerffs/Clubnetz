@@ -1,0 +1,43 @@
+@using Bookennis.Client.Services
+@using Bookennis.Shared.Controller.Admin
+
+<div class="admin-club-card">
+    <div class="admin-club-card__header">
+        <div class="admin-club-card__emoji" aria-hidden="true">🎾</div>
+        <div class="admin-club-card__name">@Club.Name</div>
+    </div>
+
+    <div class="admin-chips">
+        <span class="admin-chip">👥 @string.Format(L["MembersCount"], Club.MemberCount)</span>
+        <span class="admin-chip">🏟️ @string.Format(L["CourtsCount"], Club.CourtCount)</span>
+        <span class="admin-chip admin-chip--info">📅 @string.Format(L["BookingsCount"], Club.BookingsLast30Days)</span>
+        @if (!Club.HasActiveSeason)
+        {
+            <span class="admin-chip admin-chip--warn">⛔ @L["NoActiveSeason"]</span>
+        }
+        @if (Club.Admins.Count == 0)
+        {
+            <span class="admin-chip admin-chip--warn">⚠️ @L["NoAdmin"]</span>
+        }
+    </div>
+
+    @if (Club.Admins.Count > 0)
+    {
+        <div class="admin-club-card__admins">🧑‍💼 @string.Join(", ", Club.Admins.Select(a => a.FullName))</div>
+    }
+
+    <div class="admin-club-card__actions">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Login"
+                   OnClick="@(() => NavigationManager.OpenClubAsAdministrator(Club.Id))">
+            @L["OpenClub"]
+        </MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" Href="@($"/admin/clubs/{Club.Id}")">@L["Details"]</MudButton>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public AdminClubResult Club { get; set; } = null!;
+
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
+}

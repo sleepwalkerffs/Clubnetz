@@ -163,6 +163,9 @@ else
     private IProfileStore ProfileStore { get; set; } = null!;
 
     [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Inject]
     private IStringLocalizer<MyClubLocale> Locale { get; set; } = null!;
 
     [Inject]
@@ -187,6 +190,13 @@ else
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+
+        // Support mode has no member and therefore no "my club": the club settings are the start page
+        if (ClubProfileStore.IsSupportMode)
+        {
+            NavigationManager.NavigateTo($"/clubs/{ClubId}/profile", replace: true);
+            return;
+        }
 
         MembersStore.OnMemberChanged += StateHasChanged;
         BookingStore.OnUpcomingBookingsChanged += StateHasChanged;
