@@ -413,7 +413,7 @@ The club posts news for its members: a title and a Markdown text, optionally pin
 ### API / Authorization
 
 - `ClubAnnouncementsController` (`api/Clubs/{clubId}/ClubAnnouncements`): list (`GET ?includeExpired=&take=`, pinned first, then newest), detail, create/update/delete, `POST preview` (renders unsaved Markdown), `POST|DELETE|GET {id}/attachments[/{attachmentId}]`, `POST email-recipients` (number of addresses of an audience) and `POST {id}/email`.
-- Reading requires `AuthorizationPolicies.ClubMember`, writing and emailing `AuthorizationPolicies.ClubAnnouncementManager` (`SportsDirector`, `YouthSportsDirector`, `Admin`). Policies are set per action; the FE mirrors this in `NewsHelpers.CanManage`.
+- Reading requires `AuthorizationPolicies.ClubMember`, writing and emailing `AuthorizationPolicies.ClubAnnouncementManager` (`Maintainer`, `SportsDirector`, `YouthSportsDirector`, `Admin`). Policies are set per action; the FE mirrors this in `NewsHelpers.CanManage`.
 - **Expired announcements (and their attachments) only exist for managers.** The controller checks the manager policy with `IAuthorizationService` and passes `CanManage` to the read handlers, which also hide the email details from other members.
 - The text is rendered by `IClubEmailRenderer.RenderMarkdown` (same Markdown pipeline and sanitizer as the emails, but links open in a new tab and images are removed because the CSP only allows images from the app). DTOs carry `Body` (Markdown, for the editor) and `BodyHtml`; list items carry a plain text `Excerpt`.
 - Attachments are always served as a download (`Content-Disposition: attachment`), never inline.

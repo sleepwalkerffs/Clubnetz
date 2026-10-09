@@ -14,22 +14,22 @@ namespace Bookennis.Api.Controllers.Members;
 public class MembersController(IMediator mediator, IAuthorizationService authorizationService) : ClubControllerBase
 {
     [HttpGet]
-    [Authorize(AuthorizationPolicies.ClubAdministrator)]
+    [Authorize(AuthorizationPolicies.ClubMemberViewer)]
     public async Task<GetMembersResult> GetMembers([FromQuery] PaginationParameters pagination, [FromQuery] SortParameters? sort, [FromQuery] MemberFilter filter, CancellationToken cancellationToken)
         => await mediator.Send(new GetMembers(pagination, sort, filter), cancellationToken);
 
     [HttpGet("emails")]
-    [Authorize(AuthorizationPolicies.ClubAdministrator)]
+    [Authorize(AuthorizationPolicies.ClubMemberViewer)]
     public async Task<GetMemberEmailsResult> GetMemberEmails([FromQuery] MemberFilter filter, CancellationToken cancellationToken)
         => await mediator.Send(new GetMemberEmails(filter), cancellationToken);
 
     [HttpGet("summary")]
-    [Authorize(AuthorizationPolicies.ClubAdministrator)]
+    [Authorize(AuthorizationPolicies.ClubMemberViewer)]
     public async Task<GetMembersSummaryResult> GetMembersSummary(CancellationToken cancellationToken)
         => await mediator.Send(new GetMembersSummary(), cancellationToken);
 
     [HttpGet("{memberId:int}/overview")]
-    [Authorize(AuthorizationPolicies.ClubAdministrator)]
+    [Authorize(AuthorizationPolicies.ClubMemberViewer)]
     public async Task<GetMemberOverviewResult> GetMemberOverview([FromRoute] int clubId, int memberId, CancellationToken cancellationToken)
         => await mediator.Send(new GetMemberOverview(clubId, memberId), cancellationToken);
 
@@ -51,7 +51,9 @@ public class MembersController(IMediator mediator, IAuthorizationService authori
     [HttpGet("{memberId:int}/BookingHistory")]
     public async Task<GetMemberBookingHistoryResult> GetBookingHistory(int memberId, [FromQuery] int seasonId, CancellationToken cancellationToken)
     {
-        (await authorizationService.AuthorizeAsync(HttpContext.User, new MemberAuthorizationModel(memberId), AuthorizationPolicies.Member)).EnsureSucceeded();
+        // Members read their own history, member viewers the history of everybody
+        if (!(await authorizationService.AuthorizeAsync(HttpContext.User, AuthorizationPolicies.ClubMemberViewer)).Succeeded)
+            (await authorizationService.AuthorizeAsync(HttpContext.User, new MemberAuthorizationModel(memberId), AuthorizationPolicies.Member)).EnsureSucceeded();
 
         return await mediator.Send(new GetMemberBookingHistory(memberId, seasonId), cancellationToken);
     }

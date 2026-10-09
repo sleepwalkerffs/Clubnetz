@@ -69,7 +69,7 @@ public static class AuthorizationConfiguration
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.SportsDirector, MemberRole.YouthSportsDirector, MemberRole.Admin] }))
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Maintainer, MemberRole.SportsDirector, MemberRole.YouthSportsDirector, MemberRole.Admin] }))
 
                 // Court Blocking Manager Policy
                 .AddPolicy(AuthorizationPolicies.CourtBlockingManager, policy =>
@@ -77,6 +77,20 @@ public static class AuthorizationConfiguration
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
                           .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Maintainer, MemberRole.SportsDirector, MemberRole.Admin] }))
+
+                // Club Member Viewer Policy
+                .AddPolicy(AuthorizationPolicies.ClubMemberViewer, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Maintainer, MemberRole.Admin] }))
+
+                // Club Statistics Viewer Policy
+                .AddPolicy(AuthorizationPolicies.ClubStatisticsViewer, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Maintainer, MemberRole.Admin] }))
 
                 // Club User Policy
                 .AddPolicy(AuthorizationPolicies.Member, policy =>

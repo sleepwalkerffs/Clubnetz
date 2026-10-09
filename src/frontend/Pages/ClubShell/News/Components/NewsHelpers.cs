@@ -18,7 +18,7 @@ internal static class NewsHelpers
 
     /// <summary>Roles that write announcements, same as the backend policy <c>ClubAnnouncementManager</c>.</summary>
     public static bool CanManage(IEnumerable<MemberRole> roles)
-        => roles.Any(r => r is MemberRole.SportsDirector or MemberRole.YouthSportsDirector or MemberRole.Admin);
+        => roles.Any(r => r is MemberRole.Maintainer or MemberRole.SportsDirector or MemberRole.YouthSportsDirector or MemberRole.Admin);
 
     public static string NewsUrl(int clubId) => $"/clubs/{clubId}/news";
 

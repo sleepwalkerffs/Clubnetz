@@ -114,20 +114,20 @@
             <MudItem xs="12" md="7">
                 <SectionCard Emoji="🗓️" Title="@L["SeasonEnrollment"]" Subtitle="@L["SeasonEnrollmentHint"]">
                     <SeasonEnrollmentEditor Seasons="@ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList()" Overview="@overview?.Seasons"
-                                            SelectedIds="@selectedSeasonIds" SelectedIdsChanged="@(ids => selectedSeasonIds = ids.ToList())" Disabled="@MembersStore.IsSaving" />
+                                            SelectedIds="@selectedSeasonIds" SelectedIdsChanged="@(ids => selectedSeasonIds = ids.ToList())" Disabled="@EditingDisabled" />
                 </SectionCard>
             </MudItem>
             <MudItem xs="12" md="5">
                 <div class="member-page__stack">
                     <SectionCard Emoji="⭐" Title="@SharedLocale["Role"]" Subtitle="@L["RolesHint"]">
-                        <RoleEditor Values="@selectedRoles" ValuesChanged="@(roles => selectedRoles = roles.ToList())" Disabled="@MembersStore.IsSaving" />
+                        <RoleEditor Values="@selectedRoles" ValuesChanged="@(roles => selectedRoles = roles.ToList())" Disabled="@EditingDisabled" />
                         @if (selectedRoles.Count == 0)
                         {
                             <div class="member-page__warning">⚠️ @L["RoleRequired"]</div>
                         }
                     </SectionCard>
                     <SectionCard Emoji="🎾" Title="@L["BookingsPerWeek"]" Subtitle="@L["BookingsPerWeekHint"]">
-                        <NumberStepper @bind-Value="bookingsPerWeek" Min="0" Max="10" Unit="@L["PerWeek"]" Label="@L["BookingsPerWeek"]" Disabled="@MembersStore.IsSaving" />
+                        <NumberStepper @bind-Value="bookingsPerWeek" Min="0" Max="10" Unit="@L["PerWeek"]" Label="@L["BookingsPerWeek"]" Disabled="@EditingDisabled" />
                     </SectionCard>
                     <SectionCard Emoji="🪪" Title="@L["PersonalData"]">
                         <dl class="member-facts">
@@ -192,6 +192,9 @@ else if (MembersStore.IsLoading)
                                           && (bookingsPerWeek != Detail.BookingsPerWeek || !Detail.AllowedSeasonIds.Order().SequenceEqual(selectedSeasonIds.Order()));
 
     private bool IsDirty => RolesChanged || BookingOptionsChanged;
+
+    /// <summary>Member viewers without the admin role see the page read-only.</summary>
+    private bool EditingDisabled => MembersStore.IsSaving || !MemberAdminHelpers.CanEdit(ClubProfileStore.Roles);
 
     protected override void OnInitialized()
     {

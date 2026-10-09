@@ -16,7 +16,7 @@ public class StatisticsController(IMediator mediator, IUserAccessor userAccessor
         => mediator.Send(new GetMemberStatistics(userAccessor.GetUserId(), clubId), cancellationToken);
 
     [HttpGet("club")]
-    [Authorize(AuthorizationPolicies.ClubAdministrator)]
+    [Authorize(AuthorizationPolicies.ClubStatisticsViewer)]
     public Task<GetClubStatisticsResult> GetClubStatistics([FromRoute] int clubId, CancellationToken cancellationToken)
         => mediator.Send(new GetClubStatistics(clubId), cancellationToken);
 }

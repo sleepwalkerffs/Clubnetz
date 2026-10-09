@@ -80,6 +80,12 @@
                     <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/court-blockings")" Icon="@Icons.Material.Filled.Lock">@Locale["CourtBlockings"]</MudNavLink>
                 }
 
+                @if (ClubProfileStore.Roles.Contains(MemberRole.Maintainer) && !ClubProfileStore.Roles.Contains(MemberRole.Admin))
+                {
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/members")" Icon="@Icons.Material.Filled.Groups2">@Locale["Members"]</MudNavLink>
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/club-statistics")" Icon="@Icons.Material.Filled.Analytics">@Locale["ClubStatistics"]</MudNavLink>
+                }
+
                 @if (ClubProfileStore.Roles.Contains(MemberRole.Treasurer))
                 {
                     <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/guests")" Icon="@Icons.Material.Filled.Person">@SharedLocale["Guests"]</MudNavLink>

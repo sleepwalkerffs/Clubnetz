@@ -9,6 +9,14 @@ namespace Bookennis.Client.Pages.ClubShell.Members.Components;
 
 public static class MemberAdminHelpers
 {
+    /// <summary>Roles that see the members list and every member, same as the backend policy <c>ClubMemberViewer</c>.</summary>
+    public static bool CanView(IEnumerable<MemberRole> roles)
+        => roles.Any(r => r is MemberRole.Maintainer or MemberRole.Admin);
+
+    /// <summary>Roles that change seasons, roles and booking options of a member, same as the backend policy <c>ClubAdministrator</c>.</summary>
+    public static bool CanEdit(IEnumerable<MemberRole> roles)
+        => roles.Contains(MemberRole.Admin);
+
     public static string SeasonLabel(SeasonResult season) => SeasonLabel(season.StartDate, season.EndDate);
 
     public static string SeasonLabel(DateOnly start, DateOnly end)

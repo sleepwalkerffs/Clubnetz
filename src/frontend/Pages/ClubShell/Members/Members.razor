@@ -106,7 +106,10 @@
                         <th>@SharedLocale["Role"]</th>
                         <th>@L["Seasons"]</th>
                         <th>@SortHeader(nameof(MemberResult.LastPlayed), L["LastPlayed"])</th>
-                        <th class="members-table__actions"><span class="visually-hidden">@L["Edit"]</span></th>
+                        @if (CanEdit)
+                        {
+                            <th class="members-table__actions"><span class="visually-hidden">@L["Edit"]</span></th>
+                        }
                     </tr>
                 </thead>
                 <tbody>
@@ -135,11 +138,14 @@
                             <td>@RenderRoles(member)</td>
                             <td>@RenderSeasonDots(member)</td>
                             <td><span class="last-played @(member.LastPlayed is null ? "last-played--never" : null)">@MemberAdminHelpers.RelativeDate(L, member.LastPlayed)</span></td>
-                            <td class="members-table__actions" @onclick:stopPropagation="true">
-                                <MudTooltip Text="@L["QuickEdit"]">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(member)" aria-label="@L["QuickEdit"]" />
-                                </MudTooltip>
-                            </td>
+                            @if (CanEdit)
+                            {
+                                <td class="members-table__actions" @onclick:stopPropagation="true">
+                                    <MudTooltip Text="@L["QuickEdit"]">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(member)" aria-label="@L["QuickEdit"]" />
+                                    </MudTooltip>
+                                </td>
+                            }
                         </tr>
                     }
                 </tbody>
@@ -164,9 +170,12 @@
                                 <span class="last-played @(member.LastPlayed is null ? "last-played--never" : null)">🎾 @MemberAdminHelpers.RelativeDate(L, member.LastPlayed)</span>
                             </div>
                         </div>
-                        <div class="member-card__edit" @onclick:stopPropagation="true">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(member)" aria-label="@L["QuickEdit"]" />
-                        </div>
+                        @if (CanEdit)
+                        {
+                            <div class="member-card__edit" @onclick:stopPropagation="true">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(member)" aria-label="@L["QuickEdit"]" />
+                            </div>
+                        }
                     </div>
                 }
             </div>
@@ -216,6 +225,8 @@
     private MemberListState state = new();
     private string? loadedQuery;
     private bool copying;
+
+    private bool CanEdit => MemberAdminHelpers.CanEdit(ClubProfileStore.Roles);
 
     private List<SeasonResult> SeasonsNewestFirst => ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList();
 
