@@ -17,6 +17,14 @@
     height: 100dvh;
 }
 
+/* MudBlazor keeps the transform of the dialog's opening animation (fill mode "both"). A transformed element positions
+   and clips its position: fixed descendants, so a picker with PickerVariant.Dialog that is opened from a dialog was
+   squeezed into that dialog and cut off. Dropping the transform after the animation lets it cover the viewport again.
+   The selector has to win against MudBlazor's own .mud-dialog rule, which is loaded after this file. */
+.mud-dialog-container > .mud-dialog {
+    animation-fill-mode: backwards;
+}
+
 .mud-dialog.mud-dialog-fullscreen {
     width: 100%;
     max-width: 100%;
