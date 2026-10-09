@@ -17,7 +17,7 @@ Installable on any phone, in English and German, and free for clubs and members.
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-65A30D)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 
-[Features](#-features) · [Tech stack](#-tech-stack) · [Getting started](#-getting-started) · [Project structure](#-project-structure) · [Contributing](#-contributing)
+[Features](#-features) · [Tech stack](#-tech-stack) · [Getting started](#-getting-started) · [Hosting](#-hosting-it-yourself) · [Project structure](#-project-structure) · [Contributing](#-contributing)
 
 </div>
 
@@ -155,6 +155,33 @@ After adding a migration, drop the `bookennis_test` template database once, othe
 
 Push is switched off until VAPID keys are configured. Create a key pair with [scripts/New-VapidKeys.ps1](scripts/New-VapidKeys.ps1) and put it into the `Push` section of the API settings. Don't commit the keys.
 
+## 🐳 Hosting it yourself
+
+The [Dockerfile](Dockerfile) builds one image that runs the whole app. It needs a PostgreSQL 16 database (the database has to exist, the tables are created on startup) and an SMTP server.
+
+```bash
+docker build -t clubnetz --build-arg SOURCE_REVISION_ID=$(git rev-parse HEAD) .
+```
+
+The app listens on port `8080` (HTTP) and expects a reverse proxy in front of it that terminates HTTPS. `/health` answers with 200 when the app and the database are up.
+
+**Mount a volume at `/home/app/.aspnet/DataProtection-Keys`.** It holds the keys that protect the login cookies and the links in emails. Without it every deployment signs all users out.
+
+Settings are passed as environment variables:
+
+| Variable | Meaning |
+|---|---|
+| `ConnectionString` | `Server=...;Port=5432;Database=...;User Id=...;Password=...` |
+| `AppUrl` | Public address of the app, e.g. `https://clubnetz.example.org`. Used for the links in emails. |
+| `Email__SenderAddress`, `Email__SenderName` | Sender of all emails |
+| `Email__SmtpServer`, `Email__SmtpPort`, `Email__SmtpUsername`, `Email__SmtpPassword`, `Email__EnableSsl` | SMTP server |
+| `Legal__OperatorName`, `Legal__Street`, `Legal__ZipCode`, `Legal__City`, `Legal__Country`, `Legal__Email`, `Legal__Phone` | Your details for the imprint and privacy policy pages |
+| `Legal__HostingProvider`, `Legal__EmailProvider` | Named as data processors in the privacy policy |
+| `Push__PublicKey`, `Push__PrivateKey`, `Push__Subject` | Optional: VAPID keys for push notifications (see above). Never change them on a running installation. |
+| `BccRecipient` | Optional: address that gets a blind copy of every email |
+
+[.github/workflows/deploy.yml](.github/workflows/deploy.yml) shows how the image is built and rolled out with [Coolify](https://coolify.io/) on every push to `stage` and `production`.
+
 ## 🗂️ Project structure
 
 ```text
@@ -169,6 +196,7 @@ Push is switched off until VAPID keys are configured. Create a key pair with [sc
 │   └── global                       Bookennis.Global: cross-cutting utilities
 ├── docker                           Compose files for local development
 ├── scripts                          Database dump import/export, VAPID keys
+├── Dockerfile                       The image that runs the app
 └── .github/workflows                CI (build and tests) and deployment
 ```
 

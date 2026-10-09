@@ -1,0 +1,16 @@
+# Everything the image build doesn't need. Keeps the build context small and secrets and data out of it.
+.git
+.github
+.claude
+.vs
+.idea
+docker
+dump
+scripts
+**/bin
+**/obj
+**/*.user
+**/appsettings.Development.json
+*.md
+*.ps1
+LICENSE
