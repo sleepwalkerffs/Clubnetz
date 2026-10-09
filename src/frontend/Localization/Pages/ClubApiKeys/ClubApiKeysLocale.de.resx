@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Title" xml:space="preserve">
+    <value>API-Schlüssel</value>
+  </data>
+  <data name="Subtitle" xml:space="preserve">
+    <value>Verbinde eigene Skripte und Werkzeuge mit deinem Verein: Buchungen, Mitglieder, Termine und mehr über die API lesen und ändern.</value>
+  </data>
+  <data name="ActiveChip" xml:space="preserve">
+    <value>{0} aktiv</value>
+  </data>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Nur Admins können die API-Schlüssel des Vereins verwalten.</value>
+  </data>
+  <data name="ListTitle" xml:space="preserve">
+    <value>Schlüssel</value>
+  </data>
+  <data name="ListSubtitle" xml:space="preserve">
+    <value>Ein Schlüssel pro Skript oder Werkzeug, damit du jeden einzeln widerrufen kannst</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Neuer Schlüssel</value>
+  </data>
+  <data name="EmptyTitle" xml:space="preserve">
+    <value>Noch keine API-Schlüssel</value>
+  </data>
+  <data name="EmptyText" xml:space="preserve">
+    <value>Erstelle einen Schlüssel, damit ein Skript, eine Tabelle oder eure Vereinswebsite mit den Daten deines Vereins arbeiten kann.</value>
+  </data>
+  <data name="SupportModeHint" xml:space="preserve">
+    <value>Ein Schlüssel handelt als der Vereins-Admin, der ihn erstellt. Im Support-Modus bist du kein Mitglied dieses Vereins und kannst Schlüssel daher nur ansehen und widerrufen.</value>
+  </data>
+  <data name="Status_Active" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
+  <data name="Status_Expired" xml:space="preserve">
+    <value>Abgelaufen</value>
+  </data>
+  <data name="Status_CreatorNotAdmin" xml:space="preserve">
+    <value>Inaktiv</value>
+  </data>
+  <data name="AccessReadOnly" xml:space="preserve">
+    <value>Nur lesen</value>
+  </data>
+  <data name="AccessFull" xml:space="preserve">
+    <value>Lesen und schreiben</value>
+  </data>
+  <data name="CreatedBy" xml:space="preserve">
+    <value>Erstellt von {0} am {1}</value>
+  </data>
+  <data name="ExpiresOn" xml:space="preserve">
+    <value>Läuft am {0} ab</value>
+  </data>
+  <data name="ExpiredOn" xml:space="preserve">
+    <value>Am {0} abgelaufen</value>
+  </data>
+  <data name="NeverExpires" xml:space="preserve">
+    <value>Läuft nie ab</value>
+  </data>
+  <data name="LastUsed" xml:space="preserve">
+    <value>zuletzt verwendet {0}</value>
+  </data>
+  <data name="NeverUsed" xml:space="preserve">
+    <value>noch nie verwendet</value>
+  </data>
+  <data name="CreatorNotAdminHint" xml:space="preserve">
+    <value>{0} ist kein Admin dieses Vereins mehr, daher wird dieser Schlüssel abgelehnt. Widerrufe ihn und erstelle einen neuen.</value>
+  </data>
+  <data name="Revoke" xml:space="preserve">
+    <value>Widerrufen</value>
+  </data>
+  <data name="RevokeTitle" xml:space="preserve">
+    <value>API-Schlüssel widerrufen</value>
+  </data>
+  <data name="RevokeConfirm" xml:space="preserve">
+    <value>Den Schlüssel „{0}“ widerrufen? Alles, was ihn verwendet, funktioniert sofort nicht mehr. Das kann nicht rückgängig gemacht werden.</value>
+  </data>
+  <data name="Revoked" xml:space="preserve">
+    <value>Der Schlüssel wurde widerrufen.</value>
+  </data>
+  <data name="NewTitle" xml:space="preserve">
+    <value>Neuer API-Schlüssel</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Schlüssel erstellen</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="NameHint" xml:space="preserve">
+    <value>Wofür der Schlüssel verwendet wird, z. B. „Website“ oder „Mitgliederexport“</value>
+  </data>
+  <data name="Expiry" xml:space="preserve">
+    <value>Gültig für</value>
+  </data>
+  <data name="Expiry30" xml:space="preserve">
+    <value>30 Tage</value>
+  </data>
+  <data name="Expiry90" xml:space="preserve">
+    <value>90 Tage</value>
+  </data>
+  <data name="Expiry365" xml:space="preserve">
+    <value>1 Jahr</value>
+  </data>
+  <data name="ExpiryNever" xml:space="preserve">
+    <value>Bis er widerrufen wird</value>
+  </data>
+  <data name="Access" xml:space="preserve">
+    <value>Zugriff</value>
+  </data>
+  <data name="AccessReadOnlyHint" xml:space="preserve">
+    <value>Kann alles lesen, aber nichts ändern.</value>
+  </data>
+  <data name="AccessFullHint" xml:space="preserve">
+    <value>Kann alles, was du in diesem Verein kannst.</value>
+  </data>
+  <data name="ActsAsYouHint" xml:space="preserve">
+    <value>Der Schlüssel handelt in diesem Verein als du. Er funktioniert nicht mehr, sobald du hier kein Admin mehr bist.</value>
+  </data>
+  <data name="NewKeyTitle" xml:space="preserve">
+    <value>Dein neuer API-Schlüssel</value>
+  </data>
+  <data name="NewKeyText" xml:space="preserve">
+    <value>Kopiere ihn jetzt und bewahre ihn sicher auf. Aus Sicherheitsgründen wird er nicht noch einmal angezeigt.</value>
+  </data>
+  <data name="NewKeyDone" xml:space="preserve">
+    <value>Ich habe ihn gespeichert</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Kopieren</value>
+  </data>
+  <data name="Copied" xml:space="preserve">
+    <value>Der Schlüssel wurde kopiert.</value>
+  </data>
+  <data name="HowToTitle" xml:space="preserve">
+    <value>So verwendest du ihn</value>
+  </data>
+  <data name="HowToSubtitle" xml:space="preserve">
+    <value>Die API bietet, was auch die App selbst verwendet</value>
+  </data>
+  <data name="HowToStep1" xml:space="preserve">
+    <value>Erstelle einen Schlüssel und speichere ihn dort, wo nur dein Skript ihn lesen kann.</value>
+  </data>
+  <data name="HowToStep2" xml:space="preserve">
+    <value>Sende ihn bei jeder Anfrage im Authorization-Header mit:</value>
+  </data>
+  <data name="HowToStep3" xml:space="preserve">
+    <value>Alle Endpunkte sind im OpenAPI-Dokument beschrieben, das du in Werkzeuge wie Postman laden kannst:</value>
+  </data>
+  <data name="NoteClub" xml:space="preserve">
+    <value>Ein Schlüssel funktioniert nur für diesen Verein: Jede Adresse beginnt mit /api/Clubs/{0}/.</value>
+  </data>
+  <data name="NoteActsAs" xml:space="preserve">
+    <value>Änderungen mit einem Schlüssel gelten als vom Admin gemacht, der ihn erstellt hat.</value>
+  </data>
+  <data name="NoteLimit" xml:space="preserve">
+    <value>Jeder Schlüssel darf 120 Anfragen pro Minute senden.</value>
+  </data>
+  <data name="NoteSecret" xml:space="preserve">
+    <value>Behandle einen Schlüssel wie ein Passwort: Er gehört nie in eine Website, eine App oder ein öffentliches Repository. Wird er bekannt, widerrufe ihn.</value>
+  </data>
+  <data name="HowToGuide" xml:space="preserve">
+    <value>API-Dokumentation öffnen</value>
+  </data>
+</root>

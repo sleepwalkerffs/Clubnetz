@@ -1,5 +1,6 @@
 using System.Net;
 using System.Threading.RateLimiting;
+using Bookennis.Api.Infrastructure.Identity;
 using Bookennis.Shared.Controller.Shared;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
@@ -20,6 +21,9 @@ public static class RateLimitingConfiguration
 
     public const string TooManyRequestsErrorCode = "TooManyRequests";
 
+    /// <summary>How many requests a single club API key may send per minute.</summary>
+    public const int ClubApiKeyRequestsPerMinute = 120;
+
     public static void AddRateLimiting(this WebApplicationBuilder builder)
     {
         // Azure App Service terminates TLS in front of the app and appends the client IP to X-Forwarded-For. Only the last
@@ -35,6 +39,14 @@ public static class RateLimitingConfiguration
         builder.Services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = (int)HttpStatusCode.TooManyRequests;
+
+            // Requests made with a club API key are limited per key on every endpoint, signed-in users are not limited here
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+                context.User.GetClubApiKeyId() is { } keyId
+                    ? RateLimitPartition.GetFixedWindowLimiter(
+                        $"club-api-key:{keyId}",
+                        _ => new FixedWindowRateLimiterOptions { PermitLimit = ClubApiKeyRequestsPerMinute, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 })
+                    : RateLimitPartition.GetNoLimiter(""));
 
             options.AddPolicy(AuthenticationPolicy, context => PerClientIp(context, permitLimit: 10, window: TimeSpan.FromMinutes(1)));
             options.AddPolicy(EmailPolicy, context => PerClientIp(context, permitLimit: 5, window: TimeSpan.FromMinutes(15)));

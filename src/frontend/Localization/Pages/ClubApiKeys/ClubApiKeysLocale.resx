@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Title" xml:space="preserve">
+    <value>API keys</value>
+  </data>
+  <data name="Subtitle" xml:space="preserve">
+    <value>Connect your own scripts and tools to your club: read and change bookings, members, events and more over the API.</value>
+  </data>
+  <data name="ActiveChip" xml:space="preserve">
+    <value>{0} active</value>
+  </data>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Only admins can manage the API keys of the club.</value>
+  </data>
+  <data name="ListTitle" xml:space="preserve">
+    <value>Keys</value>
+  </data>
+  <data name="ListSubtitle" xml:space="preserve">
+    <value>One key per script or tool, so you can revoke each one on its own</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>New key</value>
+  </data>
+  <data name="EmptyTitle" xml:space="preserve">
+    <value>No API keys yet</value>
+  </data>
+  <data name="EmptyText" xml:space="preserve">
+    <value>Create a key to let a script, a spreadsheet or your club website work with the data of your club.</value>
+  </data>
+  <data name="SupportModeHint" xml:space="preserve">
+    <value>A key acts as the club admin who creates it. In support mode you are not a member of this club, so you can only view and revoke keys.</value>
+  </data>
+  <data name="Status_Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Status_Expired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="Status_CreatorNotAdmin" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="AccessReadOnly" xml:space="preserve">
+    <value>Read only</value>
+  </data>
+  <data name="AccessFull" xml:space="preserve">
+    <value>Read and write</value>
+  </data>
+  <data name="CreatedBy" xml:space="preserve">
+    <value>Created by {0} on {1}</value>
+  </data>
+  <data name="ExpiresOn" xml:space="preserve">
+    <value>Expires on {0}</value>
+  </data>
+  <data name="ExpiredOn" xml:space="preserve">
+    <value>Expired on {0}</value>
+  </data>
+  <data name="NeverExpires" xml:space="preserve">
+    <value>Never expires</value>
+  </data>
+  <data name="LastUsed" xml:space="preserve">
+    <value>last used {0}</value>
+  </data>
+  <data name="NeverUsed" xml:space="preserve">
+    <value>never used</value>
+  </data>
+  <data name="CreatorNotAdminHint" xml:space="preserve">
+    <value>{0} is no longer an admin of this club, so this key is rejected. Revoke it and create a new one.</value>
+  </data>
+  <data name="Revoke" xml:space="preserve">
+    <value>Revoke</value>
+  </data>
+  <data name="RevokeTitle" xml:space="preserve">
+    <value>Revoke API key</value>
+  </data>
+  <data name="RevokeConfirm" xml:space="preserve">
+    <value>Revoke the key "{0}"? Everything that uses it stops working immediately. This can't be undone.</value>
+  </data>
+  <data name="Revoked" xml:space="preserve">
+    <value>The key was revoked.</value>
+  </data>
+  <data name="NewTitle" xml:space="preserve">
+    <value>New API key</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Create key</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="NameHint" xml:space="preserve">
+    <value>What the key is used for, e.g. "Website" or "Membership export"</value>
+  </data>
+  <data name="Expiry" xml:space="preserve">
+    <value>Valid for</value>
+  </data>
+  <data name="Expiry30" xml:space="preserve">
+    <value>30 days</value>
+  </data>
+  <data name="Expiry90" xml:space="preserve">
+    <value>90 days</value>
+  </data>
+  <data name="Expiry365" xml:space="preserve">
+    <value>1 year</value>
+  </data>
+  <data name="ExpiryNever" xml:space="preserve">
+    <value>Until it is revoked</value>
+  </data>
+  <data name="Access" xml:space="preserve">
+    <value>Access</value>
+  </data>
+  <data name="AccessReadOnlyHint" xml:space="preserve">
+    <value>Can read everything, but change nothing.</value>
+  </data>
+  <data name="AccessFullHint" xml:space="preserve">
+    <value>Can do everything you can do in this club.</value>
+  </data>
+  <data name="ActsAsYouHint" xml:space="preserve">
+    <value>The key acts as you in this club. It stops working when you are no longer an admin here.</value>
+  </data>
+  <data name="NewKeyTitle" xml:space="preserve">
+    <value>Your new API key</value>
+  </data>
+  <data name="NewKeyText" xml:space="preserve">
+    <value>Copy it now and store it safely. For security reasons it is not shown again.</value>
+  </data>
+  <data name="NewKeyDone" xml:space="preserve">
+    <value>I have saved it</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Copied" xml:space="preserve">
+    <value>The key was copied.</value>
+  </data>
+  <data name="HowToTitle" xml:space="preserve">
+    <value>How to use it</value>
+  </data>
+  <data name="HowToSubtitle" xml:space="preserve">
+    <value>The API offers what the app itself uses</value>
+  </data>
+  <data name="HowToStep1" xml:space="preserve">
+    <value>Create a key and store it where only your script can read it.</value>
+  </data>
+  <data name="HowToStep2" xml:space="preserve">
+    <value>Send it with every request in the Authorization header:</value>
+  </data>
+  <data name="HowToStep3" xml:space="preserve">
+    <value>All endpoints are described in the OpenAPI document, which you can load into tools like Postman:</value>
+  </data>
+  <data name="NoteClub" xml:space="preserve">
+    <value>A key only works for this club: every address starts with /api/Clubs/{0}/.</value>
+  </data>
+  <data name="NoteActsAs" xml:space="preserve">
+    <value>Changes made with a key count as made by the admin who created it.</value>
+  </data>
+  <data name="NoteLimit" xml:space="preserve">
+    <value>Each key may send 120 requests per minute.</value>
+  </data>
+  <data name="NoteSecret" xml:space="preserve">
+    <value>Treat a key like a password: never put it into a website, an app or a public repository. If it leaks, revoke it.</value>
+  </data>
+  <data name="HowToGuide" xml:space="preserve">
+    <value>Open the API documentation</value>
+  </data>
+</root>

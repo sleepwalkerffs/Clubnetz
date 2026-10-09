@@ -195,4 +195,7 @@
   <data name="SupportModeExit" xml:space="preserve">
     <value>Zurück zum Admin-Bereich</value>
   </data>
+  <data name="ApiKeys" xml:space="preserve">
+    <value>API-Schlüssel</value>
+  </data>
 </root>

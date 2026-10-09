@@ -4,6 +4,7 @@ using Bookennis.Domain.Bookings;
 using Bookennis.Domain.ClubAnnouncements;
 using Bookennis.Domain.ClubEvents;
 using Bookennis.Domain.Clubs;
+using Bookennis.Domain.Clubs.ApiKeys;
 using Bookennis.Domain.Clubs.EmailTemplates;
 using Bookennis.Domain.Courts;
 using Bookennis.Domain.Families;
@@ -39,6 +40,7 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<RecurringBookingSeriesPlayer> RecurringBookingSeriesPlayers => Set<RecurringBookingSeriesPlayer>();
     public DbSet<Club> Clubs => Set<Club>();
     public DbSet<ClubEmailTemplate> ClubEmailTemplates => Set<ClubEmailTemplate>();
+    public DbSet<ClubApiKey> ClubApiKeys => Set<ClubApiKey>();
     public DbSet<Court> Courts => Set<Court>();
     public DbSet<CourtBlocking> CourtBlockings => Set<CourtBlocking>();
     public DbSet<CourtBlockingCourt> CourtBlockingCourts => Set<CourtBlockingCourt>();

@@ -43,6 +43,10 @@ namespace Bookennis.Api.Data.Migrations
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence<int>("ClubApiKeys_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence<int>("ClubEmailTemplates_Id_Sequence")
                 .StartsAt(10L)
                 .IncrementsBy(10);
@@ -596,6 +600,57 @@ namespace Bookennis.Api.Data.Migrations
                         .HasDatabaseName("UX_ClubEventRegistrationAnswers_ClubEventRegistrationId_ClubEv~");
 
                     b.ToTable("ClubEventRegistrationAnswers");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Clubs.ApiKeys.ClubApiKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "ClubApiKeys_Id_Sequence");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsReadOnly")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("KeyHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("KeyPrefix")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("KeyHash")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ClubApiKeys_KeyHash");
+
+                    b.ToTable("ClubApiKeys");
                 });
 
             modelBuilder.Entity("Bookennis.Domain.Clubs.BadgeTier", b =>
@@ -2216,6 +2271,52 @@ namespace Bookennis.Api.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Registration");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Clubs.ApiKeys.ClubApiKey", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.User.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("ClubApiKeys");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Bookennis.Domain.Clubs.BadgeTier", b =>

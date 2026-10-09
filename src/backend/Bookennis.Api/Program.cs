@@ -4,6 +4,7 @@ using Bookennis.Api.Config;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure.Configuration;
 using Bookennis.Api.Infrastructure.Configuration.Hangfire;
+using Bookennis.Api.Infrastructure.Swagger;
 using Bookennis.Api.Infrastructure.Tenant;
 using Fusonic.Extensions.AspNetCore.Http;
 using Fusonic.Extensions.Email;
@@ -54,13 +55,27 @@ app.UseSecurityHeaders();
 app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
+// The OpenAPI document of what a club API key can do is public. The document with all endpoints only exists in Development.
+// It may be read from any website (it is public and needs no sign-in), e.g. by the API reference on the landing page.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.Equals(ClubApiDocument.Url, StringComparison.OrdinalIgnoreCase))
+        context.Response.Headers.AccessControlAllowOrigin = "*";
+
+    await next();
+});
+app.UseSwagger(c => c.RouteTemplate = ClubApiDocument.RouteTemplate);
+
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
 
-    // The API description is only exposed locally, not in production
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint(url: "/swagger/v1/swagger.json", name: "Tennis API"));
+    // The interactive API description is only exposed locally, not in production
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint(url: $"/api/openapi/{ClubApiDocument.AllEndpointsName}.json", name: "All endpoints");
+        c.SwaggerEndpoint(url: ClubApiDocument.Url, name: "Club API (API keys)");
+    });
 }
 
 //maybe this: https://github.com/dotnet/runtime/issues/23801

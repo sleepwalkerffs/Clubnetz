@@ -446,7 +446,46 @@ The club posts news for its members: a title and a Markdown text, optionally pin
 - Failed password checks lock the account (`IdentityAndAuthenticationConfiguration`: 5 attempts, 15 minutes). Always call `CheckPasswordSignInAsync(..., lockoutOnFailure: true)` when checking a password (login, re-authentication for email change / account deletion). A successful `ResetPassword` lifts the lockout.
 - Don't reveal whether an email is registered: `LoginUser` answers unknown email and wrong password with `InvalidCredentials` (and only reports `NotAllowed`/unconfirmed email when the password was right), `ConfirmEmail`/`ResetPassword` treat an unknown email like an invalid token, `ForgotPassword` always succeeds.
 - `RateLimitingConfiguration` adds per-IP fixed-window policies: `AuthenticationPolicy` (10/min: login, guest login, confirm email, reset password, change password, delete account) and `EmailPolicy` (5/15 min: register, forgot password, change email). Apply them with `[EnableRateLimiting(...)]` on anonymous or credential-checking endpoints. Rejections are 429 with an `ErrorCodeResponse` (`TooManyRequests`), which `SnackbarExtensions.ShowErrorDetails` localizes. The client IP comes from `X-Forwarded-For` (`UseForwardedHeaders`, rightmost entry only).
-- Swagger is only exposed in Development. `/health` is an anonymous health check (includes the database).
+- The Swagger UI and the OpenAPI document with all endpoints are only exposed in Development; the document of the club API is public (see Club API Keys & OpenAPI). `/health` is an anonymous health check (includes the database).
+
+## Club API Keys & OpenAPI
+
+### Overview
+
+Club admins connect their own scripts and tools to their club with an API key (`Authorization: Bearer cnz_...`). There is no separate public API: a key is accepted by the club endpoints the app itself uses (`api/Clubs/{clubId}/...`).
+
+- **A key acts as the user who created it** (`ClubApiKey.CreatedByUserId`), limited to its club. The request runs with that user's id, so handlers, the audit metadata and "don't notify the user who caused it" work unchanged. There is no user-less service account - don't build handlers that expect one.
+- A key is rejected (401) when it is unknown, expired, used for another club or for a route without `{clubId}`, or **when its creator is no longer a `ClubMember` with `MemberRole.Admin` in the club** (`ClubApiKeyStatus.CreatorNotAdmin` in the list). An administrator in support mode has no member and therefore can't create a key (`ApiKeyCreatorNotClubAdmin`), only view and revoke.
+- A read-only key (`IsReadOnly`) may only send GET/HEAD requests; `ClubApiKeyReadOnlyFilter` (global MVC filter) answers everything else with 403 `ApiKeyReadOnly`, also POST endpoints that only read (previews, conflicts).
+
+### Domain / handlers
+
+- `ClubApiKey` (`Bookennis.Domain/Clubs/ApiKeys`, `TenantDomainEntity`): `Name`, `KeyHash` (SHA-256 hex of the key, unique), `KeyPrefix` (first characters, for the list), `IsReadOnly`, `CreatedByUserId` (cascade), `ExpiresAt?`, `LastUsedAt?`. `ClubApiKey.Create` returns the entity and the key; **the key is never stored and only returned by `CreateClubApiKey`**. Revoking deletes the row.
+- `Business/ClubApiKeys`: `GetClubApiKeys`, `CreateClubApiKey` (max `ClubApiKey.MaxKeysPerClub` = 20), `DeleteClubApiKey` and `AuthenticateClubApiKey` (used by the authentication handler; writes `LastUsedAt` at most every 5 minutes; ignores the tenant filter on purpose, see `ClubApiKeyQueryExtensions.ClubAdmins`).
+
+### Authentication / authorization
+
+- `ClubApiKeyAuthenticationHandler` (scheme `CustomAuthenticationSchemes.ClubApiKey`, not a default scheme) builds a principal with the creator's `sub`, the role `User` (**never `Administrator`**, even if the creator is one) and the `ClubApiKeyClaims`.
+- **Closed by default**: a key only reaches endpoints whose policy lists the scheme (`CustomAuthenticationSchemes.CookieOrClubApiKey`). These are the club policies in `AuthorizationConfiguration`; `ApplicationUser`, `AccountOwner`, `ApplicationAdministrator`, `OwnsSubscriptionPlan` and `ClubApiKeyManager` stay cookie-only, so profile, account, push, admin panel and the key management itself can't be called with a key. A new club endpoint is reachable with a key as soon as it uses a club policy; a club endpoint that only has `ApplicationUser` at the controller needs `AuthorizationPolicies.AnyMember` (see `MembersController.GetBookingHistory`).
+- `ClubApiKeysController` (`api/Clubs/{clubId}/ClubApiKeys`, policy `ClubApiKeyManager` = signed-in Admin): list, create, delete.
+- Requests with a key are limited to `RateLimitingConfiguration.ClubApiKeyRequestsPerMinute` (120) per key by the global limiter; signed-in users are not limited there.
+
+### OpenAPI
+
+- `Infrastructure/Swagger/ClubApiDocument`: the document `club` contains exactly the endpoints whose policies accept the key scheme (derived from the endpoint metadata, nothing to maintain by hand) and is served in every environment at `/api/openapi/club.json`. The document with all endpoints (`/api/openapi/v1.json`) and the Swagger UI only exist in Development.
+- The description in `ClubApiDocument.Info` is the documentation integrators read; update it when the rules above change.
+- `OperationNameFilter` gives every operation an id and a summary derived from the action name ("Get club announcements") unless the action has an XML `<summary>`; the XML comments of controllers, actions and models are included in the documents. A comment on a controller, action or shared model is therefore public documentation.
+- The club document is sent with `Access-Control-Allow-Origin: *` (`Program.cs`) so the landing page can load it. This is the only CORS exception; the API itself is not callable from other websites.
+
+### Documentation on the landing page
+
+- `website/docs/api/index.html` and `website/de/docs/api/index.html` (static, like the rest of `website/`): guide, tested examples, errors, limits and the endpoint reference. The landing pages link to them (nav, card in "For the board", section `#api`, FAQ, footer) and the API keys page of the app links to the guide.
+- The reference is not written by hand: `website/docs/api/reference.js` (plain JavaScript, no dependencies, inserts everything as text) loads `https://my.clubnetz.app/api/openapi/club.json` and renders it. For a local preview serve `website/` on localhost and append `?openapi=http://localhost:<port>/api/openapi/club.json` (only honoured on localhost).
+- **Keep both languages and the app in sync**: when the rules of the keys change (limits, status codes, what a key can reach), update both docs pages, `ClubApiDocument.Info` and the how-to card in `ApiKeys.razor`.
+
+### FE
+
+- `Pages/ClubShell/Club/ApiKeys.razor` (`/clubs/{id}/api-keys`, admins only, link in the admin group of the `NavMenu`) and `Dialogs/CreateApiKeyDialog.razor` (name, validity, read-only or read and write). The new key is shown once in the page and only kept in the component. The page also explains the usage (curl example, link to the OpenAPI document and to the guide on the landing page). Texts are in `ClubApiKeysLocale(.de).resx`, store: `IClubApiKeysStore`.
 
 ## Admin Panel & Support Mode
 
