@@ -1,0 +1,225 @@
+@page "/clubs/{ClubId:int}/api-keys"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubApiKeys
+@using Bookennis.Client.Pages.ClubShell.Club.Dialogs
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.Store.ClubApiKeys
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.ClubApiKeys
+@using Bookennis.Shared.Controller.Shared
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+<PageTitle>@L["Title"]</PageTitle>
+
+@if (!CanManage)
+{
+    <MudAlert Severity="Severity.Info">@L["NoAccess"]</MudAlert>
+}
+else if (Store.ApiKeys is not { } apiKeys)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else
+{
+    <div class="api-keys-page">
+        <AdminHero Emoji="🔑" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Title"]" Subtitle="@L["Subtitle"]">
+            <Chips>
+                <span class="hero-chip">✅ @string.Format(L["ActiveChip"], apiKeys.Count(k => k.Status == ClubApiKeyStatus.Active))</span>
+            </Chips>
+        </AdminHero>
+
+        @if (newKey is not null)
+        {
+            <div class="api-key-new" role="status">
+                <div class="api-key-new__title">🎉 @L["NewKeyTitle"]</div>
+                <div class="api-key-new__text">@L["NewKeyText"]</div>
+                <div class="api-key-new__row">
+                    <code class="api-key-new__token">@newKey.Token</code>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="CopyNewKey">@L["Copy"]</MudButton>
+                </div>
+                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="() => newKey = null">@L["NewKeyDone"]</MudButton>
+            </div>
+        }
+
+        <SectionCard Emoji="🗝️" Title="@L["ListTitle"]" Subtitle="@L["ListSubtitle"]">
+            <Actions>
+                @if (!ClubProfileStore.IsSupportMode)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenDialog">@L["Add"]</MudButton>
+                }
+            </Actions>
+            <ChildContent>
+                @if (ClubProfileStore.IsSupportMode)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">@L["SupportModeHint"]</MudAlert>
+                }
+
+                @if (apiKeys.Count == 0)
+                {
+                    <div class="api-keys-empty">
+                        <div class="api-keys-empty__emoji" aria-hidden="true">🔌</div>
+                        <div class="api-keys-empty__title">@L["EmptyTitle"]</div>
+                        <div class="api-keys-empty__text">@L["EmptyText"]</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="api-keys">
+                        @foreach (var apiKey in apiKeys)
+                        {
+                            <div class="api-key @(apiKey.Status == ClubApiKeyStatus.Active ? null : "api-key--inactive")">
+                                <div class="api-key__main">
+                                    <div class="api-key__head">
+                                        <span class="api-key__name">@apiKey.Name</span>
+                                        <span class="api-key__status">@L[$"Status_{apiKey.Status}"]</span>
+                                        <span class="api-key__access">@L[apiKey.IsReadOnly ? "AccessReadOnly" : "AccessFull"]</span>
+                                    </div>
+                                    <div class="api-key__fact">
+                                        <MudIcon Icon="@Icons.Material.Filled.Key" Class="api-key__icon" />
+                                        <code>@(apiKey.KeyPrefix)…</code>
+                                    </div>
+                                    <div class="api-key__fact">
+                                        <MudIcon Icon="@Icons.Material.Filled.Person" Class="api-key__icon" />
+                                        <span>@string.Format(L["CreatedBy"], apiKey.CreatedByName, FormatDate(apiKey.CreatedAt))</span>
+                                    </div>
+                                    <div class="api-key__fact">
+                                        <MudIcon Icon="@Icons.Material.Filled.Schedule" Class="api-key__icon" />
+                                        <span>
+                                            @(apiKey.ExpiresAt is { } expiresAt ? string.Format(L[apiKey.Status == ClubApiKeyStatus.Expired ? "ExpiredOn" : "ExpiresOn"], FormatDate(expiresAt.LocalDateTime)) : L["NeverExpires"])
+                                            <span class="api-key__muted"> · @(apiKey.LastUsedAt is { } lastUsedAt ? string.Format(L["LastUsed"], lastUsedAt.LocalDateTime.ToString("g", CultureInfo.CurrentCulture)) : L["NeverUsed"])</span>
+                                        </span>
+                                    </div>
+                                    @if (apiKey.Status == ClubApiKeyStatus.CreatorNotAdmin)
+                                    {
+                                        <div class="api-key__warning">⚠️ @string.Format(L["CreatorNotAdminHint"], apiKey.CreatedByName)</div>
+                                    }
+                                </div>
+                                <div class="api-key__actions">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@L["Revoke"]" title="@L["Revoke"]"
+                                                   Disabled="@Store.IsSaving" OnClick="() => Revoke(apiKey)" />
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </ChildContent>
+        </SectionCard>
+
+        <SectionCard Emoji="📖" Title="@L["HowToTitle"]" Subtitle="@L["HowToSubtitle"]">
+            <ol class="api-keys-howto">
+                <li>@L["HowToStep1"]</li>
+                <li>
+                    @L["HowToStep2"]
+                    <pre class="api-keys-howto__code"><code>@CurlExample</code></pre>
+                </li>
+                <li>
+                    @L["HowToStep3"]
+                    <a class="api-keys-howto__link" href="@OpenApiUrl" target="_blank" rel="noopener">@OpenApiUrl</a>
+                </li>
+            </ol>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.MenuBook" EndIcon="@Icons.Material.Filled.OpenInNew"
+                       Href="@GuideUrl" Target="_blank" Rel="noopener" Class="mt-3">@L["HowToGuide"]</MudButton>
+            <ul class="api-keys-howto__notes">
+                <li>@string.Format(L["NoteClub"], ClubId)</li>
+                <li>@L["NoteActsAs"]</li>
+                <li>@L["NoteLimit"]</li>
+                <li>@L["NoteSecret"]</li>
+            </ul>
+        </SectionCard>
+    </div>
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [Inject] private IClubApiKeysStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubApiKeysLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    /// <summary>The key that was just created. It only exists here until the page is left, the server can't return it again.</summary>
+    private CreateClubApiKeyResult? newKey;
+
+    /// <summary>Same as the backend policy <c>ClubApiKeyManager</c> (support mode reports the role Admin).</summary>
+    private bool CanManage => ClubProfileStore.Roles.Contains(MemberRole.Admin);
+
+    /// <summary>The API documentation on the landing page: guide, examples and the endpoint reference.</summary>
+    private static string GuideUrl
+        => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de" ? "https://clubnetz.app/de/docs/api/" : "https://clubnetz.app/docs/api/";
+
+    private string OpenApiUrl => $"{Navigation.BaseApiUrl()}openapi/club.json";
+
+    private string CurlExample => $"curl -H \"Authorization: Bearer cnz_...\" \\\n  {Navigation.BaseApiUrl()}Clubs/{ClubId}/Courts";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnApiKeysChanged += OnChanged;
+        ClubProfileStore.OnClubProfileChanged += OnChanged;
+
+        if (CanManage)
+            await Store.LoadApiKeys();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private static string FormatDate(DateTime date) => date.ToLocalTime().ToString("d", CultureInfo.CurrentCulture);
+
+    private async Task OpenDialog()
+    {
+        var dialog = await DialogService.ShowAsync<CreateApiKeyDialog>(L["NewTitle"], new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+
+        if (await dialog.Result is { Canceled: false, Data: CreateClubApiKeyResult created })
+        {
+            newKey = created;
+            await Store.LoadApiKeys();
+        }
+    }
+
+    private async Task CopyNewKey()
+    {
+        if (newKey is null)
+            return;
+
+        await JsRuntime.InvokeVoidAsync("App.copyToClipboard", newKey.Token);
+        Snackbar.Add(L["Copied"], Severity.Success);
+    }
+
+    private async Task Revoke(ClubApiKeyDto apiKey)
+    {
+        var confirmed = await DialogService.ShowMessageBox(L["RevokeTitle"], string.Format(L["RevokeConfirm"], apiKey.Name),
+            yesText: L["Revoke"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true)
+            return;
+
+        var result = await Store.DeleteApiKey(apiKey.Id);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        if (newKey?.Id == apiKey.Id)
+            newKey = null;
+
+        Snackbar.Add(L["Revoked"], Severity.Success);
+        await Store.LoadApiKeys();
+    }
+
+    public void Dispose()
+    {
+        Store.OnApiKeysChanged -= OnChanged;
+        ClubProfileStore.OnClubProfileChanged -= OnChanged;
+    }
+}

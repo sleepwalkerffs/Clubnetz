@@ -1,0 +1,68 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubApiKeys
+@using Bookennis.Client.Services.Store.ClubApiKeys
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.ClubApiKeys
+
+<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@L["Create"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@Store.IsSaving" Title="@L["NewTitle"]">
+    <div class="api-key-edit">
+        <MudTextField T="string" Variant="Variant.Outlined" Label="@L["Name"]" HelperText="@L["NameHint"]" @bind-Value="name" Immediate="true"
+                      MaxLength="@ClubApiKeyLimits.NameMaxLength" Required="true" AutoFocus="true" />
+
+        <MudSelect T="int?" Variant="Variant.Outlined" Label="@L["Expiry"]" @bind-Value="expiresInDays">
+            <MudSelectItem T="int?" Value="30">@L["Expiry30"]</MudSelectItem>
+            <MudSelectItem T="int?" Value="90">@L["Expiry90"]</MudSelectItem>
+            <MudSelectItem T="int?" Value="365">@L["Expiry365"]</MudSelectItem>
+            <MudSelectItem T="int?" Value="@((int?)null)">@L["ExpiryNever"]</MudSelectItem>
+        </MudSelect>
+
+        <div class="api-key-edit__access" role="radiogroup" aria-label="@L["Access"]">
+            <button type="button" role="radio" aria-checked="@(isReadOnly ? "true" : "false")" class="api-key-edit__option @(isReadOnly ? "api-key-edit__option--selected" : null)" @onclick="() => isReadOnly = true">
+                <span class="api-key-edit__option-emoji" aria-hidden="true">👀</span>
+                <span>
+                    <span class="api-key-edit__option-title">@L["AccessReadOnly"]</span>
+                    <span class="api-key-edit__option-text">@L["AccessReadOnlyHint"]</span>
+                </span>
+            </button>
+            <button type="button" role="radio" aria-checked="@(isReadOnly ? "false" : "true")" class="api-key-edit__option @(isReadOnly ? null : "api-key-edit__option--selected")" @onclick="() => isReadOnly = false">
+                <span class="api-key-edit__option-emoji" aria-hidden="true">✏️</span>
+                <span>
+                    <span class="api-key-edit__option-title">@L["AccessFull"]</span>
+                    <span class="api-key-edit__option-text">@L["AccessFullHint"]</span>
+                </span>
+            </button>
+        </div>
+
+        <div class="api-key-edit__hint">💡 @L["ActsAsYouHint"]</div>
+    </div>
+</BaseDialog>
+
+@code {
+    [Inject] private IClubApiKeysStore Store { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubApiKeysLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    private string name = "";
+    private int? expiresInDays = 365;
+    private bool isReadOnly = true;
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(name);
+
+    /// <summary>Closes with the created key (<see cref="CreateClubApiKeyResult"/>), which the page shows once.</summary>
+    private async Task<DialogResult?> Submit()
+    {
+        var response = await Store.CreateApiKey(new CreateClubApiKeyModel { Name = name, IsReadOnly = isReadOnly, ExpiresInDays = expiresInDays });
+
+        if (response is { Success: true, Dto: not null })
+            return DialogResult.Ok(response.Dto);
+
+        Snackbar.ShowErrorDetails(response, BackendLocale);
+        return null;
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+}
