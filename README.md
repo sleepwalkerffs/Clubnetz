@@ -11,6 +11,8 @@ Free, self-hostable, installable on any phone, in English and German.
 
 *Kostenlose Open-Source-Vereinsverwaltung und Platzbuchung für Tennisvereine.*
 
+**Already hosted and free for clubs at [clubnetz.app](https://clubnetz.app)**
+
 [![Build and tests](https://github.com/sleepwalkerffs/Clubnetz/actions/workflows/review_bookennis.yaml/badge.svg)](https://github.com/sleepwalkerffs/Clubnetz/actions/workflows/review_bookennis.yaml)
 ![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white)
 ![Blazor WebAssembly](https://img.shields.io/badge/Blazor-WebAssembly-512BD4?logo=blazor&logoColor=white)
@@ -29,7 +31,12 @@ Free, self-hostable, installable on any phone, in English and German.
 
 Clubnetz is a free and open-source web app for tennis clubs, and for any other sports club with courts to book. It started as a court booking system for a tennis club and grew into a full club management platform: court reservations, membership, guests, a club calendar, news, statistics and a bit of friendly competition.
 
-You can host it yourself with Docker ([see below](#-hosting-it-yourself)). The code is licensed under the AGPL-3.0.
+There are two ways to use it:
+
+- **Use the hosted version.** Clubnetz already runs at **[clubnetz.app](https://clubnetz.app)**, free for clubs and members. Write to [hello@clubnetz.app](mailto:hello@clubnetz.app) and your club gets its own area, with nothing to install or maintain.
+- **Host it yourself** with Docker ([see below](#-hosting-it-yourself)).
+
+The code is licensed under the AGPL-3.0.
 
 One installation serves many clubs. Every club is its own tenant with its own courts, seasons, members, roles and email texts.
 
