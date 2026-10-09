@@ -1,7 +1,12 @@
+@using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Components.Shared.Dialogs
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Pages.ClubShell
+@using Bookennis.Client.Localization.Pages.Trophies
+@using Bookennis.Client.Pages.ClubShell.Members.Components
 @using Bookennis.Client.Services.Store.Badges
+@using Bookennis.Client.Services.Store.Profile
+@using Bookennis.Client.Services.UserAccessor
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.MemberBadges
 @using Bookennis.Shared.Controller.OneTimeBadges
@@ -13,34 +18,66 @@
             SubmitCaption="@SharedLocale["Save"]"
             CancelFunc="Cancel"
             CancelCaption="@SharedLocale["Cancel"]">
-    <div class="mud-width-full d-flex flex-column gap-4">
-        <MudSelect Variant="Variant.Outlined" T="int?" Label="@ClubLocale["Season"]" Value="@selectedSeasonId" ValueChanged="OnSeasonChanged">
-            @foreach (var season in Seasons)
-            {
-                <MudSelectItem T="int?" Value="@((int?)season.SeasonId)">
-                    @ClubLocale["Season"] @season.SeasonFrom.Year
-                </MudSelectItem>
-            }
-        </MudSelect>
+    <div class="badge-settings">
+        @* What the choice looks like: the badge sits on the profile picture *@
+        <div class="badge-settings__preview" style="--badge-color: @(selectedOption is null ? "var(--mud-palette-lines-inputs)" : BadgeColors.ForLevel(SelectedLevel))">
+            <div class="badge-settings__avatar">
+                <UserAvatar FirstName="@(UserDataAccessor.FirstName ?? "")" LastName="@(UserDataAccessor.LastName ?? "")" ProfilePictureUrl="@ProfileStore.ProfilePictureUrl" Size="Size.Large" />
+                @if (selectedOption is not null)
+                {
+                    <div class="badge-settings__avatar-badge">
+                        <BadgeIcon ImageUrl="@SelectedImageUrl" Level="@SelectedLevel" Size="Size.Small" />
+                    </div>
+                }
+            </div>
+            <div class="badge-settings__preview-text">
+                <div class="badge-settings__caption">@SharedLocale["BadgePreviewTitle"]</div>
+                <div class="badge-settings__preview-name">@(SelectedName ?? SharedLocale["NoBadge"])</div>
+                <div class="badge-settings__hint">@SharedLocale["BadgePreviewHint"]</div>
+            </div>
+        </div>
 
-        <MudSelect Variant="Variant.Outlined" T="BadgeOption?" Label="@SharedLocale["DisplayBadge"]" Value="@selectedOption" ValueChanged="OnOptionChanged">
-            <MudSelectItem T="BadgeOption?" Value="@((BadgeOption?)null)">@SharedLocale["NoBadgeSelected"]</MudSelectItem>
-            @foreach (var badge in TierBadgesForSelectedSeason)
+        @if (Seasons.Count == 0)
+        {
+            <div class="badge-settings__empty">
+                <div class="badge-settings__empty-emoji" aria-hidden="true">🏅</div>
+                <div>@SharedLocale["NoBadges"]</div>
+            </div>
+        }
+        else
+        {
+            @if (Seasons.Count > 1)
             {
-                <MudSelectItem T="BadgeOption?" Value="@((BadgeOption?)new BadgeOption(badge.MemberBadgeId, false))">@BadgeDisplayText(badge)</MudSelectItem>
+                <ChoiceChips TItem="SeasonOption" Items="@Seasons" Label="@ClubLocale["Season"]" TextFunc="@(season => season.SeasonFrom.Year.ToString())"
+                             Value="@Seasons.FirstOrDefault(s => s.SeasonId == selectedSeasonId)" ValueChanged="@(season => selectedSeasonId = season.SeasonId)" />
             }
-            @foreach (var badge in OneTimeBadgesForSelectedSeason)
-            {
-                <MudSelectItem T="BadgeOption?" Value="@((BadgeOption?)new BadgeOption(badge.MemberOneTimeBadgeId, true))">@badge.Name</MudSelectItem>
-            }
-        </MudSelect>
 
-        <div class="d-flex flex-column gap-2">
-            <MudText Typo="Typo.subtitle2">@SharedLocale["TrophyCaseVisibility"]</MudText>
-            <MudSwitch T="bool"
-                       @bind-Value="trophyCasePublic"
-                       Label="@SharedLocale["TrophyCasePublicLabel"]"
-                       Color="Color.Primary" />
+            <div>
+                <div class="badge-settings__caption badge-settings__caption--section">@SharedLocale["DisplayBadge"]</div>
+                <div class="badge-grid" role="radiogroup" aria-label="@SharedLocale["DisplayBadge"]">
+                    <button type="button" class="badge-option badge-option--none @(selectedOption is null ? "badge-option--selected" : null)"
+                            role="radio" aria-checked="@(selectedOption is null ? "true" : "false")" @onclick="@(() => selectedOption = null)">
+                        <span class="badge-option__none" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Block" /></span>
+                        <span class="badge-option__name">@SharedLocale["NoBadge"]</span>
+                    </button>
+                    @foreach (var badge in TierBadgesForSelectedSeason.OrderByDescending(b => b.Level))
+                    {
+                        @BadgeTile(new BadgeOption(badge.MemberBadgeId, false), badge.Name, badge.ImageUrl, badge.Level)
+                    }
+                    @foreach (var badge in OneTimeBadgesForSelectedSeason)
+                    {
+                        @BadgeTile(new BadgeOption(badge.MemberOneTimeBadgeId, true), badge.Name, badge.ImageUrl, null)
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="badge-settings__visibility">
+            <div class="badge-settings__visibility-text">
+                <div class="badge-settings__visibility-title">@SharedLocale["TrophyCaseVisibility"]</div>
+                <div class="badge-settings__hint">@SharedLocale["TrophyCasePublicLabel"]</div>
+            </div>
+            <MudSwitch T="bool" @bind-Value="trophyCasePublic" Color="Color.Primary" aria-label="@SharedLocale["TrophyCasePublicLabel"]" />
         </div>
     </div>
 </BaseDialog>
@@ -83,6 +120,15 @@
 
     [Inject]
     private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [Inject]
+    private IProfileStore ProfileStore { get; set; } = null!;
+
+    [Inject]
+    private IClaimsUserDataAccessor UserDataAccessor { get; set; } = null!;
+
+    [Inject]
+    private IStringLocalizer<TrophyLocale> TrophyLocale { get; set; } = null!;
 
     private BadgeOption? selectedOption;
     private bool trophyCasePublic;
@@ -128,17 +174,32 @@
         }
     }
 
-    private void OnSeasonChanged(int? newSeasonId)
-    {
-        selectedSeasonId = newSeasonId;
-        // Clear badge selection if it no longer belongs to the new season
-        var stillValid = selectedOption is { IsOneTime: false } t && TierBadgesForSelectedSeason.Any(b => b.MemberBadgeId == t.Id)
-            || selectedOption is { IsOneTime: true } o && OneTimeBadgesForSelectedSeason.Any(b => b.MemberOneTimeBadgeId == o.Id);
-        if (!stillValid)
-            selectedOption = null;
-    }
+    // The selection is kept while looking through the seasons, the preview shows it
+    private EarnedBadgeDto? SelectedTierBadge => selectedOption is { IsOneTime: false } option ? EarnedBadges.FirstOrDefault(b => b.MemberBadgeId == option.Id) : null;
 
-    private void OnOptionChanged(BadgeOption? option) => selectedOption = option;
+    private OneTimeBadgeAwardDto? SelectedOneTimeBadge => selectedOption is { IsOneTime: true } option ? OneTimeBadges.FirstOrDefault(b => b.MemberOneTimeBadgeId == option.Id) : null;
+
+    private string? SelectedName => SelectedTierBadge?.Name ?? SelectedOneTimeBadge?.Name;
+
+    private string? SelectedImageUrl => SelectedTierBadge?.ImageUrl ?? SelectedOneTimeBadge?.ImageUrl;
+
+    private int? SelectedLevel => SelectedTierBadge?.Level;
+
+    private RenderFragment BadgeTile(BadgeOption option, string name, string? imageUrl, int? level) => __builder =>
+    {
+        var selected = selectedOption == option;
+
+        <button type="button" class="badge-option @(selected ? "badge-option--selected" : null)" style="--badge-color: @BadgeColors.ForLevel(level)"
+                role="radio" aria-checked="@(selected ? "true" : "false")" @onclick="@(() => selectedOption = option)">
+            @if (selected)
+            {
+                <span class="badge-option__check" aria-hidden="true"><MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" /></span>
+            }
+            <BadgeIcon ImageUrl="@imageUrl" Level="@level" Alt="@name" Size="Size.Large" Class="badge-option__icon" />
+            <span class="badge-option__name">@name</span>
+            <span class="badge-option__pill">@(level is { } l ? string.Format(TrophyLocale["LevelShort"], l) : TrophyLocale["SpecialAward"])</span>
+        </button>
+    };
 
     private async Task<DialogResult?> Submit()
     {
@@ -164,6 +225,4 @@
         MudDialog.Cancel();
         return Task.FromResult<DialogResult?>(null);
     }
-
-    private string BadgeDisplayText(EarnedBadgeDto badge) => $"{badge.Name} ({SharedLocale["Level"]} {badge.Level})";
 }

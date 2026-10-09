@@ -1,0 +1,184 @@
+.badge-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+}
+
+/* Preview */
+.badge-settings__preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--badge-color) 45%, var(--mud-palette-lines-default));
+    background: color-mix(in srgb, var(--badge-color) 9%, var(--mud-palette-surface));
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.badge-settings__avatar {
+    position: relative;
+    flex-shrink: 0;
+    line-height: 0;
+}
+
+.badge-settings__avatar-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--mud-palette-surface);
+}
+
+.badge-settings__preview-text {
+    min-width: 0;
+}
+
+.badge-settings__caption {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.badge-settings__caption--section {
+    margin-bottom: 8px;
+}
+
+.badge-settings__preview-name {
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.badge-settings__hint {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.badge-settings__empty {
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px dashed var(--mud-palette-lines-inputs);
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.badge-settings__empty-emoji {
+    font-size: 1.6rem;
+}
+
+/* Badges to choose from */
+.badge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 10px;
+}
+
+.badge-option {
+    --badge-color: var(--mud-palette-text-secondary);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px 10px;
+    border-radius: 14px;
+    border: 2px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.badge-option:hover {
+    border-color: color-mix(in srgb, var(--badge-color) 60%, transparent);
+    transform: translateY(-1px);
+}
+
+.badge-option:focus-visible {
+    outline: 2px solid var(--badge-color);
+    outline-offset: 2px;
+}
+
+.badge-option--selected,
+.badge-option--selected:hover {
+    border-color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 9%, var(--mud-palette-surface));
+}
+
+.badge-option ::deep .badge-option__icon {
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--badge-color) 35%, transparent);
+}
+
+.badge-option__none {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px dashed var(--mud-palette-lines-inputs);
+    color: var(--mud-palette-text-secondary);
+}
+
+.badge-option__name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.badge-option__pill {
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+    background: var(--mud-palette-background-gray);
+}
+
+.badge-option__check {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: #FFFFFF;
+    background: var(--mud-palette-primary);
+}
+
+.badge-option__check ::deep .mud-icon-root {
+    font-size: 0.9rem;
+}
+
+/* Trophy case */
+.badge-settings__visibility {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.badge-settings__visibility-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.badge-settings__visibility-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+}

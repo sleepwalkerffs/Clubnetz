@@ -402,4 +402,13 @@
   <data name="UpdateReload" xml:space="preserve">
     <value>Reload</value>
   </data>
+  <data name="BadgePreviewTitle" xml:space="preserve">
+    <value>How others see you</value>
+  </data>
+  <data name="BadgePreviewHint" xml:space="preserve">
+    <value>The badge is shown on your profile picture.</value>
+  </data>
+  <data name="NoBadge" xml:space="preserve">
+    <value>No badge</value>
+  </data>
 </root>

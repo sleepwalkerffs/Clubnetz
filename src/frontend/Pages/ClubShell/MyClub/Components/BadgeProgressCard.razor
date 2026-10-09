@@ -151,7 +151,7 @@
         parameters.Add(dialog => dialog.CurrentDisplayOneTimeBadgeId, BadgesStore.BadgeProgress!.DisplayOneTimeBadgeId);
         parameters.Add(dialog => dialog.TrophyCasePublic, BadgesStore.BadgeProgress!.TrophyCasePublic);
 
-        var dialog = await DialogService.ShowAsync<BadgeSettingsDialog>(Locale["BadgeSettings"], parameters, new DialogOptions { FullScreen = false });
+        var dialog = await DialogService.ShowAsync<BadgeSettingsDialog>(Locale["BadgeSettings"], parameters, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseOnEscapeKey = true });
         var result = await dialog.Result;
 
         if (result is { Canceled: false })
