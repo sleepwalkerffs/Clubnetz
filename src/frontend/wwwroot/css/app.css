@@ -61,10 +61,10 @@
     background: #0B1310;
 }
 
-:root[data-theme="dark"] .loading-progress circle {
-    stroke: #26352F;
+:root[data-theme="dark"] .loading-progress-text {
+    color: #10B981;
 }
 
-:root[data-theme="dark"] .loading-progress circle:last-child {
-    stroke: #10B981;
+:root[data-theme="dark"] .loading-logo {
+    filter: drop-shadow(0 0.75rem 1.5rem rgba(0, 0, 0, 0.5));
 }

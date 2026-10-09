@@ -26,9 +26,28 @@
 
 <body>
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
+        <!-- The Clubnetz icon (icons/icon.svg). The C is drawn towards the ball while the app loads, see app-loading-progress.css -->
+        <svg class="loading-logo" viewBox="0 0 512 512" role="img" aria-label="Clubnetz">
+            <defs>
+                <linearGradient id="loading-logo-bg" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#064E3B" />
+                    <stop offset="0.4" stop-color="#047857" />
+                    <stop offset="0.75" stop-color="#0D9488" />
+                    <stop offset="1.15" stop-color="#65A30D" />
+                </linearGradient>
+                <clipPath id="loading-logo-shape"><rect width="512" height="512" rx="112" /></clipPath>
+            </defs>
+            <g clip-path="url(#loading-logo-shape)">
+                <rect width="512" height="512" fill="url(#loading-logo-bg)" />
+                <g transform="rotate(-12 256 256)" fill="none" stroke="#FFFFFF" stroke-opacity="0.13" stroke-width="10">
+                    <rect x="-40" y="56" width="592" height="400" rx="8" />
+                    <path d="M256 56V456M90 256H422" />
+                </g>
+            </g>
+            <!-- Same C as in the icon, but starting at its lower end so it grows towards the ball -->
+            <path class="loading-logo__track" d="M341.6 341.6A121 121 0 1 1 277 136.8" />
+            <path class="loading-logo__fill" d="M341.6 341.6A121 121 0 1 1 277 136.8" />
+            <circle class="loading-logo__ball" cx="352" cy="181" r="37" />
         </svg>
         <div class="loading-progress-text"></div>
     </div>
