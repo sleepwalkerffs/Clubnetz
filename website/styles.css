@@ -151,6 +151,29 @@ a {
     padding: 3px 12px;
 }
 
+/* The way into the app for members who land here */
+.top__nav .login {
+    background: #fff;
+    color: var(--green-deep);
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 6px 18px;
+    white-space: nowrap;
+}
+
+.top__nav .login:hover,
+.top__nav .login:focus-visible {
+    background: #d1fae5;
+    color: var(--green-deep);
+    text-decoration: none;
+}
+
+@media (max-width: 420px) {
+    .top__nav {
+        gap: 10px;
+    }
+}
+
 @media (min-width: 760px) {
     .top__nav .nav-section {
         display: inline;
