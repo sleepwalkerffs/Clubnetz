@@ -4,6 +4,8 @@
 
 # Clubnetz
 
+**English** · [Deutsch](README.de.md)
+
 **Open-source club management and court booking for tennis clubs.**
 
 Members book courts in seconds. The board manages members, seasons, guests, events and news in one place.<br />
@@ -56,7 +58,7 @@ One installation serves many clubs. Every club is its own tenant with its own co
 | 📊 **Statistics & leaderboards** | Who plays the most, with whom, and when. |
 | 🏆 **Badges & trophy case** | Seasonal tier badges earned by playing, plus one-time badges for special achievements. |
 | 🗓️ **Subscription planner** | Plans a fair schedule for shared winter court subscriptions and exports it to Excel. |
-| 🔔 **Push notifications** | Booking added or cancelled, reminders before a match, new events, news and badges. |
+| 🔔 **Notifications** | Booking added or cancelled, reminders before a match, new events, news and badges. By push, by email, or not at all. |
 | 📱 **Installable app** | Add it to the home screen on iOS, Android and desktop. Light and dark mode included. |
 
 ### For the board
@@ -66,6 +68,7 @@ One installation serves many clubs. Every club is its own tenant with its own co
 | 👥 **Members & seasons** | Members, roles (admin, sports director, treasurer, trainer, …) and season enrollment. |
 | 🎟️ **Guest cards** | Let guests book with a link or code and a fixed number of bookings. |
 | 🏟️ **Courts & play modes** | Courts, opening hours, prime time, booking rules and who may book what. |
+| 🚧 **Court blockings** | Block courts for tournaments, maintenance, weather or weekly training. Affected players are informed. |
 | ✉️ **Email templates** | Customize every club email per language with Markdown and variables, with live preview and test send. |
 | 📣 **Announcements by email** | Send news to all members, the active season, the youth or selected roles. |
 | 📈 **Club statistics** | Court utilization and activity over the season. |
