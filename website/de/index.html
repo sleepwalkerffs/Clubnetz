@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clubnetz – kostenlose Open-Source-Vereinsverwaltung und Platzbuchung für Tennisvereine</title>
+    <meta name="description" content="Clubnetz ist eine kostenlose Open-Source-Web-App für Tennisvereine. Mitglieder buchen Plätze am Handy, der Vorstand verwaltet Mitglieder, Saisonen, Gäste, Termine und Neuigkeiten. Auch zum Selbsthosten." />
+    <link rel="canonical" href="https://clubnetz.app/de/" />
+    <link rel="alternate" hreflang="en" href="https://clubnetz.app/" />
+    <link rel="alternate" hreflang="de" href="https://clubnetz.app/de/" />
+    <link rel="alternate" hreflang="x-default" href="https://clubnetz.app/" />
+    <meta name="theme-color" content="#064e3b" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Clubnetz" />
+    <meta property="og:title" content="Clubnetz – Vereinsverwaltung und Platzbuchung für Tennisvereine" />
+    <meta property="og:description" content="Kostenlos und Open Source. Mitglieder buchen Plätze am Handy, der Vorstand verwaltet den Verein an einem Ort." />
+    <meta property="og:url" content="https://clubnetz.app/de/" />
+    <meta property="og:image" content="https://clubnetz.app/icon-512.png" />
+    <meta property="og:locale" content="de" />
+    <meta property="og:locale:alternate" content="en" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Clubnetz",
+        "url": "https://clubnetz.app/de/",
+        "description": "Kostenlose Open-Source-Web-App für Vereinsverwaltung und Platzbuchung in Tennisvereinen und anderen Sportvereinen mit Plätzen.",
+        "applicationCategory": "BusinessApplication",
+        "applicationSubCategory": "Vereinsverwaltung, Platzbuchung",
+        "operatingSystem": "Web, Android, iOS (installierbare Web-App)",
+        "inLanguage": ["de", "en"],
+        "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+        "codeRepository": "https://github.com/sleepwalkerffs/Clubnetz",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "featureList": [
+            "Platzbuchung mit Spielarten, Öffnungszeiten und Prime-Time-Regeln",
+            "Serienbuchungen",
+            "Verwaltung von Mitgliedern, Saisonen und Familien",
+            "Gästekarten",
+            "Vereinskalender mit Anmeldung zu Terminen",
+            "Vereinsneuigkeiten und Aussendungen per E-Mail",
+            "Platzsperren für Turniere, Wartung und Wetter",
+            "Statistiken, Ranglisten und Abzeichen",
+            "Benachrichtigungen per Push und E-Mail",
+            "Mandantenfähig: eine Installation für viele Vereine"
+        ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Ist Clubnetz wirklich kostenlos?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Ja. Clubnetz ist für Vereine und Mitglieder kostenlos und enthält keine Werbung. Der Quellcode ist unter der Lizenz AGPL-3.0 öffentlich." }
+            },
+            {
+                "@type": "Question",
+                "name": "Ist Clubnetz nur für Tennisvereine?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Clubnetz ist für einen Tennisverein entstanden und wird täglich im Tennis eingesetzt. Es eignet sich für jeden Verein, der Plätze zu vergeben und Mitglieder zu verwalten hat." }
+            },
+            {
+                "@type": "Question",
+                "name": "Müssen Mitglieder eine App installieren?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Nein. Clubnetz läuft im Browser auf jedem Handy, Tablet und Computer. Wer möchte, legt es auf den Startbildschirm. Dort verhält es sich wie eine App und kann Push-Benachrichtigungen senden." }
+            },
+            {
+                "@type": "Question",
+                "name": "Können wir Clubnetz selbst hosten?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Ja. Im Repository liegt ein Dockerfile, das ein Image für die gesamte App baut. Benötigt werden eine PostgreSQL-Datenbank und ein SMTP-Server für E-Mails." }
+            },
+            {
+                "@type": "Question",
+                "name": "Wie steht es um den Datenschutz?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Das gehostete Clubnetz läuft auf Servern in der EU. Mitglieder können ihre personenbezogenen Daten selbst exportieren, einen Verein verlassen und ihr Konto löschen." }
+            }
+        ]
+    }
+    </script>
+</head>
+<body>
+    <a class="skip" href="#main">Zum Inhalt springen</a>
+
+    <header class="top">
+        <div class="wrap top__bar">
+            <a class="brand" href="/de/">
+                <img src="/icon.svg" alt="" width="34" height="34" />
+                Clubnetz
+            </a>
+            <nav class="top__nav" aria-label="Hauptnavigation">
+                <a class="nav-section" href="#members">Für Mitglieder</a>
+                <a class="nav-section" href="#board">Für den Vorstand</a>
+                <a class="nav-section" href="#open-source">Open Source</a>
+                <a href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
+                <a class="lang" href="/" hreflang="en" lang="en">English</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main">
+        <div class="hero">
+            <div class="wrap hero__grid">
+                <div>
+                    <h1>Vereinsverwaltung und Platzbuchung für Tennisvereine</h1>
+                    <p class="hero__lead">Clubnetz ist eine kostenlose Open-Source-Web-App. Mitglieder buchen einen Platz mit wenigen Klicks am Handy. Der Vorstand verwaltet Mitglieder, Saisonen, Gäste, Termine und Neuigkeiten an einem Ort.</p>
+                    <div class="hero__actions">
+                        <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20f%C3%BCr%20unseren%20Verein">Clubnetz für euren Verein</a>
+                        <a class="btn btn--ghost" href="https://github.com/sleepwalkerffs/Clubnetz">Quellcode auf GitHub</a>
+                    </div>
+                    <p class="hero__note">Kostenlos für Vereine und Mitglieder. Ohne Werbung.</p>
+                </div>
+
+                <div class="board" aria-hidden="true">
+                    <div class="board__head">Samstag <span>3 Plätze</span></div>
+                    <div class="board__grid">
+                        <div></div>
+                        <div class="court">Platz 1</div>
+                        <div class="court">Platz 2</div>
+                        <div class="court">Platz 3</div>
+
+                        <div class="time">9:00</div>
+                        <div class="taken">Einzel</div>
+                        <div class="free"></div>
+                        <div class="blocked">Turnier</div>
+
+                        <div class="time">10:00</div>
+                        <div class="free"></div>
+                        <div class="series">Serie</div>
+                        <div class="blocked">Turnier</div>
+
+                        <div class="time">11:00</div>
+                        <div class="pick">Buchen</div>
+                        <div class="taken">Doppel</div>
+                        <div class="free"></div>
+
+                        <div class="time">12:00</div>
+                        <div class="free"></div>
+                        <div class="free"></div>
+                        <div class="taken">Training</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="facts">
+            <div class="wrap">
+                <ul>
+                    <li>Kostenlos für Vereine und Mitglieder</li>
+                    <li>Open Source (AGPL-3.0)</li>
+                    <li>Deutsch und Englisch</li>
+                    <li>Läuft auf jedem Handy</li>
+                    <li>In der EU gehostet</li>
+                </ul>
+            </div>
+        </div>
+
+        <section id="members">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">Für Mitglieder</p>
+                    <h2>In Sekunden einen Platz buchen, von überall</h2>
+                    <p>Kein Anruf und keine Liste im Clubhaus. Mitglieder sehen, was frei ist, und buchen selbst.</p>
+                </div>
+                <ul class="cards">
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🎾</div>
+                        <h3>Platzbuchung</h3>
+                        <p>Platz und Uhrzeit wählen, Mitspieler eintragen, fertig. Die Regeln des Vereins zu Öffnungszeiten, Prime Time und Kontingenten gelten automatisch.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🔁</div>
+                        <h3>Serienbuchungen</h3>
+                        <p>Denselben Termin jede Woche oder alle paar Wochen reservieren. Einzelne Termine oder alle folgenden lassen sich ändern und absagen.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">👨‍👩‍👧</div>
+                        <h3>Familien</h3>
+                        <p>Eltern buchen und verwalten für ihre Kinder.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">📅</div>
+                        <h3>Vereinskalender</h3>
+                        <p>Arbeitseinsätze, Feste, Turniere und Sitzungen, mit Anmeldung und Personenzahl. Termine per Link oder WhatsApp teilen.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🔔</div>
+                        <h3>Benachrichtigungen</h3>
+                        <p>Neue oder abgesagte Buchung, Erinnerung vor dem Spiel, neue Termine und Neuigkeiten. Per Push, per E-Mail oder gar nicht.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🏆</div>
+                        <h3>Statistiken und Abzeichen</h3>
+                        <p>Wer spielt am meisten und mit wem, Ranglisten und Abzeichen, die man sich über die Saison erspielt.</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="board" class="alt">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">Für den Vorstand</p>
+                    <h2>Der ganze Verein an einem Ort</h2>
+                    <p>Weniger Verwaltungsarbeit für alle, die den Verein in ihrer Freizeit führen.</p>
+                </div>
+                <ul class="cards">
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">👥</div>
+                        <h3>Mitglieder und Saisonen</h3>
+                        <p>Mitgliederliste, Rollen wie Sportwart, Kassier oder Trainer und die Anmeldung je Saison.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🏟️</div>
+                        <h3>Plätze und Regeln</h3>
+                        <p>Plätze, Öffnungszeiten, Prime Time, Spielarten und wer was buchen darf.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🚧</div>
+                        <h3>Platzsperren</h3>
+                        <p>Plätze für Turniere, Wartung, Wetter oder das wöchentliche Training sperren. Betroffene Spieler werden informiert.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🎟️</div>
+                        <h3>Gästekarten</h3>
+                        <p>Gäste buchen mit einem Link oder Code und einer festen Anzahl an Buchungen.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">📣</div>
+                        <h3>Neuigkeiten und E-Mails</h3>
+                        <p>Vereinsneuigkeiten mit Anhängen veröffentlichen und per E-Mail an alle Mitglieder, die Jugend oder einzelne Rollen senden. Jeder E-Mail-Text lässt sich anpassen.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">📈</div>
+                        <h3>Vereinsstatistik</h3>
+                        <p>Auslastung der Plätze und Aktivität über die Saison.</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="start">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">So geht es los</p>
+                    <h2>In drei Schritten mit eurem Verein auf Clubnetz</h2>
+                </div>
+                <ol class="steps">
+                    <li>
+                        <h3>Schreibt uns</h3>
+                        <p>Nennt uns den Namen eures Vereins und die Anzahl eurer Plätze.</p>
+                    </li>
+                    <li>
+                        <h3>Wir richten euren Verein ein</h3>
+                        <p>Ihr bekommt einen eigenen Vereinsbereich mit euren Plätzen, Saisonen und Regeln.</p>
+                    </li>
+                    <li>
+                        <h3>Mitglieder einladen</h3>
+                        <p>Mitglieder registrieren sich mit ihrer E-Mail-Adresse und buchen los.</p>
+                    </li>
+                </ol>
+                <p class="center"><a class="btn btn--solid" href="mailto:hello@clubnetz.app?subject=Clubnetz%20f%C3%BCr%20unseren%20Verein">An hello@clubnetz.app schreiben</a></p>
+            </div>
+        </section>
+
+        <section id="open-source" class="alt">
+            <div class="wrap split">
+                <div>
+                    <p class="eyebrow">Open Source</p>
+                    <h2>Die Daten eures Vereins sind nirgends eingesperrt</h2>
+                    <p class="soft" style="margin-top: 12px">Der gesamte Quellcode von Clubnetz ist unter der Lizenz AGPL-3.0 öffentlich. Ihr könnt ihn lesen, verbessern und auf einem eigenen Server betreiben.</p>
+                    <p class="soft">Ein Docker-Image enthält die gesamte App. Benötigt werden eine PostgreSQL-Datenbank und ein SMTP-Server für E-Mails.</p>
+                    <ul class="stack" aria-label="Technik">
+                        <li>ASP.NET Core</li>
+                        <li>Blazor WebAssembly</li>
+                        <li>PostgreSQL</li>
+                        <li>Docker</li>
+                    </ul>
+                    <p style="margin-top: 22px"><a class="btn btn--solid" href="https://github.com/sleepwalkerffs/Clubnetz#-hosting-it-yourself">Hosting-Anleitung auf GitHub (englisch)</a></p>
+                </div>
+                <pre><code>git clone https://github.com/sleepwalkerffs/Clubnetz.git
+cd Clubnetz
+docker build -t clubnetz .</code></pre>
+            </div>
+        </section>
+
+        <section id="faq">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">Fragen</p>
+                    <h2>Häufig gefragt</h2>
+                </div>
+                <div class="faq">
+                    <details>
+                        <summary>Ist Clubnetz wirklich kostenlos?</summary>
+                        <p>Ja. Clubnetz ist für Vereine und Mitglieder kostenlos und enthält keine Werbung. Der Quellcode ist unter der Lizenz AGPL-3.0 öffentlich.</p>
+                    </details>
+                    <details>
+                        <summary>Ist Clubnetz nur für Tennisvereine?</summary>
+                        <p>Clubnetz ist für einen Tennisverein entstanden und wird täglich im Tennis eingesetzt. Es eignet sich für jeden Verein, der Plätze zu vergeben und Mitglieder zu verwalten hat.</p>
+                    </details>
+                    <details>
+                        <summary>Müssen Mitglieder eine App installieren?</summary>
+                        <p>Nein. Clubnetz läuft im Browser auf jedem Handy, Tablet und Computer. Wer möchte, legt es auf den Startbildschirm. Dort verhält es sich wie eine App und kann Push-Benachrichtigungen senden.</p>
+                    </details>
+                    <details>
+                        <summary>Können wir Clubnetz selbst hosten?</summary>
+                        <p>Ja. Im Repository liegt ein Dockerfile, das ein Image für die gesamte App baut. Benötigt werden eine PostgreSQL-Datenbank und ein SMTP-Server für E-Mails.</p>
+                    </details>
+                    <details>
+                        <summary>Wie steht es um den Datenschutz?</summary>
+                        <p>Das gehostete Clubnetz läuft auf Servern in der EU. Mitglieder können ihre personenbezogenen Daten selbst exportieren, einen Verein verlassen und ihr Konto löschen.</p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta">
+            <div class="wrap">
+                <h2>Lieber spielen als Papierkram?</h2>
+                <p>Schreibt uns, und wir richten Clubnetz kostenlos für euren Verein ein.</p>
+                <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20f%C3%BCr%20unseren%20Verein">hello@clubnetz.app</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap foot">
+            <span>Clubnetz ist freie Software unter der AGPL-3.0.</span>
+            <nav aria-label="Rechtliches">
+                <a href="https://stage.clubnetz.app/legal/imprint">Impressum</a>
+                <a href="https://stage.clubnetz.app/legal/privacy">Datenschutz</a>
+                <a href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
+                <a href="/" hreflang="en" lang="en">English</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

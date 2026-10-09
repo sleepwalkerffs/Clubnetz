@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clubnetz – free, open-source club management and court booking for tennis clubs</title>
+    <meta name="description" content="Clubnetz is a free, open-source web app for tennis clubs. Members book courts from their phone, the board manages members, seasons, guests, events and news. Self-hostable." />
+    <link rel="canonical" href="https://clubnetz.app/" />
+    <link rel="alternate" hreflang="en" href="https://clubnetz.app/" />
+    <link rel="alternate" hreflang="de" href="https://clubnetz.app/de/" />
+    <link rel="alternate" hreflang="x-default" href="https://clubnetz.app/" />
+    <meta name="theme-color" content="#064e3b" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Clubnetz" />
+    <meta property="og:title" content="Clubnetz – club management and court booking for tennis clubs" />
+    <meta property="og:description" content="Free and open source. Members book courts from their phone, the board manages the club in one place." />
+    <meta property="og:url" content="https://clubnetz.app/" />
+    <meta property="og:image" content="https://clubnetz.app/icon-512.png" />
+    <meta property="og:locale" content="en" />
+    <meta property="og:locale:alternate" content="de" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Clubnetz",
+        "url": "https://clubnetz.app/",
+        "description": "Free, open-source club management and court booking web app for tennis clubs and other sports clubs with courts.",
+        "applicationCategory": "BusinessApplication",
+        "applicationSubCategory": "Sports club management, court booking",
+        "operatingSystem": "Web, Android, iOS (installable web app)",
+        "inLanguage": ["en", "de"],
+        "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+        "codeRepository": "https://github.com/sleepwalkerffs/Clubnetz",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+        "featureList": [
+            "Court booking with play modes, opening hours and prime time rules",
+            "Recurring bookings",
+            "Member, season and family management",
+            "Guest cards",
+            "Club calendar with event registration",
+            "Club news and email announcements",
+            "Court blockings for tournaments, maintenance and weather",
+            "Statistics, leaderboards and badges",
+            "Push and email notifications",
+            "Multi-tenant: one installation serves many clubs"
+        ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Is Clubnetz really free?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes. Clubnetz is free for clubs and for members, and it contains no advertising. The source code is public under the AGPL-3.0 license." }
+            },
+            {
+                "@type": "Question",
+                "name": "Is Clubnetz only for tennis clubs?",
+                "acceptedAnswer": { "@type": "Answer", "text": "It was built for a tennis club and tennis is what it is tested with every day. It works for any club that has courts to book and members to manage." }
+            },
+            {
+                "@type": "Question",
+                "name": "Do members have to install an app?",
+                "acceptedAnswer": { "@type": "Answer", "text": "No. Clubnetz runs in the browser on any phone, tablet or computer. Members who want to can add it to their home screen, where it behaves like an app and can send push notifications." }
+            },
+            {
+                "@type": "Question",
+                "name": "Can we host Clubnetz ourselves?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes. The repository contains a Dockerfile that builds one image for the whole app. You need a PostgreSQL database and an SMTP server for emails." }
+            },
+            {
+                "@type": "Question",
+                "name": "What about data protection?",
+                "acceptedAnswer": { "@type": "Answer", "text": "The hosted Clubnetz runs on servers in the EU. Members can export their personal data, leave a club and delete their account themselves." }
+            }
+        ]
+    }
+    </script>
+</head>
+<body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="top">
+        <div class="wrap top__bar">
+            <a class="brand" href="/">
+                <img src="/icon.svg" alt="" width="34" height="34" />
+                Clubnetz
+            </a>
+            <nav class="top__nav" aria-label="Main">
+                <a class="nav-section" href="#members">For members</a>
+                <a class="nav-section" href="#board">For the board</a>
+                <a class="nav-section" href="#open-source">Open source</a>
+                <a href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
+                <a class="lang" href="/de/" hreflang="de" lang="de">Deutsch</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main">
+        <div class="hero">
+            <div class="wrap hero__grid">
+                <div>
+                    <h1>Club management and court booking for tennis clubs</h1>
+                    <p class="hero__lead">Clubnetz is a free, open-source web app. Members book a court in a few taps on their phone. The board manages members, seasons, guests, events and news in one place.</p>
+                    <div class="hero__actions">
+                        <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20for%20our%20club">Get your club on Clubnetz</a>
+                        <a class="btn btn--ghost" href="https://github.com/sleepwalkerffs/Clubnetz">View the code on GitHub</a>
+                    </div>
+                    <p class="hero__note">Free for clubs and members. No advertising.</p>
+                </div>
+
+                <div class="board" aria-hidden="true">
+                    <div class="board__head">Saturday <span>3 courts</span></div>
+                    <div class="board__grid">
+                        <div></div>
+                        <div class="court">Court 1</div>
+                        <div class="court">Court 2</div>
+                        <div class="court">Court 3</div>
+
+                        <div class="time">9:00</div>
+                        <div class="taken">Singles</div>
+                        <div class="free"></div>
+                        <div class="blocked">Tournament</div>
+
+                        <div class="time">10:00</div>
+                        <div class="free"></div>
+                        <div class="series">Weekly</div>
+                        <div class="blocked">Tournament</div>
+
+                        <div class="time">11:00</div>
+                        <div class="pick">Book</div>
+                        <div class="taken">Doubles</div>
+                        <div class="free"></div>
+
+                        <div class="time">12:00</div>
+                        <div class="free"></div>
+                        <div class="free"></div>
+                        <div class="taken">Training</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="facts">
+            <div class="wrap">
+                <ul>
+                    <li>Free for clubs and members</li>
+                    <li>Open source (AGPL-3.0)</li>
+                    <li>English and German</li>
+                    <li>Works on every phone</li>
+                    <li>Hosted in the EU</li>
+                </ul>
+            </div>
+        </div>
+
+        <section id="members">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">For members</p>
+                    <h2>Book a court in seconds, from anywhere</h2>
+                    <p>No phone calls and no paper list at the clubhouse. Members see what is free and book it themselves.</p>
+                </div>
+                <ul class="cards">
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🎾</div>
+                        <h3>Court booking</h3>
+                        <p>Pick a court and a time and add your partners. The club's rules for opening hours, prime time and quotas are applied automatically.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🔁</div>
+                        <h3>Recurring bookings</h3>
+                        <p>Reserve the same slot every week or every few weeks. Change or cancel one date, or all following ones.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">👨‍👩‍👧</div>
+                        <h3>Families</h3>
+                        <p>Parents book and manage on behalf of their children.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">📅</div>
+                        <h3>Club calendar</h3>
+                        <p>Work efforts, parties, tournaments and meetings, with registration and head counts. Share an event by link or WhatsApp.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🔔</div>
+                        <h3>Notifications</h3>
+                        <p>Booking added or cancelled, a reminder before the match, new events and news. By push, by email, or not at all.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🏆</div>
+                        <h3>Statistics and badges</h3>
+                        <p>Who plays the most and with whom, leaderboards, and badges earned over the season.</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="board" class="alt">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">For the board</p>
+                    <h2>The whole club in one place</h2>
+                    <p>Less paperwork for the people who run the club in their spare time.</p>
+                </div>
+                <ul class="cards">
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">👥</div>
+                        <h3>Members and seasons</h3>
+                        <p>Member list, roles such as sports director, treasurer or trainer, and enrollment per season.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🏟️</div>
+                        <h3>Courts and rules</h3>
+                        <p>Courts, opening hours, prime time, play modes and who may book what.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🚧</div>
+                        <h3>Court blockings</h3>
+                        <p>Block courts for tournaments, maintenance, weather or weekly training. Affected players are informed.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🎟️</div>
+                        <h3>Guest cards</h3>
+                        <p>Let guests book with a link or a code and a fixed number of bookings.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">📣</div>
+                        <h3>News and emails</h3>
+                        <p>Publish club news with attachments and send it by email to all members, the youth or selected roles. Every email text can be adapted.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">📈</div>
+                        <h3>Club statistics</h3>
+                        <p>Court utilization and activity over the season.</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="start">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">Getting started</p>
+                    <h2>Three steps to your club on Clubnetz</h2>
+                </div>
+                <ol class="steps">
+                    <li>
+                        <h3>Write to us</h3>
+                        <p>Tell us the name of your club and how many courts you have.</p>
+                    </li>
+                    <li>
+                        <h3>We set up your club</h3>
+                        <p>You get your own club area with your courts, seasons and rules.</p>
+                    </li>
+                    <li>
+                        <h3>Invite your members</h3>
+                        <p>Members register with their email address and start booking.</p>
+                    </li>
+                </ol>
+                <p class="center"><a class="btn btn--solid" href="mailto:hello@clubnetz.app?subject=Clubnetz%20for%20our%20club">Write to hello@clubnetz.app</a></p>
+            </div>
+        </section>
+
+        <section id="open-source" class="alt">
+            <div class="wrap split">
+                <div>
+                    <p class="eyebrow">Open source</p>
+                    <h2>Your club's data is not locked in</h2>
+                    <p class="soft" style="margin-top: 12px">The complete source code of Clubnetz is public under the AGPL-3.0 license. You can read it, improve it and run it on your own server.</p>
+                    <p class="soft">One Docker image runs the whole app. It needs a PostgreSQL database and an SMTP server for emails.</p>
+                    <ul class="stack" aria-label="Technology">
+                        <li>ASP.NET Core</li>
+                        <li>Blazor WebAssembly</li>
+                        <li>PostgreSQL</li>
+                        <li>Docker</li>
+                    </ul>
+                    <p style="margin-top: 22px"><a class="btn btn--solid" href="https://github.com/sleepwalkerffs/Clubnetz#-hosting-it-yourself">Hosting guide on GitHub</a></p>
+                </div>
+                <pre><code>git clone https://github.com/sleepwalkerffs/Clubnetz.git
+cd Clubnetz
+docker build -t clubnetz .</code></pre>
+            </div>
+        </section>
+
+        <section id="faq">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">Questions</p>
+                    <h2>Frequently asked</h2>
+                </div>
+                <div class="faq">
+                    <details>
+                        <summary>Is Clubnetz really free?</summary>
+                        <p>Yes. Clubnetz is free for clubs and for members, and it contains no advertising. The source code is public under the AGPL-3.0 license.</p>
+                    </details>
+                    <details>
+                        <summary>Is Clubnetz only for tennis clubs?</summary>
+                        <p>It was built for a tennis club and tennis is what it is tested with every day. It works for any club that has courts to book and members to manage.</p>
+                    </details>
+                    <details>
+                        <summary>Do members have to install an app?</summary>
+                        <p>No. Clubnetz runs in the browser on any phone, tablet or computer. Members who want to can add it to their home screen, where it behaves like an app and can send push notifications.</p>
+                    </details>
+                    <details>
+                        <summary>Can we host Clubnetz ourselves?</summary>
+                        <p>Yes. The repository contains a Dockerfile that builds one image for the whole app. You need a PostgreSQL database and an SMTP server for emails.</p>
+                    </details>
+                    <details>
+                        <summary>What about data protection?</summary>
+                        <p>The hosted Clubnetz runs on servers in the EU. Members can export their personal data, leave a club and delete their account themselves.</p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta">
+            <div class="wrap">
+                <h2>Rather play than do paperwork?</h2>
+                <p>Write to us and we set up Clubnetz for your club, free of charge.</p>
+                <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20for%20our%20club">hello@clubnetz.app</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap foot">
+            <span>Clubnetz is free software under the AGPL-3.0.</span>
+            <nav aria-label="Legal">
+                <a href="https://stage.clubnetz.app/legal/imprint">Imprint</a>
+                <a href="https://stage.clubnetz.app/legal/privacy">Privacy</a>
+                <a href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
+                <a href="/de/" hreflang="de" lang="de">Deutsch</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>
