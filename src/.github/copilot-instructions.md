@@ -62,6 +62,13 @@
 - Existing `IgnoreQueryFilters()` on `Set<Member>()` in handlers like `GetBookings`, `GetLeaderboard`, `GetMemberBookingHistory`, etc. is used to show players from other clubs (ATP cross-club feature).
 - The dual membership issue (both `ClubMember` and `GuestMember` for the same user+club) is NOT a tenant filter problem — both records have the same `ClubId`. It's a cardinality issue requiring `MemberType` filtering or `FirstOrDefault` instead of `Single`.
 
+## Member Data & Privacy
+
+- **What a member gets to know about somebody else is name and picture, nothing more.** `GET Members/{memberId}/profile` (`GetMemberProfile`, `MemberProfileResult`, policy `Member`) returns exactly that, for members of the club and for players of a club it shares its players with (both `IsAtpClub`). Never add email, birthday, gender, roles or seasons to it.
+- The full record `GET Members/{memberId}` (`GetMember`, `MembersDetailResult`: email, birthday, roles, seasons, ...) is only for the member themself and for `ClubMemberViewer` (Maintainer, Admin); the controller checks that and answers everybody else with 403. It only returns members of the own club, also for viewers: a partner club never gets the full record.
+- In the FE, show another player with `IMembersStore.GetMemberProfile` (`TrophyCaseView` does). `IMembersStore.LoadMember` / `MemberDetail` is for the signed-in member and the member administration only; calling it for somebody else as a normal member ends on the access-denied page.
+- New endpoints that return members to normal members follow the same rule; `MemberPrivacySecurityTests` checks it over HTTP.
+
 ## Recurring Bookings
 
 ### Overview

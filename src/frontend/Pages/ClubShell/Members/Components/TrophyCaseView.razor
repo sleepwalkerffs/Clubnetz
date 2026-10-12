@@ -6,8 +6,6 @@
 @using Bookennis.Client.Services.Store.ClubProfile
 @using Bookennis.Client.Services.Store.Members
 
-@implements IDisposable
-
 @if (!loaded)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
@@ -101,7 +99,7 @@ else
     [Inject] private IStringLocalizer<TrophyLocale> Locale { get; set; } = null!;
     [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
 
-    private Bookennis.Shared.Controller.Members.MembersDetailResult? member;
+    private Bookennis.Shared.Controller.Members.MemberProfileResult? member;
     private Bookennis.Shared.Controller.MemberBadges.GetTrophyCaseResult? trophyCase;
     private int loadedMemberId;
     private bool loaded;
@@ -116,18 +114,13 @@ else
         member = null;
         trophyCase = null;
 
-        await Task.WhenAll(MembersStore.LoadMember(MemberId), BadgesStore.LoadTrophyCase(MemberId));
+        // Only name and picture: the full record of another member is not available to everybody
+        var loadProfile = MembersStore.GetMemberProfile(MemberId);
+        await Task.WhenAll(loadProfile, BadgesStore.LoadTrophyCase(MemberId));
 
-        // Both stores hold shared state, keep a copy so other pages loading data don't change this view
-        member = MembersStore.MemberDetail?.MemberId == MemberId ? MembersStore.MemberDetail : null;
+        // The badges store holds shared state, keep a copy so other pages loading data don't change this view
+        member = await loadProfile;
         trophyCase = BadgesStore.TrophyCase;
         loaded = true;
-    }
-
-    public void Dispose()
-    {
-        // Other pages expect the member store to hold the signed-in member, not the one viewed here
-        if (MembersStore.MemberDetail?.MemberId == MemberId)
-            MembersStore.ResetMember();
     }
 }

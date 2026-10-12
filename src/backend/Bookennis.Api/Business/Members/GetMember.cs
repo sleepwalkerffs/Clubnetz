@@ -9,6 +9,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Members;
 
+/// <summary>
+/// The full record of a member of the club, with email, birthday, roles and seasons. The controller only hands it to the member
+/// themself and to those who manage the members; everybody else gets <see cref="GetMemberProfile"/>.
+/// </summary>
 public record GetMember(int MemberId) : ICommand<MembersDetailResult>
 {
     public class Handler(AppDbContext context, ITenantService tenantService) : IRequestHandler<GetMember, MembersDetailResult>
@@ -25,12 +29,10 @@ public record GetMember(int MemberId) : ICommand<MembersDetailResult>
                                 join familyMember in context.FamilyMembers on member.Id equals familyMember.MemberId into tmpFamilyMember
                                 from familyMember in tmpFamilyMember.DefaultIfEmpty()
 
-                                // IgnoreQueryFilters switches the tenant filter off for the whole query, so the club is checked here:
-                                // a member of this club, or a player of another club when both clubs share their players (ATP)
+                                // IgnoreQueryFilters switches the tenant filter off for the whole query, so the club is checked here.
+                                // Players of other clubs (ATP) are never returned with their full record, see GetMemberProfile.
                                 where member.Id == request.MemberId
-                                   && (currentClubId == null
-                                       || member.ClubId == currentClubId
-                                       || (club.IsAtpClub && context.Clubs.Any(current => current.Id == currentClubId && current.IsAtpClub)))
+                                   && (currentClubId == null || member.ClubId == currentClubId)
 
                                 select new MembersDetailResult
                                 {

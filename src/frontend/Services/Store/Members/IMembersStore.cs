@@ -32,6 +32,12 @@ public interface IMembersStore : ISemaphoreStore
     public Task LoadSummary();
     public Task LoadMemberOverview(int memberId);
     public Task LoadMember(int memberId);
+
+    /// <summary>
+    /// Name and picture of a player, for showing somebody else (the full record in <c>MemberDetail</c> is only available for the
+    /// signed-in member and for those who manage the members). Null if the player does not exist or a newer request replaced this one.
+    /// </summary>
+    public Task<MemberProfileResult?> GetMemberProfile(int memberId);
     public bool LoadedMemberId(int memberId);
     public void ResetMembers();
     public void ResetMember();

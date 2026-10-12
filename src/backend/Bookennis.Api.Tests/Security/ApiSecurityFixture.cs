@@ -191,6 +191,10 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         return new SeededKey(key.Id, token, club.Id, key.CreatedByUserId);
     }
 
+    /// <summary>A new club with the usual resources; <paramref name="sharesPlayers"/> makes it an ATP club.</summary>
+    public Task<SeededClub> NewClub(string text, bool sharesPlayers)
+        => Db(context => AddClub(context, text, administrator: false, sharesPlayers));
+
     /// <summary>A new admin of the club, for tests that take the admin role away again.</summary>
     public Task<SeededUser> NewAdmin(SeededClub club)
         => Db(context => AddUser(context, club, $"temp-admin-{Guid.NewGuid():N}", "Temp", [MemberRole.User, MemberRole.Admin]));
@@ -256,13 +260,14 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await context.SaveChangesAsync();
     }
 
-    private static async Task<SeededClub> AddClub(AppDbContext context, string text, bool administrator)
+    private static async Task<SeededClub> AddClub(AppDbContext context, string text, bool administrator, bool sharesPlayers = false)
     {
         var club = new Club(
             $"Club {text}",
             new TimeOnlyInterval(new TimeOnly(7, 0), new TimeOnly(22, 0)),
             new TimeOnlyInterval(new TimeOnly(18, 0), new TimeOnly(20, 0)),
             [new Club.PlayModeDto([MemberRole.User], System.Drawing.Color.Brown, 2, true, $"Single {text}", TimeSpan.FromHours(1), false, true)]);
+        club.SetIsAtpClub(sharesPlayers);
         context.Add(club);
         await context.SaveChangesAsync();
 
