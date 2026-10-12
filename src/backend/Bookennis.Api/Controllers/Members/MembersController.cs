@@ -36,7 +36,19 @@ public class MembersController(IMediator mediator, IAuthorizationService authori
     [HttpGet("{memberId:int}")]
     [Authorize(AuthorizationPolicies.Member)]
     public async Task<MembersDetailResult> GetMember(int memberId, CancellationToken cancellationToken)
-        => await mediator.Send(new GetMember(memberId), cancellationToken);
+    {
+        // The full record (email, birthday, roles, ...): members read their own, member viewers the one of everybody
+        if (!(await authorizationService.AuthorizeAsync(HttpContext.User, AuthorizationPolicies.ClubMemberViewer)).Succeeded)
+            (await authorizationService.AuthorizeAsync(HttpContext.User, new MemberAuthorizationModel(memberId), AuthorizationPolicies.Member)).EnsureSucceeded();
+
+        return await mediator.Send(new GetMember(memberId), cancellationToken);
+    }
+
+    /// <summary>Name and picture of a player of the club or of a club it shares its players with. All a member gets to know about somebody else.</summary>
+    [HttpGet("{memberId:int}/profile")]
+    [Authorize(AuthorizationPolicies.Member)]
+    public async Task<MemberProfileResult> GetMemberProfile(int memberId, CancellationToken cancellationToken)
+        => await mediator.Send(new GetMemberProfile(memberId), cancellationToken);
 
     [HttpPatch("{memberId:int}/BookingOptions")]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]

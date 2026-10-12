@@ -19,15 +19,18 @@
                     <div class="family-member__text">
                         <div class="family-member__name">@parent.FirstName @parent.LastName</div>
                     </div>
-                    <MudTooltip Text="@FamilySharedLocale["RemoveFamilyMember"]">
-                        <MudIconButton Size="Size.Small" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete"
-                                       aria-label="@FamilySharedLocale["RemoveFamilyMember"]"
-                                       OnClick="_ => OpenDeleteDialog(parent)" />
-                    </MudTooltip>
+                    @if (CanManage)
+                    {
+                        <MudTooltip Text="@FamilySharedLocale["RemoveFamilyMember"]">
+                            <MudIconButton Size="Size.Small" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete"
+                                           aria-label="@FamilySharedLocale["RemoveFamilyMember"]"
+                                           OnClick="_ => OpenDeleteDialog(parent)" />
+                        </MudTooltip>
+                    }
                 </div>
             }
         }
-        else
+        else if (CanManage)
         {
             <button type="button" class="family-add" @onclick="AddPartner">
                 <MudIcon Icon="@Icons.Material.Filled.FavoriteBorder" Size="Size.Small" />
@@ -46,7 +49,7 @@
                     <div class="family-member__name">@child.FirstName @child.LastName</div>
                     <div class="family-member__meta">@string.Format(FamilySharedLocale["ChildAge"], GetAge(child.Birthday))</div>
                 </div>
-                <div class="d-flex">
+                <div class="@(CanManage ? "d-flex" : "d-none")">
                     @if (child.IsOwnedAccount)
                     {
                         <MudTooltip Text="@FamilySharedLocale["EditChild"]">
@@ -63,10 +66,13 @@
                 </div>
             </div>
         }
-        <button type="button" class="family-add" @onclick="AddChildren">
-            <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
-            @FamilySharedLocale["AddChild"]
-        </button>
+        @if (CanManage)
+        {
+            <button type="button" class="family-add" @onclick="AddChildren">
+                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                @FamilySharedLocale["AddChild"]
+            </button>
+        }
     </div>
 </SectionCard>
 
@@ -84,6 +90,9 @@
     private IStringLocalizer<FamilySharedLocale> FamilySharedLocale { get; set; } = null!;
     [Inject]
     private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    /// <summary>Only the parents change a family (the API refuses everybody else); without a family the member can found one.</summary>
+    private bool CanManage => FamilyStore.Family is null || FamilyStore.Family.Parents.Any(p => p.MemberId == MemberId);
 
     private List<FamilyParentDto> Partners => FamilyStore.Family?.Parents.Where(p => p.MemberId != MemberId).ToList() ?? [];
 

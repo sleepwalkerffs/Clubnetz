@@ -86,6 +86,27 @@ public class MembersStore(IMemberHttpService memberHttpService) : SemaphoreStore
             }
         }, nameof(LoadMember));
 
+    // Kept apart from MemberDetail (the signed-in member), so showing another player never replaces it
+    public async Task<MemberProfileResult?> GetMemberProfile(int memberId)
+    {
+        MemberProfileResult? profile = null;
+        try
+        {
+            await RunInLoadingContextAsync(async cancellationToken =>
+            {
+                var result = await memberHttpService.GetMemberProfile(memberId, cancellationToken);
+                if (result is { Success: true, Dto: not null })
+                    profile = result.Dto;
+            }, nameof(GetMemberProfile));
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
+
+        return profile;
+    }
+
     public bool LoadedMemberId(int memberId) => memberId == loadedMemberId;
 
     public void ResetMembers()

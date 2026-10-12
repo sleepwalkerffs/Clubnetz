@@ -13,6 +13,7 @@ public interface IMemberHttpService
     public Task<HttpResult<GetMemberOverviewResult>> GetMemberOverview(int memberId, CancellationToken cancellationToken = default);
 
     public Task<HttpResult<MembersDetailResult>> GetMember(int memberId, CancellationToken cancellationToken = default);
+    public Task<HttpResult<MemberProfileResult>> GetMemberProfile(int memberId, CancellationToken cancellationToken = default);
     public Task<HttpResult> UpdateMemberBookingOptions(int memberId, int[] allowedSeasonIds, int bookingsPerWeek, CancellationToken cancellationToken = default);
     public Task<HttpResult> UpdateMemberRoles(int memberId, MemberRole[] roles, CancellationToken cancellationToken = default);
     public Task<HttpResult<GetMemberBookingHistoryResult>> GetBookingHistory(int memberId, int seasonId, CancellationToken cancellationToken = default);

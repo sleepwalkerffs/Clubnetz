@@ -33,6 +33,12 @@ public static class AuthorizationPolicies
     public const string OwnsBooking = nameof(OwnsBooking);
     public const string CanEditBooking = nameof(CanEditBooking);
 
+    //Family Policies (resource: FamilyAuthorizationModel)
+    /// <summary>Reads a family: one of its members, or an Admin of the club.</summary>
+    public const string FamilyMember = nameof(FamilyMember);
+    /// <summary>Changes a family: one of its parents, an Admin of the club, or a member who takes themself out of it.</summary>
+    public const string FamilyParent = nameof(FamilyParent);
+
     //Subscription Planner Policies
     public const string OwnsSubscriptionPlan = nameof(OwnsSubscriptionPlan);
 
