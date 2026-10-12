@@ -1,0 +1,921 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="NoAccess" xml:space="preserve">
+    <value>This page is for the treasurers and admins of the club.</value>
+  </data>
+  <data name="NoSeasons" xml:space="preserve">
+    <value>The club has no season yet. Create one in the club settings first.</value>
+  </data>
+  <data name="SeasonName" xml:space="preserve">
+    <value>Season {0}</value>
+  </data>
+  <data name="Free" xml:space="preserve">
+    <value>Free</value>
+  </data>
+  <data name="Coverage_OneMember" xml:space="preserve">
+    <value>One member</value>
+  </data>
+  <data name="Coverage_Couple" xml:space="preserve">
+    <value>Couple</value>
+  </data>
+  <data name="Coverage_FamilyOneAdult" xml:space="preserve">
+    <value>Family, 1 adult</value>
+  </data>
+  <data name="Coverage_FamilyTwoAdults" xml:space="preserve">
+    <value>Family, 2 adults</value>
+  </data>
+  <data name="Born_In" xml:space="preserve">
+    <value>born {0}</value>
+  </data>
+  <data name="Born_Between" xml:space="preserve">
+    <value>born {0} to {1}</value>
+  </data>
+  <data name="Born_From" xml:space="preserve">
+    <value>born {0} or later</value>
+  </data>
+  <data name="Born_Until" xml:space="preserve">
+    <value>born {0} or earlier</value>
+  </data>
+  <data name="Age_Exactly" xml:space="preserve">
+    <value>{0} years</value>
+  </data>
+  <data name="Age_Between" xml:space="preserve">
+    <value>{0} to {1} years</value>
+  </data>
+  <data name="Age_UpTo" xml:space="preserve">
+    <value>up to {0} years</value>
+  </data>
+  <data name="Age_From" xml:space="preserve">
+    <value>{0} years and older</value>
+  </data>
+  <data name="Available_Between" xml:space="preserve">
+    <value>from {0} to {1}</value>
+  </data>
+  <data name="Available_From" xml:space="preserve">
+    <value>from {0}</value>
+  </data>
+  <data name="Available_Until" xml:space="preserve">
+    <value>until {0}</value>
+  </data>
+  <data name="Chip_RequiresApproval" xml:space="preserve">
+    <value>needs confirmation</value>
+  </data>
+  <data name="Chip_NewMembersOnly" xml:space="preserve">
+    <value>new members</value>
+  </data>
+  <data name="Chip_FamilyDiscount" xml:space="preserve">
+    <value>with a member in the family</value>
+  </data>
+  <data name="Chip_Passive" xml:space="preserve">
+    <value>passive, no bookings</value>
+  </data>
+  <data name="Chip_NotSelfService" xml:space="preserve">
+    <value>only assigned by you</value>
+  </data>
+  <data name="Sentence_OneMember" xml:space="preserve">
+    <value>For one member.</value>
+  </data>
+  <data name="Sentence_Couple" xml:space="preserve">
+    <value>For two adults of a family. One of them pays for both.</value>
+  </data>
+  <data name="Sentence_FamilyOneAdult" xml:space="preserve">
+    <value>For one adult and all their children. One price for everybody.</value>
+  </data>
+  <data name="Sentence_FamilyTwoAdults" xml:space="preserve">
+    <value>For two adults and all their children. One price for everybody.</value>
+  </data>
+  <data name="Sentence_Age" xml:space="preserve">
+    <value>Only for members {0} ({1} in {2}).</value>
+  </data>
+  <data name="Sentence_AgeOfAdults" xml:space="preserve">
+    <value>Only when the adults are {0} ({1} in {2}).</value>
+  </data>
+  <data name="Sentence_NewMembersOnly" xml:space="preserve">
+    <value>Only for members who were never enrolled in an earlier season.</value>
+  </data>
+  <data name="Sentence_FamilyDiscount" xml:space="preserve">
+    <value>Only when another adult of the family is a member in this season.</value>
+  </data>
+  <data name="Sentence_Available" xml:space="preserve">
+    <value>Can be chosen {0}.</value>
+  </data>
+  <data name="Sentence_Passive" xml:space="preserve">
+    <value>Paying it does not enroll in the season: no court bookings.</value>
+  </data>
+  <data name="Sentence_NotSelfService" xml:space="preserve">
+    <value>Members don't see this plan. You assign it when you record a payment.</value>
+  </data>
+  <data name="Sentence_ApprovalThenConfirm" xml:space="preserve">
+    <value>Members ask for it, you confirm, and they are enrolled without paying.</value>
+  </data>
+  <data name="Sentence_ApprovalThenPay" xml:space="preserve">
+    <value>Members ask for it, you confirm, then they pay and are enrolled.</value>
+  </data>
+  <data name="Sentence_Confirm" xml:space="preserve">
+    <value>Members confirm it and are enrolled right away. There is nothing to pay.</value>
+  </data>
+  <data name="Sentence_Pay" xml:space="preserve">
+    <value>Members choose it, pay, and are enrolled right away.</value>
+  </data>
+  <data name="Status_AwaitingApproval" xml:space="preserve">
+    <value>Needs confirmation</value>
+  </data>
+  <data name="Status_AwaitingPayment" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Status_Processing" xml:space="preserve">
+    <value>Debit in progress</value>
+  </data>
+  <data name="Status_Paid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="Status_Failed" xml:space="preserve">
+    <value>Payment failed</value>
+  </data>
+  <data name="Status_Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Status_Refunded" xml:space="preserve">
+    <value>Refunded</value>
+  </data>
+  <data name="Status_Disputed" xml:space="preserve">
+    <value>Disputed</value>
+  </data>
+  <data name="Method_Online" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="Method_BankTransfer" xml:space="preserve">
+    <value>Bank transfer</value>
+  </data>
+  <data name="Method_Cash" xml:space="preserve">
+    <value>Cash</value>
+  </data>
+  <data name="Method_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Enrollment_NotEnrolled" xml:space="preserve">
+    <value>No membership</value>
+  </data>
+  <data name="Enrollment_ByHand" xml:space="preserve">
+    <value>Enrolled by hand</value>
+  </data>
+  <data name="Enrollment_PaidOnline" xml:space="preserve">
+    <value>Paid online</value>
+  </data>
+  <data name="Enrollment_MarkedAsPaid" xml:space="preserve">
+    <value>Marked as paid</value>
+  </data>
+  <data name="Reason_BirthYearOutOfRange" xml:space="preserve">
+    <value>This plan is for other birth years.</value>
+  </data>
+  <data name="Reason_TooManyAdults" xml:space="preserve">
+    <value>This plan covers fewer adults.</value>
+  </data>
+  <data name="Reason_ChildrenNotIncluded" xml:space="preserve">
+    <value>This plan does not cover children.</value>
+  </data>
+  <data name="Reason_NotANewMember" xml:space="preserve">
+    <value>This plan is for new members.</value>
+  </data>
+  <data name="Reason_NoEnrolledFamilyAdult" xml:space="preserve">
+    <value>This plan needs another adult of your family who is a member in this season.</value>
+  </data>
+  <data name="Reason_PlanNotAvailable" xml:space="preserve">
+    <value>This plan can't be chosen at the moment.</value>
+  </data>
+  <data name="Reason_MemberNotInFamily" xml:space="preserve">
+    <value>This plan is for the members of one family.</value>
+  </data>
+  <data name="Reason_AlreadyHasMembership" xml:space="preserve">
+    <value>There is already a membership for this season.</value>
+  </data>
+  <data name="Reason_OnlyOneMember" xml:space="preserve">
+    <value>This plan is for one member.</value>
+  </data>
+  <data name="Reason_AdultRequired" xml:space="preserve">
+    <value>This plan needs at least one adult.</value>
+  </data>
+  <data name="Reason_Other" xml:space="preserve">
+    <value>This plan can't be chosen.</value>
+  </data>
+  <data name="Plans_Title" xml:space="preserve">
+    <value>Membership plans</value>
+  </data>
+  <data name="Plans_Subtitle" xml:space="preserve">
+    <value>Your price list: who pays what in a season. Members choose their plan themselves and pay online, by transfer or in cash.</value>
+  </data>
+  <data name="Plans_CountChip" xml:space="preserve">
+    <value>{0} plans</value>
+  </data>
+  <data name="Plans_OnlineChipOn" xml:space="preserve">
+    <value>Online payment active</value>
+  </data>
+  <data name="Plans_OnlineChipOff" xml:space="preserve">
+    <value>No online payment</value>
+  </data>
+  <data name="Plans_ToPayments" xml:space="preserve">
+    <value>Who has paid?</value>
+  </data>
+  <data name="Plans_ListTitle" xml:space="preserve">
+    <value>Plans</value>
+  </data>
+  <data name="Plans_ListSubtitle" xml:space="preserve">
+    <value>In the order members see them</value>
+  </data>
+  <data name="Plans_Add" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="Plans_AddFirst" xml:space="preserve">
+    <value>Create the first plan</value>
+  </data>
+  <data name="Plans_Copy" xml:space="preserve">
+    <value>Copy from another season</value>
+  </data>
+  <data name="Plans_Copied" xml:space="preserve">
+    <value>Plans copied. Check the prices and birth years.</value>
+  </data>
+  <data name="Plans_EmptyTitle" xml:space="preserve">
+    <value>No plans in this season yet</value>
+  </data>
+  <data name="Plans_EmptyText" xml:space="preserve">
+    <value>Enter your price list, e.g. adult, youth, family. Without plans everything stays as it is: you enroll members by hand.</value>
+  </data>
+  <data name="Plans_NoOrders" xml:space="preserve">
+    <value>Not chosen yet</value>
+  </data>
+  <data name="Plans_Orders" xml:space="preserve">
+    <value>Chosen {0} times</value>
+  </data>
+  <data name="Plans_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Plans_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Plans_DeleteTitle" xml:space="preserve">
+    <value>Delete plan</value>
+  </data>
+  <data name="Plans_DeleteConfirm" xml:space="preserve">
+    <value>Delete the plan "{0}"?</value>
+  </data>
+  <data name="Plans_Deleted" xml:space="preserve">
+    <value>Plan deleted.</value>
+  </data>
+  <data name="Plan_NewTitle" xml:space="preserve">
+    <value>New plan</value>
+  </data>
+  <data name="Plan_EditTitle" xml:space="preserve">
+    <value>Edit plan</value>
+  </data>
+  <data name="Plan_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Plan_NamePlaceholder" xml:space="preserve">
+    <value>e.g. Adult</value>
+  </data>
+  <data name="Plan_NameRequired" xml:space="preserve">
+    <value>Please enter a name.</value>
+  </data>
+  <data name="Plan_Price" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Plan_SeasonHint" xml:space="preserve">
+    <value>Price for the whole season {0}. 0 makes the plan free.</value>
+  </data>
+  <data name="Plan_Description" xml:space="preserve">
+    <value>Description (optional)</value>
+  </data>
+  <data name="Plan_DescriptionHint" xml:space="preserve">
+    <value>Shown to members below the name.</value>
+  </data>
+  <data name="Plan_Coverage" xml:space="preserve">
+    <value>Who is covered?</value>
+  </data>
+  <data name="Plan_CoverageGroupHint" xml:space="preserve">
+    <value>The price is for everybody together. Members choose who of their family is covered.</value>
+  </data>
+  <data name="Plan_AgeLimit" xml:space="preserve">
+    <value>Only for certain birth years</value>
+  </data>
+  <data name="Plan_AgeLimitAdults" xml:space="preserve">
+    <value>Only for adults of certain birth years</value>
+  </data>
+  <data name="Plan_BirthYearFrom" xml:space="preserve">
+    <value>Born from</value>
+  </data>
+  <data name="Plan_BirthYearFromHint" xml:space="preserve">
+    <value>Oldest year, empty for no limit</value>
+  </data>
+  <data name="Plan_BirthYearTo" xml:space="preserve">
+    <value>Born until</value>
+  </data>
+  <data name="Plan_BirthYearToHint" xml:space="preserve">
+    <value>Youngest year, empty for no limit</value>
+  </data>
+  <data name="Plan_AgeResult" xml:space="preserve">
+    <value>That is {0} in {1}.</value>
+  </data>
+  <data name="Plan_SelfService" xml:space="preserve">
+    <value>Members can choose it themselves</value>
+  </data>
+  <data name="Plan_SelfServiceHint" xml:space="preserve">
+    <value>Switched off, only you can assign the plan (e.g. honorary members).</value>
+  </data>
+  <data name="Plan_RequiresApproval" xml:space="preserve">
+    <value>You confirm every request</value>
+  </data>
+  <data name="Plan_RequiresApprovalHint" xml:space="preserve">
+    <value>For students, apprentices and similar: the member pays after your confirmation.</value>
+  </data>
+  <data name="Plan_NewMembersOnly" xml:space="preserve">
+    <value>Only for new members</value>
+  </data>
+  <data name="Plan_NewMembersOnlyHint" xml:space="preserve">
+    <value>For members who were never enrolled in an earlier season.</value>
+  </data>
+  <data name="Plan_FamilyDiscount" xml:space="preserve">
+    <value>Only with a member in the family</value>
+  </data>
+  <data name="Plan_FamilyDiscountHint" xml:space="preserve">
+    <value>Partner card or discount on children: another adult of the family has to be a member in this season.</value>
+  </data>
+  <data name="Plan_Passive" xml:space="preserve">
+    <value>Passive membership</value>
+  </data>
+  <data name="Plan_PassiveHint" xml:space="preserve">
+    <value>The fee is recorded, but the member is not enrolled and can't book courts.</value>
+  </data>
+  <data name="Plan_Availability" xml:space="preserve">
+    <value>Offered</value>
+  </data>
+  <data name="Plan_AvailableFrom" xml:space="preserve">
+    <value>From (optional)</value>
+  </data>
+  <data name="Plan_AvailableUntil" xml:space="preserve">
+    <value>Until (optional)</value>
+  </data>
+  <data name="Plan_AvailabilityHint" xml:space="preserve">
+    <value>For an early-bird price or a half-season plan. Empty: the whole time.</value>
+  </data>
+  <data name="Plan_ErrorNoBirthYear" xml:space="preserve">
+    <value>Enter at least one birth year or switch the age limit off.</value>
+  </data>
+  <data name="Plan_ErrorBirthYears" xml:space="preserve">
+    <value>"Born from" has to be before "born until".</value>
+  </data>
+  <data name="Plan_ErrorAvailability" xml:space="preserve">
+    <value>The plan must not end before it starts.</value>
+  </data>
+  <data name="Plan_Saved" xml:space="preserve">
+    <value>Plan saved.</value>
+  </data>
+  <data name="Copy_Submit" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Copy_Hint" xml:space="preserve">
+    <value>All plans are copied with their prices. Birth years and dates move along with the season, so "born 2009 to 2013" becomes "born 2010 to 2014" one year later.</value>
+  </data>
+  <data name="Account_Title" xml:space="preserve">
+    <value>Online payment</value>
+  </data>
+  <data name="Account_Subtitle" xml:space="preserve">
+    <value>Members pay by card or SEPA direct debit, straight to your club</value>
+  </data>
+  <data name="Account_UnavailableTitle" xml:space="preserve">
+    <value>Not available in this installation</value>
+  </data>
+  <data name="Account_UnavailableText" xml:space="preserve">
+    <value>Online payment is not set up here. Plans and the list of who has paid work without it: members pay to the club and you record the payments.</value>
+  </data>
+  <data name="Account_NotConnectedTitle" xml:space="preserve">
+    <value>Connect your club with Stripe</value>
+  </data>
+  <data name="Account_NotConnectedText" xml:space="preserve">
+    <value>Stripe is the payment provider. Your club gets its own Stripe account, and paying online enrolls the member automatically.</value>
+  </data>
+  <data name="Account_Fact_Direct" xml:space="preserve">
+    <value>The money goes directly from the member to the account of your club. Clubnetz never holds it.</value>
+  </data>
+  <data name="Account_Fact_Methods" xml:space="preserve">
+    <value>Cards and SEPA direct debit are on by default. You choose the payment methods in Stripe.</value>
+  </data>
+  <data name="Account_Fact_Fees" xml:space="preserve">
+    <value>Stripe charges its fees per payment to the club. Stripe asks for the details of the club and its bank account.</value>
+  </data>
+  <data name="Account_Country" xml:space="preserve">
+    <value>Country of the club</value>
+  </data>
+  <data name="Account_CountryHint" xml:space="preserve">
+    <value>Can't be changed afterwards.</value>
+  </data>
+  <data name="Account_Connect" xml:space="preserve">
+    <value>Connect with Stripe</value>
+  </data>
+  <data name="Account_AdminOnly" xml:space="preserve">
+    <value>Only an admin of the club can connect or disconnect Stripe.</value>
+  </data>
+  <data name="Account_IncompleteTitle" xml:space="preserve">
+    <value>Setting up at Stripe is not finished</value>
+  </data>
+  <data name="Account_IncompleteText" xml:space="preserve">
+    <value>Stripe still needs details about your club before members can pay online.</value>
+  </data>
+  <data name="Account_ReviewTitle" xml:space="preserve">
+    <value>Stripe is checking your details</value>
+  </data>
+  <data name="Account_ReviewText" xml:space="preserve">
+    <value>You have entered everything. Stripe usually needs a few minutes, sometimes a few days. Members can pay online as soon as Stripe is done.</value>
+  </data>
+  <data name="Account_LinkExpired" xml:space="preserve">
+    <value>The link of Stripe ran out. Continue to get a new one.</value>
+  </data>
+  <data name="Account_Continue" xml:space="preserve">
+    <value>Continue at Stripe</value>
+  </data>
+  <data name="Account_CheckAgain" xml:space="preserve">
+    <value>Check again</value>
+  </data>
+  <data name="Account_Disconnect" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="Account_ActiveTitle" xml:space="preserve">
+    <value>Members can pay online</value>
+  </data>
+  <data name="Account_ActiveText" xml:space="preserve">
+    <value>Payments go to the Stripe account of your club. Refunds, payouts and disputes are handled in your Stripe dashboard.</value>
+  </data>
+  <data name="Account_ChargesOn" xml:space="preserve">
+    <value>Payments active</value>
+  </data>
+  <data name="Account_PayoutsOn" xml:space="preserve">
+    <value>Payouts active</value>
+  </data>
+  <data name="Account_PayoutsOff" xml:space="preserve">
+    <value>Payouts not active yet</value>
+  </data>
+  <data name="Account_ConnectedSince" xml:space="preserve">
+    <value>Connected since {0}</value>
+  </data>
+  <data name="Account_OpenStripe" xml:space="preserve">
+    <value>Stripe dashboard</value>
+  </data>
+  <data name="Account_NowActive" xml:space="preserve">
+    <value>Done! Members can pay online now.</value>
+  </data>
+  <data name="Account_StillReview" xml:space="preserve">
+    <value>Stripe is still checking your details.</value>
+  </data>
+  <data name="Account_StillIncomplete" xml:space="preserve">
+    <value>Stripe still needs details. Continue at Stripe.</value>
+  </data>
+  <data name="Account_Gone" xml:space="preserve">
+    <value>The Stripe account can no longer be reached and was disconnected.</value>
+  </data>
+  <data name="Account_DisconnectTitle" xml:space="preserve">
+    <value>Disconnect Stripe</value>
+  </data>
+  <data name="Account_DisconnectConfirm" xml:space="preserve">
+    <value>Members can no longer pay online. Payments that were made stay as they are, and your Stripe account stays yours. Connecting again later creates a new Stripe account.</value>
+  </data>
+  <data name="Account_Disconnected" xml:space="preserve">
+    <value>Stripe disconnected.</value>
+  </data>
+  <data name="Payments_Title" xml:space="preserve">
+    <value>Membership fees</value>
+  </data>
+  <data name="Payments_Subtitle" xml:space="preserve">
+    <value>Who has which plan, who has paid and who has not. Payments by transfer or in cash are recorded here.</value>
+  </data>
+  <data name="Payments_PaidChip" xml:space="preserve">
+    <value>{0} of {1} members paid</value>
+  </data>
+  <data name="Payments_ApprovalChip" xml:space="preserve">
+    <value>{0} waiting for you</value>
+  </data>
+  <data name="Payments_ToPlans" xml:space="preserve">
+    <value>Plans and online payment</value>
+  </data>
+  <data name="Payments_Received" xml:space="preserve">
+    <value>Received</value>
+  </data>
+  <data name="Payments_ProcessingHint" xml:space="preserve">
+    <value>+ {0} debits in progress</value>
+  </data>
+  <data name="Payments_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Payments_OfMembers" xml:space="preserve">
+    <value>of {0}</value>
+  </data>
+  <data name="Payments_MembersPaid" xml:space="preserve">
+    <value>Members paid</value>
+  </data>
+  <data name="Payments_EnrolledHint" xml:space="preserve">
+    <value>{0} enrolled in the season</value>
+  </data>
+  <data name="Payments_ListTitle" xml:space="preserve">
+    <value>Members and payments</value>
+  </data>
+  <data name="Payments_ListSubtitle" xml:space="preserve">
+    <value>Every member of the club, with or without a plan</value>
+  </data>
+  <data name="Payments_Export" xml:space="preserve">
+    <value>Export as Excel</value>
+  </data>
+  <data name="Payments_Record" xml:space="preserve">
+    <value>Record payment</value>
+  </data>
+  <data name="Payments_Search" xml:space="preserve">
+    <value>Search name or plan</value>
+  </data>
+  <data name="Payments_EmptyTitle" xml:space="preserve">
+    <value>No members yet</value>
+  </data>
+  <data name="Payments_NothingFound" xml:space="preserve">
+    <value>Nothing found</value>
+  </data>
+  <data name="Payments_FormerMember" xml:space="preserve">
+    <value>Former member</value>
+  </data>
+  <data name="Payments_PaidBy" xml:space="preserve">
+    <value>Paid by {0}</value>
+  </data>
+  <data name="Payments_NoOrder" xml:space="preserve">
+    <value>No plan</value>
+  </data>
+  <data name="Payments_OrderedOn" xml:space="preserve">
+    <value>Ordered on {0}</value>
+  </data>
+  <data name="Payments_NoteHint" xml:space="preserve">
+    <value>Your note, members don't see it</value>
+  </data>
+  <data name="Payments_Approve" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="Payments_Reject" xml:space="preserve">
+    <value>Decline</value>
+  </data>
+  <data name="Payments_MarkPaid" xml:space="preserve">
+    <value>Mark as paid</value>
+  </data>
+  <data name="Payments_Cancel" xml:space="preserve">
+    <value>Cancel order</value>
+  </data>
+  <data name="Payments_CancelPaid" xml:space="preserve">
+    <value>Cancel paid order</value>
+  </data>
+  <data name="Payments_More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="Payments_ShowMore" xml:space="preserve">
+    <value>Show {0} more</value>
+  </data>
+  <data name="Payments_Approved" xml:space="preserve">
+    <value>Confirmed. The member was told by email.</value>
+  </data>
+  <data name="Payments_Rejected" xml:space="preserve">
+    <value>Declined. The member can choose another plan.</value>
+  </data>
+  <data name="Payments_Cancelled" xml:space="preserve">
+    <value>Order cancelled.</value>
+  </data>
+  <data name="Payments_MarkedPaid" xml:space="preserve">
+    <value>Marked as paid. The members are enrolled.</value>
+  </data>
+  <data name="Payments_RejectTitle" xml:space="preserve">
+    <value>Decline plan</value>
+  </data>
+  <data name="Payments_RejectConfirm" xml:space="preserve">
+    <value>Decline "{0}" for {1}? They can choose another plan afterwards.</value>
+  </data>
+  <data name="Payments_CancelTitle" xml:space="preserve">
+    <value>Cancel order</value>
+  </data>
+  <data name="Payments_CancelConfirm" xml:space="preserve">
+    <value>Cancel the order "{0}" of {1}? They can choose a plan again afterwards.</value>
+  </data>
+  <data name="Payments_CancelPaidConfirm" xml:space="preserve">
+    <value>Cancel the paid order "{0}" of {1}? Clubnetz does not refund anything: give the money back yourself (for online payments in your Stripe dashboard). The members stay enrolled until you change that in the member administration.</value>
+  </data>
+  <data name="Payments_NoPlans" xml:space="preserve">
+    <value>This season has no plans yet. Create a plan first.</value>
+  </data>
+  <data name="Filter_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Filter_NeedsApproval" xml:space="preserve">
+    <value>To confirm</value>
+  </data>
+  <data name="Filter_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Filter_Processing" xml:space="preserve">
+    <value>Debit in progress</value>
+  </data>
+  <data name="Filter_Paid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="Filter_Problems" xml:space="preserve">
+    <value>Problems</value>
+  </data>
+  <data name="Filter_NoMembership" xml:space="preserve">
+    <value>No membership</value>
+  </data>
+  <data name="Filter_ByHand" xml:space="preserve">
+    <value>Enrolled by hand</value>
+  </data>
+  <data name="Filter_Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Record_Intro" xml:space="preserve">
+    <value>For a fee that was paid by bank transfer or in cash. The members are enrolled in the season right away.</value>
+  </data>
+  <data name="Record_Member" xml:space="preserve">
+    <value>Member</value>
+  </data>
+  <data name="Record_MemberHint" xml:space="preserve">
+    <value>Only members without a membership in this season.</value>
+  </data>
+  <data name="Record_Plan" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="Record_Covered" xml:space="preserve">
+    <value>Who is covered?</value>
+  </data>
+  <data name="Record_NoFamily" xml:space="preserve">
+    <value>This member has no family in Clubnetz, so the plan only covers them. Add the family in the member administration to cover more members.</value>
+  </data>
+  <data name="Record_Method" xml:space="preserve">
+    <value>Paid by</value>
+  </data>
+  <data name="Record_PaidOn" xml:space="preserve">
+    <value>Paid on</value>
+  </data>
+  <data name="Record_Note" xml:space="preserve">
+    <value>Note (optional)</value>
+  </data>
+  <data name="Record_NoteHint" xml:space="preserve">
+    <value>Only for you and the other treasurers.</value>
+  </data>
+  <data name="Record_EnrollHint" xml:space="preserve">
+    <value>The members are enrolled in the season and the payer gets a confirmation by email.</value>
+  </data>
+  <data name="Record_PassiveHint" xml:space="preserve">
+    <value>A passive plan: the payment is recorded, nobody is enrolled.</value>
+  </data>
+  <data name="Record_ErrorMember" xml:space="preserve">
+    <value>Please choose a member.</value>
+  </data>
+  <data name="Record_ErrorPlan" xml:space="preserve">
+    <value>Please choose a plan.</value>
+  </data>
+  <data name="Record_Submit" xml:space="preserve">
+    <value>Record {0}</value>
+  </data>
+  <data name="Record_SubmitFree" xml:space="preserve">
+    <value>Enroll</value>
+  </data>
+  <data name="Record_Saved" xml:space="preserve">
+    <value>Payment recorded.</value>
+  </data>
+  <data name="My_Title" xml:space="preserve">
+    <value>My membership</value>
+  </data>
+  <data name="My_MembersOnly" xml:space="preserve">
+    <value>This page is for the members of the club.</value>
+  </data>
+  <data name="My_NoSeason" xml:space="preserve">
+    <value>The club has no running or upcoming season at the moment.</value>
+  </data>
+  <data name="My_State_Enrolled" xml:space="preserve">
+    <value>You're in for season {0}</value>
+  </data>
+  <data name="My_StateText_Enrolled" xml:space="preserve">
+    <value>You are enrolled and can book courts.</value>
+  </data>
+  <data name="My_State_Processing" xml:space="preserve">
+    <value>You're in for season {0}</value>
+  </data>
+  <data name="My_StateText_Processing" xml:space="preserve">
+    <value>Your direct debit is on its way. You can already book courts.</value>
+  </data>
+  <data name="My_State_Paid" xml:space="preserve">
+    <value>Your fee for season {0} is paid</value>
+  </data>
+  <data name="My_StateText_Paid" xml:space="preserve">
+    <value>Thank you! Your membership is recorded.</value>
+  </data>
+  <data name="My_State_AwaitingApproval" xml:space="preserve">
+    <value>Waiting for the club</value>
+  </data>
+  <data name="My_StateText_AwaitingApproval" xml:space="preserve">
+    <value>The club has to confirm your plan for season {0}. You get an email as soon as you can go on.</value>
+  </data>
+  <data name="My_State_AwaitingPayment" xml:space="preserve">
+    <value>Your membership for season {0} is open</value>
+  </data>
+  <data name="My_StateText_AwaitingPayment" xml:space="preserve">
+    <value>One step left: complete your order below.</value>
+  </data>
+  <data name="My_State_Failed" xml:space="preserve">
+    <value>Your payment did not go through</value>
+  </data>
+  <data name="My_StateText_Failed" xml:space="preserve">
+    <value>Please pay again for season {0}, or get in touch with the club.</value>
+  </data>
+  <data name="My_State_Open" xml:space="preserve">
+    <value>Your membership for season {0}</value>
+  </data>
+  <data name="My_StateText_Open" xml:space="preserve">
+    <value>Choose the plan that fits you.</value>
+  </data>
+  <data name="My_WaitingTitle" xml:space="preserve">
+    <value>Waiting for your payment</value>
+  </data>
+  <data name="My_WaitingText" xml:space="preserve">
+    <value>The payment provider is confirming it. This only takes a moment.</value>
+  </data>
+  <data name="My_PendingText" xml:space="preserve">
+    <value>We have not got the confirmation of your payment yet. If you paid, you don't have to do anything: this page updates as soon as your bank confirms it, and you get an email.</value>
+  </data>
+  <data name="My_OrdersTitle" xml:space="preserve">
+    <value>Your membership</value>
+  </data>
+  <data name="My_OrdersSubtitle" xml:space="preserve">
+    <value>Season {0}</value>
+  </data>
+  <data name="My_ConfirmedOn" xml:space="preserve">
+    <value>Confirmed on {0}</value>
+  </data>
+  <data name="My_PaidOn" xml:space="preserve">
+    <value>Paid on {0} · {1}</value>
+  </data>
+  <data name="My_Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="My_Pay" xml:space="preserve">
+    <value>Pay {0}</value>
+  </data>
+  <data name="My_PayAgain" xml:space="preserve">
+    <value>Pay {0} again</value>
+  </data>
+  <data name="My_Withdraw" xml:space="preserve">
+    <value>Withdraw</value>
+  </data>
+  <data name="My_WithdrawTitle" xml:space="preserve">
+    <value>Withdraw order</value>
+  </data>
+  <data name="My_WithdrawConfirm" xml:space="preserve">
+    <value>Withdraw your order "{0}"? You can choose a plan again afterwards.</value>
+  </data>
+  <data name="My_Withdrawn" xml:space="preserve">
+    <value>Order withdrawn.</value>
+  </data>
+  <data name="My_PlansTitle" xml:space="preserve">
+    <value>Choose a plan</value>
+  </data>
+  <data name="My_PlansSubtitleOnline" xml:space="preserve">
+    <value>Pay online and you are enrolled right away</value>
+  </data>
+  <data name="My_PlansSubtitleOffline" xml:space="preserve">
+    <value>Choose your plan and pay the fee to the club</value>
+  </data>
+  <data name="My_NoPlansTitle" xml:space="preserve">
+    <value>No plans to choose yet</value>
+  </data>
+  <data name="My_NoPlansText" xml:space="preserve">
+    <value>The club has not published its plans for this season. Please ask the club how to pay your membership fee.</value>
+  </data>
+  <data name="My_NoEligiblePlan" xml:space="preserve">
+    <value>None of the plans fits you at the moment. Please get in touch with the club.</value>
+  </data>
+  <data name="My_ForWhom" xml:space="preserve">
+    <value>For whom?</value>
+  </data>
+  <data name="My_FamilyHint" xml:space="preserve">
+    <value>This plan also covers your family.</value>
+  </data>
+  <data name="My_FamilyLink" xml:space="preserve">
+    <value>Add your family on My Club</value>
+  </data>
+  <data name="My_OtherPlans" xml:space="preserve">
+    <value>Other plans of the club ({0})</value>
+  </data>
+  <data name="My_AskForApproval" xml:space="preserve">
+    <value>Ask for confirmation</value>
+  </data>
+  <data name="My_Choose" xml:space="preserve">
+    <value>Choose this plan</value>
+  </data>
+  <data name="My_Chosen" xml:space="preserve">
+    <value>Plan chosen. Please pay the fee to the club.</value>
+  </data>
+  <data name="My_ApprovalRequested" xml:space="preserve">
+    <value>Request sent. The club will confirm your plan.</value>
+  </data>
+  <data name="My_CheckoutCancelled" xml:space="preserve">
+    <value>The payment was cancelled. Your order is still open.</value>
+  </data>
+  <data name="My_PaidEnrolled" xml:space="preserve">
+    <value>Thank you! Your payment arrived and you are enrolled.</value>
+  </data>
+  <data name="My_PaidPassive" xml:space="preserve">
+    <value>Thank you! Your payment arrived.</value>
+  </data>
+  <data name="My_ProcessingEnrolled" xml:space="preserve">
+    <value>Thank you! Your direct debit was started and you are enrolled.</value>
+  </data>
+  <data name="My_ConfirmedEnrolled" xml:space="preserve">
+    <value>Done! You are enrolled.</value>
+  </data>
+  <data name="My_ConfirmedPassive" xml:space="preserve">
+    <value>Done! Your membership is recorded.</value>
+  </data>
+  <data name="My_Hint_AwaitingApproval" xml:space="preserve">
+    <value>The club checks whether this plan is right for you. You get an email as soon as it is confirmed.</value>
+  </data>
+  <data name="My_Hint_Free" xml:space="preserve">
+    <value>This plan is free. Confirm it and you are enrolled.</value>
+  </data>
+  <data name="My_Hint_PayToClub" xml:space="preserve">
+    <value>Please pay the fee to the club (bank transfer or cash). The treasurer records your payment and you are enrolled.</value>
+  </data>
+  <data name="My_Hint_Failed" xml:space="preserve">
+    <value>The payment did not go through. You can pay again.</value>
+  </data>
+  <data name="My_Hint_Processing" xml:space="preserve">
+    <value>Your direct debit takes a few days. You are already enrolled.</value>
+  </data>
+  <data name="My_Hint_Disputed" xml:space="preserve">
+    <value>The payment is disputed at the bank. Please get in touch with the club.</value>
+  </data>
+  <data name="My_Hint_Passive" xml:space="preserve">
+    <value>A passive membership: no court bookings.</value>
+  </data>
+  <data name="Card_Title" xml:space="preserve">
+    <value>Your membership</value>
+  </data>
+  <data name="Card_Open" xml:space="preserve">
+    <value>You are not enrolled for season {0} yet. Choose your plan and you are in.</value>
+  </data>
+  <data name="Card_OpenAction" xml:space="preserve">
+    <value>Choose a plan</value>
+  </data>
+  <data name="Card_AwaitingApproval" xml:space="preserve">
+    <value>The club has to confirm your plan "{0}". You get an email as soon as you can go on.</value>
+  </data>
+  <data name="Card_AwaitingPayment" xml:space="preserve">
+    <value>Your plan "{0}" is waiting for its payment.</value>
+  </data>
+  <data name="Card_AwaitingPaymentAction" xml:space="preserve">
+    <value>Complete membership</value>
+  </data>
+  <data name="Card_Failed" xml:space="preserve">
+    <value>The payment for your plan "{0}" did not go through.</value>
+  </data>
+  <data name="Card_FailedAction" xml:space="preserve">
+    <value>Pay again</value>
+  </data>
+  <data name="Card_View" xml:space="preserve">
+    <value>View</value>
+  </data>
+</root>

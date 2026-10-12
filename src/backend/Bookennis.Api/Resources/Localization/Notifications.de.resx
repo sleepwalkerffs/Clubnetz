@@ -54,4 +54,31 @@
   <data name="ReasonSeriesCancelled" xml:space="preserve">
     <value>samt allen folgenden Terminen der Serie storniert</value>
   </data>
+  <data name="Membership_Reason_ApprovalRequested" xml:space="preserve">
+    <value>Ein Mitglied möchte einen Tarif, den ihr bestätigen müsst.</value>
+  </data>
+  <data name="Membership_Reason_PaymentFailed" xml:space="preserve">
+    <value>Die Zahlung ist fehlgeschlagen. Die Mitglieder bleiben für die Saison freigeschaltet, bis ihr etwas anderes entscheidet.</value>
+  </data>
+  <data name="Membership_Reason_Refunded" xml:space="preserve">
+    <value>Die Zahlung wurde in Stripe erstattet. Die Mitglieder bleiben für die Saison freigeschaltet, bis ihr etwas anderes entscheidet.</value>
+  </data>
+  <data name="Membership_Reason_Disputed" xml:space="preserve">
+    <value>Die Zahlung wurde bei der Bank beanstandet. Bitte beantwortet die Beanstandung in eurem Stripe-Dashboard. Die Mitglieder bleiben für die Saison freigeschaltet, bis ihr etwas anderes entscheidet.</value>
+  </data>
+  <data name="Membership_Reason_UnexpectedPayment" xml:space="preserve">
+    <value>Für eine Bestellung, die storniert oder bereits als bezahlt eingetragen wurde, ist eine Online-Zahlung eingegangen. Bitte prüft sie in eurem Stripe-Dashboard und erstattet sie oder tragt die Mitgliedschaft ein.</value>
+  </data>
+  <data name="Membership_Method_Online" xml:space="preserve">
+    <value>Online-Zahlung</value>
+  </data>
+  <data name="Membership_Method_BankTransfer" xml:space="preserve">
+    <value>Überweisung</value>
+  </data>
+  <data name="Membership_Method_Cash" xml:space="preserve">
+    <value>Bar</value>
+  </data>
+  <data name="Membership_Method_Other" xml:space="preserve">
+    <value>Sonstiges</value>
+  </data>
 </root>

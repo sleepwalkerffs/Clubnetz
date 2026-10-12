@@ -198,4 +198,10 @@
   <data name="ApiKeys" xml:space="preserve">
     <value>API keys</value>
   </data>
+  <data name="MembershipPlans" xml:space="preserve">
+    <value>Membership plans</value>
+  </data>
+  <data name="MembershipPayments" xml:space="preserve">
+    <value>Membership fees</value>
+  </data>
 </root>

@@ -241,4 +241,7 @@
   <data name="Book" xml:space="preserve">
     <value>Buchen</value>
   </data>
+  <data name="Membership" xml:space="preserve">
+    <value>Mitgliedschaft</value>
+  </data>
 </root>

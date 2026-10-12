@@ -350,7 +350,7 @@ Club members (not guests) plan shared winter court subscriptions: a date range, 
 
 Emails triggered by something happening in a club are club-agnostic and can be customized per club by club admins (EN + DE). Platform emails (`VerifyUser`, `ForgotPassword`, `ConfirmEmailChange`, `EmailChanged`) are not club emails and stay fixed Razor views.
 
-- `ClubEmailType` (Domain + a copy in Shared): `Welcome`, `SeasonActivated`, `BadgeAwarded`, `GuestCard`, `BookingDeleted`, `Announcement` (see Club Announcements), `BookingAdded`, `BookingReminder`, `ClubEventCreated`, `ClubEventReminder`, `ClubEventRegistrationDeadline` (see Notifications).
+- `ClubEmailType` (Domain + a copy in Shared): `Welcome`, `SeasonActivated`, `BadgeAwarded`, `GuestCard`, `BookingDeleted`, `Announcement` (see Club Announcements), `BookingAdded`, `BookingReminder`, `ClubEventCreated`, `ClubEventReminder`, `ClubEventRegistrationDeadline` (see Notifications), `MembershipPaymentReceived`, `MembershipApproved`, `MembershipPaymentFailed`, `MembershipNeedsAttention` (see Memberships & Payments).
 - `ClubEmailTemplate` (`TenantDomainEntity`): `Type`, `Language`, `Subject`, `Body`. Unique on `(ClubId, Type, Language)`. No row = built-in default.
 - `Club.WebsiteUrl` (`{{ club.website_url }}`) and `Club.ReplyToEmail` (used as `ReplyTo` of every club email), set via `UpdateClubEmailSettings`.
 - Built-in defaults: embedded resources `Resources/EmailTemplates/{Type}.{German|English}.md` (first line = subject, rest = body), loaded by `ClubEmailDefaultTemplates`. They must stay club neutral (no club names or URLs).
@@ -534,6 +534,69 @@ The operator of the installation (ASP.NET role `Administrator`, policy `Applicat
 - The styles shared by the admin pages (`admin-page`, `admin-row`, `admin-chip`, `admin-club-card`, `admin-fields`, ...) are in `AdminLayout.razor.css`; they reach the pages via `.admin-shell ::deep`.
 - `Controllers/Admin/ClubsController` still has endpoints for play modes, courts, seasons, members and families of a club (`Admin*` handlers). Except for adding a member the FE no longer uses them, these things are edited in support mode - don't add new ones.
 
+## Memberships & Payments
+
+### Overview
+
+A club enters its price list as membership plans per season. Members choose a plan for themselves or their family and pay the fee: online with Stripe (card, SEPA direct debit), or by bank transfer or cash, which the treasurer records. A paid order enrolls its members in the season. **Plans, the treasurer's list and "mark as paid" work without Stripe**; only the online checkout needs it.
+
+**Enrolling by hand stays as it was.** `UpdateMemberBookingOptions` and `SeasonEnrollmentEditor` are untouched. An order is one more way to create a `MemberSeason`: removing an enrollment by hand never changes an order, and an order never removes an enrollment (not when it is cancelled, refunded, disputed or its debit fails - the treasurer decides).
+
+### Domain Model (`Bookennis.Domain/Memberships`)
+
+- `MembershipPlan` (`TenantDomainEntity`, aggregate root): `SeasonId` (cascade), `Name` (unique per club and season), `Description?` (plain text), `PriceCents` (0 = free plan, confirmed instead of paid), `Currency` ("eur"), and the rules: `MaxAdults` (1-2) + `IncludesChildren` (1/false = one member, 2/false = couple, otherwise a family: `IsGroupPlan`), `BirthYearFrom?`/`BirthYearTo?`, `RequiresApproval`, `NewMembersOnly`, `RequiresEnrolledFamilyAdult` (partner card, discount on children; only for plans for one member), `GrantsSeasonEnrollment` (`false` = passive member: paid, but not enrolled), `AvailableFrom?`/`AvailableUntil?`, `IsSelfService` (off = only the treasurer assigns it), `SortOrder`. **The price is per order, however many members it covers.**
+- `MembershipOrder` (`TenantDomainEntity`, aggregate root): plan, season, a snapshot of `PlanName`/`AmountCents`/`Currency` (a plan that changes later never changes an order), `PayerMemberId?`, `Members` (`MembershipOrderMember`), `Status`, `PaymentMethod?` (`Online`, `BankTransfer`, `Cash`, `Other`; `null` for a confirmed free plan), `StripeCheckoutSessionId?`, `StripePaymentIntentId?`, `ApprovedAt?`, `PaidAt?`, `MarkedPaidByMemberId?`, `Note?` (treasurers only).
+    - `MembershipOrderStatus` (Domain + a copy in Shared): `AwaitingApproval` → `AwaitingPayment` → `Processing` (SEPA debit started) → `Paid`; `Failed`, `Cancelled`, `Refunded`, `Disputed`. The transitions are methods of the order (`Approve`, `Reject`, `StartCheckout`, `MarkProcessing`, `MarkPaid`, `ConfirmFree`, `MarkFailed`, `CancelByMember`, `CancelByTreasurer`, `MarkRefunded`, `MarkDisputed`); an invalid one throws `MembershipOrderInvalidStatus`. **`MarkPaid`, `MarkProcessing`, `MarkFailed`, `MarkRefunded` and `MarkDisputed` are no-ops when repeated**, because Stripe reports things twice.
+    - **A member has one membership per season**: one order whose status is in `MembershipOrder.ActiveStatuses` (everything except `Cancelled`, `Failed`, `Refunded`). The join table can't carry a unique index for that, so every handler that creates an order (or reopens a failed one) calls `context.LockMembershipOrders(clubId, seasonId)` (advisory lock until the transaction ends) before it checks.
+- `MembershipEligibility` (static domain service): `Check(plan, today, candidates, otherFamilyAdults)` returns the reasons a plan can't be chosen (`BirthYearOutOfRange`, `TooManyAdults`, `ChildrenNotIncluded`, `NotANewMember`, `NoEnrolledFamilyAdult`, `PlanNotAvailable`, `MemberNotInFamily`, `AlreadyHasMembership`, `OnlyOneMember`, `AdultRequired`). For a plan for one member the birth years and "new member" apply to that member, for couples and families to the adults. Its tests (`Bookennis.Domain.Tests/Memberships`) are the price lists of three real clubs - add a case there when a rule changes.
+- `ClubPaymentAccount` (`TenantDomainEntity`, unique per club): `StripeAccountId`, `ChargesEnabled`, `PayoutsEnabled`, `DetailsSubmitted`. Deleting the row disconnects the club.
+- `StripeWebhookEvent` (not tenant specific): `EventId` (unique), `Type`, `StripeAccountId?`, `ObjectId`, `ProcessedAt?`. No payload is stored.
+- `MemberSeason.MembershipOrderId?` (set null): the order that enrolled the member, `null` = by hand.
+
+### Rules of the handlers (`Business/Memberships`)
+
+- `MembershipPeople.Load` gives the handlers what the rules need about members (family, birth year, earlier seasons, enrollment, active order). `OrderableBy(memberId)` is who a member may order for: themself and, **as a parent**, the family - the same right that lets a parent book for children. `CreateMembershipOrder` answers anything else with 403.
+- `IMembershipFulfillment.Complete(order)` is the **only** place that turns an order into `MemberSeason`s (unless the plan does not enroll). Call it when an order becomes paid or its debit starts, and save together with the status change. It skips members who are already enrolled, so calling it twice does no harm.
+- The treasurer decides who gets which plan: `RecordMembershipPayment` does **not** check the rules of the plan, only that the members belong to the club and have no membership yet.
+- The payments list (`GetMembershipPayments`) is the treasurers' only list of members (they are no `ClubMemberViewer`). It carries names, family, plan and payment - **never email, birthday or address**. `MembershipOrderDto` (what members see) never carries the note or anything of Stripe.
+- Support mode has no member: treasurer handlers use the nullable `GetClubMemberId` (`MarkedPaidByMemberId` stays `null`). The member's own endpoints (`MembershipsController`) need a member.
+- `DeleteSeason` is rejected with `SeasonHasPayments` when the season has orders that are `Paid` or `Processing`; unpaid orders are deleted with the season. `DeleteMembershipPlan` is rejected once the plan has any order (`MembershipPlanHasOrders`).
+- `MemberRemoval`: paid orders stay as the club's record without the person (the database takes the member out and empties the payer); open orders that would cover nobody are deleted. `ExportPersonalData` lists `MembershipOrders` without Stripe ids.
+
+### Stripe (`Business/Payments`)
+
+- **Nothing but `StripeGateway` (`IStripeGateway`) talks to Stripe.** It is a substitute in `TestFixture`; wrap calls made for a user in `StripeCalls.Run`, which turns a failure into the localized `PaymentProviderUnavailable`.
+- Settings: `AppSettings.Stripe` (`SecretKey`, `WebhookSecret`, `ApplicationFeePercent` = 0). Without keys `IStripeGateway.IsConfigured` is `false`: the FE hides the online part and the endpoints answer `PaymentsNotConfigured`. Never commit keys.
+- **Connect**: the installation is the platform, the club is the merchant. `ConnectPaymentAccount` creates a connected account with the full Stripe dashboard (the club pays the Stripe fees and answers its disputes, Stripe collects the requirements) and returns the link to Stripe's onboarding. `account.updated` and `RefreshPaymentAccount` keep the status current.
+- **Checkout**: `StartMembershipCheckout` creates a Checkout Session **on the connected account** (direct charge) with the name and amount inline (`price_data`) - nothing is kept in Stripe's product catalog. Payment methods are not listed in code: Stripe shows what the club switched on. A new session closes the previous one, and cancelling or marking an order as paid closes its open session (`IMembershipCheckout.ExpireSession`).
+- **The redirect back to the app proves nothing.** Only the webhook changes an order: `POST api/Stripe/Webhook` (`StripeController`, anonymous, not a club route) → `ReceiveStripeWebhook` verifies the signature, stores the event (a known event id is acknowledged and ignored) and enqueues `ProcessStripeEvent` (`[OutOfBand]`).
+- `ProcessStripeEvent` **loads the object again from Stripe** instead of trusting the payload. **The club is the one the Stripe account of the event belongs to** (`ClubPaymentAccount.StripeAccountId`), and an order is only touched when it belongs to that club (the queries use `IgnoreQueryFilters()` and filter by `ClubId` themselves). An order id of another club in a session changes nothing.
+- SEPA: `checkout.session.completed` with an unpaid session marks the order `Processing` and enrolls right away; `async_payment_succeeded` marks it paid; `async_payment_failed` marks it failed and mails the payer and the treasurers. A full refund (`charge.refunded`) or a dispute only changes the status and mails the treasurers.
+
+### API / Authorization
+
+- `MembershipPlansController` (`MembershipPlans`): read `ClubMember` (members only get self-service plans, treasurers also the rest and the order counts), write `ClubTreasurer` (create, update, delete, `copy`, `sort`). Copying shifts birth years and dates by the difference of the season years.
+- `MembershipsController` (`Memberships`, `ClubMember`): `options`, `orders` (create), and per order get, `checkout`, `confirm` (free plan), delete (withdraw). **Every action on an order is authorized with the resource `MembershipOrderAuthorizationModel` and the policy `OwnsMembershipOrder`**: the payer, a covered member, a parent of a covered child, or a Treasurer/Admin of the club.
+- `MembershipPaymentsController` (`MembershipPayments`, `ClubTreasurer`): list, `summary`, record a payment, `approve`, `reject`, `mark-paid`, `cancel`, `export` (ClosedXML, `Export.MembershipPayments(.de).resx`).
+- `PaymentsController` (`Payments`, `ClubTreasurer`): `configuration`, `account` (status only, never the Stripe account id).
+- `PaymentAccountController` (`Payments/account/connect|refresh`, `DELETE Payments/account`): policy `ClubPaymentAccountManager` = a signed-in Admin, cookie only. **Where the money of a club goes is never decided by a treasurer or an API key.** It is its own controller so the rest of `Payments` can be open to keys (see `ControllersOpenToKeys`).
+- `MembershipSecurityTests` attacks all of this over HTTP, including the webhook with forged, foreign and replayed signatures (the fixture runs with a known webhook secret).
+
+### Emails
+
+`MembershipPaymentReceived`, `MembershipApproved`, `MembershipPaymentFailed` (to the payer, or a parent for a child without email) and `MembershipNeedsAttention` (to Treasurers and Admins; the reason is a text of `Notifications(.de).resx`, `Membership_Reason_…`). They are club emails that are always sent and have no notification preference. Send them with `IMembershipNotifier` (a substitute in `TestFixture`) **after** the changes are saved.
+
+### FE
+
+- Stores (`Services/Store/Memberships`): `IMembershipPlansStore`, `IMembershipsStore` (`Options` for the membership page, `Current` isolated for My Club), `IMembershipPaymentsStore`, `IPaymentAccountStore`. Texts are in `MembershipsLocale(.de).resx`, helpers (amounts, chips, the sentences that read a plan back, status colors) in `MembershipHelpers`.
+- `Pages/ClubShell/Club/Memberships`: `MembershipPlans.razor` (`/clubs/{id}/membership-plans`, plan cards per season, `EditMembershipPlanDialog` with a live summary, copy, sort, and `PaymentAccountCard` for the Stripe account) and `MembershipPayments.razor` (`/clubs/{id}/membership-payments`, summary tiles, filter chips with counts, rows as table on desktop and cards on phones, `RecordPaymentDialog`, `MarkPaidDialog`, export). Both for Treasurers and Admins (`MembershipHelpers.CanManage`), linked in the `NavMenu`.
+- `Pages/ClubShell/Membership/Membership.razor` (`/clubs/{id}/membership`): the member's page. State of the season on top, the own orders with their next step, then the plans. A plan for one member is offered per person, a couple or family plan once with the members it can cover. Coming back from Stripe with `checkout=success` it **polls the order** (the webhook may arrive after the redirect) and then removes the query parameters. Leaving for Stripe is `NavigateTo(url, forceLoad: true)`; the CSP needs no change because nothing of Stripe is embedded.
+- My Club: `MembershipCard` (only when there is something to do or to wait for), the "not enrolled" chip of `MyClubHero` links to the page, `AccountCard` shows the plan. Member administration: `SeasonEnrollmentEditor` marks how a season was entered (`MembersDetailResult.SeasonEnrollments`) and asks before a paid season (`MemberResult.PaidSeasonIds`) is switched off.
+
+### Not built yet
+
+Add-ons (e.g. a locker fee), booking rules per plan (a "light" membership is a price only), automatic renewal, pro-rated prices, refunds from within Clubnetz, receipts as PDF, reminders for unpaid fees.
+
 ## Privacy (GDPR) & Legal Pages
 
 - `Pages/Legal`: `/legal/imprint` and `/legal/privacy` (public, `NoNavigationLayout`), texts in `LegalLocale(.de).resx` (`LegalSection` renders lines starting with "- " as a list). The operator details differ per installation and are never committed: they come from the `Legal` section of the server settings (`AppSettings.Legal`, e.g. the environment variable `Legal__OperatorName`), are served by the anonymous `GET api/Legal` (`GetLegalSettings`) and loaded once by `ILegalStore`; the pages show a warning while the operator is not configured. Update `LegalDocument.LastUpdated` when the texts change. `LegalLinks` is shown in `AuthShell` and at the bottom of the `NavMenu`.
@@ -614,7 +677,7 @@ Members are notified about what happens to them by push notification and by emai
 | `ClubAnnouncement` | `NotifyClubAnnouncementCreatedHandler` | `Announcement` (only when a manager sends it) | club members / the chosen audience |
 | `BadgeAwarded` | `NotifyBadgeAwardedHandler` | `BadgeAwarded` | the member |
 
-`Welcome`, `SeasonActivated` and `GuestCard` (contains the login link) are not notifications: they are always sent and have no preference.
+`Welcome`, `SeasonActivated`, `GuestCard` (contains the login link) and the four membership emails (they are about money) are not notifications: they are always sent and have no preference.
 
 ### Preferences
 

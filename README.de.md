@@ -45,6 +45,7 @@ Eine Installation bedient viele Vereine. Jeder Verein ist ein eigener Mandant mi
 | 🏆 **Abzeichen und Trophäenschrank** | Abzeichen, die man sich über die Saison erspielt, und einmalige Abzeichen für besondere Erfolge. |
 | 🗓️ **Abo-Planer** | Erstellt einen fairen Spielplan für gemeinsame Winterabos und exportiert ihn nach Excel. |
 | 🔔 **Benachrichtigungen** | Neue oder abgesagte Buchung, Erinnerung vor dem Spiel, neue Termine, Neuigkeiten und Abzeichen. Per Push, per E-Mail oder gar nicht. |
+| 💳 **Mitgliedschaft** | Einen Tarif für sich oder die ganze Familie wählen und den Beitrag online bezahlen. |
 | 📱 **Installierbare App** | Auf iOS, Android und am Computer auf den Startbildschirm legen. Mit hellem und dunklem Design. |
 
 ### Für den Vorstand
@@ -52,6 +53,7 @@ Eine Installation bedient viele Vereine. Jeder Verein ist ein eigener Mandant mi
 | | |
 |---|---|
 | 👥 **Mitglieder und Saisonen** | Mitglieder, Rollen (Admin, Sportwart, Kassier, Trainer, …) und die Anmeldung je Saison. |
+| 💶 **Mitgliedsbeiträge** | Eure eigene Preisliste je Saison: Erwachsene, Jugend nach Jahrgang, Paare, Familien, Studierende, kostenlose Tarife und mehr. Mitglieder wählen ihren Tarif und bezahlen online mit Karte oder SEPA-Lastschrift (Stripe, direkt auf das Konto des Vereins) und sind damit automatisch freigeschaltet. Der Kassier sieht, wer bezahlt hat, trägt Überweisungen und Barzahlungen ein und exportiert die Liste nach Excel. |
 | 🎟️ **Gästekarten** | Gäste buchen mit einem Link oder Code und einer festen Anzahl an Buchungen. |
 | 🏟️ **Plätze und Spielarten** | Plätze, Öffnungszeiten, Prime Time, Buchungsregeln und wer was buchen darf. |
 | 🚧 **Platzsperren** | Plätze für Turniere, Wartung, Wetter oder das wöchentliche Training sperren. Betroffene Spieler werden informiert. |
@@ -72,6 +74,7 @@ Technik, lokale Einrichtung, Hosting mit Docker, Projektstruktur und die Hinweis
 
 - [Tech stack](README.md#-tech-stack)
 - [Getting started](README.md#-getting-started)
+- [Payments (optional)](README.md#payments-optional)
 - [Hosting it yourself](README.md#-hosting-it-yourself)
 - [Project structure](README.md#-project-structure)
 - [Contributing](README.md#-contributing)

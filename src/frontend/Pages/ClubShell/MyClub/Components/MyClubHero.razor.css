@@ -118,6 +118,18 @@
     background: rgba(254, 202, 202, 0.32);
 }
 
+.hero-chip--link {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.hero-chip--link:hover,
+.hero-chip--link:focus-visible {
+    background: rgba(254, 202, 202, 0.5);
+    outline: none;
+}
+
 .myclub-hero__next {
     position: relative;
     flex: 0 1 280px;

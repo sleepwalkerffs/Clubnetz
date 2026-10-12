@@ -17,6 +17,8 @@ public static class AuthorizationPolicies
     public const string Member = nameof(Member);
     public const string ClubMember = nameof(ClubMember);
     public const string ClubTreasurer = nameof(ClubTreasurer);
+    /// <summary>Connects and disconnects the Stripe account of the club: a signed-in Admin. Not accepted for requests made with an API key.</summary>
+    public const string ClubPaymentAccountManager = nameof(ClubPaymentAccountManager);
     public const string OneTimeBadgeManager = nameof(OneTimeBadgeManager);
     /// <summary>Plans events in the club calendar: Maintainer, SportsDirector, YouthSportsDirector or Admin.</summary>
     public const string ClubEventManager = nameof(ClubEventManager);
@@ -38,6 +40,10 @@ public static class AuthorizationPolicies
     public const string FamilyMember = nameof(FamilyMember);
     /// <summary>Changes a family: one of its parents, an Admin of the club, or a member who takes themself out of it.</summary>
     public const string FamilyParent = nameof(FamilyParent);
+
+    //Membership Policies (resource: MembershipOrderAuthorizationModel)
+    /// <summary>Reads, pays or withdraws a membership order: its payer, a member it covers, a parent of a covered child, or a Treasurer or Admin of the club.</summary>
+    public const string OwnsMembershipOrder = nameof(OwnsMembershipOrder);
 
     //Subscription Planner Policies
     public const string OwnsSubscriptionPlan = nameof(OwnsSubscriptionPlan);

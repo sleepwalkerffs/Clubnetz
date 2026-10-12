@@ -106,7 +106,8 @@
 - Family: profiles of children that parents create and manage themselves (name, date of birth, gender).
 - Subscription planner: the plans you create, including the names of the participants you enter.
 - Push notifications (only if you switch them on): the address of your device at the push service of your browser and the keys used to encrypt notifications for it. Switching them off or signing out removes this data.
-- Technical data: the IP address and time of requests in the server logs, and failed login attempts to protect your account.</value>
+- Technical data: the IP address and time of requests in the server logs, and failed login attempts to protect your account.
+- Membership fees: the plan you chose or that was recorded for you, the season, the amount, the members it covers, the state of the payment, how and when it was paid. Card and bank details are never stored in Clubnetz: you enter them on the page of the payment provider.</value>
   </data>
   <data name="Privacy_Purpose_Title" xml:space="preserve">
     <value>3. Purposes and legal basis</value>
@@ -114,7 +115,8 @@
   <data name="Privacy_Purpose_Body" xml:space="preserve">
     <value>- Providing the app (account, club membership, booking, events, emails such as confirmations and booking notifications): Art. 6(1)(b) GDPR (performance of the contract of use).
 - Security of the app, preventing abuse and troubleshooting (server logs, login protection): Art. 6(1)(f) GDPR (legitimate interest in a secure and working service).
-- Optional information such as your address or profile picture: Art. 6(1)(a) GDPR (consent). You can remove it at any time in your profile.</value>
+- Optional information such as your address or profile picture: Art. 6(1)(a) GDPR (consent). You can remove it at any time in your profile.
+- Membership fees (choosing a plan, paying it online if your club offers that, the club's record of who has paid): Art. 6(1)(b) GDPR (performance of your membership in the club).</value>
   </data>
   <data name="Privacy_Recipients_Title" xml:space="preserve">
     <value>4. Who can see your data</value>
@@ -123,7 +125,8 @@
     <value>- Your club: the club's administrators and officials see your member data (e.g. name, contact details, date of birth, bookings) to organise the club. Other members see your name, profile picture and badge in the booking plan, in the leaderboard (you can opt out) and in your trophy case (you decide whether it is public). Please also contact your club about how it uses your data.
 - Service providers that process data on our behalf under a data processing agreement: hosting of the app and the database ({0}) and delivery of emails ({1}).
 - Push notifications, if you switch them on, are delivered through the push service of your browser or device vendor (Apple, Google, Mozilla or Microsoft). Their content is encrypted for your device, the push service cannot read it.
-- We do not pass on your data to anyone else unless we are legally obliged to do so.</value>
+- We do not pass on your data to anyone else unless we are legally obliged to do so.
+- Online payment of membership fees (only if your club offers it and you pay online): the payment is made to your club and handled by Stripe (Stripe Payments Europe, Limited, Ireland), which your club uses as its payment provider. For the payment we pass your email address, the amount, the name of the plan with the season and the names of the members it covers to Stripe. You enter your payment details on the page of Stripe, which processes them under its own privacy policy (stripe.com/privacy). The treasurers of your club see your name, your plan and the state of your payment.</value>
   </data>
   <data name="Privacy_Children_Title" xml:space="preserve">
     <value>5. Children</value>
@@ -141,7 +144,7 @@
     <value>7. How long we keep your data</value>
   </data>
   <data name="Privacy_Retention_Body" xml:space="preserve">
-    <value>We keep your data as long as you have an account. When you leave a club, your membership in that club is deleted. When you delete your account, all your personal data is deleted immediately; it disappears from backups when they are rotated out. Server logs are only kept for a short time.</value>
+    <value>We keep your data as long as you have an account. When you leave a club, your membership in that club is deleted. When you delete your account, all your personal data is deleted immediately; it disappears from backups when they are rotated out. Server logs are only kept for a short time. The record of a membership fee that was paid (plan, amount, date) stays with the club without your name, because the club has to keep its accounts.</value>
   </data>
   <data name="Privacy_Rights_Title" xml:space="preserve">
     <value>8. Your rights</value>

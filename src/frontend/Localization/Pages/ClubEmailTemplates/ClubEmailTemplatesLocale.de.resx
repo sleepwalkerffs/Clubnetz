@@ -385,4 +385,52 @@
   <data name="Variable_event.url" xml:space="preserve">
     <value>Link zur Veranstaltung in der App</value>
   </data>
+  <data name="Type_MembershipPaymentReceived" xml:space="preserve">
+    <value>Mitgliedsbeitrag erhalten</value>
+  </data>
+  <data name="TypeDescription_MembershipPaymentReceived" xml:space="preserve">
+    <value>Geht an die Person, die bezahlt hat, wenn ein Mitgliedsbeitrag online bezahlt oder vom Kassier eingetragen wurde.</value>
+  </data>
+  <data name="Type_MembershipApproved" xml:space="preserve">
+    <value>Tarif bestätigt</value>
+  </data>
+  <data name="TypeDescription_MembershipApproved" xml:space="preserve">
+    <value>Geht an das Mitglied, wenn der Kassier einen Tarif bestätigt hat, der eine Bestätigung braucht. Das Mitglied kann jetzt bezahlen.</value>
+  </data>
+  <data name="Type_MembershipPaymentFailed" xml:space="preserve">
+    <value>Zahlung des Mitgliedsbeitrags fehlgeschlagen</value>
+  </data>
+  <data name="TypeDescription_MembershipPaymentFailed" xml:space="preserve">
+    <value>Geht an die Person, die bezahlt hat, wenn eine Online-Zahlung fehlgeschlagen ist, z. B. eine zurückgegebene Lastschrift.</value>
+  </data>
+  <data name="Type_MembershipNeedsAttention" xml:space="preserve">
+    <value>Mitgliedsbeitrag: bitte ansehen</value>
+  </data>
+  <data name="TypeDescription_MembershipNeedsAttention" xml:space="preserve">
+    <value>Geht an Kassiere und Admins: ein Tarif wartet auf Bestätigung, eine Zahlung ist fehlgeschlagen, wurde erstattet oder beanstandet.</value>
+  </data>
+  <data name="Variable_membership.plan" xml:space="preserve">
+    <value>Name des Tarifs</value>
+  </data>
+  <data name="Variable_membership.season" xml:space="preserve">
+    <value>Saison der Mitgliedschaft</value>
+  </data>
+  <data name="Variable_membership.amount" xml:space="preserve">
+    <value>Betrag mit Währung</value>
+  </data>
+  <data name="Variable_membership.members" xml:space="preserve">
+    <value>Namen der eingeschlossenen Mitglieder</value>
+  </data>
+  <data name="Variable_membership.payment_method" xml:space="preserve">
+    <value>Zahlungsart (leer, solange nichts bezahlt wurde)</value>
+  </data>
+  <data name="Variable_membership.url" xml:space="preserve">
+    <value>Link zur Seite in der App</value>
+  </data>
+  <data name="Variable_reason" xml:space="preserve">
+    <value>Was mit der Bestellung passiert ist</value>
+  </data>
+  <data name="Variable_payer" xml:space="preserve">
+    <value>Name des Mitglieds, das bezahlt</value>
+  </data>
 </root>

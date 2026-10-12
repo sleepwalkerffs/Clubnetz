@@ -1,3 +1,11 @@
-﻿namespace Bookennis.Shared.Controller.Members;
+﻿using Bookennis.Shared.Controller.Memberships;
 
-public record MembersDetailResult : MemberResult;
+namespace Bookennis.Shared.Controller.Members;
+
+public record MembersDetailResult : MemberResult
+{
+    /// <summary>How the member got into each season they are enrolled in.</summary>
+    public List<MemberSeasonEnrollment> SeasonEnrollments { get; set; } = [];
+}
+
+public record MemberSeasonEnrollment(int SeasonId, MembershipEnrollmentSource Source);

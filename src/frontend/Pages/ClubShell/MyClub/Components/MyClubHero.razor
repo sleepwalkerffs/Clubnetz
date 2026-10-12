@@ -27,9 +27,17 @@
                 }
                 else if (ActiveSeasonYear is not null)
                 {
-                    <span class="hero-chip @(IsEnrolled ? "hero-chip--ok" : "hero-chip--warn")">
-                        @(IsEnrolled ? "✅" : "⛔") @string.Format(Locale[IsEnrolled ? "EnrolledChip" : "NotEnrolledChip"], ActiveSeasonYear)
-                    </span>
+                    @if (IsEnrolled)
+                    {
+                        <span class="hero-chip hero-chip--ok">✅ @string.Format(Locale["EnrolledChip"], ActiveSeasonYear)</span>
+                    }
+                    else
+                    {
+                        @* Leads to the page where the member chooses a plan and pays *@
+                        <a class="hero-chip hero-chip--warn hero-chip--link" href="@($"/clubs/{ClubId}/membership")">
+                            ⛔ @string.Format(Locale["NotEnrolledChip"], ActiveSeasonYear) ›
+                        </a>
+                    }
                 }
                 @foreach (var role in Member.Roles.Where(r => r is not MemberRole.User and not MemberRole.Guest))
                 {

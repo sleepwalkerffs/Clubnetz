@@ -528,4 +528,106 @@
   <data name="ApiKeyLimitReached" xml:space="preserve">
     <value>Ein Verein kann höchstens {0} API-Schlüssel haben. Widerrufe einen, den du nicht mehr brauchst.</value>
   </data>
+  <data name="MembershipPlanNameRequired" xml:space="preserve">
+    <value>Bitte gib einen Namen für den Tarif ein.</value>
+  </data>
+  <data name="MembershipPlanNameTooLong" xml:space="preserve">
+    <value>Der Name des Tarifs ist zu lang (höchstens {0} Zeichen).</value>
+  </data>
+  <data name="MembershipPlanDescriptionTooLong" xml:space="preserve">
+    <value>Die Beschreibung des Tarifs ist zu lang (höchstens {0} Zeichen).</value>
+  </data>
+  <data name="MembershipPlanInvalidPrice" xml:space="preserve">
+    <value>Der Preis ist nicht gültig.</value>
+  </data>
+  <data name="MembershipPlanInvalidMaxAdults" xml:space="preserve">
+    <value>Ein Tarif gilt für eine*n oder zwei Erwachsene.</value>
+  </data>
+  <data name="MembershipPlanInvalidBirthYears" xml:space="preserve">
+    <value>Die Jahrgänge sind nicht gültig.</value>
+  </data>
+  <data name="MembershipPlanInvalidAvailability" xml:space="preserve">
+    <value>Der Tarif darf nicht enden, bevor er beginnt.</value>
+  </data>
+  <data name="MembershipPlanFamilyDiscountOnlyForOneMember" xml:space="preserve">
+    <value>Ein Tarif, der ein Mitglied in der Familie voraussetzt, gilt für ein Mitglied, nicht für ein Paar oder eine Familie.</value>
+  </data>
+  <data name="MembershipPlanNameAlreadyUsed" xml:space="preserve">
+    <value>In dieser Saison gibt es schon einen Tarif mit diesem Namen.</value>
+  </data>
+  <data name="MembershipPlanHasOrders" xml:space="preserve">
+    <value>Dieser Tarif wurde schon gewählt und kann nicht gelöscht werden. Schalte „Mitglieder können ihn selbst wählen“ aus, um ihn aus der Liste zu nehmen.</value>
+  </data>
+  <data name="MembershipPlanSourceSeasonEmpty" xml:space="preserve">
+    <value>Die gewählte Saison hat keine Tarife zum Kopieren.</value>
+  </data>
+  <data name="MembershipPlanTargetSeasonNotEmpty" xml:space="preserve">
+    <value>Diese Saison hat schon Tarife.</value>
+  </data>
+  <data name="MembershipPlanNotSelfService" xml:space="preserve">
+    <value>Dieser Tarif wird vom Verein vergeben.</value>
+  </data>
+  <data name="MembershipOrderMemberRequired" xml:space="preserve">
+    <value>Bitte wähle mindestens ein Mitglied.</value>
+  </data>
+  <data name="MembershipOrderTooManyMembers" xml:space="preserve">
+    <value>Eine Bestellung gilt für höchstens {0} Mitglieder.</value>
+  </data>
+  <data name="MembershipOrderNoteTooLong" xml:space="preserve">
+    <value>Die Notiz ist zu lang (höchstens {0} Zeichen).</value>
+  </data>
+  <data name="MembershipOrderInvalidStatus" xml:space="preserve">
+    <value>Das ist im aktuellen Zustand der Bestellung nicht möglich. Bitte lade die Seite neu.</value>
+  </data>
+  <data name="MembershipOrderNotFree" xml:space="preserve">
+    <value>Dieser Tarif muss bezahlt werden.</value>
+  </data>
+  <data name="MembershipOrderIsFree" xml:space="preserve">
+    <value>Dieser Tarif ist kostenlos: bestätige ihn, statt zu bezahlen.</value>
+  </data>
+  <data name="MembershipMemberNotInClub" xml:space="preserve">
+    <value>Ein Mitglied gehört nicht zu diesem Verein.</value>
+  </data>
+  <data name="BirthYearOutOfRange" xml:space="preserve">
+    <value>Dieser Tarif ist für andere Jahrgänge.</value>
+  </data>
+  <data name="TooManyAdults" xml:space="preserve">
+    <value>Dieser Tarif gilt für weniger Erwachsene.</value>
+  </data>
+  <data name="ChildrenNotIncluded" xml:space="preserve">
+    <value>Dieser Tarif gilt nicht für Kinder.</value>
+  </data>
+  <data name="NotANewMember" xml:space="preserve">
+    <value>Dieser Tarif ist für Neumitglieder.</value>
+  </data>
+  <data name="NoEnrolledFamilyAdult" xml:space="preserve">
+    <value>Für diesen Tarif muss ein*e andere*r Erwachsene*r der Familie in dieser Saison Mitglied sein.</value>
+  </data>
+  <data name="PlanNotAvailable" xml:space="preserve">
+    <value>Dieser Tarif ist im Moment nicht wählbar.</value>
+  </data>
+  <data name="MemberNotInFamily" xml:space="preserve">
+    <value>Dieser Tarif ist für die Mitglieder einer Familie.</value>
+  </data>
+  <data name="AlreadyHasMembership" xml:space="preserve">
+    <value>Eines der Mitglieder hat in dieser Saison schon eine Mitgliedschaft.</value>
+  </data>
+  <data name="OnlyOneMember" xml:space="preserve">
+    <value>Dieser Tarif ist für ein Mitglied.</value>
+  </data>
+  <data name="AdultRequired" xml:space="preserve">
+    <value>Für diesen Tarif braucht es mindestens eine*n Erwachsene*n.</value>
+  </data>
+  <data name="PaymentsNotConfigured" xml:space="preserve">
+    <value>Die Online-Zahlung ist in dieser Installation nicht verfügbar.</value>
+  </data>
+  <data name="PaymentAccountNotReady" xml:space="preserve">
+    <value>Der Verein kann im Moment keine Online-Zahlungen annehmen. Bitte bezahle den Beitrag an den Verein.</value>
+  </data>
+  <data name="PaymentProviderUnavailable" xml:space="preserve">
+    <value>Der Zahlungsanbieter hat die Anfrage nicht angenommen. Bitte versuche es später noch einmal. ({0})</value>
+  </data>
+  <data name="SeasonHasPayments" xml:space="preserve">
+    <value>Für diese Saison wurden Mitgliedsbeiträge bezahlt, sie kann daher nicht gelöscht werden.</value>
+  </data>
 </root>

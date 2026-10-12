@@ -16,7 +16,9 @@
 @using Bookennis.Client.Services.Store.Members
 @using Bookennis.Client.Services.Store.Profile
 @using Bookennis.Client.Services.Store.Statistics
+@using Bookennis.Client.Services.Store.Memberships
 @using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Memberships
 @using Bookennis.Shared.Controller.Shared
 @using Bookennis.Shared.Controller.Statistics
 
@@ -57,6 +59,11 @@ else
                             LastMatch="@StatisticsStore.Statistics?.AllTime.LastBooking"
                             CurrentWeekStreak="@(StatisticsStore.Statistics?.AllTime.CurrentWeekStreak ?? 0)" />
             </MudItem>
+
+            @if (IsUser)
+            {
+                <MembershipCard ClubId="@ClubId" />
+            }
 
             @if (!IsGuest)
             {
@@ -118,7 +125,7 @@ else
                         </SectionCard>
                     }
 
-                    <AccountCard Member="@member" Seasons="@ClubStore.Seasons" />
+                    <AccountCard Member="@member" Seasons="@ClubStore.Seasons" MembershipPlanName="@MembershipPlanName(member.MemberId)" MembershipUrl="@($"/clubs/{ClubId}/membership")" />
 
                     @if (IsUser)
                     {
@@ -163,6 +170,9 @@ else
     private IProfileStore ProfileStore { get; set; } = null!;
 
     [Inject]
+    private IMembershipsStore MembershipsStore { get; set; } = null!;
+
+    [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
     [Inject]
@@ -172,6 +182,12 @@ else
     private IStringLocalizer<StatisticsLocale> StatisticsLocale { get; set; } = null!;
 
     private bool isInitialized;
+
+    /// <summary>The plan the member has in the running (else the next) season, loaded by the membership card.</summary>
+    private string? MembershipPlanName(int memberId)
+        => MembershipsStore.Current?.Orders
+            .FirstOrDefault(o => o.Status is MembershipOrderStatus.Paid or MembershipOrderStatus.Processing && o.Members.Any(m => m.MemberId == memberId))
+            ?.PlanName;
 
     private bool IsGuest => ClubProfileStore.Roles.Contains(MemberRole.Guest);
 
@@ -204,6 +220,7 @@ else
         LeaderboardStore.OnLeaderboardChanged += StateHasChanged;
         BadgesStore.OnMyDisplayBadgeChanged += StateHasChanged;
         ProfileStore.OnProfileChanged += StateHasChanged;
+        MembershipsStore.OnCurrentChanged += StateHasChanged;
 
         // Seasons and courts are shared with the booking history, load them before the child components render
         var loadMember = !await MembersStore.WaitUntilLoaded() || !MembersStore.LoadedMemberId(ClubProfileStore.MemberId)
@@ -276,5 +293,6 @@ else
         LeaderboardStore.OnLeaderboardChanged -= StateHasChanged;
         BadgesStore.OnMyDisplayBadgeChanged -= StateHasChanged;
         ProfileStore.OnProfileChanged -= StateHasChanged;
+        MembershipsStore.OnCurrentChanged -= StateHasChanged;
     }
 }

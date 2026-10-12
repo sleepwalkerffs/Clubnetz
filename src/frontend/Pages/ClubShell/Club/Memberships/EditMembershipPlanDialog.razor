@@ -1,0 +1,268 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Memberships
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Memberships
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@Store.IsSaving" Title="@L[Plan is null ? "Plan_NewTitle" : "Plan_EditTitle"]">
+    <div class="plan-edit">
+        <section>
+            <div class="plan-edit__row plan-edit__row--name">
+                <MudTextField Variant="Variant.Outlined" T="string" Label="@L["Plan_Name"]" @bind-Value="name" Immediate="true" Required="true"
+                              RequiredError="@L["Plan_NameRequired"]" MaxLength="100" Margin="Margin.Dense" Placeholder="@L["Plan_NamePlaceholder"]" />
+                <MudNumericField Variant="Variant.Outlined" T="decimal" Label="@L["Plan_Price"]" @bind-Value="price" Immediate="true" Min="0" Max="99999.99m" Step="5"
+                                 Format="N2" Culture="@CultureInfo.CurrentCulture" Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true" Margin="Margin.Dense" />
+            </div>
+            <div class="plan-edit__seasonhint">@string.Format(L["Plan_SeasonHint"], MemberAdminHelpers.SeasonLabel(Season))</div>
+            <MudTextField Variant="Variant.Outlined" T="string" Label="@L["Plan_Description"]" @bind-Value="description" Immediate="true" Lines="2" AutoGrow="true" MaxLines="5"
+                          MaxLength="1000" HelperText="@L["Plan_DescriptionHint"]" Margin="Margin.Dense" Class="mt-3" />
+        </section>
+
+        <section>
+            <ChoiceChips TItem="MembershipCoverage" Label="@L["Plan_Coverage"]" Items="@Coverages" Value="@coverage" ValueChanged="OnCoverageChanged"
+                         TextFunc="@(c => MembershipHelpers.CoverageText(L, c))" />
+            @if (IsGroup)
+            {
+                <p class="plan-edit__hint">@L["Plan_CoverageGroupHint"]</p>
+            }
+        </section>
+
+        <section class="plan-edit__box @(ageLimit ? "plan-edit__box--on" : null)">
+            <MudSwitch T="bool" @bind-Value="ageLimit" Color="Color.Primary" Label="@L[IsGroup ? "Plan_AgeLimitAdults" : "Plan_AgeLimit"]" />
+            @if (ageLimit)
+            {
+                <div class="plan-edit__row">
+                    <MudNumericField Variant="Variant.Outlined" T="int?" Label="@L["Plan_BirthYearFrom"]" @bind-Value="birthYearFrom" Immediate="true" Min="1900" Max="2200"
+                                     HideSpinButtons="true" Clearable="true" Margin="Margin.Dense" HelperText="@L["Plan_BirthYearFromHint"]" />
+                    <MudNumericField Variant="Variant.Outlined" T="int?" Label="@L["Plan_BirthYearTo"]" @bind-Value="birthYearTo" Immediate="true" Min="1900" Max="2200"
+                                     HideSpinButtons="true" Clearable="true" Margin="Margin.Dense" HelperText="@L["Plan_BirthYearToHint"]" />
+                </div>
+                @if (MembershipHelpers.AgeText(L, birthYearFrom, birthYearTo, Season.StartDate.Year) is { } age)
+                {
+                    <p class="plan-edit__hint">🎂 @string.Format(L["Plan_AgeResult"], age, Season.StartDate.Year)</p>
+                }
+            }
+        </section>
+
+        <section class="plan-edit__switches">
+            <MudSwitch T="bool" @bind-Value="isSelfService" Color="Color.Primary">
+                <span class="plan-edit__switch"><strong>@L["Plan_SelfService"]</strong><span>@L["Plan_SelfServiceHint"]</span></span>
+            </MudSwitch>
+            <MudSwitch T="bool" @bind-Value="requiresApproval" Color="Color.Primary" Disabled="@(!isSelfService)">
+                <span class="plan-edit__switch"><strong>@L["Plan_RequiresApproval"]</strong><span>@L["Plan_RequiresApprovalHint"]</span></span>
+            </MudSwitch>
+            <MudSwitch T="bool" @bind-Value="newMembersOnly" Color="Color.Primary">
+                <span class="plan-edit__switch"><strong>@L["Plan_NewMembersOnly"]</strong><span>@L["Plan_NewMembersOnlyHint"]</span></span>
+            </MudSwitch>
+            <MudSwitch T="bool" @bind-Value="requiresFamilyAdult" Color="Color.Primary" Disabled="@IsGroup">
+                <span class="plan-edit__switch"><strong>@L["Plan_FamilyDiscount"]</strong><span>@L["Plan_FamilyDiscountHint"]</span></span>
+            </MudSwitch>
+            <MudSwitch T="bool" @bind-Value="passive" Color="Color.Primary">
+                <span class="plan-edit__switch"><strong>@L["Plan_Passive"]</strong><span>@L["Plan_PassiveHint"]</span></span>
+            </MudSwitch>
+        </section>
+
+        <section>
+            <h3 class="plan-edit__title">@L["Plan_Availability"]</h3>
+            <div class="plan-edit__row">
+                <MudDatePicker @bind-Date="availableFrom" Variant="Variant.Outlined" Label="@L["Plan_AvailableFrom"]" Clearable="true"
+                               PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" />
+                <MudDatePicker @bind-Date="availableUntil" Variant="Variant.Outlined" Label="@L["Plan_AvailableUntil"]" Clearable="true" MinDate="@availableFrom"
+                               PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" />
+            </div>
+            <p class="plan-edit__hint">@L["Plan_AvailabilityHint"]</p>
+        </section>
+
+        <section class="plan-edit__summary" aria-live="polite">
+            <div class="plan-edit__summary-head">
+                <span class="plan-edit__summary-name">@(string.IsNullOrWhiteSpace(name) ? L["Plan_NamePlaceholder"] : name.Trim())</span>
+                <span class="plan-edit__summary-price">@MembershipHelpers.Price(L, PriceCents)</span>
+            </div>
+            <ul>
+                @foreach (var sentence in MembershipHelpers.Sentences(L, Preview, Season.StartDate.Year))
+                {
+                    <li>@sentence</li>
+                }
+            </ul>
+        </section>
+
+        @if (Error is { } error && showErrors)
+        {
+            <div class="plan-edit__error">⚠️ @error</div>
+        }
+    </div>
+</BaseDialog>
+
+@code {
+    /// <summary>The plan to edit; <c>null</c> to create one.</summary>
+    [Parameter] public MembershipPlanDto? Plan { get; set; }
+
+    [Parameter, EditorRequired] public SeasonResult Season { get; set; } = null!;
+
+    [Inject] private IMembershipPlansStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private static readonly MembershipCoverage[] Coverages = Enum.GetValues<MembershipCoverage>();
+
+    private string name = string.Empty;
+    private string? description;
+    private decimal price;
+    private MembershipCoverage coverage = MembershipCoverage.OneMember;
+    private bool ageLimit;
+    private int? birthYearFrom;
+    private int? birthYearTo;
+    private bool isSelfService = true;
+    private bool requiresApproval;
+    private bool newMembersOnly;
+    private bool requiresFamilyAdult;
+    private bool passive;
+    private DateTime? availableFrom;
+    private DateTime? availableUntil;
+    private bool showErrors;
+
+    private bool IsGroup => coverage != MembershipCoverage.OneMember;
+    private int PriceCents => (int)Math.Round(price * 100m, MidpointRounding.AwayFromZero);
+
+    private string? Error
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return L["Plan_NameRequired"];
+
+            if (ageLimit && birthYearFrom is null && birthYearTo is null)
+                return L["Plan_ErrorNoBirthYear"];
+
+            if (ageLimit && birthYearFrom > birthYearTo)
+                return L["Plan_ErrorBirthYears"];
+
+            if (availableFrom > availableUntil)
+                return L["Plan_ErrorAvailability"];
+
+            return null;
+        }
+    }
+
+    private SaveMembershipPlanModel Model
+    {
+        get
+        {
+            var (maxAdults, includesChildren) = coverage.ToRules();
+            return new SaveMembershipPlanModel
+            {
+                Name = name,
+                Description = description,
+                PriceCents = PriceCents,
+                MaxAdults = maxAdults,
+                IncludesChildren = includesChildren,
+                BirthYearFrom = ageLimit ? birthYearFrom : null,
+                BirthYearTo = ageLimit ? birthYearTo : null,
+                RequiresApproval = requiresApproval && isSelfService,
+                NewMembersOnly = newMembersOnly,
+                RequiresEnrolledFamilyAdult = requiresFamilyAdult && !IsGroup,
+                GrantsSeasonEnrollment = !passive,
+                AvailableFrom = availableFrom is { } from ? DateOnly.FromDateTime(from) : null,
+                AvailableUntil = availableUntil is { } until ? DateOnly.FromDateTime(until) : null,
+                IsSelfService = isSelfService,
+            };
+        }
+    }
+
+    /// <summary>The plan as it would be saved, to read its rules back in the summary.</summary>
+    private MembershipPlanDto Preview
+    {
+        get
+        {
+            var model = Model;
+            return new MembershipPlanDto
+            {
+                Id = Plan?.Id ?? 0,
+                SeasonId = Season.Id,
+                Name = name,
+                Description = description,
+                PriceCents = model.PriceCents,
+                Currency = "eur",
+                MaxAdults = model.MaxAdults,
+                IncludesChildren = model.IncludesChildren,
+                BirthYearFrom = model.BirthYearFrom,
+                BirthYearTo = model.BirthYearTo,
+                RequiresApproval = model.RequiresApproval,
+                NewMembersOnly = model.NewMembersOnly,
+                RequiresEnrolledFamilyAdult = model.RequiresEnrolledFamilyAdult,
+                GrantsSeasonEnrollment = model.GrantsSeasonEnrollment,
+                AvailableFrom = model.AvailableFrom,
+                AvailableUntil = model.AvailableUntil,
+                IsSelfService = model.IsSelfService,
+                SortOrder = Plan?.SortOrder ?? 0,
+                OrderCount = 0,
+            };
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (Plan is not { } plan)
+            return;
+
+        name = plan.Name;
+        description = plan.Description;
+        price = plan.PriceCents / 100m;
+        coverage = plan.Coverage();
+        ageLimit = plan.BirthYearFrom is not null || plan.BirthYearTo is not null;
+        birthYearFrom = plan.BirthYearFrom;
+        birthYearTo = plan.BirthYearTo;
+        isSelfService = plan.IsSelfService;
+        requiresApproval = plan.RequiresApproval;
+        newMembersOnly = plan.NewMembersOnly;
+        requiresFamilyAdult = plan.RequiresEnrolledFamilyAdult;
+        passive = !plan.GrantsSeasonEnrollment;
+        availableFrom = plan.AvailableFrom?.ToDateTime(TimeOnly.MinValue);
+        availableUntil = plan.AvailableUntil?.ToDateTime(TimeOnly.MinValue);
+    }
+
+    private void OnCoverageChanged(MembershipCoverage value)
+    {
+        coverage = value;
+
+        // The discount for families of a member is for one member
+        if (IsGroup)
+            requiresFamilyAdult = false;
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        showErrors = true;
+        if (Error is not null)
+            return null;
+
+        var result = Plan is null
+            ? await Store.CreatePlan(Season.Id, Model)
+            : await Store.UpdatePlan(Plan.Id, Model);
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Plan_Saved"], Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

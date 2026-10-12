@@ -1,0 +1,202 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Memberships
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Shared
+
+@implements IDisposable
+
+<SectionCard Emoji="💳" Title="@L["Account_Title"]" Subtitle="@L["Account_Subtitle"]">
+    <ChildContent>
+        @if (Store.Account is not { } account)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (!account.IsAvailable)
+        {
+            <div class="pay-state">
+                <div class="pay-state__emoji" aria-hidden="true">🧾</div>
+                <div class="pay-state__body">
+                    <div class="pay-state__title">@L["Account_UnavailableTitle"]</div>
+                    <div class="pay-state__text">@L["Account_UnavailableText"]</div>
+                </div>
+            </div>
+        }
+        else if (!account.IsConnected)
+        {
+            <div class="pay-state">
+                <div class="pay-state__emoji" aria-hidden="true">🔌</div>
+                <div class="pay-state__body">
+                    <div class="pay-state__title">@L["Account_NotConnectedTitle"]</div>
+                    <div class="pay-state__text">@L["Account_NotConnectedText"]</div>
+                    <ul class="pay-state__list">
+                        <li>@L["Account_Fact_Direct"]</li>
+                        <li>@L["Account_Fact_Methods"]</li>
+                        <li>@L["Account_Fact_Fees"]</li>
+                    </ul>
+                    @if (CanConnect)
+                    {
+                        <div class="pay-state__connect">
+                            <MudSelect T="Country" @bind-Value="country" Variant="Variant.Outlined" Label="@L["Account_Country"]" HelperText="@L["Account_CountryHint"]" Margin="Margin.Dense" Class="pay-state__country">
+                                <MudSelectItem T="Country" Value="Country.Austria">@SharedLocale["Austria"]</MudSelectItem>
+                                <MudSelectItem T="Country" Value="Country.Germany">@SharedLocale["Germany"]</MudSelectItem>
+                                <MudSelectItem T="Country" Value="Country.Switzerland">@SharedLocale["Switzerland"]</MudSelectItem>
+                            </MudSelect>
+                            <LoadButton Variant="Variant.Filled" Color="Color.Primary" Loading="@Store.IsSaving" OnClick="Connect">@L["Account_Connect"]</LoadButton>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="pay-state__hint">🔒 @L["Account_AdminOnly"]</div>
+                    }
+                </div>
+            </div>
+        }
+        else if (!account.ChargesEnabled)
+        {
+            <div class="pay-state pay-state--pending">
+                <div class="pay-state__emoji" aria-hidden="true">⏳</div>
+                <div class="pay-state__body">
+                    <div class="pay-state__title">@L[account.DetailsSubmitted ? "Account_ReviewTitle" : "Account_IncompleteTitle"]</div>
+                    <div class="pay-state__text">@L[account.DetailsSubmitted ? "Account_ReviewText" : "Account_IncompleteText"]</div>
+                    @if (linkExpired)
+                    {
+                        <div class="pay-state__hint">ℹ️ @L["Account_LinkExpired"]</div>
+                    }
+                    @if (CanConnect)
+                    {
+                        <div class="pay-state__actions">
+                            <LoadButton Variant="Variant.Filled" Color="Color.Primary" Loading="@Store.IsSaving" OnClick="Connect">@L["Account_Continue"]</LoadButton>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Disabled="@Store.IsSaving" OnClick="() => Refresh(showResult: true)">@L["Account_CheckAgain"]</MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Error" Disabled="@Store.IsSaving" OnClick="Disconnect">@L["Account_Disconnect"]</MudButton>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="pay-state__hint">🔒 @L["Account_AdminOnly"]</div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="pay-state pay-state--active">
+                <div class="pay-state__emoji" aria-hidden="true">✅</div>
+                <div class="pay-state__body">
+                    <div class="pay-state__title">@L["Account_ActiveTitle"]</div>
+                    <div class="pay-state__text">@L["Account_ActiveText"]</div>
+                    <div class="pay-state__chips">
+                        <span class="pay-chip pay-chip--ok">💳 @L["Account_ChargesOn"]</span>
+                        <span class="pay-chip @(account.PayoutsEnabled ? "pay-chip--ok" : "pay-chip--warn")">🏦 @L[account.PayoutsEnabled ? "Account_PayoutsOn" : "Account_PayoutsOff"]</span>
+                        @if (account.ConnectedAt is { } connectedAt)
+                        {
+                            <span class="pay-chip">🔗 @string.Format(L["Account_ConnectedSince"], MembershipHelpers.Date(connectedAt))</span>
+                        }
+                    </div>
+                    <div class="pay-state__actions">
+                        <MudButton Href="https://dashboard.stripe.com" Target="_blank" Rel="noopener" Variant="Variant.Outlined" Color="Color.Primary" EndIcon="@Icons.Material.Filled.OpenInNew">@L["Account_OpenStripe"]</MudButton>
+                        @if (CanConnect)
+                        {
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="@Store.IsSaving" OnClick="() => Refresh(showResult: true)">@L["Account_CheckAgain"]</MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Error" Disabled="@Store.IsSaving" OnClick="Disconnect">@L["Account_Disconnect"]</MudButton>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </ChildContent>
+</SectionCard>
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    /// <summary>"return" or "refresh" when the admin just came back from Stripe's onboarding: the status is asked from Stripe right away.</summary>
+    [Parameter] public string? ReturnedFromStripe { get; set; }
+
+    [Inject] private IPaymentAccountStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private Country country = Country.Austria;
+    private bool linkExpired;
+
+    private bool CanConnect => MembershipHelpers.CanConnectPayments(ClubProfileStore.Roles);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnAccountChanged += OnChanged;
+        await Store.LoadAccount();
+
+        if (ReturnedFromStripe is null || !CanConnect || Store.Account is not { IsAvailable: true, IsConnected: true })
+            return;
+
+        linkExpired = ReturnedFromStripe == "refresh";
+        await Refresh(showResult: !linkExpired);
+
+        // Don't ask again when the page is reloaded
+        NavigationManager.NavigateTo(MembershipHelpers.PlansUrl(ClubId), replace: true);
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task Connect()
+    {
+        var result = await Store.Connect(country);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            await Store.LoadAccount();
+            return;
+        }
+
+        // The onboarding is a page of Stripe: leave the app
+        NavigationManager.NavigateTo(result.Dto.Url, forceLoad: true);
+    }
+
+    private async Task Refresh(bool showResult)
+    {
+        var result = await Store.Refresh();
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        if (!showResult || Store.Account is not { } account)
+            return;
+
+        if (account.ChargesEnabled)
+            Snackbar.Add(L["Account_NowActive"], Severity.Success);
+        else if (account.IsConnected)
+            Snackbar.Add(L[account.DetailsSubmitted ? "Account_StillReview" : "Account_StillIncomplete"], Severity.Info);
+        else
+            Snackbar.Add(L["Account_Gone"], Severity.Warning);
+    }
+
+    private async Task Disconnect()
+    {
+        var confirmed = await DialogService.ShowMessageBox(L["Account_DisconnectTitle"], L["Account_DisconnectConfirm"],
+            yesText: L["Account_Disconnect"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true)
+            return;
+
+        var result = await Store.Disconnect();
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(L["Account_Disconnected"], Severity.Success);
+    }
+
+    public void Dispose() => Store.OnAccountChanged -= OnChanged;
+}

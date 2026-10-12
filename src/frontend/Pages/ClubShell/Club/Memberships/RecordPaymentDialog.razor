@@ -1,0 +1,193 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Client.Services.Store.Memberships
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Memberships
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SubmitCaption" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@Store.IsSaving" Title="@L["Payments_Record"]">
+    <div class="record">
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@L["Record_Intro"]</MudText>
+
+        <MudAutocomplete T="MembershipPaymentMemberDto" Value="@member" ValueChanged="OnMemberChanged" SearchFunc="SearchMembers" ToStringFunc="@(m => m is null ? "" : Name(m))"
+                         Variant="Variant.Outlined" Label="@L["Record_Member"]" Required="true" ResetValueOnEmptyText="true" CoerceText="true" MaxItems="30"
+                         Margin="Margin.Dense" HelperText="@L["Record_MemberHint"]" />
+
+        <MudSelect T="MembershipPlanDto" Value="@plan" ValueChanged="OnPlanChanged" Variant="Variant.Outlined" Label="@L["Record_Plan"]" Required="true" Margin="Margin.Dense"
+                   ToStringFunc="@(p => p is null ? "" : $"{p.Name} · {MembershipHelpers.Price(L, p.PriceCents)}")">
+            @foreach (var option in Plans)
+            {
+                <MudSelectItem T="MembershipPlanDto" Value="@option">
+                    <div class="record__plan">
+                        <span>@option.Name</span>
+                        <span class="record__price">@MembershipHelpers.Price(L, option.PriceCents)</span>
+                    </div>
+                </MudSelectItem>
+            }
+        </MudSelect>
+
+        @if (plan is { IsGroupPlan: true } && member is not null)
+        {
+            @if (FamilyMembers.Count > 1)
+            {
+                <MultiChoiceChips TItem="MembershipPaymentMemberDto" Label="@L["Record_Covered"]" Items="@FamilyMembers" @bind-Values="covered"
+                                  TextFunc="@(m => m.FirstName + (m.IsChild ? " 🧒" : ""))" Dense="true" />
+            }
+            else
+            {
+                <p class="record__hint">ℹ️ @L["Record_NoFamily"]</p>
+            }
+        }
+
+        @if (plan is { IsFree: false })
+        {
+            <ChoiceChips TItem="MembershipPaymentMethod" Label="@L["Record_Method"]" Items="@MarkPaidDialog.Methods" @bind-Value="method" TextFunc="@(m => MembershipHelpers.MethodText(L, m))" />
+
+            <MudDatePicker @bind-Date="paidOn" Variant="Variant.Outlined" Label="@L["Record_PaidOn"]" MaxDate="@DateTime.Today" PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" />
+        }
+
+        <MudTextField Variant="Variant.Outlined" T="string" Label="@L["Record_Note"]" @bind-Value="note" Lines="2" MaxLength="500" HelperText="@L["Record_NoteHint"]" Margin="Margin.Dense" />
+
+        @if (plan is not null)
+        {
+            <p class="record__hint">@L[plan.GrantsSeasonEnrollment ? "Record_EnrollHint" : "Record_PassiveHint"]</p>
+        }
+
+        @if (Error is { } error && showErrors)
+        {
+            <div class="record__error">⚠️ @error</div>
+        }
+    </div>
+</BaseDialog>
+
+@code {
+    /// <summary>All plans of the season, also the ones only the treasurer can assign.</summary>
+    [Parameter, EditorRequired] public List<MembershipPlanDto> Plans { get; set; } = [];
+
+    /// <summary>The members who have no membership in the season yet.</summary>
+    [Parameter, EditorRequired] public List<MembershipPaymentMemberDto> Members { get; set; } = [];
+
+    /// <summary>The member the dialog was opened for.</summary>
+    [Parameter] public MembershipPaymentMemberDto? Member { get; set; }
+
+    [Inject] private IMembershipPaymentsStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private MembershipPaymentMemberDto? member;
+    private MembershipPlanDto? plan;
+    private IReadOnlyCollection<MembershipPaymentMemberDto> covered = [];
+    private MembershipPaymentMethod method = MembershipPaymentMethod.BankTransfer;
+    private DateTime? paidOn = DateTime.Today;
+    private string? note;
+    private bool showErrors;
+
+    /// <summary>The member and the rest of the family who have no membership yet.</summary>
+    private List<MembershipPaymentMemberDto> FamilyMembers => member is null
+        ? []
+        : Members.Where(m => m.MemberId == member.MemberId || (member.FamilyId is not null && m.FamilyId == member.FamilyId))
+            .OrderBy(m => m.MemberId == member.MemberId ? 0 : 1).ThenBy(m => m.IsChild).ThenBy(m => m.FirstName)
+            .ToList();
+
+    private string SubmitCaption => plan switch
+    {
+        null => L["Payments_Record"],
+        { IsFree: true } => L["Record_SubmitFree"],
+        _ => string.Format(L["Record_Submit"], MembershipHelpers.Amount(plan.PriceCents)),
+    };
+
+    private string? Error
+    {
+        get
+        {
+            if (member is null)
+                return L["Record_ErrorMember"];
+
+            if (plan is null)
+                return L["Record_ErrorPlan"];
+
+            return null;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        member = Member;
+        ResetCovered();
+    }
+
+    private static string Name(MembershipPaymentMemberDto m) => $"{m.FirstName} {m.LastName}";
+
+    private Task<IEnumerable<MembershipPaymentMemberDto>> SearchMembers(string? value, CancellationToken cancellationToken)
+    {
+        var terms = (value ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return Task.FromResult(Members.Where(m => terms.All(term =>
+            m.FirstName.StartsWith(term, StringComparison.CurrentCultureIgnoreCase) || m.LastName.StartsWith(term, StringComparison.CurrentCultureIgnoreCase))));
+    }
+
+    private void OnMemberChanged(MembershipPaymentMemberDto? value)
+    {
+        member = value;
+        ResetCovered();
+    }
+
+    private void OnPlanChanged(MembershipPlanDto? value)
+    {
+        plan = value;
+        ResetCovered();
+    }
+
+    /// <summary>A couple or family plan covers the family as far as the plan allows, a plan for one member only the member.</summary>
+    private void ResetCovered()
+    {
+        if (member is null || plan is not { IsGroupPlan: true })
+        {
+            covered = member is null ? [] : [member];
+            return;
+        }
+
+        var family = FamilyMembers;
+        var adults = family.Where(m => !m.IsChild).Take(plan.MaxAdults);
+        var children = plan.IncludesChildren ? family.Where(m => m.IsChild) : [];
+        covered = adults.Concat(children).ToList();
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        showErrors = true;
+        if (Error is not null || member is null || plan is null)
+            return null;
+
+        var memberIds = covered.Select(m => m.MemberId).Append(member.MemberId).Distinct().ToList();
+        var result = await Store.RecordPayment(new RecordMembershipPaymentModel
+        {
+            MembershipPlanId = plan.Id,
+            MemberIds = memberIds,
+            PayerMemberId = member.MemberId,
+            Method = method,
+            PaidOn = DateOnly.FromDateTime(paidOn ?? DateTime.Today),
+            Note = string.IsNullOrWhiteSpace(note) ? null : note,
+        });
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Record_Saved"], Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

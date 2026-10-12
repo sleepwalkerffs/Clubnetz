@@ -114,7 +114,8 @@
             <MudItem xs="12" md="7">
                 <SectionCard Emoji="🗓️" Title="@L["SeasonEnrollment"]" Subtitle="@L["SeasonEnrollmentHint"]">
                     <SeasonEnrollmentEditor Seasons="@ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList()" Overview="@overview?.Seasons"
-                                            SelectedIds="@selectedSeasonIds" SelectedIdsChanged="@(ids => selectedSeasonIds = ids.ToList())" Disabled="@EditingDisabled" />
+                                            SelectedIds="@selectedSeasonIds" SelectedIdsChanged="@(ids => selectedSeasonIds = ids.ToList())" Disabled="@EditingDisabled"
+                                            Enrollments="@member.SeasonEnrollments" PaidSeasonIds="@member.PaidSeasonIds" />
                 </SectionCard>
             </MudItem>
             <MudItem xs="12" md="5">

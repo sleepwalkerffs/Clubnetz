@@ -57,6 +57,19 @@
                 </div>
             </div>
 
+            @if (MembershipPlanName is not null)
+            {
+                <div class="account-row">
+                    <MudIcon Icon="@Icons.Material.Filled.CardMembership" Size="Size.Small" Class="account-row__icon" />
+                    <div class="account-row__text">
+                        <div class="account-row__label">@Locale["Membership"]</div>
+                        <div class="account-row__value">
+                            <a class="account-row__link" href="@MembershipUrl">@MembershipPlanName</a>
+                        </div>
+                    </div>
+                </div>
+            }
+
             @if (Seasons.Count > 0)
             {
                 <div class="account-row">
@@ -83,6 +96,11 @@
 @code {
     [Parameter, EditorRequired] public MembersDetailResult Member { get; set; } = null!;
     [Parameter] public List<SeasonResult> Seasons { get; set; } = [];
+
+    /// <summary>The plan of the member in the running season, e.g. "Family · Season 2026"; <c>null</c> without one.</summary>
+    [Parameter] public string? MembershipPlanName { get; set; }
+
+    [Parameter] public string? MembershipUrl { get; set; }
 
     [Inject] private IStringLocalizer<MyClubLocale> Locale { get; set; } = null!;
     [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;

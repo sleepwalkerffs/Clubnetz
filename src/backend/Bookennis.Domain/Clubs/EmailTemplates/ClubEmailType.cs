@@ -16,5 +16,9 @@ public enum ClubEmailType
     BookingReminder = 7,
     ClubEventCreated = 8,
     ClubEventReminder = 9,
-    ClubEventRegistrationDeadline = 10
+    ClubEventRegistrationDeadline = 10,
+    MembershipPaymentReceived = 11,
+    MembershipApproved = 12,
+    MembershipPaymentFailed = 13,
+    MembershipNeedsAttention = 14
 }

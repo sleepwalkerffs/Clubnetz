@@ -84,6 +84,7 @@
     <PackageVersion Include="SimpleInjector.Integration.AspNetCore" Version="5.5.0" />
     <PackageVersion Include="SimpleInjector.Integration.GenericHost" Version="5.4.0" />
     <PackageVersion Include="SimpleInjector" Version="5.5.1" />
+    <PackageVersion Include="Stripe.net" Version="53.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.7" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />

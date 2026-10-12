@@ -18,6 +18,7 @@ using Bookennis.Client.Services.Store.Statistics;
 using Bookennis.Client.Services.Store.Leaderboards;
 using Bookennis.Client.Services.Store.ClubEvents;
 using Bookennis.Client.Services.Store.CourtBlockings;
+using Bookennis.Client.Services.Store.Memberships;
 using Bookennis.Client.Services.Store.SubscriptionPlans;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -50,5 +51,9 @@ public static class AddStores
         builder.Services.AddSingleton<IPushStore, PushStore>();
         builder.Services.AddSingleton<ILegalStore, LegalStore>();
         builder.Services.AddSingleton<INotificationPreferencesStore, NotificationPreferencesStore>();
+        builder.Services.AddSingleton<IMembershipPlansStore, MembershipPlansStore>();
+        builder.Services.AddSingleton<IMembershipsStore, MembershipsStore>();
+        builder.Services.AddSingleton<IMembershipPaymentsStore, MembershipPaymentsStore>();
+        builder.Services.AddSingleton<IPaymentAccountStore, PaymentAccountStore>();
     }
 }

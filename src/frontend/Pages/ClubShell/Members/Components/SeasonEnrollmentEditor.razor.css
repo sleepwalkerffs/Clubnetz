@@ -100,6 +100,16 @@
     color: var(--mud-palette-text-secondary);
 }
 
+.enrollment__source {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--mud-palette-text-secondary);
+}
+
+.enrollment__source--paid {
+    color: var(--bk-dark-green, #047857);
+}
+
 .enrollment__stats {
     flex-shrink: 0;
     display: flex;

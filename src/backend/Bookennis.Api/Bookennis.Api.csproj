@@ -48,6 +48,7 @@
     <PackageReference Include="SimpleInjector" />
     <PackageReference Include="SimpleInjector.Integration.AspNetCore" />
     <PackageReference Include="SimpleInjector.Integration.AspNetCore.Mvc" />
+    <PackageReference Include="Stripe.net" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="OpenTelemetry.Api" />

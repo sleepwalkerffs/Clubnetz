@@ -24,7 +24,8 @@
             <h3 class="member-edit__title">🗓️ @L["SeasonEnrollment"]</h3>
             <p class="member-edit__hint">@L["SeasonEnrollmentHint"]</p>
             <SeasonEnrollmentEditor Seasons="@ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList()"
-                                    SelectedIds="@selectedSeasonIds" SelectedIdsChanged="@(ids => selectedSeasonIds = ids.ToList())" />
+                                    SelectedIds="@selectedSeasonIds" SelectedIdsChanged="@(ids => selectedSeasonIds = ids.ToList())"
+                                    PaidSeasonIds="@Member.PaidSeasonIds" />
         </section>
 
         <section class="member-edit__section">

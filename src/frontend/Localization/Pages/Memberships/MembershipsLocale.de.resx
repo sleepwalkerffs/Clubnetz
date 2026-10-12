@@ -1,0 +1,921 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Diese Seite ist für die Kassiere und Admins des Vereins.</value>
+  </data>
+  <data name="NoSeasons" xml:space="preserve">
+    <value>Der Verein hat noch keine Saison. Lege zuerst eine in den Vereinseinstellungen an.</value>
+  </data>
+  <data name="SeasonName" xml:space="preserve">
+    <value>Saison {0}</value>
+  </data>
+  <data name="Free" xml:space="preserve">
+    <value>Kostenlos</value>
+  </data>
+  <data name="Coverage_OneMember" xml:space="preserve">
+    <value>Ein Mitglied</value>
+  </data>
+  <data name="Coverage_Couple" xml:space="preserve">
+    <value>Paar</value>
+  </data>
+  <data name="Coverage_FamilyOneAdult" xml:space="preserve">
+    <value>Familie, 1 Erwachsene*r</value>
+  </data>
+  <data name="Coverage_FamilyTwoAdults" xml:space="preserve">
+    <value>Familie, 2 Erwachsene</value>
+  </data>
+  <data name="Born_In" xml:space="preserve">
+    <value>Jahrgang {0}</value>
+  </data>
+  <data name="Born_Between" xml:space="preserve">
+    <value>Jahrgang {0} bis {1}</value>
+  </data>
+  <data name="Born_From" xml:space="preserve">
+    <value>ab Jahrgang {0}</value>
+  </data>
+  <data name="Born_Until" xml:space="preserve">
+    <value>bis Jahrgang {0}</value>
+  </data>
+  <data name="Age_Exactly" xml:space="preserve">
+    <value>{0} Jahre</value>
+  </data>
+  <data name="Age_Between" xml:space="preserve">
+    <value>{0} bis {1} Jahre</value>
+  </data>
+  <data name="Age_UpTo" xml:space="preserve">
+    <value>bis {0} Jahre</value>
+  </data>
+  <data name="Age_From" xml:space="preserve">
+    <value>ab {0} Jahren</value>
+  </data>
+  <data name="Available_Between" xml:space="preserve">
+    <value>von {0} bis {1}</value>
+  </data>
+  <data name="Available_From" xml:space="preserve">
+    <value>ab {0}</value>
+  </data>
+  <data name="Available_Until" xml:space="preserve">
+    <value>bis {0}</value>
+  </data>
+  <data name="Chip_RequiresApproval" xml:space="preserve">
+    <value>mit Bestätigung</value>
+  </data>
+  <data name="Chip_NewMembersOnly" xml:space="preserve">
+    <value>Neumitglieder</value>
+  </data>
+  <data name="Chip_FamilyDiscount" xml:space="preserve">
+    <value>mit Mitglied in der Familie</value>
+  </data>
+  <data name="Chip_Passive" xml:space="preserve">
+    <value>passiv, keine Buchungen</value>
+  </data>
+  <data name="Chip_NotSelfService" xml:space="preserve">
+    <value>nur von dir vergeben</value>
+  </data>
+  <data name="Sentence_OneMember" xml:space="preserve">
+    <value>Für ein Mitglied.</value>
+  </data>
+  <data name="Sentence_Couple" xml:space="preserve">
+    <value>Für zwei Erwachsene einer Familie. Eine Person bezahlt für beide.</value>
+  </data>
+  <data name="Sentence_FamilyOneAdult" xml:space="preserve">
+    <value>Für eine*n Erwachsene*n und alle Kinder. Ein Preis für alle.</value>
+  </data>
+  <data name="Sentence_FamilyTwoAdults" xml:space="preserve">
+    <value>Für zwei Erwachsene und alle Kinder. Ein Preis für alle.</value>
+  </data>
+  <data name="Sentence_Age" xml:space="preserve">
+    <value>Nur für Mitglieder: {0} ({1} im Jahr {2}).</value>
+  </data>
+  <data name="Sentence_AgeOfAdults" xml:space="preserve">
+    <value>Nur wenn die Erwachsenen passen: {0} ({1} im Jahr {2}).</value>
+  </data>
+  <data name="Sentence_NewMembersOnly" xml:space="preserve">
+    <value>Nur für Mitglieder, die in keiner früheren Saison freigeschaltet waren.</value>
+  </data>
+  <data name="Sentence_FamilyDiscount" xml:space="preserve">
+    <value>Nur wenn ein*e andere*r Erwachsene*r der Familie in dieser Saison Mitglied ist.</value>
+  </data>
+  <data name="Sentence_Available" xml:space="preserve">
+    <value>Wählbar {0}.</value>
+  </data>
+  <data name="Sentence_Passive" xml:space="preserve">
+    <value>Die Zahlung schaltet nicht für die Saison frei: keine Platzbuchungen.</value>
+  </data>
+  <data name="Sentence_NotSelfService" xml:space="preserve">
+    <value>Mitglieder sehen diesen Tarif nicht. Du vergibst ihn, wenn du eine Zahlung einträgst.</value>
+  </data>
+  <data name="Sentence_ApprovalThenConfirm" xml:space="preserve">
+    <value>Mitglieder fragen an, du bestätigst, und sie sind ohne Zahlung freigeschaltet.</value>
+  </data>
+  <data name="Sentence_ApprovalThenPay" xml:space="preserve">
+    <value>Mitglieder fragen an, du bestätigst, dann bezahlen sie und sind freigeschaltet.</value>
+  </data>
+  <data name="Sentence_Confirm" xml:space="preserve">
+    <value>Mitglieder bestätigen und sind sofort freigeschaltet. Es ist nichts zu bezahlen.</value>
+  </data>
+  <data name="Sentence_Pay" xml:space="preserve">
+    <value>Mitglieder wählen den Tarif, bezahlen und sind sofort freigeschaltet.</value>
+  </data>
+  <data name="Status_AwaitingApproval" xml:space="preserve">
+    <value>Wartet auf Bestätigung</value>
+  </data>
+  <data name="Status_AwaitingPayment" xml:space="preserve">
+    <value>Offen</value>
+  </data>
+  <data name="Status_Processing" xml:space="preserve">
+    <value>Lastschrift läuft</value>
+  </data>
+  <data name="Status_Paid" xml:space="preserve">
+    <value>Bezahlt</value>
+  </data>
+  <data name="Status_Failed" xml:space="preserve">
+    <value>Zahlung fehlgeschlagen</value>
+  </data>
+  <data name="Status_Cancelled" xml:space="preserve">
+    <value>Storniert</value>
+  </data>
+  <data name="Status_Refunded" xml:space="preserve">
+    <value>Erstattet</value>
+  </data>
+  <data name="Status_Disputed" xml:space="preserve">
+    <value>Beanstandet</value>
+  </data>
+  <data name="Method_Online" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="Method_BankTransfer" xml:space="preserve">
+    <value>Überweisung</value>
+  </data>
+  <data name="Method_Cash" xml:space="preserve">
+    <value>Bar</value>
+  </data>
+  <data name="Method_Other" xml:space="preserve">
+    <value>Sonstiges</value>
+  </data>
+  <data name="Enrollment_NotEnrolled" xml:space="preserve">
+    <value>Keine Mitgliedschaft</value>
+  </data>
+  <data name="Enrollment_ByHand" xml:space="preserve">
+    <value>Von Hand freigeschaltet</value>
+  </data>
+  <data name="Enrollment_PaidOnline" xml:space="preserve">
+    <value>Online bezahlt</value>
+  </data>
+  <data name="Enrollment_MarkedAsPaid" xml:space="preserve">
+    <value>Als bezahlt markiert</value>
+  </data>
+  <data name="Reason_BirthYearOutOfRange" xml:space="preserve">
+    <value>Dieser Tarif ist für andere Jahrgänge.</value>
+  </data>
+  <data name="Reason_TooManyAdults" xml:space="preserve">
+    <value>Dieser Tarif gilt für weniger Erwachsene.</value>
+  </data>
+  <data name="Reason_ChildrenNotIncluded" xml:space="preserve">
+    <value>Dieser Tarif gilt nicht für Kinder.</value>
+  </data>
+  <data name="Reason_NotANewMember" xml:space="preserve">
+    <value>Dieser Tarif ist für Neumitglieder.</value>
+  </data>
+  <data name="Reason_NoEnrolledFamilyAdult" xml:space="preserve">
+    <value>Für diesen Tarif muss ein*e andere*r Erwachsene*r deiner Familie in dieser Saison Mitglied sein.</value>
+  </data>
+  <data name="Reason_PlanNotAvailable" xml:space="preserve">
+    <value>Dieser Tarif ist im Moment nicht wählbar.</value>
+  </data>
+  <data name="Reason_MemberNotInFamily" xml:space="preserve">
+    <value>Dieser Tarif ist für die Mitglieder einer Familie.</value>
+  </data>
+  <data name="Reason_AlreadyHasMembership" xml:space="preserve">
+    <value>Für diese Saison gibt es schon eine Mitgliedschaft.</value>
+  </data>
+  <data name="Reason_OnlyOneMember" xml:space="preserve">
+    <value>Dieser Tarif ist für ein Mitglied.</value>
+  </data>
+  <data name="Reason_AdultRequired" xml:space="preserve">
+    <value>Für diesen Tarif braucht es mindestens eine*n Erwachsene*n.</value>
+  </data>
+  <data name="Reason_Other" xml:space="preserve">
+    <value>Dieser Tarif ist nicht wählbar.</value>
+  </data>
+  <data name="Plans_Title" xml:space="preserve">
+    <value>Mitgliedstarife</value>
+  </data>
+  <data name="Plans_Subtitle" xml:space="preserve">
+    <value>Eure Preisliste: wer in einer Saison was bezahlt. Mitglieder wählen ihren Tarif selbst und bezahlen online, per Überweisung oder bar.</value>
+  </data>
+  <data name="Plans_CountChip" xml:space="preserve">
+    <value>{0} Tarife</value>
+  </data>
+  <data name="Plans_OnlineChipOn" xml:space="preserve">
+    <value>Online-Zahlung aktiv</value>
+  </data>
+  <data name="Plans_OnlineChipOff" xml:space="preserve">
+    <value>Keine Online-Zahlung</value>
+  </data>
+  <data name="Plans_ToPayments" xml:space="preserve">
+    <value>Wer hat bezahlt?</value>
+  </data>
+  <data name="Plans_ListTitle" xml:space="preserve">
+    <value>Tarife</value>
+  </data>
+  <data name="Plans_ListSubtitle" xml:space="preserve">
+    <value>In der Reihenfolge, in der Mitglieder sie sehen</value>
+  </data>
+  <data name="Plans_Add" xml:space="preserve">
+    <value>Tarif</value>
+  </data>
+  <data name="Plans_AddFirst" xml:space="preserve">
+    <value>Ersten Tarif anlegen</value>
+  </data>
+  <data name="Plans_Copy" xml:space="preserve">
+    <value>Aus anderer Saison kopieren</value>
+  </data>
+  <data name="Plans_Copied" xml:space="preserve">
+    <value>Tarife kopiert. Prüfe die Preise und Jahrgänge.</value>
+  </data>
+  <data name="Plans_EmptyTitle" xml:space="preserve">
+    <value>Noch keine Tarife in dieser Saison</value>
+  </data>
+  <data name="Plans_EmptyText" xml:space="preserve">
+    <value>Trage eure Preisliste ein, zum Beispiel Erwachsene, Jugend, Familie. Ohne Tarife bleibt alles wie bisher: du schaltest Mitglieder von Hand frei.</value>
+  </data>
+  <data name="Plans_NoOrders" xml:space="preserve">
+    <value>Noch nicht gewählt</value>
+  </data>
+  <data name="Plans_Orders" xml:space="preserve">
+    <value>{0} mal gewählt</value>
+  </data>
+  <data name="Plans_MoveUp" xml:space="preserve">
+    <value>Nach oben</value>
+  </data>
+  <data name="Plans_MoveDown" xml:space="preserve">
+    <value>Nach unten</value>
+  </data>
+  <data name="Plans_DeleteTitle" xml:space="preserve">
+    <value>Tarif löschen</value>
+  </data>
+  <data name="Plans_DeleteConfirm" xml:space="preserve">
+    <value>Den Tarif „{0}“ löschen?</value>
+  </data>
+  <data name="Plans_Deleted" xml:space="preserve">
+    <value>Tarif gelöscht.</value>
+  </data>
+  <data name="Plan_NewTitle" xml:space="preserve">
+    <value>Neuer Tarif</value>
+  </data>
+  <data name="Plan_EditTitle" xml:space="preserve">
+    <value>Tarif bearbeiten</value>
+  </data>
+  <data name="Plan_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Plan_NamePlaceholder" xml:space="preserve">
+    <value>z. B. Erwachsene</value>
+  </data>
+  <data name="Plan_NameRequired" xml:space="preserve">
+    <value>Bitte gib einen Namen ein.</value>
+  </data>
+  <data name="Plan_Price" xml:space="preserve">
+    <value>Preis</value>
+  </data>
+  <data name="Plan_SeasonHint" xml:space="preserve">
+    <value>Preis für die ganze Saison {0}. Mit 0 ist der Tarif kostenlos.</value>
+  </data>
+  <data name="Plan_Description" xml:space="preserve">
+    <value>Beschreibung (optional)</value>
+  </data>
+  <data name="Plan_DescriptionHint" xml:space="preserve">
+    <value>Wird Mitgliedern unter dem Namen angezeigt.</value>
+  </data>
+  <data name="Plan_Coverage" xml:space="preserve">
+    <value>Für wen gilt der Tarif?</value>
+  </data>
+  <data name="Plan_CoverageGroupHint" xml:space="preserve">
+    <value>Der Preis gilt für alle zusammen. Mitglieder wählen, wer aus ihrer Familie dabei ist.</value>
+  </data>
+  <data name="Plan_AgeLimit" xml:space="preserve">
+    <value>Nur für bestimmte Jahrgänge</value>
+  </data>
+  <data name="Plan_AgeLimitAdults" xml:space="preserve">
+    <value>Nur für Erwachsene bestimmter Jahrgänge</value>
+  </data>
+  <data name="Plan_BirthYearFrom" xml:space="preserve">
+    <value>Jahrgang von</value>
+  </data>
+  <data name="Plan_BirthYearFromHint" xml:space="preserve">
+    <value>Ältester Jahrgang, leer für keine Grenze</value>
+  </data>
+  <data name="Plan_BirthYearTo" xml:space="preserve">
+    <value>Jahrgang bis</value>
+  </data>
+  <data name="Plan_BirthYearToHint" xml:space="preserve">
+    <value>Jüngster Jahrgang, leer für keine Grenze</value>
+  </data>
+  <data name="Plan_AgeResult" xml:space="preserve">
+    <value>Das sind {0} im Jahr {1}.</value>
+  </data>
+  <data name="Plan_SelfService" xml:space="preserve">
+    <value>Mitglieder können ihn selbst wählen</value>
+  </data>
+  <data name="Plan_SelfServiceHint" xml:space="preserve">
+    <value>Ausgeschaltet kannst nur du den Tarif vergeben (z. B. Ehrenmitglieder).</value>
+  </data>
+  <data name="Plan_RequiresApproval" xml:space="preserve">
+    <value>Du bestätigst jede Anfrage</value>
+  </data>
+  <data name="Plan_RequiresApprovalHint" xml:space="preserve">
+    <value>Für Studierende, Lehrlinge und Ähnliches: das Mitglied bezahlt nach deiner Bestätigung.</value>
+  </data>
+  <data name="Plan_NewMembersOnly" xml:space="preserve">
+    <value>Nur für Neumitglieder</value>
+  </data>
+  <data name="Plan_NewMembersOnlyHint" xml:space="preserve">
+    <value>Für Mitglieder, die in keiner früheren Saison freigeschaltet waren.</value>
+  </data>
+  <data name="Plan_FamilyDiscount" xml:space="preserve">
+    <value>Nur mit Mitglied in der Familie</value>
+  </data>
+  <data name="Plan_FamilyDiscountHint" xml:space="preserve">
+    <value>Partnerkarte oder Ermäßigung für Kinder: ein*e andere*r Erwachsene*r der Familie muss in dieser Saison Mitglied sein.</value>
+  </data>
+  <data name="Plan_Passive" xml:space="preserve">
+    <value>Passive Mitgliedschaft</value>
+  </data>
+  <data name="Plan_PassiveHint" xml:space="preserve">
+    <value>Der Beitrag wird erfasst, aber das Mitglied wird nicht freigeschaltet und kann keine Plätze buchen.</value>
+  </data>
+  <data name="Plan_Availability" xml:space="preserve">
+    <value>Angeboten</value>
+  </data>
+  <data name="Plan_AvailableFrom" xml:space="preserve">
+    <value>Von (optional)</value>
+  </data>
+  <data name="Plan_AvailableUntil" xml:space="preserve">
+    <value>Bis (optional)</value>
+  </data>
+  <data name="Plan_AvailabilityHint" xml:space="preserve">
+    <value>Für einen Frühbucherpreis oder einen Halbsaison-Tarif. Leer: die ganze Zeit.</value>
+  </data>
+  <data name="Plan_ErrorNoBirthYear" xml:space="preserve">
+    <value>Gib mindestens einen Jahrgang ein oder schalte die Altersgrenze aus.</value>
+  </data>
+  <data name="Plan_ErrorBirthYears" xml:space="preserve">
+    <value>„Jahrgang von“ muss vor „Jahrgang bis“ liegen.</value>
+  </data>
+  <data name="Plan_ErrorAvailability" xml:space="preserve">
+    <value>Der Tarif darf nicht enden, bevor er beginnt.</value>
+  </data>
+  <data name="Plan_Saved" xml:space="preserve">
+    <value>Tarif gespeichert.</value>
+  </data>
+  <data name="Copy_Submit" xml:space="preserve">
+    <value>Kopieren</value>
+  </data>
+  <data name="Copy_Hint" xml:space="preserve">
+    <value>Alle Tarife werden mit ihren Preisen kopiert. Jahrgänge und Daten wandern mit der Saison mit: aus „Jahrgang 2009 bis 2013“ wird ein Jahr später „Jahrgang 2010 bis 2014“.</value>
+  </data>
+  <data name="Account_Title" xml:space="preserve">
+    <value>Online-Zahlung</value>
+  </data>
+  <data name="Account_Subtitle" xml:space="preserve">
+    <value>Mitglieder bezahlen mit Karte oder SEPA-Lastschrift, direkt an euren Verein</value>
+  </data>
+  <data name="Account_UnavailableTitle" xml:space="preserve">
+    <value>In dieser Installation nicht verfügbar</value>
+  </data>
+  <data name="Account_UnavailableText" xml:space="preserve">
+    <value>Die Online-Zahlung ist hier nicht eingerichtet. Tarife und die Übersicht, wer bezahlt hat, funktionieren auch ohne: Mitglieder bezahlen an den Verein und du trägst die Zahlungen ein.</value>
+  </data>
+  <data name="Account_NotConnectedTitle" xml:space="preserve">
+    <value>Verbinde euren Verein mit Stripe</value>
+  </data>
+  <data name="Account_NotConnectedText" xml:space="preserve">
+    <value>Stripe ist der Zahlungsanbieter. Euer Verein bekommt ein eigenes Stripe-Konto, und wer online bezahlt, wird automatisch freigeschaltet.</value>
+  </data>
+  <data name="Account_Fact_Direct" xml:space="preserve">
+    <value>Das Geld geht direkt vom Mitglied auf das Konto eures Vereins. Clubnetz hält es nie.</value>
+  </data>
+  <data name="Account_Fact_Methods" xml:space="preserve">
+    <value>Karten und SEPA-Lastschrift sind von Anfang an aktiv. Die Zahlungsarten wählt ihr in Stripe.</value>
+  </data>
+  <data name="Account_Fact_Fees" xml:space="preserve">
+    <value>Stripe verrechnet seine Gebühren pro Zahlung an den Verein. Stripe fragt die Daten des Vereins und des Bankkontos ab.</value>
+  </data>
+  <data name="Account_Country" xml:space="preserve">
+    <value>Land des Vereins</value>
+  </data>
+  <data name="Account_CountryHint" xml:space="preserve">
+    <value>Kann danach nicht mehr geändert werden.</value>
+  </data>
+  <data name="Account_Connect" xml:space="preserve">
+    <value>Mit Stripe verbinden</value>
+  </data>
+  <data name="Account_AdminOnly" xml:space="preserve">
+    <value>Nur ein Admin des Vereins kann Stripe verbinden oder trennen.</value>
+  </data>
+  <data name="Account_IncompleteTitle" xml:space="preserve">
+    <value>Die Einrichtung bei Stripe ist noch nicht fertig</value>
+  </data>
+  <data name="Account_IncompleteText" xml:space="preserve">
+    <value>Stripe braucht noch Angaben zu eurem Verein, bevor Mitglieder online bezahlen können.</value>
+  </data>
+  <data name="Account_ReviewTitle" xml:space="preserve">
+    <value>Stripe prüft eure Angaben</value>
+  </data>
+  <data name="Account_ReviewText" xml:space="preserve">
+    <value>Ihr habt alles eingegeben. Stripe braucht meist ein paar Minuten, manchmal ein paar Tage. Sobald Stripe fertig ist, können Mitglieder online bezahlen.</value>
+  </data>
+  <data name="Account_LinkExpired" xml:space="preserve">
+    <value>Der Link von Stripe ist abgelaufen. Mit „Weiter“ bekommst du einen neuen.</value>
+  </data>
+  <data name="Account_Continue" xml:space="preserve">
+    <value>Weiter bei Stripe</value>
+  </data>
+  <data name="Account_CheckAgain" xml:space="preserve">
+    <value>Erneut prüfen</value>
+  </data>
+  <data name="Account_Disconnect" xml:space="preserve">
+    <value>Trennen</value>
+  </data>
+  <data name="Account_ActiveTitle" xml:space="preserve">
+    <value>Mitglieder können online bezahlen</value>
+  </data>
+  <data name="Account_ActiveText" xml:space="preserve">
+    <value>Zahlungen gehen auf das Stripe-Konto eures Vereins. Erstattungen, Auszahlungen und Beanstandungen erledigt ihr in eurem Stripe-Dashboard.</value>
+  </data>
+  <data name="Account_ChargesOn" xml:space="preserve">
+    <value>Zahlungen aktiv</value>
+  </data>
+  <data name="Account_PayoutsOn" xml:space="preserve">
+    <value>Auszahlungen aktiv</value>
+  </data>
+  <data name="Account_PayoutsOff" xml:space="preserve">
+    <value>Auszahlungen noch nicht aktiv</value>
+  </data>
+  <data name="Account_ConnectedSince" xml:space="preserve">
+    <value>Verbunden seit {0}</value>
+  </data>
+  <data name="Account_OpenStripe" xml:space="preserve">
+    <value>Stripe-Dashboard</value>
+  </data>
+  <data name="Account_NowActive" xml:space="preserve">
+    <value>Geschafft! Mitglieder können jetzt online bezahlen.</value>
+  </data>
+  <data name="Account_StillReview" xml:space="preserve">
+    <value>Stripe prüft eure Angaben noch.</value>
+  </data>
+  <data name="Account_StillIncomplete" xml:space="preserve">
+    <value>Stripe braucht noch Angaben. Mach bei Stripe weiter.</value>
+  </data>
+  <data name="Account_Gone" xml:space="preserve">
+    <value>Das Stripe-Konto ist nicht mehr erreichbar und wurde getrennt.</value>
+  </data>
+  <data name="Account_DisconnectTitle" xml:space="preserve">
+    <value>Stripe trennen</value>
+  </data>
+  <data name="Account_DisconnectConfirm" xml:space="preserve">
+    <value>Mitglieder können dann nicht mehr online bezahlen. Geleistete Zahlungen bleiben, wie sie sind, und euer Stripe-Konto bleibt bei euch. Wenn ihr später wieder verbindet, wird ein neues Stripe-Konto angelegt.</value>
+  </data>
+  <data name="Account_Disconnected" xml:space="preserve">
+    <value>Stripe getrennt.</value>
+  </data>
+  <data name="Payments_Title" xml:space="preserve">
+    <value>Mitgliedsbeiträge</value>
+  </data>
+  <data name="Payments_Subtitle" xml:space="preserve">
+    <value>Wer hat welchen Tarif, wer hat bezahlt und wer nicht. Zahlungen per Überweisung oder bar trägst du hier ein.</value>
+  </data>
+  <data name="Payments_PaidChip" xml:space="preserve">
+    <value>{0} von {1} Mitgliedern haben bezahlt</value>
+  </data>
+  <data name="Payments_ApprovalChip" xml:space="preserve">
+    <value>{0} warten auf dich</value>
+  </data>
+  <data name="Payments_ToPlans" xml:space="preserve">
+    <value>Tarife und Online-Zahlung</value>
+  </data>
+  <data name="Payments_Received" xml:space="preserve">
+    <value>Eingegangen</value>
+  </data>
+  <data name="Payments_ProcessingHint" xml:space="preserve">
+    <value>+ {0} Lastschriften unterwegs</value>
+  </data>
+  <data name="Payments_Open" xml:space="preserve">
+    <value>Offen</value>
+  </data>
+  <data name="Payments_OfMembers" xml:space="preserve">
+    <value>von {0}</value>
+  </data>
+  <data name="Payments_MembersPaid" xml:space="preserve">
+    <value>Mitglieder haben bezahlt</value>
+  </data>
+  <data name="Payments_EnrolledHint" xml:space="preserve">
+    <value>{0} für die Saison freigeschaltet</value>
+  </data>
+  <data name="Payments_ListTitle" xml:space="preserve">
+    <value>Mitglieder und Zahlungen</value>
+  </data>
+  <data name="Payments_ListSubtitle" xml:space="preserve">
+    <value>Jedes Mitglied des Vereins, mit oder ohne Tarif</value>
+  </data>
+  <data name="Payments_Export" xml:space="preserve">
+    <value>Als Excel exportieren</value>
+  </data>
+  <data name="Payments_Record" xml:space="preserve">
+    <value>Zahlung eintragen</value>
+  </data>
+  <data name="Payments_Search" xml:space="preserve">
+    <value>Name oder Tarif suchen</value>
+  </data>
+  <data name="Payments_EmptyTitle" xml:space="preserve">
+    <value>Noch keine Mitglieder</value>
+  </data>
+  <data name="Payments_NothingFound" xml:space="preserve">
+    <value>Nichts gefunden</value>
+  </data>
+  <data name="Payments_FormerMember" xml:space="preserve">
+    <value>Ehemaliges Mitglied</value>
+  </data>
+  <data name="Payments_PaidBy" xml:space="preserve">
+    <value>Bezahlt von {0}</value>
+  </data>
+  <data name="Payments_NoOrder" xml:space="preserve">
+    <value>Kein Tarif</value>
+  </data>
+  <data name="Payments_OrderedOn" xml:space="preserve">
+    <value>Bestellt am {0}</value>
+  </data>
+  <data name="Payments_NoteHint" xml:space="preserve">
+    <value>Deine Notiz, Mitglieder sehen sie nicht</value>
+  </data>
+  <data name="Payments_Approve" xml:space="preserve">
+    <value>Bestätigen</value>
+  </data>
+  <data name="Payments_Reject" xml:space="preserve">
+    <value>Ablehnen</value>
+  </data>
+  <data name="Payments_MarkPaid" xml:space="preserve">
+    <value>Als bezahlt markieren</value>
+  </data>
+  <data name="Payments_Cancel" xml:space="preserve">
+    <value>Bestellung stornieren</value>
+  </data>
+  <data name="Payments_CancelPaid" xml:space="preserve">
+    <value>Bezahlte Bestellung stornieren</value>
+  </data>
+  <data name="Payments_More" xml:space="preserve">
+    <value>Mehr</value>
+  </data>
+  <data name="Payments_ShowMore" xml:space="preserve">
+    <value>{0} weitere anzeigen</value>
+  </data>
+  <data name="Payments_Approved" xml:space="preserve">
+    <value>Bestätigt. Das Mitglied wurde per E-Mail informiert.</value>
+  </data>
+  <data name="Payments_Rejected" xml:space="preserve">
+    <value>Abgelehnt. Das Mitglied kann einen anderen Tarif wählen.</value>
+  </data>
+  <data name="Payments_Cancelled" xml:space="preserve">
+    <value>Bestellung storniert.</value>
+  </data>
+  <data name="Payments_MarkedPaid" xml:space="preserve">
+    <value>Als bezahlt markiert. Die Mitglieder sind freigeschaltet.</value>
+  </data>
+  <data name="Payments_RejectTitle" xml:space="preserve">
+    <value>Tarif ablehnen</value>
+  </data>
+  <data name="Payments_RejectConfirm" xml:space="preserve">
+    <value>„{0}“ für {1} ablehnen? Danach kann ein anderer Tarif gewählt werden.</value>
+  </data>
+  <data name="Payments_CancelTitle" xml:space="preserve">
+    <value>Bestellung stornieren</value>
+  </data>
+  <data name="Payments_CancelConfirm" xml:space="preserve">
+    <value>Die Bestellung „{0}“ von {1} stornieren? Danach kann wieder ein Tarif gewählt werden.</value>
+  </data>
+  <data name="Payments_CancelPaidConfirm" xml:space="preserve">
+    <value>Die bezahlte Bestellung „{0}“ von {1} stornieren? Clubnetz erstattet nichts: gib das Geld selbst zurück (bei Online-Zahlungen in eurem Stripe-Dashboard). Die Mitglieder bleiben freigeschaltet, bis du das in der Mitgliederverwaltung änderst.</value>
+  </data>
+  <data name="Payments_NoPlans" xml:space="preserve">
+    <value>Diese Saison hat noch keine Tarife. Lege zuerst einen Tarif an.</value>
+  </data>
+  <data name="Filter_All" xml:space="preserve">
+    <value>Alle</value>
+  </data>
+  <data name="Filter_NeedsApproval" xml:space="preserve">
+    <value>Zu bestätigen</value>
+  </data>
+  <data name="Filter_Open" xml:space="preserve">
+    <value>Offen</value>
+  </data>
+  <data name="Filter_Processing" xml:space="preserve">
+    <value>Lastschrift läuft</value>
+  </data>
+  <data name="Filter_Paid" xml:space="preserve">
+    <value>Bezahlt</value>
+  </data>
+  <data name="Filter_Problems" xml:space="preserve">
+    <value>Probleme</value>
+  </data>
+  <data name="Filter_NoMembership" xml:space="preserve">
+    <value>Keine Mitgliedschaft</value>
+  </data>
+  <data name="Filter_ByHand" xml:space="preserve">
+    <value>Von Hand freigeschaltet</value>
+  </data>
+  <data name="Filter_Cancelled" xml:space="preserve">
+    <value>Storniert</value>
+  </data>
+  <data name="Record_Intro" xml:space="preserve">
+    <value>Für einen Beitrag, der per Überweisung oder bar bezahlt wurde. Die Mitglieder werden sofort für die Saison freigeschaltet.</value>
+  </data>
+  <data name="Record_Member" xml:space="preserve">
+    <value>Mitglied</value>
+  </data>
+  <data name="Record_MemberHint" xml:space="preserve">
+    <value>Nur Mitglieder ohne Mitgliedschaft in dieser Saison.</value>
+  </data>
+  <data name="Record_Plan" xml:space="preserve">
+    <value>Tarif</value>
+  </data>
+  <data name="Record_Covered" xml:space="preserve">
+    <value>Für wen gilt die Zahlung?</value>
+  </data>
+  <data name="Record_NoFamily" xml:space="preserve">
+    <value>Dieses Mitglied hat keine Familie in Clubnetz, der Tarif gilt daher nur für es. Lege die Familie in der Mitgliederverwaltung an, um weitere Mitglieder einzuschließen.</value>
+  </data>
+  <data name="Record_Method" xml:space="preserve">
+    <value>Bezahlt per</value>
+  </data>
+  <data name="Record_PaidOn" xml:space="preserve">
+    <value>Bezahlt am</value>
+  </data>
+  <data name="Record_Note" xml:space="preserve">
+    <value>Notiz (optional)</value>
+  </data>
+  <data name="Record_NoteHint" xml:space="preserve">
+    <value>Nur für dich und die anderen Kassiere.</value>
+  </data>
+  <data name="Record_EnrollHint" xml:space="preserve">
+    <value>Die Mitglieder werden für die Saison freigeschaltet, und wer bezahlt hat, bekommt eine Bestätigung per E-Mail.</value>
+  </data>
+  <data name="Record_PassiveHint" xml:space="preserve">
+    <value>Ein passiver Tarif: die Zahlung wird erfasst, niemand wird freigeschaltet.</value>
+  </data>
+  <data name="Record_ErrorMember" xml:space="preserve">
+    <value>Bitte wähle ein Mitglied.</value>
+  </data>
+  <data name="Record_ErrorPlan" xml:space="preserve">
+    <value>Bitte wähle einen Tarif.</value>
+  </data>
+  <data name="Record_Submit" xml:space="preserve">
+    <value>{0} eintragen</value>
+  </data>
+  <data name="Record_SubmitFree" xml:space="preserve">
+    <value>Freischalten</value>
+  </data>
+  <data name="Record_Saved" xml:space="preserve">
+    <value>Zahlung eingetragen.</value>
+  </data>
+  <data name="My_Title" xml:space="preserve">
+    <value>Meine Mitgliedschaft</value>
+  </data>
+  <data name="My_MembersOnly" xml:space="preserve">
+    <value>Diese Seite ist für die Mitglieder des Vereins.</value>
+  </data>
+  <data name="My_NoSeason" xml:space="preserve">
+    <value>Der Verein hat im Moment keine laufende oder kommende Saison.</value>
+  </data>
+  <data name="My_State_Enrolled" xml:space="preserve">
+    <value>Du bist in der Saison {0} dabei</value>
+  </data>
+  <data name="My_StateText_Enrolled" xml:space="preserve">
+    <value>Du bist freigeschaltet und kannst Plätze buchen.</value>
+  </data>
+  <data name="My_State_Processing" xml:space="preserve">
+    <value>Du bist in der Saison {0} dabei</value>
+  </data>
+  <data name="My_StateText_Processing" xml:space="preserve">
+    <value>Deine Lastschrift ist unterwegs. Du kannst schon Plätze buchen.</value>
+  </data>
+  <data name="My_State_Paid" xml:space="preserve">
+    <value>Dein Beitrag für die Saison {0} ist bezahlt</value>
+  </data>
+  <data name="My_StateText_Paid" xml:space="preserve">
+    <value>Danke! Deine Mitgliedschaft ist erfasst.</value>
+  </data>
+  <data name="My_State_AwaitingApproval" xml:space="preserve">
+    <value>Warten auf den Verein</value>
+  </data>
+  <data name="My_StateText_AwaitingApproval" xml:space="preserve">
+    <value>Der Verein muss deinen Tarif für die Saison {0} bestätigen. Du bekommst eine E-Mail, sobald es weitergeht.</value>
+  </data>
+  <data name="My_State_AwaitingPayment" xml:space="preserve">
+    <value>Deine Mitgliedschaft für die Saison {0} ist offen</value>
+  </data>
+  <data name="My_StateText_AwaitingPayment" xml:space="preserve">
+    <value>Nur noch ein Schritt: schließe deine Bestellung unten ab.</value>
+  </data>
+  <data name="My_State_Failed" xml:space="preserve">
+    <value>Deine Zahlung ist fehlgeschlagen</value>
+  </data>
+  <data name="My_StateText_Failed" xml:space="preserve">
+    <value>Bitte bezahle für die Saison {0} noch einmal oder melde dich beim Verein.</value>
+  </data>
+  <data name="My_State_Open" xml:space="preserve">
+    <value>Deine Mitgliedschaft für die Saison {0}</value>
+  </data>
+  <data name="My_StateText_Open" xml:space="preserve">
+    <value>Wähle den Tarif, der zu dir passt.</value>
+  </data>
+  <data name="My_WaitingTitle" xml:space="preserve">
+    <value>Wir warten auf deine Zahlung</value>
+  </data>
+  <data name="My_WaitingText" xml:space="preserve">
+    <value>Der Zahlungsanbieter bestätigt sie gerade. Das dauert nur einen Moment.</value>
+  </data>
+  <data name="My_PendingText" xml:space="preserve">
+    <value>Die Bestätigung deiner Zahlung ist noch nicht da. Wenn du bezahlt hast, musst du nichts tun: diese Seite zeigt es an, sobald deine Bank bestätigt, und du bekommst eine E-Mail.</value>
+  </data>
+  <data name="My_OrdersTitle" xml:space="preserve">
+    <value>Deine Mitgliedschaft</value>
+  </data>
+  <data name="My_OrdersSubtitle" xml:space="preserve">
+    <value>Saison {0}</value>
+  </data>
+  <data name="My_ConfirmedOn" xml:space="preserve">
+    <value>Bestätigt am {0}</value>
+  </data>
+  <data name="My_PaidOn" xml:space="preserve">
+    <value>Bezahlt am {0} · {1}</value>
+  </data>
+  <data name="My_Confirm" xml:space="preserve">
+    <value>Bestätigen</value>
+  </data>
+  <data name="My_Pay" xml:space="preserve">
+    <value>{0} bezahlen</value>
+  </data>
+  <data name="My_PayAgain" xml:space="preserve">
+    <value>{0} erneut bezahlen</value>
+  </data>
+  <data name="My_Withdraw" xml:space="preserve">
+    <value>Zurückziehen</value>
+  </data>
+  <data name="My_WithdrawTitle" xml:space="preserve">
+    <value>Bestellung zurückziehen</value>
+  </data>
+  <data name="My_WithdrawConfirm" xml:space="preserve">
+    <value>Deine Bestellung „{0}“ zurückziehen? Danach kannst du wieder einen Tarif wählen.</value>
+  </data>
+  <data name="My_Withdrawn" xml:space="preserve">
+    <value>Bestellung zurückgezogen.</value>
+  </data>
+  <data name="My_PlansTitle" xml:space="preserve">
+    <value>Tarif wählen</value>
+  </data>
+  <data name="My_PlansSubtitleOnline" xml:space="preserve">
+    <value>Online bezahlen und du bist sofort freigeschaltet</value>
+  </data>
+  <data name="My_PlansSubtitleOffline" xml:space="preserve">
+    <value>Wähle deinen Tarif und bezahle den Beitrag an den Verein</value>
+  </data>
+  <data name="My_NoPlansTitle" xml:space="preserve">
+    <value>Noch keine Tarife zur Auswahl</value>
+  </data>
+  <data name="My_NoPlansText" xml:space="preserve">
+    <value>Der Verein hat seine Tarife für diese Saison noch nicht veröffentlicht. Frag bitte beim Verein nach, wie du deinen Mitgliedsbeitrag bezahlst.</value>
+  </data>
+  <data name="My_NoEligiblePlan" xml:space="preserve">
+    <value>Im Moment passt keiner der Tarife zu dir. Melde dich bitte beim Verein.</value>
+  </data>
+  <data name="My_ForWhom" xml:space="preserve">
+    <value>Für wen?</value>
+  </data>
+  <data name="My_FamilyHint" xml:space="preserve">
+    <value>Dieser Tarif gilt auch für deine Familie.</value>
+  </data>
+  <data name="My_FamilyLink" xml:space="preserve">
+    <value>Familie unter „Mein Verein“ anlegen</value>
+  </data>
+  <data name="My_OtherPlans" xml:space="preserve">
+    <value>Weitere Tarife des Vereins ({0})</value>
+  </data>
+  <data name="My_AskForApproval" xml:space="preserve">
+    <value>Bestätigung anfragen</value>
+  </data>
+  <data name="My_Choose" xml:space="preserve">
+    <value>Diesen Tarif wählen</value>
+  </data>
+  <data name="My_Chosen" xml:space="preserve">
+    <value>Tarif gewählt. Bitte bezahle den Beitrag an den Verein.</value>
+  </data>
+  <data name="My_ApprovalRequested" xml:space="preserve">
+    <value>Anfrage gesendet. Der Verein bestätigt deinen Tarif.</value>
+  </data>
+  <data name="My_CheckoutCancelled" xml:space="preserve">
+    <value>Die Zahlung wurde abgebrochen. Deine Bestellung ist noch offen.</value>
+  </data>
+  <data name="My_PaidEnrolled" xml:space="preserve">
+    <value>Danke! Deine Zahlung ist da und du bist freigeschaltet.</value>
+  </data>
+  <data name="My_PaidPassive" xml:space="preserve">
+    <value>Danke! Deine Zahlung ist da.</value>
+  </data>
+  <data name="My_ProcessingEnrolled" xml:space="preserve">
+    <value>Danke! Deine Lastschrift wurde gestartet und du bist freigeschaltet.</value>
+  </data>
+  <data name="My_ConfirmedEnrolled" xml:space="preserve">
+    <value>Geschafft! Du bist freigeschaltet.</value>
+  </data>
+  <data name="My_ConfirmedPassive" xml:space="preserve">
+    <value>Geschafft! Deine Mitgliedschaft ist erfasst.</value>
+  </data>
+  <data name="My_Hint_AwaitingApproval" xml:space="preserve">
+    <value>Der Verein prüft, ob dieser Tarif für dich passt. Du bekommst eine E-Mail, sobald er bestätigt ist.</value>
+  </data>
+  <data name="My_Hint_Free" xml:space="preserve">
+    <value>Dieser Tarif ist kostenlos. Bestätige ihn und du bist freigeschaltet.</value>
+  </data>
+  <data name="My_Hint_PayToClub" xml:space="preserve">
+    <value>Bitte bezahle den Beitrag an den Verein (Überweisung oder bar). Der Kassier trägt deine Zahlung ein und du bist freigeschaltet.</value>
+  </data>
+  <data name="My_Hint_Failed" xml:space="preserve">
+    <value>Die Zahlung ist fehlgeschlagen. Du kannst noch einmal bezahlen.</value>
+  </data>
+  <data name="My_Hint_Processing" xml:space="preserve">
+    <value>Deine Lastschrift braucht ein paar Tage. Du bist schon freigeschaltet.</value>
+  </data>
+  <data name="My_Hint_Disputed" xml:space="preserve">
+    <value>Die Zahlung wurde bei der Bank beanstandet. Melde dich bitte beim Verein.</value>
+  </data>
+  <data name="My_Hint_Passive" xml:space="preserve">
+    <value>Eine passive Mitgliedschaft: keine Platzbuchungen.</value>
+  </data>
+  <data name="Card_Title" xml:space="preserve">
+    <value>Deine Mitgliedschaft</value>
+  </data>
+  <data name="Card_Open" xml:space="preserve">
+    <value>Du bist für die Saison {0} noch nicht freigeschaltet. Wähle deinen Tarif und du bist dabei.</value>
+  </data>
+  <data name="Card_OpenAction" xml:space="preserve">
+    <value>Tarif wählen</value>
+  </data>
+  <data name="Card_AwaitingApproval" xml:space="preserve">
+    <value>Der Verein muss deinen Tarif „{0}“ bestätigen. Du bekommst eine E-Mail, sobald es weitergeht.</value>
+  </data>
+  <data name="Card_AwaitingPayment" xml:space="preserve">
+    <value>Dein Tarif „{0}“ wartet auf die Zahlung.</value>
+  </data>
+  <data name="Card_AwaitingPaymentAction" xml:space="preserve">
+    <value>Mitgliedschaft abschließen</value>
+  </data>
+  <data name="Card_Failed" xml:space="preserve">
+    <value>Die Zahlung für deinen Tarif „{0}“ ist fehlgeschlagen.</value>
+  </data>
+  <data name="Card_FailedAction" xml:space="preserve">
+    <value>Erneut bezahlen</value>
+  </data>
+  <data name="Card_View" xml:space="preserve">
+    <value>Ansehen</value>
+  </data>
+</root>

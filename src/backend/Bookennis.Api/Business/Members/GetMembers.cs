@@ -50,6 +50,10 @@ public class GetMembers(PaginationParameters pagination, SortParameters? sort, M
                                         .Where(ms => ms.MemberId == row.Member.Id)
                                         .Select(ms => ms.SeasonId)
                                         .ToArray(),
+                                    PaidSeasonIds = context.MemberSeasons
+                                        .Where(ms => ms.MemberId == row.Member.Id && ms.MembershipOrderId != null)
+                                        .Select(ms => ms.SeasonId)
+                                        .ToArray(),
                                     ProfilePictureUrl = context.UserProfilePictures.Any(p => p.UserId == row.User.Id) ? "/api/Profile/picture/" + row.User.Id : null,
                                     LastPlayed = context.BookingPlayers
                                         .Where(bp => bp.MemberId == row.Member.Id && bp.Booking.Interval.From <= now)

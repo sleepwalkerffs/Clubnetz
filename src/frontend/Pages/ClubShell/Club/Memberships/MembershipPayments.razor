@@ -1,0 +1,463 @@
+@page "/clubs/{ClubId:int}/membership-payments"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Memberships
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Memberships
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+<PageTitle>@L["Payments_Title"]</PageTitle>
+
+@if (!CanManage)
+{
+    <MudAlert Severity="Severity.Info">@L["NoAccess"]</MudAlert>
+}
+else
+{
+    var season = ClubStore.Seasons.FirstOrDefault(s => s.Id == selectedSeasonId);
+    var payments = Store.Payments?.SeasonId == selectedSeasonId ? Store.Payments : null;
+    var summary = payments is null ? null : Store.Summary;
+
+    <div class="payments-page">
+        <AdminHero Emoji="💰" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Payments_Title"]" Subtitle="@L["Payments_Subtitle"]">
+            <Chips>
+                @if (season is not null)
+                {
+                    <span class="hero-chip">🗓️ @string.Format(L["SeasonName"], MemberAdminHelpers.SeasonLabel(season))</span>
+                }
+                @if (summary is not null)
+                {
+                    <span class="hero-chip">👥 @string.Format(L["Payments_PaidChip"], summary.MembersPaid, summary.MembersTotal)</span>
+                    @if (summary.OrdersByStatus.GetValueOrDefault(MembershipOrderStatus.AwaitingApproval) is > 0 and var waiting)
+                    {
+                        <span class="hero-chip hero-chip--warn">✋ @string.Format(L["Payments_ApprovalChip"], waiting)</span>
+                    }
+                }
+            </Chips>
+            <ChildContent>
+                <div class="payments-hero__links">
+                    <MudButton Href="@MembershipHelpers.PlansUrl(ClubId)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.ReceiptLong" Class="payments-hero__link">
+                        @L["Payments_ToPlans"]
+                    </MudButton>
+                </div>
+            </ChildContent>
+        </AdminHero>
+
+        @if (ClubStore.Seasons.Count > 0)
+        {
+            <ChoiceChips TItem="SeasonResult" Items="@SeasonsNewestFirst" Value="@season" ValueChanged="@(s => OnSeasonChanged(s.Id))"
+                         TextFunc="@(s => string.Format(L["SeasonName"], MemberAdminHelpers.SeasonLabel(s)))" ColorFunc="@(s => s.IsActive ? "#059669" : null)" />
+        }
+        else if (seasonsLoaded)
+        {
+            <MudAlert Severity="Severity.Info">@L["NoSeasons"]</MudAlert>
+        }
+
+        @if (season is not null && (payments is null || summary is null))
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (payments is not null && summary is not null)
+        {
+            <div class="payments-tiles">
+                <StatTile Icon="@Icons.Material.Filled.Savings" Value="@MembershipHelpers.Amount(summary.ReceivedCents)" Label="@L["Payments_Received"]" Color="#059669"
+                          Hint="@(summary.ProcessingCents > 0 ? string.Format(L["Payments_ProcessingHint"], MembershipHelpers.Amount(summary.ProcessingCents)) : null)" />
+                <StatTile Icon="@Icons.Material.Filled.HourglassTop" Value="@MembershipHelpers.Amount(summary.OpenCents)" Label="@L["Payments_Open"]" Color="#D97706" />
+                <StatTile Icon="@Icons.Material.Filled.HowToReg" Value="@summary.MembersPaid.ToString(CultureInfo.CurrentCulture)" Unit="@string.Format(L["Payments_OfMembers"], summary.MembersTotal)"
+                          Label="@L["Payments_MembersPaid"]" Color="#2563EB"
+                          Hint="@string.Format(L["Payments_EnrolledHint"], summary.MembersEnrolled)" />
+            </div>
+
+            var rows = Rows(payments);
+            var shown = Filtered(rows).ToList();
+
+            <SectionCard Emoji="📋" Title="@L["Payments_ListTitle"]" Subtitle="@L["Payments_ListSubtitle"]">
+                <Actions>
+                    <MudTooltip Text="@L["Payments_Export"]">
+                        <MudIconButton Icon="@Icons.Material.Filled.Download" Size="Size.Small" aria-label="@L["Payments_Export"]" Disabled="@Store.IsSaving" OnClick="Export" />
+                    </MudTooltip>
+                </Actions>
+                <ChildContent>
+                    <div class="payments-filters">
+                        <ChoiceChips TItem="PaymentFilter" Items="@VisibleFilters(rows)" Value="@filter" ValueChanged="@OnFilterChanged"
+                                     TextFunc="@(f => $"{L[$"Filter_{f}"]} · {Count(rows, f)}")" ColorFunc="@FilterColor" />
+                        <div class="payments-toolbar">
+                            <MudTextField T="string" @bind-Value="search" @bind-Value:after="ResetVisible" Immediate="true" DebounceInterval="200" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                          Placeholder="@L["Payments_Search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" Class="payments-search" />
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenRecordDialog(null)" Class="payments-record">@L["Payments_Record"]</MudButton>
+                        </div>
+                    </div>
+
+                    @if (shown.Count == 0)
+                    {
+                        <div class="payments-empty">
+                            <div class="payments-empty__emoji" aria-hidden="true">🔍</div>
+                            <div class="payments-empty__title">@L[rows.Count == 0 ? "Payments_EmptyTitle" : "Payments_NothingFound"]</div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="payments-list">
+                            @foreach (var row in shown.Take(visibleCount))
+                            {
+                                var order = row.Order;
+                                @* Rows with a menu only (or nothing to do) keep it next to the status on phones *@
+                                var compact = order is not null && order.Status is not (MembershipOrderStatus.AwaitingApproval or MembershipOrderStatus.AwaitingPayment or MembershipOrderStatus.Failed);
+                                <div class="payment-row @(compact ? "payment-row--compact" : null)" style="--row-color: @(order is null ? "var(--mud-palette-text-secondary)" : MembershipHelpers.StatusColor(order.Status))">
+                                    <div class="payment-row__who">
+                                        <div class="payment-row__names">
+                                            @foreach (var member in row.Members)
+                                            {
+                                                <span class="payment-row__name @(member.IsChild ? "payment-row__name--child" : null)">@member.FirstName @member.LastName</span>
+                                            }
+                                            @if (row.Members.Count == 0)
+                                            {
+                                                <span class="payment-row__name payment-row__name--gone">@L["Payments_FormerMember"]</span>
+                                            }
+                                        </div>
+                                        @if (order is not null && row.Payer is { } payer && (row.Members.Count != 1 || row.Members[0].MemberId != payer.MemberId))
+                                        {
+                                            <div class="payment-row__payer">@string.Format(L["Payments_PaidBy"], $"{payer.FirstName} {payer.LastName}")</div>
+                                        }
+                                    </div>
+
+                                    <div class="payment-row__plan">
+                                        @if (order is not null)
+                                        {
+                                            <span class="payment-row__planname">@order.PlanName</span>
+                                            <span class="payment-row__amount">@MembershipHelpers.Amount(order.AmountCents)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="payment-row__muted">@L["Payments_NoOrder"]</span>
+                                        }
+                                    </div>
+
+                                    <div class="payment-row__status">
+                                        @if (order is not null)
+                                        {
+                                            <span class="status-pill">@MembershipHelpers.StatusEmoji(order.Status) @MembershipHelpers.StatusText(L, order.Status)</span>
+                                            @if (order.PaidAt is { } paidAt)
+                                            {
+                                                <span class="payment-row__muted">@MembershipHelpers.MethodText(L, order.PaymentMethod) · @MembershipHelpers.Date(paidAt)</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="payment-row__muted">@string.Format(L["Payments_OrderedOn"], MembershipHelpers.Date(order.CreatedAt))</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var enrollment = row.Members[0].Enrollment;
+                                            <span class="status-pill">@(enrollment == MembershipEnrollmentSource.NotEnrolled ? "⛔" : "🖐️") @L[$"Enrollment_{enrollment}"]</span>
+                                        }
+                                        @if (order?.Note is { } note)
+                                        {
+                                            <span class="payment-row__note" title="@L["Payments_NoteHint"]">📝 @note</span>
+                                        }
+                                    </div>
+
+                                    <div class="payment-row__actions">
+                                        @if (order is null)
+                                        {
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="() => OpenRecordDialog(row.Members[0])">@L["Payments_Record"]</MudButton>
+                                        }
+                                        else if (order.Status == MembershipOrderStatus.AwaitingApproval)
+                                        {
+                                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="@Store.IsSaving" OnClick="() => Approve(row)">@L["Payments_Approve"]</MudButton>
+                                            <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" Disabled="@Store.IsSaving" OnClick="() => Reject(row)">@L["Payments_Reject"]</MudButton>
+                                        }
+                                        else if (order.Status is MembershipOrderStatus.AwaitingPayment or MembershipOrderStatus.Failed)
+                                        {
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Disabled="@Store.IsSaving" OnClick="() => OpenMarkPaidDialog(row)">@L["Payments_MarkPaid"]</MudButton>
+                                            <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" Disabled="@Store.IsSaving" OnClick="() => Cancel(row)">@L["Payments_Cancel"]</MudButton>
+                                        }
+                                        else if (order.Status is MembershipOrderStatus.Paid or MembershipOrderStatus.Disputed)
+                                        {
+                                            <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" AriaLabel="@L["Payments_More"]" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                                                <MudMenuItem Icon="@Icons.Material.Filled.Block" OnClick="() => Cancel(row)">@L["Payments_CancelPaid"]</MudMenuItem>
+                                            </MudMenu>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        @if (shown.Count > visibleCount)
+                        {
+                            <div class="payments-more">
+                                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => visibleCount += PageSize">@string.Format(L["Payments_ShowMore"], shown.Count - visibleCount)</MudButton>
+                            </div>
+                        }
+                    }
+                </ChildContent>
+            </SectionCard>
+        }
+    </div>
+}
+
+@code {
+    private const int PageSize = 60;
+
+    [Parameter] public int ClubId { get; set; }
+
+    /// <summary>The season to open, e.g. from the link in an email.</summary>
+    [SupplyParameterFromQuery(Name = "season")] public int? Season { get; set; }
+
+    [Inject] private IMembershipPaymentsStore Store { get; set; } = null!;
+    [Inject] private IMembershipPlansStore PlansStore { get; set; } = null!;
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private enum PaymentFilter
+    {
+        All,
+        NeedsApproval,
+        Open,
+        Processing,
+        Paid,
+        Problems,
+        NoMembership,
+        ByHand,
+        Cancelled,
+    }
+
+    /// <summary>An order with the members it covers, or a member who has no order that holds a membership.</summary>
+    private sealed record Row(MembershipPaymentOrderDto? Order, List<MembershipPaymentMemberDto> Members, MembershipPaymentMemberDto? Payer);
+
+    private int? selectedSeasonId;
+    private bool seasonsLoaded;
+    private PaymentFilter filter = PaymentFilter.All;
+    private string? search;
+    private int visibleCount = PageSize;
+
+    private bool CanManage => MembershipHelpers.CanManage(ClubProfileStore.Roles);
+
+    private List<SeasonResult> SeasonsNewestFirst => ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnPaymentsChanged += OnChanged;
+        ClubProfileStore.OnClubProfileChanged += OnChanged;
+
+        if (!CanManage)
+            return;
+
+        await ClubStore.LoadSeasons();
+        seasonsLoaded = true;
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        selectedSeasonId = (ClubStore.Seasons.FirstOrDefault(s => s.Id == Season)
+                            ?? ClubStore.Seasons.FirstOrDefault(s => s.IsActive)
+                            ?? ClubStore.Seasons.Where(s => s.StartDate > today).OrderBy(s => s.StartDate).FirstOrDefault()
+                            ?? SeasonsNewestFirst.FirstOrDefault())?.Id;
+
+        if (selectedSeasonId is { } seasonId)
+            await Store.Load(seasonId);
+
+        // Somebody waits for a confirmation: that is what the treasurer came for
+        if (Store.Summary?.OrdersByStatus.GetValueOrDefault(MembershipOrderStatus.AwaitingApproval) > 0)
+            filter = PaymentFilter.NeedsApproval;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task OnSeasonChanged(int seasonId)
+    {
+        selectedSeasonId = seasonId;
+        filter = PaymentFilter.All;
+        ResetVisible();
+        await Store.Load(seasonId);
+    }
+
+    private void OnFilterChanged(PaymentFilter value)
+    {
+        filter = value;
+        ResetVisible();
+    }
+
+    private void ResetVisible() => visibleCount = PageSize;
+
+    private static List<Row> Rows(GetMembershipPaymentsResult payments)
+    {
+        var members = payments.Members.ToDictionary(m => m.MemberId);
+        var rows = new List<Row>();
+        var withMembership = new HashSet<int>();
+
+        foreach (var order in payments.Orders)
+        {
+            var covered = order.MemberIds.Where(members.ContainsKey).Select(id => members[id]).OrderBy(m => m.IsChild).ThenBy(m => m.LastName).ThenBy(m => m.FirstName).ToList();
+            rows.Add(new Row(order, covered, order.PayerMemberId is { } payerId ? members.GetValueOrDefault(payerId) : null));
+
+            if (order.Status.IsActive())
+                withMembership.UnionWith(order.MemberIds);
+        }
+
+        rows.AddRange(payments.Members.Where(m => !withMembership.Contains(m.MemberId)).Select(m => new Row(null, [m], null)));
+        return rows;
+    }
+
+    private static bool Matches(Row row, PaymentFilter filter) => filter switch
+    {
+        PaymentFilter.All => row.Order is null || row.Order.Status != MembershipOrderStatus.Cancelled,
+        PaymentFilter.NeedsApproval => row.Order?.Status == MembershipOrderStatus.AwaitingApproval,
+        PaymentFilter.Open => row.Order?.Status == MembershipOrderStatus.AwaitingPayment,
+        PaymentFilter.Processing => row.Order?.Status == MembershipOrderStatus.Processing,
+        PaymentFilter.Paid => row.Order?.Status == MembershipOrderStatus.Paid,
+        PaymentFilter.Problems => row.Order?.Status is MembershipOrderStatus.Failed or MembershipOrderStatus.Disputed or MembershipOrderStatus.Refunded,
+        PaymentFilter.NoMembership => row.Order is null && row.Members[0].Enrollment == MembershipEnrollmentSource.NotEnrolled,
+        PaymentFilter.ByHand => row.Order is null && row.Members[0].Enrollment != MembershipEnrollmentSource.NotEnrolled,
+        PaymentFilter.Cancelled => row.Order?.Status == MembershipOrderStatus.Cancelled,
+        _ => false,
+    };
+
+    private static int Count(List<Row> rows, PaymentFilter filter) => rows.Count(r => Matches(r, filter));
+
+    /// <summary>Filters without rows are left out, except the one that is selected.</summary>
+    private List<PaymentFilter> VisibleFilters(List<Row> rows)
+        => Enum.GetValues<PaymentFilter>().Where(f => f == PaymentFilter.All || f == filter || Count(rows, f) > 0).ToList();
+
+    private static string? FilterColor(PaymentFilter filter) => filter switch
+    {
+        PaymentFilter.NeedsApproval => "#7C3AED",
+        PaymentFilter.Open => "#D97706",
+        PaymentFilter.Processing => "#2563EB",
+        PaymentFilter.Paid => "#059669",
+        PaymentFilter.Problems => "#DC2626",
+        _ => null,
+    };
+
+    private IEnumerable<Row> Filtered(List<Row> rows)
+    {
+        var terms = (search ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        return rows
+            .Where(r => Matches(r, filter))
+            .Where(r => terms.Length == 0 || terms.All(term =>
+                r.Members.Any(m => m.FirstName.Contains(term, StringComparison.CurrentCultureIgnoreCase) || m.LastName.Contains(term, StringComparison.CurrentCultureIgnoreCase))
+                || (r.Order?.PlanName.Contains(term, StringComparison.CurrentCultureIgnoreCase) ?? false)));
+    }
+
+    private static string Names(Row row) => string.Join(", ", row.Members.Select(m => $"{m.FirstName} {m.LastName}"));
+
+    private async Task Reload()
+    {
+        if (selectedSeasonId is { } seasonId)
+            await Store.Load(seasonId);
+
+        // The last row of the selected filter is gone (e.g. the only request was confirmed): show everything again
+        if (filter != PaymentFilter.All && Store.Payments is { } payments && Count(Rows(payments), filter) == 0)
+            filter = PaymentFilter.All;
+    }
+
+    private async Task Run(Task<Bookennis.Client.Services.HttpClients.HttpResult> action, string successKey)
+    {
+        var result = await action;
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+        else
+            Snackbar.Add(L[successKey], Severity.Success);
+
+        await Reload();
+    }
+
+    private Task Approve(Row row) => Run(Store.Approve(row.Order!.Id), "Payments_Approved");
+
+    private async Task Reject(Row row)
+    {
+        var confirmed = await DialogService.ShowMessageBox(L["Payments_RejectTitle"], string.Format(L["Payments_RejectConfirm"], row.Order!.PlanName, Names(row)),
+            yesText: L["Payments_Reject"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed == true)
+            await Run(Store.Reject(row.Order.Id), "Payments_Rejected");
+    }
+
+    private async Task Cancel(Row row)
+    {
+        var paid = row.Order!.Status is MembershipOrderStatus.Paid or MembershipOrderStatus.Disputed;
+        var confirmed = await DialogService.ShowMessageBox(L["Payments_CancelTitle"],
+            string.Format(L[paid ? "Payments_CancelPaidConfirm" : "Payments_CancelConfirm"], row.Order.PlanName, Names(row)),
+            yesText: L["Payments_Cancel"], cancelText: SharedLocale["Close"]);
+        if (confirmed == true)
+            await Run(Store.Cancel(row.Order.Id), "Payments_Cancelled");
+    }
+
+    private async Task OpenMarkPaidDialog(Row row)
+    {
+        var parameters = new DialogParameters<MarkPaidDialog>
+        {
+            { d => d.OrderId, row.Order!.Id },
+            { d => d.Summary, $"{row.Order.PlanName} · {MembershipHelpers.Amount(row.Order.AmountCents)} · {Names(row)}" },
+        };
+        var dialog = await DialogService.ShowAsync<MarkPaidDialog>(L["Payments_MarkPaid"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseOnEscapeKey = true });
+
+        if (await dialog.Result is { Canceled: false })
+            await Reload();
+    }
+
+    private async Task OpenRecordDialog(MembershipPaymentMemberDto? member)
+    {
+        if (selectedSeasonId is not { } seasonId || Store.Payments is not { } payments)
+            return;
+
+        await PlansStore.LoadPlans(seasonId);
+        if (PlansStore.Plans is not { Count: > 0 } plans)
+        {
+            Snackbar.Add(L["Payments_NoPlans"], Severity.Info);
+            return;
+        }
+
+        var withMembership = payments.Orders.Where(o => o.Status.IsActive()).SelectMany(o => o.MemberIds).ToHashSet();
+        var parameters = new DialogParameters<RecordPaymentDialog>
+        {
+            { d => d.Plans, plans },
+            { d => d.Members, payments.Members.Where(m => !withMembership.Contains(m.MemberId)).ToList() },
+            { d => d.Member, member },
+        };
+        var dialog = await DialogService.ShowAsync<RecordPaymentDialog>(L["Payments_Record"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+
+        if (await dialog.Result is { Canceled: false })
+            await Reload();
+    }
+
+    private async Task Export()
+    {
+        if (selectedSeasonId is not { } seasonId)
+            return;
+
+        var result = await Store.Export(seasonId);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        using var stream = new MemoryStream(result.Dto.Data);
+        using var streamReference = new DotNetStreamReference(stream);
+        await JsRuntime.InvokeVoidAsync("App.downloadFileFromStream", result.Dto.FileName, streamReference);
+    }
+
+    public void Dispose()
+    {
+        Store.OnPaymentsChanged -= OnChanged;
+        ClubProfileStore.OnClubProfileChanged -= OnChanged;
+    }
+}

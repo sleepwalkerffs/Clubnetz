@@ -1,0 +1,65 @@
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Client.Pages.ClubShell.Club.Memberships
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Memberships
+@using Bookennis.Shared.Controller.Memberships
+
+@implements IDisposable
+
+@* Only shown when the member has something to do or to wait for: an open season without membership, or an order that is not through yet *@
+@if (View is { } view)
+{
+    <MudItem xs="12">
+        <div class="membership-card membership-card--@view.Kind">
+            <div class="membership-card__emoji" aria-hidden="true">@view.Emoji</div>
+            <div class="membership-card__body">
+                <div class="membership-card__title">@L["Card_Title"]</div>
+                <div class="membership-card__text">@view.Text</div>
+            </div>
+            <MudButton Href="@MembershipHelpers.MembershipUrl(ClubId, view.SeasonId)" Variant="@(view.IsAction ? Variant.Filled : Variant.Outlined)" Color="Color.Primary"
+                       EndIcon="@Icons.Material.Filled.ChevronRight" Class="membership-card__action">
+                @view.Action
+            </MudButton>
+        </div>
+    </MudItem>
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [Inject] private IMembershipsStore Store { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+
+    private sealed record CardView(string Kind, string Emoji, string Text, string Action, bool IsAction, int SeasonId);
+
+    private CardView? View
+    {
+        get
+        {
+            if (Store.Current is not { SeasonId: { } seasonId, SeasonStart: { } start, SeasonEnd: { } end } current || current.People.FirstOrDefault(p => p.IsMe) is not { } me)
+                return null;
+
+            var order = current.Orders.FirstOrDefault(o => o.Status is not (MembershipOrderStatus.Cancelled or MembershipOrderStatus.Refunded) && o.Members.Any(m => m.MemberId == me.MemberId));
+            var season = MemberAdminHelpers.SeasonLabel(start, end);
+
+            return order?.Status switch
+            {
+                MembershipOrderStatus.AwaitingApproval => new("wait", "✋", string.Format(L["Card_AwaitingApproval"], order.PlanName), L["Card_View"], false, seasonId),
+                MembershipOrderStatus.AwaitingPayment => new("open", "⏳", string.Format(L["Card_AwaitingPayment"], order.PlanName), L["Card_AwaitingPaymentAction"], true, seasonId),
+                MembershipOrderStatus.Failed => new("failed", "⚠️", string.Format(L["Card_Failed"], order.PlanName), L["Card_FailedAction"], true, seasonId),
+                null when !me.IsEnrolled && current.Plans.Count > 0 => new("open", "🎾", string.Format(L["Card_Open"], season), L["Card_OpenAction"], true, seasonId),
+                _ => null,
+            };
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnCurrentChanged += OnChanged;
+        await Store.LoadCurrent();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Store.OnCurrentChanged -= OnChanged;
+}

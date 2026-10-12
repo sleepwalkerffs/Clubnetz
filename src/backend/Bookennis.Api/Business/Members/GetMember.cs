@@ -3,6 +3,7 @@ using Bookennis.Api.Infrastructure.Tenant;
 using Bookennis.Domain.Families;
 using Bookennis.Domain.Members;
 using Bookennis.Shared.Controller.Members;
+using Bookennis.Shared.Controller.Memberships;
 using Bookennis.Shared.Controller.Shared;
 using Fusonic.Extensions.Common.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +66,30 @@ public record GetMember(int MemberId) : ICommand<MembersDetailResult>
                                         .Max(bp => (DateTimeOffset?)bp.Booking.Interval.From),
                                 }).FirstOrDefaultAsync(cancellationToken)
                              ?? throw new EntityNotFoundException(typeof(Member), request.MemberId);
+
+            // Where each enrollment came from: by hand, or from a membership order (and how that one was paid)
+            var enrollments = await (
+                from memberSeason in context.MemberSeasons
+                where memberSeason.MemberId == result.MemberId
+                select new
+                {
+                    memberSeason.SeasonId,
+                    memberSeason.MembershipOrderId,
+                    Method = context.MembershipOrders.IgnoreQueryFilters()
+                        .Where(o => o.Id == memberSeason.MembershipOrderId)
+                        .Select(o => o.PaymentMethod)
+                        .FirstOrDefault(),
+                }
+            ).ToListAsync(cancellationToken);
+
+            result.PaidSeasonIds = enrollments.Where(e => e.MembershipOrderId is not null).Select(e => e.SeasonId).ToArray();
+            result.SeasonEnrollments = enrollments
+                .Select(e => new MemberSeasonEnrollment(
+                    e.SeasonId,
+                    e.MembershipOrderId is null ? MembershipEnrollmentSource.ByHand
+                    : e.Method == Domain.Memberships.MembershipPaymentMethod.Online ? MembershipEnrollmentSource.PaidOnline
+                    : MembershipEnrollmentSource.MarkedAsPaid))
+                .ToList();
 
             return result;
         }

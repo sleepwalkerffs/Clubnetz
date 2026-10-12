@@ -1,6 +1,9 @@
 using Bookennis.Api.Business.Badges;
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.Memberships;
 using Bookennis.Api.Business.Notifications;
+using Bookennis.Api.Business.Payments;
+using Bookennis.Api.Business.Payments.Stripe;
 using Bookennis.Api.Business.Push;
 using Bookennis.Api.Config;
 using Bookennis.Api.Data;
@@ -96,6 +99,13 @@ public class TestFixture : SimpleInjectorTestFixture
                 // SendEmail has no handler in tests, the emails of deleted bookings are tested with the notifier itself
                 container.RegisterSingleton(() => Substitute.For<IBookingEmailNotifier>());
                 container.Register<IClubEventNotifier, ClubEventNotifier>();
+
+                // Memberships and payments: Stripe is never called and no email is sent in tests
+                container.RegisterSingleton(() => Substitute.For<IStripeGateway>());
+                container.RegisterSingleton(() => Substitute.For<IMembershipNotifier>());
+                container.Register<IPaymentAvailability, PaymentAvailability>();
+                container.Register<IMembershipCheckout, MembershipCheckout>();
+                container.Register<IMembershipFulfillment, MembershipFulfillment>();
             }
         );
 

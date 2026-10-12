@@ -17,6 +17,10 @@ public static class EmailTypeInfo
         ClubEmailType.ClubEventCreated => "📅",
         ClubEmailType.ClubEventReminder => "🔔",
         ClubEmailType.ClubEventRegistrationDeadline => "⏳",
+        ClubEmailType.MembershipPaymentReceived => "💶",
+        ClubEmailType.MembershipApproved => "✅",
+        ClubEmailType.MembershipPaymentFailed => "⚠️",
+        ClubEmailType.MembershipNeedsAttention => "🧾",
         _ => "✉️"
     };
 

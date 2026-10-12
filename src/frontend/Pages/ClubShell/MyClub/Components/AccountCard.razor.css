@@ -41,6 +41,16 @@
     word-break: break-word;
 }
 
+.account-row__link {
+    color: var(--mud-palette-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.account-row__link:hover {
+    text-decoration: underline;
+}
+
 .account-row__muted {
     font-weight: 400;
     color: var(--mud-palette-text-secondary);

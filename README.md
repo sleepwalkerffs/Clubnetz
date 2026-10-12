@@ -59,6 +59,7 @@ One installation serves many clubs. Every club is its own tenant with its own co
 | 🏆 **Badges & trophy case** | Seasonal tier badges earned by playing, plus one-time badges for special achievements. |
 | 🗓️ **Subscription planner** | Plans a fair schedule for shared winter court subscriptions and exports it to Excel. |
 | 🔔 **Notifications** | Booking added or cancelled, reminders before a match, new events, news and badges. By push, by email, or not at all. |
+| 💳 **Membership** | Choose a plan for yourself or the whole family and pay the fee online. |
 | 📱 **Installable app** | Add it to the home screen on iOS, Android and desktop. Light and dark mode included. |
 
 ### For the board
@@ -66,6 +67,7 @@ One installation serves many clubs. Every club is its own tenant with its own co
 | | |
 |---|---|
 | 👥 **Members & seasons** | Members, roles (admin, sports director, treasurer, trainer, …) and season enrollment. |
+| 💶 **Membership fees** | Your own price list per season: adult, youth by birth year, couple, family, student, free plans and more. Members choose their plan and pay online with card or SEPA direct debit (Stripe, straight to the club's account), which enrolls them automatically. The treasurer sees who has paid, records bank transfers and cash, and exports the list to Excel. |
 | 🎟️ **Guest cards** | Let guests book with a link or code and a fixed number of bookings. |
 | 🏟️ **Courts & play modes** | Courts, opening hours, prime time, booking rules and who may book what. |
 | 🚧 **Court blockings** | Block courts for tournaments, maintenance, weather or weekly training. Affected players are informed. |
@@ -169,6 +171,25 @@ After adding a migration, drop the `bookennis_test` template database once, othe
 
 Push is switched off until VAPID keys are configured. Create a key pair with [scripts/New-VapidKeys.ps1](scripts/New-VapidKeys.ps1) and put it into the `Push` section of the API settings. Don't commit the keys.
 
+### Payments (optional)
+
+Clubs can let their members pay the membership fee online. This is switched off until Stripe keys are configured; plans, the treasurer's list and "mark as paid" work without them.
+
+The installation is a [Stripe Connect](https://docs.stripe.com/connect) platform: every club connects its own Stripe account, is the merchant of its payments and gets the money directly. The platform account never holds funds.
+
+1. Create a Stripe account for the installation and switch on **Connect**.
+2. Put the secret key into `Stripe:SecretKey` (environment variable `Stripe__SecretKey`).
+3. Add a webhook endpoint for `https://<your app>/api/Stripe/Webhook` that listens to **events on connected accounts** with these events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`, `charge.refunded`, `charge.dispute.created`, `account.updated`, `account.application.deauthorized`. Put its signing secret into `Stripe:WebhookSecret`.
+4. A club admin then connects the club on the page *Membership plans*. Stripe asks for the details of the club and its bank account.
+
+For local development use a Stripe sandbox, keep the keys in user secrets or environment variables (never commit them) and forward the events with the Stripe CLI. `AppUrl` has to be the address you open the app with, because Stripe sends the member back to it:
+
+```bash
+stripe listen --forward-connect-to http://localhost:5080/api/Stripe/Webhook
+```
+
+`Stripe:ApplicationFeePercent` (default `0`) is the share of every payment that goes to the platform account. Before you take payments in production, have the terms for your clubs and the privacy policy checked: the texts in the app name Stripe as the payment provider of the club.
+
 ## 🐳 Hosting it yourself
 
 The [Dockerfile](Dockerfile) builds one image that runs the whole app. It needs a PostgreSQL 16 database (the database has to exist, the tables are created on startup) and an SMTP server.
@@ -192,6 +213,8 @@ Settings are passed as environment variables:
 | `Legal__OperatorName`, `Legal__Street`, `Legal__ZipCode`, `Legal__City`, `Legal__Country`, `Legal__Email`, `Legal__Phone` | Your details for the imprint and privacy policy pages |
 | `Legal__HostingProvider`, `Legal__EmailProvider` | Named as data processors in the privacy policy |
 | `Push__PublicKey`, `Push__PrivateKey`, `Push__Subject` | Optional: VAPID keys for push notifications (see above). Never change them on a running installation. |
+| `Stripe__SecretKey`, `Stripe__WebhookSecret` | Optional: Stripe keys for the online payment of membership fees (see [Payments](#payments-optional)). Without them the online payment is switched off. |
+| `Stripe__ApplicationFeePercent` | Optional: share of every payment that goes to your platform account, in percent. Default `0`. |
 | `BccRecipient` | Optional: address that gets a blind copy of every email |
 
 [.github/workflows/deploy.yml](.github/workflows/deploy.yml) shows how the image is built and rolled out with [Coolify](https://coolify.io/) on every push to `stage` and `production`.

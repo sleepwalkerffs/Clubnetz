@@ -71,6 +71,10 @@ namespace Bookennis.Api.Data.Migrations
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence<int>("ClubPaymentAccounts_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence<int>("Clubs_Id_Sequence")
                 .StartsAt(10L)
                 .IncrementsBy(10);
@@ -119,6 +123,18 @@ namespace Bookennis.Api.Data.Migrations
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence<int>("MembershipOrderMembers_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence<int>("MembershipOrders_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence<int>("MembershipPlans_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence<int>("NotificationPreferences_Id_Sequence")
                 .StartsAt(10L)
                 .IncrementsBy(10);
@@ -144,6 +160,10 @@ namespace Bookennis.Api.Data.Migrations
                 .IncrementsBy(10);
 
             modelBuilder.HasSequence<int>("Seasons_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence<int>("StripeWebhookEvents_Id_Sequence")
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
@@ -1236,10 +1256,15 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("MemberId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("MembershipOrderId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("SeasonId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MembershipOrderId");
 
                     b.HasIndex("SeasonId");
 
@@ -1248,6 +1273,269 @@ namespace Bookennis.Api.Data.Migrations
                         .HasDatabaseName("UX_MemberSeasons_MemberId_SeasonId");
 
                     b.ToTable("MemberSeasons");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Memberships.ClubPaymentAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "ClubPaymentAccounts_Id_Sequence");
+
+                    b.Property<bool>("ChargesEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("ConnectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("DetailsSubmitted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PayoutsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("StripeAccountId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ClubPaymentAccounts_ClubId");
+
+                    b.HasIndex("StripeAccountId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ClubPaymentAccounts_StripeAccountId");
+
+                    b.ToTable("ClubPaymentAccounts");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Memberships.MembershipOrder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "MembershipOrders_Id_Sequence");
+
+                    b.Property<int>("AmountCents")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<int?>("MarkedPaidByMemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MembershipPlanId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("PayerMemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PaymentMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PlanName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("SeasonId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StripeCheckoutSessionId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("StripePaymentIntentId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MarkedPaidByMemberId");
+
+                    b.HasIndex("MembershipPlanId");
+
+                    b.HasIndex("PayerMemberId");
+
+                    b.HasIndex("SeasonId");
+
+                    b.HasIndex("StripePaymentIntentId");
+
+                    b.HasIndex("ClubId", "SeasonId", "Status");
+
+                    b.ToTable("MembershipOrders");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Memberships.MembershipOrderMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "MembershipOrderMembers_Id_Sequence");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MembershipOrderId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("MembershipOrderId", "MemberId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_MembershipOrderMembers_MembershipOrderId_MemberId");
+
+                    b.ToTable("MembershipOrderMembers");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Memberships.MembershipPlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "MembershipPlans_Id_Sequence");
+
+                    b.Property<DateOnly?>("AvailableFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("AvailableUntil")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("BirthYearFrom")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("BirthYearTo")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("GrantsSeasonEnrollment")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IncludesChildren")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsSelfService")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxAdults")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("NewMembersOnly")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("PriceCents")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("RequiresApproval")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequiresEnrolledFamilyAdult")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SeasonId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SeasonId");
+
+                    b.HasIndex("ClubId", "SeasonId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("UX_MembershipPlans_ClubId_SeasonId_Name");
+
+                    b.ToTable("MembershipPlans");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Memberships.StripeWebhookEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "StripeWebhookEvents_Id_Sequence");
+
+                    b.Property<string>("EventId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("ObjectId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("StripeAccountId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_StripeWebhookEvents_EventId");
+
+                    b.ToTable("StripeWebhookEvents");
                 });
 
             modelBuilder.Entity("Bookennis.Domain.Notifications.NotificationPreference", b =>
@@ -3217,6 +3505,11 @@ namespace Bookennis.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Bookennis.Domain.Memberships.MembershipOrder", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipOrderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Bookennis.Domain.Clubs.Season", null)
                         .WithMany()
                         .HasForeignKey("SeasonId")
@@ -3246,6 +3539,236 @@ namespace Bookennis.Api.Data.Migrations
                             b1.HasKey("EntityId");
 
                             b1.ToTable("MemberSeasons");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Memberships.ClubPaymentAccount", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("ClubPaymentAccounts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Memberships.MembershipOrder", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MarkedPaidByMemberId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bookennis.Domain.Memberships.MembershipPlan", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipPlanId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("PayerMemberId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bookennis.Domain.Clubs.Season", null)
+                        .WithMany()
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("MembershipOrders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Memberships.MembershipOrderMember", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Memberships.MembershipOrder", "Order")
+                        .WithMany("Members")
+                        .HasForeignKey("MembershipOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("MembershipOrderMembers");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Memberships.MembershipPlan", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Clubs.Season", null)
+                        .WithMany()
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("MembershipPlans");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Memberships.StripeWebhookEvent", b =>
+                {
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("StripeWebhookEvents");
 
                             b1.WithOwner()
                                 .HasForeignKey("EntityId");
@@ -3648,6 +4171,11 @@ namespace Bookennis.Api.Data.Migrations
                     b.Navigation("FamilyMembers");
 
                     b.Navigation("Parents");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Memberships.MembershipOrder", b =>
+                {
+                    b.Navigation("Members");
                 });
 
             modelBuilder.Entity("Bookennis.Domain.SubscriptionPlans.SubscriptionPlan", b =>

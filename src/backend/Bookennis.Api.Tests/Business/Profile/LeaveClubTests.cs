@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using Bookennis.Api.Business.Profile;
+using Bookennis.Api.Tests.Business.Memberships;
+using Bookennis.Domain.Memberships;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Members;
@@ -136,6 +138,52 @@ public class LeaveClubTests(TestFixture fixture) : TestBase(fixture)
         await SendAsync(new LeaveClub(TestDataSeed.ClubId));
 
         (await QueryAsync(ctx => ctx.ClubMembers.CountAsync())).Should().Be(2);
+    }
+
+    [Fact]
+    public async Task LeaveClub_PaidMembershipOrder_StaysAsTheRecordOfTheClubWithoutThePerson()
+    {
+        var seeded = await QueryAsync(async ctx =>
+        {
+            var leaving = await MemberSeed.AddUserWithMember(ctx, "leaving@test.com");
+            var season = await MembershipSeed.SeedSeason(ctx);
+            var plan = await MembershipSeed.SeedPlan(ctx, season.Id, MembershipSeed.FamilyData());
+
+            // Paid by the leaving member for themself and Member1, and recorded by them
+            var order = await MembershipSeed.SeedOrder(ctx, plan, leaving.MemberId, leaving.MemberId, TestDataSeed.Member1Id);
+            order.MarkPaid(MembershipPaymentMethod.Cash, DateTimeOffset.UtcNow, leaving.MemberId);
+            ctx.Add(new MemberSeason(leaving.MemberId, season.Id, order.Id));
+            ctx.Add(new MemberSeason(TestDataSeed.Member1Id, season.Id, order.Id));
+            await ctx.SaveChangesAsync();
+            return new { User = leaving, OrderId = order.Id };
+        });
+        SetCurrentUser(seeded.User.UserId);
+
+        await SendAsync(new LeaveClub(TestDataSeed.ClubId));
+
+        var order = await QueryAsync(ctx => ctx.MembershipOrders.Include(o => o.Members).SingleAsync(o => o.Id == seeded.OrderId));
+        order.Should().BeEquivalentTo(new { PlanName = "Family", AmountCents = 21500, Status = MembershipOrderStatus.Paid, PayerMemberId = (int?)null, MarkedPaidByMemberId = (int?)null }, o => o.ExcludingMissingMembers());
+        order.Members.Select(m => m.MemberId).Should().Equal(TestDataSeed.Member1Id);
+
+        (await QueryAsync(ctx => ctx.MemberSeasons.Select(ms => ms.MemberId).ToListAsync())).Should().Equal(TestDataSeed.Member1Id);
+    }
+
+    [Fact]
+    public async Task LeaveClub_OpenMembershipOrderThatCoversNobodyElse_IsRemoved()
+    {
+        var seeded = await QueryAsync(async ctx =>
+        {
+            var leaving = await MemberSeed.AddUserWithMember(ctx, "leaving@test.com");
+            var plan = await MembershipSeed.SeedPlan(ctx, (await MembershipSeed.SeedSeason(ctx)).Id, MembershipSeed.FamilyData());
+            var own = await MembershipSeed.SeedOrder(ctx, plan, leaving.MemberId, leaving.MemberId);
+            return new { User = leaving, OwnOrderId = own.Id, PlanId = plan.Id };
+        });
+        SetCurrentUser(seeded.User.UserId);
+
+        await SendAsync(new LeaveClub(TestDataSeed.ClubId));
+
+        (await QueryAsync(ctx => ctx.MembershipOrders.AnyAsync(o => o.Id == seeded.OwnOrderId))).Should().BeFalse("nobody is left who could pay it");
+        (await QueryAsync(ctx => ctx.MembershipPlans.AnyAsync(p => p.Id == seeded.PlanId))).Should().BeTrue();
     }
 
     private void SetCurrentUser(int userId)

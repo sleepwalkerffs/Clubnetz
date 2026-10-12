@@ -106,7 +106,8 @@
 - Familie: Profile von Kindern, die Eltern selbst anlegen und verwalten (Name, Geburtsdatum, Geschlecht).
 - Abo-Planer: die Pläne, die du erstellst, einschließlich der Namen der Teilnehmer*innen, die du einträgst.
 - Push-Benachrichtigungen (nur wenn du sie einschaltest): die Adresse deines Geräts beim Push-Dienst deines Browsers und die Schlüssel, mit denen Benachrichtigungen dafür verschlüsselt werden. Beim Ausschalten oder Abmelden werden diese Daten entfernt.
-- Technische Daten: IP-Adresse und Zeitpunkt von Anfragen in den Server-Logs sowie fehlgeschlagene Anmeldeversuche zum Schutz deines Kontos.</value>
+- Technische Daten: IP-Adresse und Zeitpunkt von Anfragen in den Server-Logs sowie fehlgeschlagene Anmeldeversuche zum Schutz deines Kontos.
+- Mitgliedsbeiträge: der Tarif, den du gewählt hast oder der für dich eingetragen wurde, die Saison, der Betrag, die eingeschlossenen Mitglieder, der Stand der Zahlung sowie wie und wann bezahlt wurde. Karten- und Bankdaten werden nie in Clubnetz gespeichert: du gibst sie auf der Seite des Zahlungsanbieters ein.</value>
   </data>
   <data name="Privacy_Purpose_Title" xml:space="preserve">
     <value>3. Zwecke und Rechtsgrundlagen</value>
@@ -114,7 +115,8 @@
   <data name="Privacy_Purpose_Body" xml:space="preserve">
     <value>- Bereitstellung der App (Konto, Vereinsmitgliedschaft, Buchungen, Veranstaltungen, E-Mails wie Bestätigungen und Buchungsbenachrichtigungen): Art. 6 Abs. 1 lit. b DSGVO (Erfüllung des Nutzungsvertrags).
 - Sicherheit der App, Schutz vor Missbrauch und Fehlerbehebung (Server-Logs, Anmeldeschutz): Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und funktionierenden Dienst).
-- Freiwillige Angaben wie deine Adresse oder dein Profilbild: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung). Du kannst sie jederzeit in deinem Profil entfernen.</value>
+- Freiwillige Angaben wie deine Adresse oder dein Profilbild: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung). Du kannst sie jederzeit in deinem Profil entfernen.
+- Mitgliedsbeiträge (Wahl eines Tarifs, Online-Zahlung, falls dein Verein sie anbietet, Übersicht des Vereins, wer bezahlt hat): Art. 6 Abs. 1 lit. b DSGVO (Erfüllung deiner Mitgliedschaft im Verein).</value>
   </data>
   <data name="Privacy_Recipients_Title" xml:space="preserve">
     <value>4. Wer deine Daten sieht</value>
@@ -123,7 +125,8 @@
     <value>- Dein Verein: Die Administrator*innen und Funktionär*innen deines Vereins sehen deine Mitgliedsdaten (z. B. Name, Kontaktdaten, Geburtsdatum, Buchungen), um den Verein zu organisieren. Andere Mitglieder sehen deinen Namen, dein Profilbild und dein Abzeichen im Buchungsplan, in der Rangliste (du kannst dich abmelden) und in deiner Trophäensammlung (du entscheidest, ob sie öffentlich ist). Wie dein Verein deine Daten verwendet, erfährst du auch direkt bei deinem Verein.
 - Dienstleister, die in unserem Auftrag auf Basis eines Auftragsverarbeitungsvertrags Daten verarbeiten: Hosting der App und der Datenbank ({0}) und Versand der E-Mails ({1}).
 - Push-Benachrichtigungen werden, wenn du sie einschaltest, über den Push-Dienst deines Browser- bzw. Geräteherstellers zugestellt (Apple, Google, Mozilla oder Microsoft). Der Inhalt ist für dein Gerät verschlüsselt, der Push-Dienst kann ihn nicht lesen.
-- Darüber hinaus geben wir deine Daten nicht weiter, außer wir sind gesetzlich dazu verpflichtet.</value>
+- Darüber hinaus geben wir deine Daten nicht weiter, außer wir sind gesetzlich dazu verpflichtet.
+- Online-Zahlung von Mitgliedsbeiträgen (nur wenn dein Verein sie anbietet und du online bezahlst): Die Zahlung geht an deinen Verein und wird von Stripe (Stripe Payments Europe, Limited, Irland) abgewickelt, den dein Verein als Zahlungsanbieter nutzt. Für die Zahlung geben wir deine E-Mail-Adresse, den Betrag, den Namen des Tarifs mit der Saison und die Namen der eingeschlossenen Mitglieder an Stripe weiter. Deine Zahlungsdaten gibst du auf der Seite von Stripe ein; Stripe verarbeitet sie nach seiner eigenen Datenschutzerklärung (stripe.com/privacy). Die Kassiere deines Vereins sehen deinen Namen, deinen Tarif und den Stand deiner Zahlung.</value>
   </data>
   <data name="Privacy_Children_Title" xml:space="preserve">
     <value>5. Kinder</value>
@@ -141,7 +144,7 @@
     <value>7. Wie lange wir deine Daten speichern</value>
   </data>
   <data name="Privacy_Retention_Body" xml:space="preserve">
-    <value>Wir speichern deine Daten, solange du ein Konto hast. Wenn du einen Verein verlässt, wird deine Mitgliedschaft in diesem Verein gelöscht. Wenn du dein Konto löschst, werden alle deine personenbezogenen Daten sofort gelöscht; aus Sicherungskopien verschwinden sie, sobald diese turnusmäßig überschrieben werden. Server-Logs werden nur kurz aufbewahrt.</value>
+    <value>Wir speichern deine Daten, solange du ein Konto hast. Wenn du einen Verein verlässt, wird deine Mitgliedschaft in diesem Verein gelöscht. Wenn du dein Konto löschst, werden alle deine personenbezogenen Daten sofort gelöscht; aus Sicherungskopien verschwinden sie, sobald diese turnusmäßig überschrieben werden. Server-Logs werden nur kurz aufbewahrt. Der Eintrag eines bezahlten Mitgliedsbeitrags (Tarif, Betrag, Datum) bleibt ohne deinen Namen beim Verein, weil der Verein seine Buchhaltung aufbewahren muss.</value>
   </data>
   <data name="Privacy_Rights_Title" xml:space="preserve">
     <value>8. Deine Rechte</value>
