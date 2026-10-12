@@ -495,6 +495,31 @@ public class ClubApiKeySecurityTests(ApiSecurityFixture app)
         response.Body.Should().Contain(ApiSecurityFixture.Marker);
     }
 
+    // ---------- signed-in users of another club ----------
+
+    [Fact]
+    public async Task SignedInUserOfAnotherClub_IsForbiddenOnEveryEndpointOfTheClub()
+    {
+        // The admin of club B is nobody in club A: a clean 403 everywhere, never data and never a server error
+        var cookie = await app.Login(app.ClubB.Admin);
+        var before = await app.Fingerprint(app.ClubA);
+
+        using (new AssertionScope())
+        {
+            foreach (var endpoint in ClubEndpoints.Where(e => !e.AllowsAnonymous))
+            {
+                var response = await app.Send(new HttpMethod(endpoint.Method), endpoint.Url(app.ClubA.Id, app.ClubA), body: endpoint.HasBody ? "{}" : null,
+                    configure: request => request.Headers.TryAddWithoutValidation("Cookie", cookie));
+
+                // An upload sent as JSON is turned down for its format before anybody is asked who it comes from
+                ((int)response.Status).Should().BeOneOf([403, 415], endpoint.ToString());
+                response.Body.Should().NotContain(ApiSecurityFixture.Marker, endpoint.ToString());
+            }
+        }
+
+        (await app.Fingerprint(app.ClubA)).Should().Be(before);
+    }
+
     // ---------- limits ----------
 
     [Fact]
@@ -560,10 +585,9 @@ public class ClubApiKeySecurityTests(ApiSecurityFixture app)
         {
             foreach (var (who, cookie) in new[] { ("member", memberCookie), ("admin of another club", otherClubCookie) })
             {
-                // Somebody who is no member of the club is refused with an error of the authorization (answered with 500 today)
-                ((int)(await WithCookie(HttpMethod.Get, url, cookie)).Status).Should().BeOneOf([403, 404, 500], who);
-                ((int)(await WithCookie(HttpMethod.Post, url, cookie, """{"name":"Not allowed"}""")).Status).Should().BeOneOf([403, 404, 500], who);
-                ((int)(await WithCookie(HttpMethod.Delete, $"{url}/{id}", cookie)).Status).Should().BeOneOf([403, 404, 500], who);
+                (await WithCookie(HttpMethod.Get, url, cookie)).Status.Should().Be(HttpStatusCode.Forbidden, who);
+                (await WithCookie(HttpMethod.Post, url, cookie, """{"name":"Not allowed"}""")).Status.Should().Be(HttpStatusCode.Forbidden, who);
+                (await WithCookie(HttpMethod.Delete, $"{url}/{id}", cookie)).Status.Should().Be(HttpStatusCode.Forbidden, who);
             }
 
             // The admin of club B can't revoke club A's key through the address of the own club either

@@ -3,7 +3,6 @@ using Bookennis.Api.Infrastructure.Authorization.Requirements;
 using Bookennis.Api.Infrastructure.Tenant;
 using Bookennis.Api.Infrastructure.User;
 using Bookennis.Domain.Members;
-using Fusonic.Extensions.Common.Entities;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Bookennis.Api.Infrastructure.Authorization.Handler;
@@ -25,8 +24,9 @@ public class ClubAuthorizationHandler(ITenantService tenantService, Authorizatio
             return;
 
         var (memberId, memberRole) = await authorizationHandlerService.GetMember(context.User.GetId(), tenantId, context.User);
+        // No member of the club: the requirement stays unmet, which is answered with 403
         if (memberId is null || memberRole is null)
-            throw new EntityNotFoundException();
+            return;
 
         if (memberRole.Contains(MemberRole.Admin))
         {
