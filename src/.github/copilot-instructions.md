@@ -477,6 +477,16 @@ Club admins connect their own scripts and tools to their club with an API key (`
 - `OperationNameFilter` gives every operation an id and a summary derived from the action name ("Get club announcements") unless the action has an XML `<summary>`; the XML comments of controllers, actions and models are included in the documents. A comment on a controller, action or shared model is therefore public documentation.
 - The club document is sent with `Access-Control-Allow-Origin: *` (`Program.cs`) so the landing page can load it. This is the only CORS exception; the API itself is not callable from other websites.
 
+### Security tests (`Bookennis.Api.Tests/Security`)
+
+- `ApiSecurityFixture` starts **the real app** (`Program.cs`, Production environment, `WebApplicationFactory`) against its own copy of the test database and seeds two clubs. `ClubApiKeySecurityTests` attack it over HTTP. They run with `dotnet test`, so also in CI.
+- **The sweeps read every endpoint from the running app** (`ApiEndpoint.All`), nothing is listed by hand: a new endpoint is attacked automatically. They check that a key is only accepted on the routes of its club, that every kind of rejected key (unknown, expired, revoked, other club, creator no longer admin) gets 401 everywhere, that a read-only key gets 403 on every write, and that a key of club A never reads or changes anything of club B.
+- Leaks are detected with a canary: every text of club B contains `ApiSecurityFixture.Canary`, which must never appear in an answer to club A. Changes are detected with `Fingerprint` (a hash over all rows with the club's `ClubId`). A probe middleware reports who a request really ran as (`ApiResponse.RanAsKey`), so the tests don't have to guess from status codes.
+- `ControllersOpenToKeys` in the test is the reviewed list of controllers a key can reach. **A new club controller fails the test until it is added there on purpose**; `ClubApiKeys` must never be in it.
+- When you add a tenant entity that a club endpoint returns or changes by id, seed one in `ApiSecurityFixture.AddClub` (with the canary text) and add its route parameter to `ApiEndpoint.Value`, otherwise the sweeps call that endpoint with an id that does not exist.
+- **`IgnoreQueryFilters()` switches the tenant filter off for the whole query, not only for the set it is called on.** A query that uses it for players of other clubs must filter its root entity by the club explicitly (`booking.ClubId == currentClub.Id`). The sweeps found exactly this in `GetBookings`, `GetBooking`, `GetUpcomingBookings`, `GetMemberBookingHistory` and `GetMember`.
+- Handler tests (`TestBase`) can't test tenant isolation: the tenant set with `SetTenantId` does not reach the handler's `AppDbContext`, so the tenant filter is off there. Test isolation between clubs in the security tests.
+
 ### Documentation on the landing page
 
 - `website/docs/api/index.html` and `website/de/docs/api/index.html` (static, like the rest of `website/`): guide, tested examples, errors, limits and the endpoint reference. The landing pages link to them (nav, card in "For the board", section `#api`, FAQ, footer) and the API keys page of the app links to the guide.

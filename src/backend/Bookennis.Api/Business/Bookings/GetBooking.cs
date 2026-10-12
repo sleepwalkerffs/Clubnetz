@@ -27,7 +27,8 @@ public record GetBooking(int Id) : IQuery<BookingResult>
                             select new { member.Id, user.FirstName, user.LastName, UserId = user.Id, member.MemberType, IsAtpPlayer = club.IsAtpClub && member.ClubId != currentClub.Id, HasProfilePicture = context.UserProfilePictures.Any(p => p.UserId == user.Id) }
                            ).ToList()
 
-               where bookingEntry.Id == request.Id
+               // IgnoreQueryFilters (needed for players of other clubs) switches the tenant filter off for the whole query, so the club is checked here
+               where bookingEntry.Id == request.Id && bookingEntry.ClubId == currentClub.Id
                select new { Booking = bookingEntry, Users = users, PlayMode = playMode }
            ).SingleRequiredAsync(cancellationToken);
 

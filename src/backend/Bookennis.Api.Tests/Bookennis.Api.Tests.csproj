@@ -18,6 +18,7 @@
     <PackageReference Include="Fusonic.Extensions.UnitTests.SimpleInjector"/>
     <PackageReference Include="Fusonic.Extensions.UnitTests.EntityFrameworkCore.Npgsql"/>
     <PackageReference Include="Fusonic.Extensions.UnitTests.EntityFrameworkCore.SqlServer"/>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing"/>
     <PackageReference Include="Microsoft.NET.Test.Sdk"/>
     <PackageReference Include="NSubstitute"/>
     <PackageReference Include="NSubstitute.Analyzers.CSharp">

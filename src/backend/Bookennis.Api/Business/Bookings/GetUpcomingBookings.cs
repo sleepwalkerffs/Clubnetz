@@ -29,7 +29,9 @@ public record GetUpcomingBookings(int? Amount, int UserId) : ICommand<GetUpcomin
                                                select new { MemberId = member.Id, user.FirstName, user.LastName, UserId = user.Id, member.MemberType, IsAtpPlayer = club.IsAtpClub && member.ClubId != currentClub.Id, HasProfilePicture = context.UserProfilePictures.Any(p => p.UserId == user.Id) }
                                               ).ToList()
 
-                                  where users.Any(u => u.UserId == request.UserId)
+                                  // IgnoreQueryFilters (needed for players of other clubs) switches the tenant filter off for the whole query, so the club is checked here
+                                  where booking.ClubId == currentClub.Id
+                                     && users.Any(u => u.UserId == request.UserId)
                                      && booking.Interval.From > DateTimeOffset.UtcNow
 
                                   orderby booking.Interval.From

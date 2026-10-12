@@ -31,7 +31,9 @@ public record GetBookings(DateOnly DayFrom, DateOnly DayTo) : ICommand<GetBookin
                     select new { member.Id, user.FirstName, user.LastName, UserId = user.Id, member.MemberType, IsAtpPlayer = club.IsAtpClub && member.ClubId != currentClub.Id, HasProfilePicture = context.UserProfilePictures.Any(p => p.UserId == user.Id) }
                 ).ToList()
 
-                where fromUtc <= booking.Interval.From && booking.Interval.From <= toUtc
+                // IgnoreQueryFilters (needed for players of other clubs) switches the tenant filter off for the whole query, so the club is checked here
+                where booking.ClubId == currentClub.Id
+                   && fromUtc <= booking.Interval.From && booking.Interval.From <= toUtc
                 select new { Booking = booking, Users = users, PlayMode = playMode }
             ).ToListAsync(cancellationToken);
 
