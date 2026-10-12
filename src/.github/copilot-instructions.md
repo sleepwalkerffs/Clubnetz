@@ -18,6 +18,7 @@
 - Validation and BE errors that result from invalid user input should be returned as ErrorCodeResponse via the ExceptionFilter. The errors should the be displayed in the FE using the SnackbarExtensions.ShowErrorDetails. The user should stay on the same page
 - This is a multi tenant application. Always consider the tenant context when implementing features in the BE. The tenant context can be accessed via the ITenantService service. The tenant context contains the TenantId and other tenant specific information. The Tenant is represented as the Club with the Club.Id beeing the TeanentId
 - Every backend request handler needs to be tested so that the ef core query can be translated.
+- Every feature that adds or changes an endpoint, a way to sign in, or data that belongs to a club has to hold up in the security tests (`Bookennis.Api.Tests/Security`, see "Security tests" below): run them, seed the new data in `ApiSecurityFixture` so the sweeps reach it, and add an attack test for every new rule about who may do what. A query that uses `IgnoreQueryFilters()` must filter its root entity by the club itself.
 - Also do not commit changes. I will commit the changes after i have reviewed them.
 
 ## Guest System & Dual Membership
