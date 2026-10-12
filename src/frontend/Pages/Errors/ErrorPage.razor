@@ -1,0 +1,61 @@
+@using Bookennis.Client.Localization.Pages.Errors
+
+@* The shared look of the error pages (access denied, not found, something went wrong) *@
+<PageTitle>@Title</PageTitle>
+
+<div class="error-page">
+    <div class="error-page__card" role="alert">
+        <div class="error-page__court" aria-hidden="true"></div>
+        <div class="error-page__emoji" aria-hidden="true">@Emoji</div>
+        @if (Code is not null)
+        {
+            <div class="error-page__code">@string.Format(L["Code"], Code)</div>
+        }
+        <h1 class="error-page__title">@Title</h1>
+        <p class="error-page__text">@Text</p>
+        @if (Hint is not null)
+        {
+            <p class="error-page__hint">@Hint</p>
+        }
+
+        <div class="error-page__actions">
+            @if (ShowReload)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="Reload">@L["Reload"]</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Home" Href="/">@L["Home"]</MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Home" Href="/">@L["Home"]</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack">@L["Back"]</MudButton>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Emoji { get; set; } = null!;
+    [Parameter, EditorRequired] public string Title { get; set; } = null!;
+    [Parameter, EditorRequired] public string Text { get; set; } = null!;
+
+    /// <summary>The HTTP status the page stands for, shown small above the title.</summary>
+    [Parameter] public string? Code { get; set; }
+
+    [Parameter] public string? Hint { get; set; }
+
+    /// <summary>For errors that may be gone on the next try: offers to load the previous page again instead of only going back.</summary>
+    [Parameter] public bool ShowReload { get; set; }
+
+    [Inject] private IStringLocalizer<ErrorsLocale> L { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
+    private async Task GoBack()
+    {
+        if (!await JsRuntime.InvokeAsync<bool>("App.goBack"))
+            NavigationManager.NavigateTo("/");
+    }
+
+    // The page that failed is the previous entry of the history: going back loads it again
+    private Task Reload() => GoBack();
+}

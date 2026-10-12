@@ -636,6 +636,8 @@ Members are notified about what happens to them by push notification and by emai
 
 ## Frontend Misc
 
+- **Error pages** (`Pages/Errors`): `AccessDenied` (`/accessdenied`, shown for a 403), `NotFound` (`/notfound` and, rendered in place by `App.razor`, every unknown address) and `Error` (`/error`, shown for a 500) all use `ErrorPage.razor` (emoji, optional status code, title, text, hint, buttons). Texts are in `ErrorsLocale(.de).resx`. A new error page uses the same component. The bar Blazor shows when the app itself crashed (`#blazor-error-ui` in `index.html`) is plain HTML: styled in `app.css`, German text set by `App.localizeErrorBar` in `js-helpers.js`.
+
 - Pickers with `PickerVariant.Dialog` inside a `MudDialog` only work because `app.css` drops the transform MudBlazor leaves on `.mud-dialog` after its opening animation (`animation-fill-mode: backwards`). Without it the picker is squeezed into the dialog and cut off on desktop. Don't add `transform`, `filter` or `backdrop-filter` to a dialog for the same reason.
 - `PlayerSelection.razor` search splits the input on whitespace; every term must match the start of the first or last name, so "first last" and "last first" both work.
 

@@ -51,10 +51,12 @@
         </svg>
         <div class="loading-progress-text"></div>
     </div>
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
+    <!-- Shown by Blazor when the app itself crashed. Styled in app.css, German text set by js-helpers.js -->
+    <div id="blazor-error-ui" role="alert">
+        <span class="blazor-error-ui__emoji" aria-hidden="true">🛠️</span>
+        <span class="blazor-error-ui__text">Something went wrong. Please reload the page.</span>
         <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
+        <a class="dismiss" role="button" aria-label="Close">✕</a>
     </div>
     <script src="_content/Microsoft.AspNetCore.Components.WebAssembly.Authentication/AuthenticationService.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
