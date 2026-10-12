@@ -11,6 +11,7 @@ using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Clubs.ApiKeys;
 using Bookennis.Domain.Courts;
 using Bookennis.Domain.Exceptions;
+using Bookennis.Domain.Families;
 using Bookennis.Domain.Members;
 using Bookennis.Domain.User;
 using Bookennis.Global.Intervals;
@@ -47,6 +48,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
     public const string Canary = "ZZCANARYOFCLUBB";
     public const string Marker = "AAMARKEROFCLUBA";
     public const string Password = "Sec-Test-1234!";
+    public static readonly DateOnly ChildBirthday = new(2016, 5, 17);
 
     private string connectionString = null!;
     private string adminConnectionString = null!;
@@ -63,6 +65,15 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
 
     /// <summary>A member of club A without any special role.</summary>
     public SeededUser MemberOfA { get; private set; } = null!;
+
+    /// <summary>Another member of club A without any special role, who has nothing to do with <see cref="MemberOfA"/>.</summary>
+    public SeededUser OtherMemberOfA { get; private set; } = null!;
+
+    /// <summary>The family of <see cref="MemberOfA"/> (the only parent) with one child that has no login of its own.</summary>
+    public SeededFamily FamilyOfMemberOfA { get; private set; } = null!;
+
+    /// <summary>The family of <see cref="OtherMemberOfA"/>, built the same way.</summary>
+    public SeededFamily FamilyOfOtherMemberOfA { get; private set; } = null!;
 
     /// <summary>
     /// An admin of club A (user and member id of club A) who is also a plain member of club B and has a booking there.
@@ -94,7 +105,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await Seed();
 
         // Signing in is limited per client address and the sweeps also hit the sign-in endpoints, so the tests sign in once up front
-        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, MemberOfA })
+        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, MemberOfA, OtherMemberOfA })
             cookies[user.UserId] = await SignIn(user);
     }
 
@@ -249,6 +260,9 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         ClubA = await AddClub(context, Marker, administrator: true);
         ClubB = await AddClub(context, Canary, administrator: false);
         MemberOfA = await AddUser(context, ClubA, "member-a", Marker, [MemberRole.User]);
+        OtherMemberOfA = await AddUser(context, ClubA, "other-member-a", Marker, [MemberRole.User]);
+        FamilyOfMemberOfA = await AddFamily(context, ClubA, MemberOfA, "Ownchild");
+        FamilyOfOtherMemberOfA = await AddFamily(context, ClubA, OtherMemberOfA, "Otherchild");
 
         AdminOfAWhoPlaysInB = await AddUser(context, ClubA, "admin-in-both", Marker, [MemberRole.User, MemberRole.Admin]);
         var memberInB = new ClubMember(AdminOfAWhoPlaysInB.UserId, ClubB.Id, [MemberRole.User]);
@@ -300,6 +314,24 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         seeded.ClubAnnouncementId = announcement.Id;
         seeded.CourtBlockingId = blocking.Id;
         return seeded;
+    }
+
+    private static async Task<SeededFamily> AddFamily(AppDbContext context, SeededClub club, SeededUser parent, string childFirstName)
+    {
+        var child = new User(childFirstName, $"Last{Marker}", ChildBirthday, Gender.Male, parent.UserId);
+        context.Add(child);
+        await context.SaveChangesAsync();
+
+        var childMember = new ClubMember(child.Id, club.Id, [MemberRole.User]);
+        context.Add(childMember);
+        await context.SaveChangesAsync();
+
+        var family = new Family(club.Id, [parent.MemberId], [childMember.Id]);
+        context.Add(family);
+        await context.SaveChangesAsync();
+
+        club.UserIds.Add(child.Id);
+        return new SeededFamily(family.Id, parent.MemberId, childMember.Id, child.Id);
     }
 
     private static async Task<SeededUser> AddUser(AppDbContext context, SeededClub club, string name, string text, MemberRole[] roles, bool administrator = false)
@@ -398,6 +430,8 @@ public sealed class SeededClub
 }
 
 public sealed record SeededUser(int UserId, int MemberId, string Email);
+
+public sealed record SeededFamily(int Id, int ParentMemberId, int ChildMemberId, int ChildUserId);
 
 public sealed record SeededKey(int Id, string Token, int ClubId, int UserId)
 {

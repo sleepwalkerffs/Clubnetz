@@ -131,6 +131,17 @@ public static class AuthorizationConfiguration
                             .RequireAuthenticatedUser()
                             .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
                             .AddRequirements(new CanEditBookingRequirement()))
+               // Family Policies
+               .AddPolicy(AuthorizationPolicies.FamilyMember, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
+                            .RequireAuthenticatedUser()
+                            .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                            .AddRequirements(new FamilyAccessRequirement { ParentsOnly = false }))
+               .AddPolicy(AuthorizationPolicies.FamilyParent, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
+                            .RequireAuthenticatedUser()
+                            .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                            .AddRequirements(new FamilyAccessRequirement { ParentsOnly = true }))
                // Subscription Planner Policy
                .AddPolicy(AuthorizationPolicies.OwnsSubscriptionPlan, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)

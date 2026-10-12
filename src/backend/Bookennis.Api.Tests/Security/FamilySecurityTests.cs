@@ -1,0 +1,162 @@
+using System.Net;
+using Bookennis.Domain.Members;
+using FluentAssertions;
+using FluentAssertions.Execution;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
+
+namespace Bookennis.Api.Tests.Security;
+
+/// <summary>
+/// A family belongs to its members. Another member of the club must not read it (it holds the birthdays of children), join it,
+/// or change or delete it. Whoever is a parent of a family may book for its children, so joining a family is a way to gain rights.
+/// </summary>
+[Collection(ApiSecurityTestGroup.Name)]
+public class FamilySecurityTests(ApiSecurityFixture app)
+{
+    private const string ChildBirthday = "2016-05-17";
+
+    private string Families => $"/api/Clubs/{app.ClubA.Id}/Families";
+    private SeededFamily Own => app.FamilyOfMemberOfA;
+    private SeededFamily Foreign => app.FamilyOfOtherMemberOfA;
+
+    private async Task<ApiResponse> Send(HttpMethod method, string url, SeededUser? user, string? body = null, SeededKey? key = null)
+    {
+        var cookie = user is null ? null : await app.Login(user);
+        return await app.Send(method, url, key?.Bearer, body, request =>
+        {
+            if (cookie is not null)
+                request.Headers.TryAddWithoutValidation("Cookie", cookie);
+        });
+    }
+
+    private Task<List<(int MemberId, bool IsParent)>> MembersOf(SeededFamily family) => app.Db(async context =>
+    {
+        var loaded = await context.Families.IgnoreQueryFilters().Include(f => f.Parents).Include(f => f.Children).SingleAsync(f => f.Id == family.Id);
+        return loaded.Parents.Select(p => (p.MemberId, true)).Concat(loaded.Children.Select(c => (c.MemberId, false))).OrderBy(m => m.MemberId).ToList();
+    });
+
+    [Fact]
+    public async Task Member_ReadsTheOwnFamily()
+    {
+        var response = await Send(HttpMethod.Get, $"{Families}/{Own.Id}", app.MemberOfA);
+
+        response.Status.Should().Be(HttpStatusCode.OK);
+        response.Body.Should().Contain("Ownchild").And.Contain(ChildBirthday);
+    }
+
+    [Fact]
+    public async Task Member_CannotReadTheFamilyOfSomebodyElse()
+    {
+        var single = await Send(HttpMethod.Get, $"{Families}/{Foreign.Id}", app.MemberOfA);
+        var all = await Send(HttpMethod.Get, Families, app.MemberOfA);
+
+        foreach (var response in new[] { single, all })
+        {
+            response.Status.Should().Be(HttpStatusCode.Forbidden);
+            response.Body.Should().NotContain("Otherchild").And.NotContain(ChildBirthday);
+        }
+    }
+
+    [Fact]
+    public async Task Member_CannotJoinChangeOrDeleteTheFamilyOfSomebodyElse()
+    {
+        var before = await MembersOf(Foreign);
+        var me = app.MemberOfA.MemberId;
+        var family = $"{Families}/{Foreign.Id}";
+
+        var attempts = new Dictionary<string, ApiResponse>
+        {
+            ["add myself as parent"] = await Send(HttpMethod.Post, $"{family}/Parent", app.MemberOfA, $$"""{"memberId":{{me}}}"""),
+            ["add a member as child"] = await Send(HttpMethod.Post, $"{family}/Child", app.MemberOfA, $$"""{"memberIds":[{{app.ClubA.Member.MemberId}}]}"""),
+            ["add a new child"] = await Send(HttpMethod.Post, $"{family}/NewChild", app.MemberOfA, """{"firstName":"Planted","lastName":"Child","birthday":"2015-01-01","gender":"Male"}"""),
+            ["rename the child"] = await Send(HttpMethod.Put, $"{family}/Child/{Foreign.ChildMemberId}", app.MemberOfA, """{"firstName":"Renamed","lastName":"Child","birthday":"2015-01-01","gender":"Male"}"""),
+            ["remove the child"] = await Send(HttpMethod.Delete, $"{family}/Member/{Foreign.ChildMemberId}", app.MemberOfA),
+            ["remove the parent"] = await Send(HttpMethod.Delete, $"{family}/Member/{Foreign.ParentMemberId}", app.MemberOfA),
+            ["delete the family"] = await Send(HttpMethod.Delete, family, app.MemberOfA),
+        };
+
+        using (new AssertionScope())
+        {
+            foreach (var (what, response) in attempts)
+                response.Status.Should().Be(HttpStatusCode.Forbidden, what);
+        }
+
+        (await MembersOf(Foreign)).Should().Equal(before);
+        (await app.Db(c => c.Users.Where(u => u.Id == Foreign.ChildUserId).Select(u => u.FirstName).SingleAsync())).Should().Be("Otherchild");
+        (await app.Db(c => c.Users.CountAsync(u => u.FirstName == "Planted"))).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Member_CannotFoundAFamilyForOtherPeople()
+    {
+        // Parents would be two other members: whoever is a parent of a family may book for its children
+        var admin = app.ClubA.Admin.MemberId;
+        var member = app.ClubA.Member.MemberId;
+
+        var response = await Send(HttpMethod.Post, Families, app.MemberOfA, $$"""{"parentContractUserIds":[{{admin}}],"childrenUserContractIds":[{{member}}],"newChildUsers":[]}""");
+
+        response.Status.Should().Be(HttpStatusCode.Forbidden);
+        (await app.Db(c => c.FamilyMembers.IgnoreQueryFilters().CountAsync(fm => fm.MemberId == admin || fm.MemberId == member))).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task Parent_ChangesTheOwnFamily()
+    {
+        var family = $"{Families}/{Own.Id}";
+
+        var renamed = await Send(HttpMethod.Put, $"{family}/Child/{Own.ChildMemberId}", app.MemberOfA, """{"firstName":"Ownchild","lastName":"Renamed","birthday":"2016-05-17","gender":"Male"}""");
+        renamed.Status.Should().Be(HttpStatusCode.OK, renamed.Body);
+        (await app.Db(c => c.Users.Where(u => u.Id == Own.ChildUserId).Select(u => u.LastName).SingleAsync())).Should().Be("Renamed");
+
+        var added = await Send(HttpMethod.Post, $"{family}/NewChild", app.MemberOfA, """{"firstName":"Secondchild","lastName":"Own","birthday":"2018-03-03","gender":"Female"}""");
+        added.Status.Should().Be(HttpStatusCode.OK, added.Body);
+
+        var members = await MembersOf(Own);
+        members.Should().HaveCount(3);
+        var secondChild = members.Single(m => !m.IsParent && m.MemberId != Own.ChildMemberId).MemberId;
+
+        var removed = await Send(HttpMethod.Delete, $"{family}/Member/{secondChild}", app.MemberOfA);
+        removed.Status.Should().Be(HttpStatusCode.OK, removed.Body);
+        (await MembersOf(Own)).Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task ThoseWhoManageTheClub_ReadAllFamilies_WithCookieAndWithKey()
+    {
+        foreach (var response in new[]
+                 {
+                     await Send(HttpMethod.Get, Families, app.ClubA.Admin),
+                     await Send(HttpMethod.Get, Families, user: null, key: await app.NewKey(app.ClubA)),
+                     await Send(HttpMethod.Get, $"{Families}/{Foreign.Id}", app.ClubA.Admin),
+                 })
+        {
+            response.Status.Should().Be(HttpStatusCode.OK);
+            response.Body.Should().Contain("Otherchild");
+        }
+    }
+
+    [Fact]
+    public async Task AdminOfAnotherClub_HasNoAccessToTheFamilies()
+    {
+        var before = await MembersOf(Foreign);
+
+        foreach (var (method, url) in new[]
+                 {
+                     (HttpMethod.Get, Families),
+                     (HttpMethod.Get, $"{Families}/{Foreign.Id}"),
+                     (HttpMethod.Delete, $"{Families}/{Foreign.Id}"),
+                     (HttpMethod.Delete, $"{Families}/{Foreign.Id}/Member/{Foreign.ChildMemberId}"),
+                     // Through the address of the own club, where this user is admin
+                     (HttpMethod.Get, $"/api/Clubs/{app.ClubB.Id}/Families/{Foreign.Id}"),
+                     (HttpMethod.Delete, $"/api/Clubs/{app.ClubB.Id}/Families/{Foreign.Id}"),
+                 })
+        {
+            var response = await Send(method, url, app.ClubB.Admin);
+            ((int)response.Status).Should().BeOneOf([403, 404], $"{method} {url}");
+            response.Body.Should().NotContain("Otherchild");
+        }
+
+        (await MembersOf(Foreign)).Should().Equal(before);
+    }
+}
