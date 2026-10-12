@@ -513,4 +513,19 @@
   <data name="InvalidNotificationType" xml:space="preserve">
     <value>Unbekannte Art von Benachrichtigung.</value>
   </data>
+  <data name="ApiKeyNameRequired" xml:space="preserve">
+    <value>Bitte gib dem API-Schlüssel einen Namen.</value>
+  </data>
+  <data name="ApiKeyNameTooLong" xml:space="preserve">
+    <value>Der Name darf höchstens {0} Zeichen lang sein.</value>
+  </data>
+  <data name="ApiKeyInvalidExpiry" xml:space="preserve">
+    <value>Der Schlüssel muss 1 bis {0} Tage gültig sein.</value>
+  </data>
+  <data name="ApiKeyCreatorNotClubAdmin" xml:space="preserve">
+    <value>Nur ein Admin, der Mitglied dieses Vereins ist, kann einen API-Schlüssel erstellen.</value>
+  </data>
+  <data name="ApiKeyLimitReached" xml:space="preserve">
+    <value>Ein Verein kann höchstens {0} API-Schlüssel haben. Widerrufe einen, den du nicht mehr brauchst.</value>
+  </data>
 </root>

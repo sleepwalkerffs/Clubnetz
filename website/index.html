@@ -45,6 +45,7 @@
             "Court blockings for tournaments, maintenance and weather",
             "Statistics, leaderboards and badges",
             "Push and email notifications",
+            "API with API keys for own scripts and integrations",
             "Multi-tenant: one installation serves many clubs"
         ]
     }
@@ -78,6 +79,11 @@
                 "@type": "Question",
                 "name": "What about data protection?",
                 "acceptedAnswer": { "@type": "Answer", "text": "The hosted Clubnetz runs on servers in the EU. Members can export their personal data, leave a club and delete their account themselves." }
+            },
+            {
+                "@type": "Question",
+                "name": "Is there an API?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes. Club admins create API keys in the app and use them to read and change the data of their club from their own scripts and tools, for example to show free courts on the club website or to export the member list." }
             }
         ]
     }
@@ -96,6 +102,7 @@
                 <a class="nav-section" href="#members">For members</a>
                 <a class="nav-section" href="#board">For the board</a>
                 <a class="nav-section" href="#open-source">Open source</a>
+                <a class="nav-section" href="/docs/api/">API</a>
                 <a class="nav-section" href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
                 <a class="lang" href="/de/" hreflang="de" lang="de">Deutsch</a>
                 <a class="login" href="https://my.clubnetz.app/">Log in</a>
@@ -240,6 +247,12 @@
                         <h3>Club statistics</h3>
                         <p>Court utilization and activity over the season.</p>
                     </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🔌</div>
+                        <h3>API for your own tools</h3>
+                        <p>Connect your club website, a spreadsheet or your own scripts with an API key.</p>
+                        <a class="card__link" href="/docs/api/">API documentation →</a>
+                    </li>
                 </ul>
             </div>
         </section>
@@ -289,7 +302,31 @@ docker build -t clubnetz .</code></pre>
             </div>
         </section>
 
-        <section id="faq">
+        <section id="api">
+            <div class="wrap split">
+                <div>
+                    <p class="eyebrow">For tinkerers</p>
+                    <h2>An API for your own ideas</h2>
+                    <p class="soft" style="margin-top: 12px">Somebody in your club knows a little programming? With an API key, your own scripts and tools can read and change what the app shows: bookings, members, events, news and court blockings.</p>
+                    <ul class="checks">
+                        <li>Show free courts or the next events on your club website</li>
+                        <li>Export members to a spreadsheet or your accounting tool</li>
+                        <li>Read-only keys for displays and exports</li>
+                        <li>Each key belongs to one club and can be revoked at any time</li>
+                    </ul>
+                    <p style="margin-top: 22px"><a class="btn btn--solid" href="/docs/api/">Read the API documentation</a></p>
+                </div>
+                <pre><code># How many members do we have?
+curl -H "Authorization: Bearer cnz_..." \
+  https://my.clubnetz.app/api/Clubs/12/Members/summary
+
+# Which courts can be booked?
+curl -H "Authorization: Bearer cnz_..." \
+  https://my.clubnetz.app/api/Clubs/12/Courts</code></pre>
+            </div>
+        </section>
+
+        <section id="faq" class="alt">
             <div class="wrap">
                 <div class="section-head">
                     <p class="eyebrow">Questions</p>
@@ -316,6 +353,10 @@ docker build -t clubnetz .</code></pre>
                         <summary>What about data protection?</summary>
                         <p>The hosted Clubnetz runs on servers in the EU. Members can export their personal data, leave a club and delete their account themselves.</p>
                     </details>
+                    <details>
+                        <summary>Is there an API?</summary>
+                        <p>Yes. Club admins create API keys in the app and use them to read and change the data of their club from their own scripts and tools, for example to show free courts on the club website or to export the member list. <a href="/docs/api/">API documentation</a></p>
+                    </details>
                 </div>
             </div>
         </section>
@@ -335,6 +376,7 @@ docker build -t clubnetz .</code></pre>
             <nav aria-label="Legal">
                 <a href="https://my.clubnetz.app/legal/imprint">Imprint</a>
                 <a href="https://my.clubnetz.app/legal/privacy">Privacy</a>
+                <a href="/docs/api/">API</a>
                 <a href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
                 <a href="/de/" hreflang="de" lang="de">Deutsch</a>
             </nav>

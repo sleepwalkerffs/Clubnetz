@@ -39,7 +39,9 @@ public record GetMemberBookingHistory(int MemberId, int SeasonId) : ICommand<Get
                     select new { member.Id, user.FirstName, user.LastName, member.MemberType, IsAtpPlayer = club.IsAtpClub && member.ClubId != currentClub.Id, UserId = user.Id, HasProfilePicture = context.UserProfilePictures.Any(p => p.UserId == user.Id) }
                 ).ToList()
 
-                where users.Any(u => u.UserId == userId)
+                // IgnoreQueryFilters (needed for players of other clubs) switches the tenant filter off for the whole query, so the club is checked here
+                where booking.ClubId == currentClub.Id
+                   && users.Any(u => u.UserId == userId)
                    && fromUtc <= booking.Interval.From && booking.Interval.From <= toUtc
 
                 orderby booking.Interval.From descending

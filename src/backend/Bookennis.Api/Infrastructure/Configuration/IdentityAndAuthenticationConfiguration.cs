@@ -2,6 +2,7 @@ using System.Net;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure.Identity;
 using Bookennis.Domain.User;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 
@@ -29,6 +30,10 @@ public static class IdentityAndAuthenticationConfiguration
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddClaimsPrincipalFactory<CustomUserClaimsPrincipalFactory>()
                 .AddDefaultTokenProviders();
+
+        // Club API keys: not a default scheme, it is only used by the policies that list it
+        services.AddAuthentication()
+                .AddScheme<AuthenticationSchemeOptions, ClubApiKeyAuthenticationHandler>(CustomAuthenticationSchemes.ClubApiKey, configureOptions: null);
 
         services.ConfigureApplicationCookie(options =>
         {

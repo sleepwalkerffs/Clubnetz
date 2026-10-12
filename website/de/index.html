@@ -45,6 +45,7 @@
             "Platzsperren für Turniere, Wartung und Wetter",
             "Statistiken, Ranglisten und Abzeichen",
             "Benachrichtigungen per Push und E-Mail",
+            "API mit API-Schlüsseln für eigene Skripte und Anbindungen",
             "Mandantenfähig: eine Installation für viele Vereine"
         ]
     }
@@ -78,6 +79,11 @@
                 "@type": "Question",
                 "name": "Wie steht es um den Datenschutz?",
                 "acceptedAnswer": { "@type": "Answer", "text": "Das gehostete Clubnetz läuft auf Servern in der EU. Mitglieder können ihre personenbezogenen Daten selbst exportieren, einen Verein verlassen und ihr Konto löschen." }
+            },
+            {
+                "@type": "Question",
+                "name": "Gibt es eine API?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Ja. Vereins-Admins erstellen in der App API-Schlüssel und können damit die Daten ihres Vereins aus eigenen Skripten und Werkzeugen lesen und ändern, zum Beispiel um freie Plätze auf der Vereinswebsite zu zeigen oder die Mitgliederliste zu exportieren." }
             }
         ]
     }
@@ -96,6 +102,7 @@
                 <a class="nav-section" href="#members">Für Mitglieder</a>
                 <a class="nav-section" href="#board">Für den Vorstand</a>
                 <a class="nav-section" href="#open-source">Open Source</a>
+                <a class="nav-section" href="/de/docs/api/">API</a>
                 <a class="nav-section" href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
                 <a class="lang" href="/" hreflang="en" lang="en">English</a>
                 <a class="login" href="https://my.clubnetz.app/">Anmelden</a>
@@ -240,6 +247,12 @@
                         <h3>Vereinsstatistik</h3>
                         <p>Auslastung der Plätze und Aktivität über die Saison.</p>
                     </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🔌</div>
+                        <h3>API für eigene Werkzeuge</h3>
+                        <p>Verbindet eure Vereinswebsite, eine Tabelle oder eigene Skripte über einen API-Schlüssel.</p>
+                        <a class="card__link" href="/de/docs/api/">API-Dokumentation →</a>
+                    </li>
                 </ul>
             </div>
         </section>
@@ -289,7 +302,31 @@ docker build -t clubnetz .</code></pre>
             </div>
         </section>
 
-        <section id="faq">
+        <section id="api">
+            <div class="wrap split">
+                <div>
+                    <p class="eyebrow">Für Bastler</p>
+                    <h2>Eine API für eure eigenen Ideen</h2>
+                    <p class="soft" style="margin-top: 12px">Jemand in eurem Verein kann ein wenig programmieren? Mit einem API-Schlüssel können eigene Skripte und Werkzeuge lesen und ändern, was die App zeigt: Buchungen, Mitglieder, Termine, Neuigkeiten und Platzsperren.</p>
+                    <ul class="checks">
+                        <li>Freie Plätze oder die nächsten Termine auf der Vereinswebsite zeigen</li>
+                        <li>Mitglieder in eine Tabelle oder die Buchhaltung exportieren</li>
+                        <li>Schlüssel nur zum Lesen für Anzeigen und Exporte</li>
+                        <li>Jeder Schlüssel gehört zu einem Verein und lässt sich jederzeit widerrufen</li>
+                    </ul>
+                    <p style="margin-top: 22px"><a class="btn btn--solid" href="/de/docs/api/">Zur API-Dokumentation</a></p>
+                </div>
+                <pre><code># Wie viele Mitglieder haben wir?
+curl -H "Authorization: Bearer cnz_..." \
+  https://my.clubnetz.app/api/Clubs/12/Members/summary
+
+# Welche Plätze kann man buchen?
+curl -H "Authorization: Bearer cnz_..." \
+  https://my.clubnetz.app/api/Clubs/12/Courts</code></pre>
+            </div>
+        </section>
+
+        <section id="faq" class="alt">
             <div class="wrap">
                 <div class="section-head">
                     <p class="eyebrow">Fragen</p>
@@ -316,6 +353,10 @@ docker build -t clubnetz .</code></pre>
                         <summary>Wie steht es um den Datenschutz?</summary>
                         <p>Das gehostete Clubnetz läuft auf Servern in der EU. Mitglieder können ihre personenbezogenen Daten selbst exportieren, einen Verein verlassen und ihr Konto löschen.</p>
                     </details>
+                    <details>
+                        <summary>Gibt es eine API?</summary>
+                        <p>Ja. Vereins-Admins erstellen in der App API-Schlüssel und können damit die Daten ihres Vereins aus eigenen Skripten und Werkzeugen lesen und ändern, zum Beispiel um freie Plätze auf der Vereinswebsite zu zeigen oder die Mitgliederliste zu exportieren. <a href="/de/docs/api/">API-Dokumentation</a></p>
+                    </details>
                 </div>
             </div>
         </section>
@@ -335,6 +376,7 @@ docker build -t clubnetz .</code></pre>
             <nav aria-label="Rechtliches">
                 <a href="https://my.clubnetz.app/legal/imprint">Impressum</a>
                 <a href="https://my.clubnetz.app/legal/privacy">Datenschutz</a>
+                <a href="/de/docs/api/">API</a>
                 <a href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
                 <a href="/" hreflang="en" lang="en">English</a>
             </nav>

@@ -39,6 +39,7 @@ public static class SimpleInjectorConfiguration
                 services.AddScoped(_ => container.GetInstance<IDomainEventDispatcher>());
                 services.AddScoped(_ => container.GetInstance<IUserAccessor>());
                 services.AddScoped(_ => container.GetInstance<ITenantService>());
+                services.AddScoped(_ => container.GetInstance<IMediator>());
             }
         );
     }

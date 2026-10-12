@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clubnetz API – connect your own scripts and tools to your club</title>
+    <meta name="description" content="Documentation of the Clubnetz API: create an API key, read and change bookings, members, events and news of your tennis club from your own scripts, with examples and a full endpoint reference." />
+    <link rel="canonical" href="https://clubnetz.app/docs/api/" />
+    <link rel="alternate" hreflang="en" href="https://clubnetz.app/docs/api/" />
+    <link rel="alternate" hreflang="de" href="https://clubnetz.app/de/docs/api/" />
+    <link rel="alternate" hreflang="x-default" href="https://clubnetz.app/docs/api/" />
+    <meta name="theme-color" content="#064e3b" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Clubnetz" />
+    <meta property="og:title" content="Clubnetz API documentation" />
+    <meta property="og:description" content="Connect your own scripts and tools to your club with an API key." />
+    <meta property="og:url" content="https://clubnetz.app/docs/api/" />
+    <meta property="og:image" content="https://clubnetz.app/icon-512.png" />
+    <meta property="og:locale" content="en" />
+    <meta property="og:locale:alternate" content="de" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/docs/api/reference.js" defer></script>
+</head>
+<body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="top">
+        <div class="wrap top__bar">
+            <a class="brand" href="/">
+                <img src="/icon.svg" alt="" width="34" height="34" />
+                Clubnetz
+            </a>
+            <nav class="top__nav" aria-label="Main">
+                <a class="nav-section" href="/">Home</a>
+                <a class="nav-section" href="/docs/api/" aria-current="page">API</a>
+                <a class="nav-section" href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
+                <a class="lang" href="/de/docs/api/" hreflang="de" lang="de">Deutsch</a>
+                <a class="login" href="https://my.clubnetz.app/">Log in</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main">
+        <div class="docs-hero">
+            <div class="wrap">
+                <p class="docs-hero__eyebrow">Documentation</p>
+                <h1>Clubnetz API</h1>
+                <p class="docs-hero__lead">Connect your own scripts and tools to your club. Everything the app can do for a club admin is available over HTTP with an API key: bookings, members, seasons, events, news, court blockings and more.</p>
+            </div>
+        </div>
+
+        <div class="wrap docs">
+            <nav class="docs__toc" aria-label="On this page">
+                <p class="docs__toc-title">On this page</p>
+                <ol>
+                    <li><a href="#ideas">What you can build</a></li>
+                    <li><a href="#key">Create an API key</a></li>
+                    <li><a href="#first-request">Your first request</a></li>
+                    <li><a href="#rules">How a key works</a></li>
+                    <li><a href="#formats">Data formats</a></li>
+                    <li><a href="#examples">Examples</a></li>
+                    <li><a href="#errors">Errors and limits</a></li>
+                    <li><a href="#security">Keeping keys safe</a></li>
+                    <li><a href="#changes">Changes to the API</a></li>
+                    <li><a href="#reference">Endpoint reference</a></li>
+                </ol>
+            </nav>
+
+            <article class="docs__content">
+                <section id="ideas">
+                    <h2>What you can build</h2>
+                    <p>The API is meant for club admins who know a little programming and want to save themselves recurring work. Some ideas:</p>
+                    <ul>
+                        <li>Show today's free courts or the next club events on your club website.</li>
+                        <li>Export the member list to a spreadsheet or your accounting tool every night.</li>
+                        <li>Create the court blockings for the whole team championship from a list of dates.</li>
+                        <li>Post the bookings of the day to a display in the clubhouse.</li>
+                        <li>Publish a news item automatically when your league results come in.</li>
+                    </ul>
+                    <p>There is no separate "public API" with fewer features: a key uses the same endpoints as the Clubnetz app itself.</p>
+                </section>
+
+                <section id="key">
+                    <h2>Create an API key</h2>
+                    <ol class="docs__steps">
+                        <li>Log in to Clubnetz as an admin of your club.</li>
+                        <li>Open <strong>Admin → API keys</strong> in the menu.</li>
+                        <li>Choose <strong>New key</strong>, give it a name that says what it is for, and pick how long it is valid.</li>
+                        <li>Decide what it may do: <strong>Read only</strong> for exports and displays, <strong>Read and write</strong> if it should change something.</li>
+                        <li>Copy the key. It starts with <code>cnz_</code> and is shown <strong>only once</strong>.</li>
+                    </ol>
+                    <p class="docs__note">Use one key per script or tool. Then you can see which one was used last and revoke a single key without breaking the others.</p>
+                </section>
+
+                <section id="first-request">
+                    <h2>Your first request</h2>
+                    <p>Send the key in the <code>Authorization</code> header. This lists the courts of your club:</p>
+                    <pre><code>curl -H "Authorization: Bearer cnz_YOUR_KEY" \
+  https://my.clubnetz.app/api/Clubs/12/Courts</code></pre>
+                    <p>The answer is JSON:</p>
+                    <pre><code>{
+  "courts": [
+    { "courtId": 1, "name": "Court 1", "alias": "1", "sortOrder": 1, "inactive": null },
+    { "courtId": 2, "name": "Court 2", "alias": "2", "sortOrder": 2, "inactive": null }
+  ]
+}</code></pre>
+                    <h3>The address of your club</h3>
+                    <p>Every address starts with <code>https://my.clubnetz.app/api/Clubs/<em>clubId</em>/</code>. The number of your club is in the address bar when you use the app (<code>/clubs/<strong>12</strong>/my-club</code>), and the API keys page shows a ready-made example with it.</p>
+                    <p>If your club runs its own installation of Clubnetz, replace <code>my.clubnetz.app</code> with your own address.</p>
+                </section>
+
+                <section id="rules">
+                    <h2>How a key works</h2>
+                    <dl class="docs__facts">
+                        <div>
+                            <dt>It acts as you</dt>
+                            <dd>A key can do what the admin who created it can do in the club. Changes made with it are recorded as made by that person.</dd>
+                        </div>
+                        <div>
+                            <dt>It only works for one club</dt>
+                            <dd>A key is bound to the club it was created in. It can't be used for another club, your personal profile or anything outside <code>/api/Clubs/<em>clubId</em>/</code>.</dd>
+                        </div>
+                        <div>
+                            <dt>Read-only keys only read</dt>
+                            <dd>A read-only key may send <code>GET</code> requests. Everything else is answered with <code>403</code>.</dd>
+                        </div>
+                        <div>
+                            <dt>It stops when you stop being admin</dt>
+                            <dd>If the person who created the key leaves the club or is no longer an admin, the key is rejected. Another admin then creates a new one.</dd>
+                        </div>
+                        <div>
+                            <dt>It can't manage keys</dt>
+                            <dd>Keys are only created and revoked in the app by a logged-in admin, never with a key.</dd>
+                        </div>
+                        <div>
+                            <dt>Every admin can revoke it</dt>
+                            <dd>Revoking takes effect immediately and can't be undone.</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <section id="formats">
+                    <h2>Data formats</h2>
+                    <div class="docs__table">
+                        <table>
+                            <thead>
+                                <tr><th>What</th><th>Format</th><th>Example</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Requests and answers</td><td>JSON with camelCase names. Send <code>Content-Type: application/json</code> with a body.</td><td><code>{ "courtId": 1 }</code></td></tr>
+                                <tr><td>A day</td><td>Year, month, day</td><td><code>2027-06-12</code></td></tr>
+                                <tr><td>A point in time</td><td>ISO 8601 with offset; answers are in UTC</td><td><code>2027-06-12T16:00:00+00:00</code></td></tr>
+                                <tr><td>A time of day</td><td>Hours, minutes, seconds in the club's local time</td><td><code>18:00:00</code></td></tr>
+                                <tr><td>Fixed choices</td><td>Text, not numbers</td><td><code>"Social"</code>, <code>"Admin"</code></td></tr>
+                                <tr><td>Files</td><td>Excel exports and attachments are returned as a download</td><td></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>For bookings, pass the name of your time zone as <code>timeZoneInfoId</code>, for example <code>Europe/Vienna</code>.</p>
+                </section>
+
+                <section id="examples">
+                    <h2>Examples</h2>
+
+                    <h3>The bookings of a week</h3>
+                    <pre><code>curl -H "Authorization: Bearer cnz_YOUR_KEY" \
+  "https://my.clubnetz.app/api/Clubs/12/Bookings?dayFrom=2027-06-07&amp;dayTo=2027-06-13"</code></pre>
+                    <p>Each booking has its court, its time (<code>interval.from</code> and <code>interval.to</code>), the play mode and the players.</p>
+
+                    <h3>The member list, page by page</h3>
+                    <pre><code>curl -H "Authorization: Bearer cnz_YOUR_KEY" \
+  "https://my.clubnetz.app/api/Clubs/12/Members?Page=1&amp;PageSize=50&amp;EnablePaging=true"</code></pre>
+                    <p>The answer contains <code>total</code> and the members of the page in <code>entities</code>. You can filter with <code>SearchTerm</code>, <code>Roles</code>, <code>InSeasonIds</code> and more, see the reference below.</p>
+
+                    <h3>Create a club event</h3>
+                    <p>This needs a key with <strong>Read and write</strong>. The answer is the id of the new event.</p>
+                    <pre><code>curl -X POST \
+  -H "Authorization: Bearer cnz_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "title": "Summer party",
+        "category": "Social",
+        "startDate": "2027-06-12",
+        "startTime": "18:00:00",
+        "location": "Clubhouse",
+        "registrationEnabled": true,
+        "notifyMembers": false
+      }' \
+  https://my.clubnetz.app/api/Clubs/12/ClubEvents</code></pre>
+                    <p class="docs__note">With <code>"notifyMembers": true</code> all members get a push notification and an email about the new event. Leave it off while you are testing.</p>
+
+                    <h3>Python: export all members to a CSV file</h3>
+<pre><code>import csv, os, requests
+
+BASE = "https://my.clubnetz.app/api/Clubs/12"
+HEADERS = {"Authorization": f"Bearer {os.environ['CLUBNETZ_API_KEY']}"}
+
+members, page = [], 1
+while True:
+    response = requests.get(f"{BASE}/Members", headers=HEADERS,
+                            params={"Page": page, "PageSize": 100, "EnablePaging": "true"})
+    response.raise_for_status()
+    data = response.json()
+    members += data["entities"]
+    if len(members) >= data["total"] or not data["entities"]:
+        break
+    page += 1
+
+with open("members.csv", "w", newline="", encoding="utf-8") as file:
+    writer = csv.writer(file)
+    writer.writerow(["First name", "Last name", "Email", "Roles"])
+    for m in members:
+        writer.writerow([m["firstName"], m["lastName"], m["email"], ", ".join(m["roles"])])</code></pre>
+
+                    <h3>JavaScript (Node.js): the next club events</h3>
+<pre><code>const base = "https://my.clubnetz.app/api/Clubs/12";
+const headers = { Authorization: `Bearer ${process.env.CLUBNETZ_API_KEY}` };
+
+const today = new Date().toISOString().slice(0, 10);
+const inAMonth = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+
+const response = await fetch(`${base}/ClubEvents?from=${today}&amp;to=${inAMonth}`, { headers });
+if (!response.ok) throw new Error(`Clubnetz answered ${response.status}`);
+
+const { events } = await response.json();
+for (const event of events) {
+    console.log(event.startDate, event.startTime ?? "all day", event.title);
+}</code></pre>
+                    <p class="docs__note">Run such scripts on a server or your own computer. If you want to show something on your club website, let your server fetch the data and pass on only what visitors should see. Never put the key into the page itself.</p>
+                </section>
+
+                <section id="errors">
+                    <h2>Errors and limits</h2>
+                    <div class="docs__table">
+                        <table>
+                            <thead>
+                                <tr><th>Status</th><th>Meaning</th><th>What to do</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>200</code></td><td>It worked.</td><td></td></tr>
+                                <tr><td><code>401</code></td><td>The key is missing, wrong, expired, revoked, belongs to another club, or its creator is no longer an admin.</td><td>Check the key and the club number in the address.</td></tr>
+                                <tr><td><code>403</code></td><td>The key is read-only (<code>ApiKeyReadOnly</code>), or you are not allowed to do this.</td><td>Use a key with read and write access.</td></tr>
+                                <tr><td><code>404</code></td><td>What you asked for does not exist in your club.</td><td>Check the id.</td></tr>
+                                <tr><td><code>412</code></td><td>The request breaks a rule of the club or contains invalid data.</td><td>Read <code>errorCode</code> and <code>message</code> in the answer.</td></tr>
+                                <tr><td><code>429</code></td><td>Too many requests.</td><td>Wait for the number of seconds in the <code>Retry-After</code> header.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>An error that concerns your input looks like this:</p>
+                    <pre><code>{
+  "message": "A title is required.",
+  "errorCode": "ClubEventTitleRequired",
+  "errorDetail": null
+}</code></pre>
+                    <p>Use <code>errorCode</code> in your code; the text of <code>message</code> may change.</p>
+                    <h3>Limit</h3>
+                    <p>Each key may send <strong>120 requests per minute</strong>. That is plenty for exports and displays. If you load a lot of data, ask for larger pages instead of sending many small requests.</p>
+                </section>
+
+                <section id="security">
+                    <h2>Keeping keys safe</h2>
+                    <ul>
+                        <li>Treat a key like a password. Whoever has it can read the data of your members.</li>
+                        <li>Store it in an environment variable or a secrets store, not in the code and never in a public repository.</li>
+                        <li>Never put it into a website or a mobile app, where everybody can read it. The API also does not answer requests that a browser sends from another website.</li>
+                        <li>Prefer read-only keys and give keys an expiry date.</li>
+                        <li>If a key may have leaked, revoke it right away under <strong>Admin → API keys</strong> and create a new one.</li>
+                    </ul>
+                </section>
+
+                <section id="changes">
+                    <h2>Changes to the API</h2>
+                    <p>The app and the API are released together, so an endpoint can change with a new version of Clubnetz. Every answer carries the running version in the <code>X-App-Version</code> header. If your script matters to you, log that header and check your script after an update. The reference below always describes the version that is running right now.</p>
+                </section>
+
+                <section id="reference">
+                    <h2>Endpoint reference</h2>
+                    <p>All endpoints a key can call, loaded live from the OpenAPI document of Clubnetz. Paths are shown without the leading <code>/api/Clubs/<em>clubId</em></code>.</p>
+                    <p><a class="btn btn--solid" href="https://my.clubnetz.app/api/openapi/club.json">Download the OpenAPI document</a></p>
+                    <p class="docs__muted">You can import this file into tools such as Postman, Insomnia or Bruno, or generate a client for your programming language from it.</p>
+
+                    <div id="api-reference" class="api-ref"
+                         data-openapi="https://my.clubnetz.app/api/openapi/club.json"
+                         data-loading="Loading the endpoints…"
+                         data-failed="The endpoints could not be loaded. Please open the OpenAPI document with the button above."
+                         data-filter="Search endpoints, for example “booking” or “POST”"
+                         data-empty="No endpoint matches your search."
+                         data-count="{0} endpoints"
+                         data-parameters="Parameters"
+                         data-name="Name"
+                         data-in="In"
+                         data-type="Type"
+                         data-description="Description"
+                         data-required="required"
+                         data-body="Request body"
+                         data-response="Answer"
+                         data-no-content="No content"
+                         data-file="File"
+                         data-write="needs read and write access"></div>
+                    <noscript><p>The endpoint list needs JavaScript. Without it, please use the OpenAPI document.</p></noscript>
+                </section>
+            </article>
+        </div>
+
+        <section class="cta">
+            <div class="wrap">
+                <h2>Is something missing?</h2>
+                <p>Tell us what you want to build, or open an issue on GitHub. Clubnetz is open source, so you can also add it yourself.</p>
+                <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20API">hello@clubnetz.app</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap foot">
+            <span>Clubnetz is free software under the AGPL-3.0.</span>
+            <nav aria-label="Legal">
+                <a href="https://my.clubnetz.app/legal/imprint">Imprint</a>
+                <a href="https://my.clubnetz.app/legal/privacy">Privacy</a>
+                <a href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
+                <a href="/de/docs/api/" hreflang="de" lang="de">Deutsch</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

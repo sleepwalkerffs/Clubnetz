@@ -49,6 +49,7 @@ public class MembersController(IMediator mediator, IAuthorizationService authori
         => await mediator.Send(new UpdateMemberRoles(memberId, request.Roles.Select(r => (MemberRole)r).ToArray()), cancellationToken);
 
     [HttpGet("{memberId:int}/BookingHistory")]
+    [Authorize(AuthorizationPolicies.AnyMember)]
     public async Task<GetMemberBookingHistoryResult> GetBookingHistory(int memberId, [FromQuery] int seasonId, CancellationToken cancellationToken)
     {
         // Members read their own history, member viewers the history of everybody

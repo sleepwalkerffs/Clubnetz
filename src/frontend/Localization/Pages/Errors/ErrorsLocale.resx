@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Code" xml:space="preserve">
+    <value>Error {0}</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Back to the start page</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Go back</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="AccessDenied_Title" xml:space="preserve">
+    <value>You don't have access to this page</value>
+  </data>
+  <data name="AccessDenied_Text" xml:space="preserve">
+    <value>This page belongs to a club you are not a member of, or it needs a role you don't have.</value>
+  </data>
+  <data name="AccessDenied_Hint" xml:space="preserve">
+    <value>If you think you should see it, ask an admin of your club.</value>
+  </data>
+  <data name="NotFound_Title" xml:space="preserve">
+    <value>This page is out</value>
+  </data>
+  <data name="NotFound_Text" xml:space="preserve">
+    <value>There is nothing at this address. The link may be outdated, or what it pointed to has been deleted.</value>
+  </data>
+  <data name="Error_Title" xml:space="preserve">
+    <value>Something went wrong</value>
+  </data>
+  <data name="Error_Text" xml:space="preserve">
+    <value>That was our fault, not yours. Please try again in a moment.</value>
+  </data>
+  <data name="Error_Hint" xml:space="preserve">
+    <value>If it keeps happening, let an admin of your club know what you were doing.</value>
+  </data>
+</root>

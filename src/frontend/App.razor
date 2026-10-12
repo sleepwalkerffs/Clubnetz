@@ -20,9 +20,8 @@
             </CascadingValue>
         </Found>
         <NotFound>
-            <PageTitle>Not found</PageTitle>
-            <LayoutView Layout="@typeof(AuthorizedLayout)">
-                <RedirectToNotFound />
+            <LayoutView Layout="@typeof(NoNavigationLayout)">
+                <Bookennis.Client.Pages.Errors.NotFound />
             </LayoutView>
         </NotFound>
     </Router>

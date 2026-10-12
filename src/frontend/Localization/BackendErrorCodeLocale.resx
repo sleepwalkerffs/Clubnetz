@@ -513,4 +513,19 @@
   <data name="InvalidNotificationType" xml:space="preserve">
     <value>Unknown type of notification.</value>
   </data>
+  <data name="ApiKeyNameRequired" xml:space="preserve">
+    <value>Please give the API key a name.</value>
+  </data>
+  <data name="ApiKeyNameTooLong" xml:space="preserve">
+    <value>The name must not be longer than {0} characters.</value>
+  </data>
+  <data name="ApiKeyInvalidExpiry" xml:space="preserve">
+    <value>The key must be valid for 1 to {0} days.</value>
+  </data>
+  <data name="ApiKeyCreatorNotClubAdmin" xml:space="preserve">
+    <value>Only an admin who is a member of this club can create an API key.</value>
+  </data>
+  <data name="ApiKeyLimitReached" xml:space="preserve">
+    <value>A club can have at most {0} API keys. Revoke one you no longer need.</value>
+  </data>
 </root>

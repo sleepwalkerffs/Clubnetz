@@ -10,4 +10,14 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://clubnetz.app/" />
     <xhtml:link rel="alternate" hreflang="de" href="https://clubnetz.app/de/" />
   </url>
+  <url>
+    <loc>https://clubnetz.app/docs/api/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clubnetz.app/docs/api/" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://clubnetz.app/de/docs/api/" />
+  </url>
+  <url>
+    <loc>https://clubnetz.app/de/docs/api/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clubnetz.app/docs/api/" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://clubnetz.app/de/docs/api/" />
+  </url>
 </urlset>

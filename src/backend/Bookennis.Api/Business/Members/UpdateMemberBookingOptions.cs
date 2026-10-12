@@ -33,8 +33,15 @@ public record UpdateMemberBookingOptions(int MemberId, int[] AllowedSeasonIds, i
                 .Where(ms => ms.MemberId == request.MemberId)
                 .ToListAsync(cancellationToken);
 
-            var toRemove = existingSeasonLinks.Where(ms => !request.AllowedSeasonIds.Contains(ms.SeasonId)).ToList();
-            var toAdd = request.AllowedSeasonIds
+            // Only seasons of the member's club: ids of other clubs (or ones that don't exist) are ignored
+            var clubId = queryResult.member.ClubId;
+            var allowedSeasonIds = await context.Seasons
+                .Where(s => s.ClubId == clubId && request.AllowedSeasonIds.Contains(s.Id))
+                .Select(s => s.Id)
+                .ToListAsync(cancellationToken);
+
+            var toRemove = existingSeasonLinks.Where(ms => !allowedSeasonIds.Contains(ms.SeasonId)).ToList();
+            var toAdd = allowedSeasonIds
                 .Where(sid => existingSeasonLinks.All(ms => ms.SeasonId != sid))
                 .Select(sid => new MemberSeason(request.MemberId, sid))
                 .ToList();

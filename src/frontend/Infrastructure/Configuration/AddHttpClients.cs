@@ -18,6 +18,7 @@ using Bookennis.Client.Services.HttpClients.ClubAnnouncements;
 using Bookennis.Client.Services.HttpClients.ClubEvents;
 using Bookennis.Client.Services.HttpClients.CourtBlockings;
 using Bookennis.Client.Services.HttpClients.SubscriptionPlans;
+using Bookennis.Client.Services.HttpClients.ClubApiKeys;
 using Bookennis.Client.Services.HttpClients.ClubEmailTemplates;
 using Bookennis.Client.Services.HttpClients.Legal;
 using Bookennis.Client.Services.HttpClients.Push;
@@ -197,6 +198,18 @@ public static class AddHttpClients
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
                     client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/CourtBlockings/");
+                }
+            )
+           .AddHttpMessageHandler<TenantDelegatingHandler>()
+           .AddHttpMessageHandler<RedirectToLoginOnUnauthorizedHandler>();
+
+        services
+           .AddHttpClient<IClubApiKeysHttpClient, ClubApiKeysHttpClient>(
+                (serviceProvider, client) =>
+                {
+                    var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
+                    client.AddDefaultHeaders();
+                    client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/ClubApiKeys/");
                 }
             )
            .AddHttpMessageHandler<TenantDelegatingHandler>()

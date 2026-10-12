@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clubnetz-API – eigene Skripte und Werkzeuge mit dem Verein verbinden</title>
+    <meta name="description" content="Dokumentation der Clubnetz-API: API-Schlüssel erstellen, Buchungen, Mitglieder, Termine und Neuigkeiten des Tennisvereins aus eigenen Skripten lesen und ändern, mit Beispielen und einer vollständigen Referenz aller Endpunkte." />
+    <link rel="canonical" href="https://clubnetz.app/de/docs/api/" />
+    <link rel="alternate" hreflang="en" href="https://clubnetz.app/docs/api/" />
+    <link rel="alternate" hreflang="de" href="https://clubnetz.app/de/docs/api/" />
+    <link rel="alternate" hreflang="x-default" href="https://clubnetz.app/docs/api/" />
+    <meta name="theme-color" content="#064e3b" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Clubnetz" />
+    <meta property="og:title" content="Dokumentation der Clubnetz-API" />
+    <meta property="og:description" content="Verbinde eigene Skripte und Werkzeuge über einen API-Schlüssel mit deinem Verein." />
+    <meta property="og:url" content="https://clubnetz.app/de/docs/api/" />
+    <meta property="og:image" content="https://clubnetz.app/icon-512.png" />
+    <meta property="og:locale" content="de" />
+    <meta property="og:locale:alternate" content="en" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/docs/api/reference.js" defer></script>
+</head>
+<body>
+    <a class="skip" href="#main">Zum Inhalt springen</a>
+
+    <header class="top">
+        <div class="wrap top__bar">
+            <a class="brand" href="/de/">
+                <img src="/icon.svg" alt="" width="34" height="34" />
+                Clubnetz
+            </a>
+            <nav class="top__nav" aria-label="Hauptnavigation">
+                <a class="nav-section" href="/de/">Startseite</a>
+                <a class="nav-section" href="/de/docs/api/" aria-current="page">API</a>
+                <a class="nav-section" href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
+                <a class="lang" href="/docs/api/" hreflang="en" lang="en">English</a>
+                <a class="login" href="https://my.clubnetz.app/">Anmelden</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main">
+        <div class="docs-hero">
+            <div class="wrap">
+                <p class="docs-hero__eyebrow">Dokumentation</p>
+                <h1>Clubnetz-API</h1>
+                <p class="docs-hero__lead">Verbinde eigene Skripte und Werkzeuge mit deinem Verein. Alles, was die App für einen Vereins-Admin kann, steht mit einem API-Schlüssel auch über HTTP zur Verfügung: Buchungen, Mitglieder, Saisonen, Termine, Neuigkeiten, Platzsperren und mehr.</p>
+            </div>
+        </div>
+
+        <div class="wrap docs">
+            <nav class="docs__toc" aria-label="Auf dieser Seite">
+                <p class="docs__toc-title">Auf dieser Seite</p>
+                <ol>
+                    <li><a href="#ideas">Was du damit bauen kannst</a></li>
+                    <li><a href="#key">API-Schlüssel erstellen</a></li>
+                    <li><a href="#first-request">Die erste Anfrage</a></li>
+                    <li><a href="#rules">So funktioniert ein Schlüssel</a></li>
+                    <li><a href="#formats">Datenformate</a></li>
+                    <li><a href="#examples">Beispiele</a></li>
+                    <li><a href="#errors">Fehler und Limits</a></li>
+                    <li><a href="#security">Schlüssel sicher aufbewahren</a></li>
+                    <li><a href="#changes">Änderungen an der API</a></li>
+                    <li><a href="#reference">Referenz der Endpunkte</a></li>
+                </ol>
+            </nav>
+
+            <article class="docs__content">
+                <section id="ideas">
+                    <h2>Was du damit bauen kannst</h2>
+                    <p>Die API ist für Vereins-Admins gedacht, die ein wenig programmieren können und sich wiederkehrende Arbeit sparen wollen. Ein paar Ideen:</p>
+                    <ul>
+                        <li>Die heute freien Plätze oder die nächsten Vereinstermine auf der Vereinswebsite anzeigen.</li>
+                        <li>Die Mitgliederliste jede Nacht in eine Tabelle oder die Buchhaltung exportieren.</li>
+                        <li>Die Platzsperren für die gesamte Mannschaftsmeisterschaft aus einer Terminliste anlegen.</li>
+                        <li>Die Buchungen des Tages auf einem Bildschirm im Clubhaus zeigen.</li>
+                        <li>Automatisch eine Neuigkeit veröffentlichen, sobald die Ergebnisse der Liga da sind.</li>
+                    </ul>
+                    <p>Es gibt keine eigene „öffentliche API“ mit weniger Funktionen: Ein Schlüssel verwendet dieselben Endpunkte wie die Clubnetz-App selbst.</p>
+                </section>
+
+                <section id="key">
+                    <h2>API-Schlüssel erstellen</h2>
+                    <ol class="docs__steps">
+                        <li>Melde dich als Admin deines Vereins bei Clubnetz an.</li>
+                        <li>Öffne im Menü <strong>Admin → API-Schlüssel</strong>.</li>
+                        <li>Wähle <strong>Neuer Schlüssel</strong>, gib ihm einen Namen, der sagt, wofür er da ist, und lege fest, wie lange er gültig ist.</li>
+                        <li>Entscheide, was er darf: <strong>Nur lesen</strong> für Exporte und Anzeigen, <strong>Lesen und schreiben</strong>, wenn er etwas ändern soll.</li>
+                        <li>Kopiere den Schlüssel. Er beginnt mit <code>cnz_</code> und wird <strong>nur einmal</strong> angezeigt.</li>
+                    </ol>
+                    <p class="docs__note">Verwende einen Schlüssel pro Skript oder Werkzeug. So siehst du, welcher zuletzt verwendet wurde, und kannst einen einzelnen widerrufen, ohne die anderen lahmzulegen.</p>
+                </section>
+
+                <section id="first-request">
+                    <h2>Die erste Anfrage</h2>
+                    <p>Sende den Schlüssel im Header <code>Authorization</code> mit. Diese Anfrage listet die Plätze deines Vereins auf:</p>
+                    <pre><code>curl -H "Authorization: Bearer cnz_DEIN_SCHLUESSEL" \
+  https://my.clubnetz.app/api/Clubs/12/Courts</code></pre>
+                    <p>Die Antwort ist JSON:</p>
+                    <pre><code>{
+  "courts": [
+    { "courtId": 1, "name": "Platz 1", "alias": "1", "sortOrder": 1, "inactive": null },
+    { "courtId": 2, "name": "Platz 2", "alias": "2", "sortOrder": 2, "inactive": null }
+  ]
+}</code></pre>
+                    <h3>Die Adresse deines Vereins</h3>
+                    <p>Jede Adresse beginnt mit <code>https://my.clubnetz.app/api/Clubs/<em>clubId</em>/</code>. Die Nummer deines Vereins steht in der Adresszeile, wenn du die App verwendest (<code>/clubs/<strong>12</strong>/my-club</code>), und die Seite „API-Schlüssel“ zeigt ein fertiges Beispiel damit.</p>
+                    <p>Betreibt euer Verein eine eigene Installation von Clubnetz, ersetze <code>my.clubnetz.app</code> durch eure Adresse.</p>
+                </section>
+
+                <section id="rules">
+                    <h2>So funktioniert ein Schlüssel</h2>
+                    <dl class="docs__facts">
+                        <div>
+                            <dt>Er handelt als du</dt>
+                            <dd>Ein Schlüssel kann, was der Admin, der ihn erstellt hat, im Verein kann. Änderungen damit werden als von dieser Person gemacht festgehalten.</dd>
+                        </div>
+                        <div>
+                            <dt>Er gilt nur für einen Verein</dt>
+                            <dd>Ein Schlüssel ist an den Verein gebunden, in dem er erstellt wurde. Für einen anderen Verein, dein persönliches Profil oder irgendetwas außerhalb von <code>/api/Clubs/<em>clubId</em>/</code> funktioniert er nicht.</dd>
+                        </div>
+                        <div>
+                            <dt>Nur-Lese-Schlüssel lesen nur</dt>
+                            <dd>Ein Schlüssel mit „Nur lesen“ darf <code>GET</code>-Anfragen senden. Alles andere wird mit <code>403</code> beantwortet.</dd>
+                        </div>
+                        <div>
+                            <dt>Er endet, wenn du kein Admin mehr bist</dt>
+                            <dd>Verlässt die Person, die den Schlüssel erstellt hat, den Verein oder ist sie kein Admin mehr, wird der Schlüssel abgelehnt. Ein anderer Admin erstellt dann einen neuen.</dd>
+                        </div>
+                        <div>
+                            <dt>Er kann keine Schlüssel verwalten</dt>
+                            <dd>Schlüssel werden nur in der App von einem angemeldeten Admin erstellt und widerrufen, nie mit einem Schlüssel.</dd>
+                        </div>
+                        <div>
+                            <dt>Jeder Admin kann ihn widerrufen</dt>
+                            <dd>Das Widerrufen wirkt sofort und kann nicht rückgängig gemacht werden.</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <section id="formats">
+                    <h2>Datenformate</h2>
+                    <div class="docs__table">
+                        <table>
+                            <thead>
+                                <tr><th>Was</th><th>Format</th><th>Beispiel</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Anfragen und Antworten</td><td>JSON mit Namen in camelCase. Sende bei einem Inhalt <code>Content-Type: application/json</code> mit.</td><td><code>{ "courtId": 1 }</code></td></tr>
+                                <tr><td>Ein Tag</td><td>Jahr, Monat, Tag</td><td><code>2027-06-12</code></td></tr>
+                                <tr><td>Ein Zeitpunkt</td><td>ISO 8601 mit Zeitverschiebung; Antworten sind in UTC</td><td><code>2027-06-12T16:00:00+00:00</code></td></tr>
+                                <tr><td>Eine Uhrzeit</td><td>Stunden, Minuten, Sekunden in der Ortszeit des Vereins</td><td><code>18:00:00</code></td></tr>
+                                <tr><td>Feste Auswahlwerte</td><td>Text, keine Zahlen (auf Englisch)</td><td><code>"Social"</code>, <code>"Admin"</code></td></tr>
+                                <tr><td>Dateien</td><td>Excel-Exporte und Anhänge kommen als Download zurück</td><td></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>Gib bei Buchungen den Namen deiner Zeitzone als <code>timeZoneInfoId</code> an, zum Beispiel <code>Europe/Vienna</code>.</p>
+                </section>
+
+                <section id="examples">
+                    <h2>Beispiele</h2>
+
+                    <h3>Die Buchungen einer Woche</h3>
+                    <pre><code>curl -H "Authorization: Bearer cnz_DEIN_SCHLUESSEL" \
+  "https://my.clubnetz.app/api/Clubs/12/Bookings?dayFrom=2027-06-07&amp;dayTo=2027-06-13"</code></pre>
+                    <p>Jede Buchung enthält ihren Platz, ihre Zeit (<code>interval.from</code> und <code>interval.to</code>), die Spielart und die Spieler.</p>
+
+                    <h3>Die Mitgliederliste, Seite für Seite</h3>
+                    <pre><code>curl -H "Authorization: Bearer cnz_DEIN_SCHLUESSEL" \
+  "https://my.clubnetz.app/api/Clubs/12/Members?Page=1&amp;PageSize=50&amp;EnablePaging=true"</code></pre>
+                    <p>Die Antwort enthält <code>total</code> und die Mitglieder der Seite in <code>entities</code>. Filtern kannst du mit <code>SearchTerm</code>, <code>Roles</code>, <code>InSeasonIds</code> und weiteren Parametern, siehe die Referenz unten.</p>
+
+                    <h3>Einen Vereinstermin anlegen</h3>
+                    <p>Dafür braucht es einen Schlüssel mit <strong>Lesen und schreiben</strong>. Die Antwort ist die Id des neuen Termins.</p>
+                    <pre><code>curl -X POST \
+  -H "Authorization: Bearer cnz_DEIN_SCHLUESSEL" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "title": "Sommerfest",
+        "category": "Social",
+        "startDate": "2027-06-12",
+        "startTime": "18:00:00",
+        "location": "Clubhaus",
+        "registrationEnabled": true,
+        "notifyMembers": false
+      }' \
+  https://my.clubnetz.app/api/Clubs/12/ClubEvents</code></pre>
+                    <p class="docs__note">Mit <code>"notifyMembers": true</code> bekommen alle Mitglieder eine Push-Benachrichtigung und eine E-Mail zum neuen Termin. Lass es beim Testen ausgeschaltet.</p>
+
+                    <h3>Python: alle Mitglieder in eine CSV-Datei exportieren</h3>
+<pre><code>import csv, os, requests
+
+BASE = "https://my.clubnetz.app/api/Clubs/12"
+HEADERS = {"Authorization": f"Bearer {os.environ['CLUBNETZ_API_KEY']}"}
+
+members, page = [], 1
+while True:
+    response = requests.get(f"{BASE}/Members", headers=HEADERS,
+                            params={"Page": page, "PageSize": 100, "EnablePaging": "true"})
+    response.raise_for_status()
+    data = response.json()
+    members += data["entities"]
+    if len(members) >= data["total"] or not data["entities"]:
+        break
+    page += 1
+
+with open("mitglieder.csv", "w", newline="", encoding="utf-8") as file:
+    writer = csv.writer(file)
+    writer.writerow(["Vorname", "Nachname", "E-Mail", "Rollen"])
+    for m in members:
+        writer.writerow([m["firstName"], m["lastName"], m["email"], ", ".join(m["roles"])])</code></pre>
+
+                    <h3>JavaScript (Node.js): die nächsten Vereinstermine</h3>
+<pre><code>const base = "https://my.clubnetz.app/api/Clubs/12";
+const headers = { Authorization: `Bearer ${process.env.CLUBNETZ_API_KEY}` };
+
+const today = new Date().toISOString().slice(0, 10);
+const inAMonth = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+
+const response = await fetch(`${base}/ClubEvents?from=${today}&amp;to=${inAMonth}`, { headers });
+if (!response.ok) throw new Error(`Clubnetz antwortet mit ${response.status}`);
+
+const { events } = await response.json();
+for (const event of events) {
+    console.log(event.startDate, event.startTime ?? "ganztägig", event.title);
+}</code></pre>
+                    <p class="docs__note">Lass solche Skripte auf einem Server oder deinem eigenen Computer laufen. Wenn du etwas auf der Vereinswebsite zeigen willst, lass deinen Server die Daten holen und nur das weitergeben, was Besucher sehen sollen. Der Schlüssel gehört nie in die Seite selbst.</p>
+                </section>
+
+                <section id="errors">
+                    <h2>Fehler und Limits</h2>
+                    <div class="docs__table">
+                        <table>
+                            <thead>
+                                <tr><th>Status</th><th>Bedeutung</th><th>Was tun</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>200</code></td><td>Es hat funktioniert.</td><td></td></tr>
+                                <tr><td><code>401</code></td><td>Der Schlüssel fehlt, ist falsch, abgelaufen, widerrufen, gehört zu einem anderen Verein, oder sein Ersteller ist kein Admin mehr.</td><td>Prüfe den Schlüssel und die Vereinsnummer in der Adresse.</td></tr>
+                                <tr><td><code>403</code></td><td>Der Schlüssel darf nur lesen (<code>ApiKeyReadOnly</code>), oder du darfst das nicht.</td><td>Verwende einen Schlüssel mit „Lesen und schreiben“.</td></tr>
+                                <tr><td><code>404</code></td><td>Das Angefragte gibt es in deinem Verein nicht.</td><td>Prüfe die Id.</td></tr>
+                                <tr><td><code>412</code></td><td>Die Anfrage verletzt eine Regel des Vereins oder enthält ungültige Daten.</td><td>Lies <code>errorCode</code> und <code>message</code> in der Antwort.</td></tr>
+                                <tr><td><code>429</code></td><td>Zu viele Anfragen.</td><td>Warte so viele Sekunden, wie im Header <code>Retry-After</code> stehen.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>Ein Fehler, der deine Eingabe betrifft, sieht so aus:</p>
+                    <pre><code>{
+  "message": "A title is required.",
+  "errorCode": "ClubEventTitleRequired",
+  "errorDetail": null
+}</code></pre>
+                    <p>Verwende in deinem Code <code>errorCode</code>; der Text in <code>message</code> ist englisch und kann sich ändern.</p>
+                    <h3>Limit</h3>
+                    <p>Jeder Schlüssel darf <strong>120 Anfragen pro Minute</strong> senden. Das reicht für Exporte und Anzeigen bei Weitem. Wenn du viele Daten lädst, frage größere Seiten ab, statt viele kleine Anfragen zu senden.</p>
+                </section>
+
+                <section id="security">
+                    <h2>Schlüssel sicher aufbewahren</h2>
+                    <ul>
+                        <li>Behandle einen Schlüssel wie ein Passwort. Wer ihn hat, kann die Daten eurer Mitglieder lesen.</li>
+                        <li>Speichere ihn in einer Umgebungsvariable oder einem Secret-Speicher, nicht im Code und nie in einem öffentlichen Repository.</li>
+                        <li>Er gehört nie in eine Website oder eine Handy-App, wo ihn jeder auslesen kann. Die API beantwortet außerdem keine Anfragen, die ein Browser von einer anderen Website aus sendet.</li>
+                        <li>Bevorzuge Schlüssel mit „Nur lesen“ und gib Schlüsseln ein Ablaufdatum.</li>
+                        <li>Könnte ein Schlüssel bekannt geworden sein, widerrufe ihn sofort unter <strong>Admin → API-Schlüssel</strong> und erstelle einen neuen.</li>
+                    </ul>
+                </section>
+
+                <section id="changes">
+                    <h2>Änderungen an der API</h2>
+                    <p>Die App und die API werden gemeinsam veröffentlicht, ein Endpunkt kann sich also mit einer neuen Version von Clubnetz ändern. Jede Antwort enthält die laufende Version im Header <code>X-App-Version</code>. Wenn dir dein Skript wichtig ist, protokolliere diesen Header und prüfe dein Skript nach einem Update. Die Referenz unten beschreibt immer die Version, die gerade läuft.</p>
+                </section>
+
+                <section id="reference">
+                    <h2>Referenz der Endpunkte</h2>
+                    <p>Alle Endpunkte, die ein Schlüssel aufrufen kann, live aus dem OpenAPI-Dokument von Clubnetz geladen. Die Pfade sind ohne das führende <code>/api/Clubs/<em>clubId</em></code> angegeben. Namen und Beschreibungen in der Referenz sind englisch.</p>
+                    <p><a class="btn btn--solid" href="https://my.clubnetz.app/api/openapi/club.json">OpenAPI-Dokument herunterladen</a></p>
+                    <p class="docs__muted">Diese Datei kannst du in Werkzeuge wie Postman, Insomnia oder Bruno importieren oder daraus einen Client für deine Programmiersprache erzeugen.</p>
+
+                    <div id="api-reference" class="api-ref"
+                         data-openapi="https://my.clubnetz.app/api/openapi/club.json"
+                         data-loading="Die Endpunkte werden geladen …"
+                         data-failed="Die Endpunkte konnten nicht geladen werden. Bitte öffne das OpenAPI-Dokument über die Schaltfläche oben."
+                         data-filter="Endpunkte suchen, zum Beispiel „booking“ oder „POST“"
+                         data-empty="Kein Endpunkt passt zu deiner Suche."
+                         data-count="{0} Endpunkte"
+                         data-parameters="Parameter"
+                         data-name="Name"
+                         data-in="Ort"
+                         data-type="Typ"
+                         data-description="Beschreibung"
+                         data-required="erforderlich"
+                         data-body="Inhalt der Anfrage"
+                         data-response="Antwort"
+                         data-no-content="Kein Inhalt"
+                         data-file="Datei"
+                         data-write="braucht „Lesen und schreiben“"></div>
+                    <noscript><p>Die Liste der Endpunkte braucht JavaScript. Ohne JavaScript verwende bitte das OpenAPI-Dokument.</p></noscript>
+                </section>
+            </article>
+        </div>
+
+        <section class="cta">
+            <div class="wrap">
+                <h2>Fehlt etwas?</h2>
+                <p>Schreib uns, was du bauen möchtest, oder eröffne ein Issue auf GitHub. Clubnetz ist Open Source, du kannst es also auch selbst ergänzen.</p>
+                <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz-API">hello@clubnetz.app</a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap foot">
+            <span>Clubnetz ist freie Software unter der AGPL-3.0.</span>
+            <nav aria-label="Rechtliches">
+                <a href="https://my.clubnetz.app/legal/imprint">Impressum</a>
+                <a href="https://my.clubnetz.app/legal/privacy">Datenschutz</a>
+                <a href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
+                <a href="/docs/api/" hreflang="en" lang="en">English</a>
+            </nav>
+        </div>
+    </footer>
+</body>
+</html>

@@ -10,6 +10,10 @@ public static class AuthorizationPolicies
 
     // Club Policies
     public const string ClubAdministrator = nameof(ClubAdministrator);
+    /// <summary>Creates and revokes the API keys of the club: a signed-in Admin. Not accepted for requests made with an API key.</summary>
+    public const string ClubApiKeyManager = nameof(ClubApiKeyManager);
+    /// <summary>Everybody who has a member in the club, whatever its roles are. For endpoints that check the rest themselves.</summary>
+    public const string AnyMember = nameof(AnyMember);
     public const string Member = nameof(Member);
     public const string ClubMember = nameof(ClubMember);
     public const string ClubTreasurer = nameof(ClubTreasurer);

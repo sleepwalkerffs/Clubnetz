@@ -80,3 +80,16 @@ App.goBack = function () {
   }
   return false;
 }
+
+// The error bar of index.html is plain HTML, so its text can't come from the app's resources: German for German browsers.
+App.localizeErrorBar = function () {
+  const bar = document.getElementById('blazor-error-ui');
+  if (!bar || !(navigator.language || '').toLowerCase().startsWith('de'))
+    return;
+
+  bar.querySelector('.blazor-error-ui__text').textContent = 'Da ist etwas schiefgelaufen. Bitte lade die Seite neu.';
+  bar.querySelector('.reload').textContent = 'Neu laden';
+  bar.querySelector('.dismiss').setAttribute('aria-label', 'Schließen');
+};
+
+App.localizeErrorBar();

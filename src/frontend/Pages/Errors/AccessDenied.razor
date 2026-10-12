@@ -1,10 +1,8 @@
 @page "/accessdenied"
-<h3>Access Denied</h3>
-<div class="d-flex justify-center mud-width-full mt-4">
-    <MudLink Href="/"
-             Typo="Typo.h3"
-             Underline="Underline.Always"
-             Color="Color.Secondary">
-        Home
-    </MudLink>
-</div>
+@using Bookennis.Client.Localization.Pages.Errors
+
+<ErrorPage Emoji="🔒" Code="403" Title="@L["AccessDenied_Title"]" Text="@L["AccessDenied_Text"]" Hint="@L["AccessDenied_Hint"]" />
+
+@code {
+    [Inject] private IStringLocalizer<ErrorsLocale> L { get; set; } = null!;
+}

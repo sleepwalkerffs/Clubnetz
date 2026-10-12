@@ -1,4 +1,5 @@
 using Bookennis.Api.Data;
+using Bookennis.Api.Infrastructure.Tenant;
 using Bookennis.Domain.Families;
 using Bookennis.Domain.Members;
 using Bookennis.Shared.Controller.Members;
@@ -10,11 +11,13 @@ namespace Bookennis.Api.Business.Members;
 
 public record GetMember(int MemberId) : ICommand<MembersDetailResult>
 {
-    public class Handler(AppDbContext context) : IRequestHandler<GetMember, MembersDetailResult>
+    public class Handler(AppDbContext context, ITenantService tenantService) : IRequestHandler<GetMember, MembersDetailResult>
     {
         public async Task<MembersDetailResult> Handle(GetMember request, CancellationToken cancellationToken)
         {
             var now = DateTimeOffset.UtcNow;
+            var currentClubId = tenantService.GetTenantId();
+
             var result = await (from user in context.Users
                                 join member in context.Set<Member>().IgnoreQueryFilters() on user.Id equals member.UserId
                                 join club in context.Clubs.IgnoreQueryFilters() on member.ClubId equals club.Id
@@ -22,7 +25,12 @@ public record GetMember(int MemberId) : ICommand<MembersDetailResult>
                                 join familyMember in context.FamilyMembers on member.Id equals familyMember.MemberId into tmpFamilyMember
                                 from familyMember in tmpFamilyMember.DefaultIfEmpty()
 
+                                // IgnoreQueryFilters switches the tenant filter off for the whole query, so the club is checked here:
+                                // a member of this club, or a player of another club when both clubs share their players (ATP)
                                 where member.Id == request.MemberId
+                                   && (currentClubId == null
+                                       || member.ClubId == currentClubId
+                                       || (club.IsAtpClub && context.Clubs.Any(current => current.Id == currentClubId && current.IsAtpClub)))
 
                                 select new MembersDetailResult
                                 {

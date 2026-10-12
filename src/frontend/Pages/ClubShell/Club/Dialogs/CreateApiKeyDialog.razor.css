@@ -1,0 +1,62 @@
+.api-key-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.api-key-edit__access {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.api-key-edit__option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 2px solid var(--mud-palette-lines-inputs);
+    background: var(--mud-palette-surface);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.api-key-edit__option:hover {
+    border-color: var(--mud-palette-primary);
+}
+
+.api-key-edit__option--selected {
+    border-color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 8%, var(--mud-palette-surface));
+}
+
+.api-key-edit__option-emoji {
+    font-size: 1.3rem;
+    line-height: 1.2;
+}
+
+.api-key-edit__option-title {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.api-key-edit__option-text {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.api-key-edit__hint {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+@media (max-width: 599.98px) {
+    .api-key-edit__access {
+        grid-template-columns: 1fr;
+    }
+}

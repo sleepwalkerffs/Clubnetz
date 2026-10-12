@@ -1,0 +1,210 @@
+.api-keys-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.api-key-new {
+    --new-color: var(--bk-dark-green, #047857);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 16px;
+    border: 2px solid var(--new-color);
+    background: color-mix(in srgb, var(--new-color) 8%, var(--mud-palette-surface));
+}
+
+.api-key-new__title {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.api-key-new__text {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.api-key-new__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.api-key-new__token {
+    flex: 1 1 260px;
+    min-width: 0;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-background-gray);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+    user-select: all;
+}
+
+.api-keys-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 28px 12px;
+    border-radius: 16px;
+    border: 2px dashed var(--mud-palette-lines-inputs);
+    text-align: center;
+}
+
+.api-keys-empty__emoji {
+    font-size: 2.4rem;
+    line-height: 1;
+}
+
+.api-keys-empty__title {
+    margin-top: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.api-keys-empty__text {
+    max-width: 440px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.api-keys {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.api-key {
+    --key-color: var(--bk-dark-green, #047857);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 8px 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-left: 4px solid var(--key-color);
+    background: var(--mud-palette-surface);
+}
+
+.api-key--inactive {
+    --key-color: var(--mud-palette-text-secondary);
+}
+
+.api-key__main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.api-key__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+}
+
+.api-key__name {
+    margin-right: 2px;
+    font-size: 1rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.api-key__status,
+.api-key__access {
+    padding: 1px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.api-key__status {
+    color: var(--key-color);
+    background: color-mix(in srgb, var(--key-color) 14%, transparent);
+}
+
+.api-key__access {
+    color: var(--mud-palette-text-secondary);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.api-key__fact {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.api-key__fact code {
+    font-size: 0.82rem;
+}
+
+::deep .api-key__icon {
+    flex: 0 0 auto;
+    margin-top: 2px;
+    font-size: 1rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.api-key__muted {
+    color: var(--mud-palette-text-secondary);
+}
+
+.api-key__warning {
+    margin-top: 2px;
+    font-size: 0.82rem;
+    color: var(--bk-dark-amber, #B45309);
+}
+
+.api-key__actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+.api-keys-howto {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding-left: 20px;
+    font-size: 0.9rem;
+}
+
+.api-keys-howto__code {
+    margin: 8px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-background-gray);
+    font-size: 0.8rem;
+    overflow-x: auto;
+}
+
+.api-keys-howto__link {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-primary);
+    overflow-wrap: anywhere;
+}
+
+.api-keys-howto__notes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 14px 0 0;
+    padding-left: 20px;
+    font-size: 0.82rem;
+    color: var(--mud-palette-text-secondary);
+}
