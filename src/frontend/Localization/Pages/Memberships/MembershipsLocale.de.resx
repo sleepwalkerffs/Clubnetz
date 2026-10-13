@@ -933,4 +933,7 @@
   <data name="Approve_Intro" xml:space="preserve">
     <value>Das Mitglied bekommt eine E-Mail und kann dann bezahlen. Prüfe vorher, für wen der Tarif gilt: Das Mitglied zahlt einen Beitrag für alle.</value>
   </data>
+  <data name="MarkPaid_NobodyCovered" xml:space="preserve">
+    <value>Wähle mindestens ein Mitglied, für das der Tarif gilt.</value>
+  </data>
 </root>

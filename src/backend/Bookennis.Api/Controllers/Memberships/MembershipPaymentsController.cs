@@ -48,7 +48,7 @@ public class MembershipPaymentsController(IMediator mediator, IUserAccessor user
     /// <summary>Marks an open order as paid outside of the app and enrolls its members.</summary>
     [HttpPost("{orderId:int}/mark-paid")]
     public Task<MembershipOrderDto> MarkMembershipOrderPaid(int clubId, int orderId, [FromBody] MarkMembershipOrderPaidModel model, CancellationToken cancellationToken)
-        => mediator.Send(new MarkMembershipOrderPaid(clubId, userAccessor.GetUserId(), orderId, (MembershipPaymentMethod)model.Method, model.PaidOn, model.Note), cancellationToken);
+        => mediator.Send(new MarkMembershipOrderPaid(clubId, userAccessor.GetUserId(), orderId, (MembershipPaymentMethod)model.Method, model.PaidOn, model.Note, model.MemberIds), cancellationToken);
 
     /// <summary>Cancels an order, also a paid one. Enrollments stay, and money is given back outside of the app.</summary>
     [HttpPost("{orderId:int}/cancel")]

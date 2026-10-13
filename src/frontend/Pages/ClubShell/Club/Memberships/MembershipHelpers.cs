@@ -196,6 +196,20 @@ public static class MembershipHelpers
         return payments.Members.Where(m => !withMembership.Contains(m.MemberId)).ToList();
     }
 
+    /// <summary>
+    /// Who the treasurer can put on an existing order: the payer, the members it already covers and the rest of the payer's family,
+    /// as far as they have no other membership in the season.
+    /// </summary>
+    public static List<MembershipPaymentMemberDto> CoverableBy(GetMembershipPaymentsResult payments, MembershipPaymentOrderDto order, MembershipPaymentMemberDto payer)
+    {
+        var free = MembersWithoutMembership(payments).Select(m => m.MemberId).ToHashSet();
+        return payments.Members
+            .Where(m => order.MemberIds.Contains(m.MemberId)
+                     || (free.Contains(m.MemberId) && (m.MemberId == payer.MemberId || (payer.FamilyId is not null && m.FamilyId == payer.FamilyId))))
+            .OrderBy(m => m.MemberId == payer.MemberId ? 0 : 1).ThenBy(m => m.IsChild).ThenBy(m => m.FirstName)
+            .ToList();
+    }
+
     /// <summary>Who a couple or family plan covers unless the treasurer says otherwise: the family as far as the plan allows.</summary>
     public static List<MembershipPaymentMemberDto> CoveredByDefault(MembershipPlanDto plan, IReadOnlyCollection<MembershipPaymentMemberDto> family)
     {

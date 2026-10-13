@@ -933,4 +933,7 @@
   <data name="Approve_Intro" xml:space="preserve">
     <value>The member gets an email and can pay then. Check who the plan covers first: the member pays one fee for all of them.</value>
   </data>
+  <data name="MarkPaid_NobodyCovered" xml:space="preserve">
+    <value>Choose at least one member the plan covers.</value>
+  </data>
 </root>

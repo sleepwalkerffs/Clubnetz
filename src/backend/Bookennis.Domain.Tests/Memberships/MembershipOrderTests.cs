@@ -81,17 +81,36 @@ public class MembershipOrderTests
     }
 
     [Fact]
-    public void SetMembers_NobodyOrAfterTheConfirmation_Throws()
+    public void SetMembers_Nobody_Throws()
     {
-        var order = new MembershipOrder(Plan(requiresApproval: true), 1, [1]);
+        var order = Order();
 
         var nobody = () => order.SetMembers([]);
-        nobody.Should().Throw<PreconditionException>().Which.ErrorCode.Should().Be(nameof(MembershipOrder.ErrorCode.MembershipOrderMemberRequired));
 
-        // The member pays for what the confirmed order says
-        order.Approve(Now);
-        ShouldBeInvalid(() => order.SetMembers([1, 2]));
-        order.Members.Select(m => m.MemberId).Should().Equal(1);
+        nobody.Should().Throw<PreconditionException>().Which.ErrorCode.Should().Be(nameof(MembershipOrder.ErrorCode.MembershipOrderMemberRequired));
+    }
+
+    [Theory]
+    [InlineData(MembershipOrderStatus.AwaitingPayment, true)]
+    [InlineData(MembershipOrderStatus.Failed, true)]
+    [InlineData(MembershipOrderStatus.Processing, false)]
+    [InlineData(MembershipOrderStatus.Paid, false)]
+    [InlineData(MembershipOrderStatus.Cancelled, false)]
+    public void SetMembers_OnlyUntilMoneyIsOnItsWay(MembershipOrderStatus status, bool allowed)
+    {
+        // From then on the members are enrolled by the order
+        var order = OrderIn(status);
+
+        if (allowed)
+        {
+            order.SetMembers([1, 2]);
+            order.Members.Select(m => m.MemberId).Should().BeEquivalentTo([1, 2]);
+        }
+        else
+        {
+            ShouldBeInvalid(() => order.SetMembers([1, 2]));
+            order.Members.Select(m => m.MemberId).Should().Equal(1);
+        }
     }
 
     [Fact]

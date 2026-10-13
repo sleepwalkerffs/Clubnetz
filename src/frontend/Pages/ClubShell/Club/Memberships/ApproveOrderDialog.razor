@@ -33,22 +33,7 @@
 
     private IReadOnlyCollection<MembershipPaymentMemberDto> covered = [];
 
-    /// <summary>The payer, the members of the order and the rest of the family, as far as they have no other membership.</summary>
-    private List<MembershipPaymentMemberDto> FamilyMembers
-    {
-        get
-        {
-            if (Store.Payments is not { } payments)
-                return [];
-
-            var free = MembershipHelpers.MembersWithoutMembership(payments).Select(m => m.MemberId).ToHashSet();
-            return payments.Members
-                .Where(m => Order.MemberIds.Contains(m.MemberId)
-                         || (free.Contains(m.MemberId) && (m.MemberId == Payer.MemberId || (Payer.FamilyId is not null && m.FamilyId == Payer.FamilyId))))
-                .OrderBy(m => m.MemberId == Payer.MemberId ? 0 : 1).ThenBy(m => m.IsChild).ThenBy(m => m.FirstName)
-                .ToList();
-        }
-    }
+    private List<MembershipPaymentMemberDto> FamilyMembers => Store.Payments is { } payments ? MembershipHelpers.CoverableBy(payments, Order, Payer) : [];
 
     protected override void OnInitialized()
         => covered = FamilyMembers.Where(m => Order.MemberIds.Contains(m.MemberId)).ToList();

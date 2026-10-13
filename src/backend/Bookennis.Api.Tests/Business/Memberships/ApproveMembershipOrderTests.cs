@@ -73,6 +73,41 @@ public class ApproveMembershipOrderTests(TestFixture fixture) : TestBase(fixture
     }
 
     [Fact]
+    public async Task MarkMembershipOrderPaid_WithMembers_EnrollsThePartnerTheMemberForgot()
+    {
+        // A couple plan needs no confirmation: the member ordered it alone and the treasurer adds the partner when the money arrives
+        var (orderId, family) = await QueryAsync(async ctx =>
+        {
+            var seeded = await MembershipSeed.SeedFamily(ctx);
+            var plan = await MembershipSeed.SeedPlan(ctx, seeded.SeasonId, MembershipSeed.Data("Couple", 40000) with { MaxAdults = 2 });
+            return ((await MembershipSeed.SeedOrder(ctx, plan, seeded.Parent, seeded.Parent)).Id, seeded);
+        });
+
+        var result = await SendAsync(new MarkMembershipOrderPaid(TestDataSeed.ClubId, TestDataSeed.AdminId, orderId, MembershipPaymentMethod.BankTransfer, default, null, [family.Parent, family.Partner]));
+
+        result.Status.Should().Be(OrderStatus.Paid);
+        var enrolled = await QueryAsync(ctx => ctx.MemberSeasons.Where(ms => ms.MembershipOrderId == orderId).Select(ms => ms.MemberId).ToListAsync());
+        enrolled.Should().BeEquivalentTo([family.Parent, family.Partner]);
+    }
+
+    [Fact]
+    public async Task MarkMembershipOrderPaid_WithOtherMembersOnAPaidOrder_Throws()
+    {
+        var (orderId, family) = await QueryAsync(async ctx =>
+        {
+            var seeded = await MembershipSeed.SeedFamily(ctx);
+            var plan = await MembershipSeed.SeedPlan(ctx, seeded.SeasonId, MembershipSeed.Data("Couple", 40000) with { MaxAdults = 2 });
+            return ((await MembershipSeed.SeedOrder(ctx, plan, seeded.Parent, seeded.Parent)).Id, seeded);
+        });
+        await SendAsync(new MarkMembershipOrderPaid(TestDataSeed.ClubId, TestDataSeed.AdminId, orderId, MembershipPaymentMethod.Cash, default, null));
+
+        var act = () => SendAsync(new MarkMembershipOrderPaid(TestDataSeed.ClubId, TestDataSeed.AdminId, orderId, MembershipPaymentMethod.Cash, default, null, [family.Parent, family.Partner]));
+
+        (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(MembershipOrder.ErrorCode.MembershipOrderInvalidStatus));
+        (await QueryAsync(ctx => ctx.MemberSeasons.CountAsync(ms => ms.MemberId == family.Partner))).Should().Be(0);
+    }
+
+    [Fact]
     public async Task ApproveMembershipOrder_WithSomebodyWhoIsNoMemberOfTheClub_Throws()
     {
         var orderId = await QueryAsync(ctx => MembershipPaymentSeed.OrderAwaitingApproval(ctx));

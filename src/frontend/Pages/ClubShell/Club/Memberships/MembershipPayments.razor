@@ -431,6 +431,20 @@ else
             { d => d.OrderId, row.Order!.Id },
             { d => d.Summary, $"{row.Order.PlanName} · {MembershipHelpers.Amount(row.Order.AmountCents)} · {Names(row)}" },
         };
+
+        // Who a couple or family plan covers can still be corrected as long as no money is on its way
+        if (row.Order.Status is MembershipOrderStatus.AwaitingApproval or MembershipOrderStatus.AwaitingPayment or MembershipOrderStatus.Failed
+            && row.Payer is { } payer && selectedSeasonId is { } seasonId)
+        {
+            await PlansStore.LoadPlans(seasonId);
+            if (PlansStore.Plans?.FirstOrDefault(p => p.Id == row.Order.MembershipPlanId) is { IsGroupPlan: true } plan)
+            {
+                parameters.Add(d => d.Order, row.Order);
+                parameters.Add(d => d.Plan, plan);
+                parameters.Add(d => d.Payer, payer);
+            }
+        }
+
         var dialog = await DialogService.ShowAsync<MarkPaidDialog>(L["Payments_MarkPaid"], parameters,
             new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseOnEscapeKey = true });
 

@@ -104,6 +104,9 @@ public record ApproveMembershipOrderModel
 
 public record MarkMembershipOrderPaidModel
 {
+    /// <summary>Who the order covers from now on; <c>null</c> leaves the members as the member chose them.</summary>
+    public List<int>? MemberIds { get; init; }
+
     public MembershipPaymentMethod Method { get; init; } = MembershipPaymentMethod.BankTransfer;
     public DateOnly PaidOn { get; init; }
     public string? Note { get; init; }

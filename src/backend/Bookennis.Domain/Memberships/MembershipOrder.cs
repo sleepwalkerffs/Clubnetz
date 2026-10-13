@@ -106,12 +106,12 @@ public class MembershipOrder : TenantDomainEntity, IAggregateRoot
     }
 
     /// <summary>
-    /// The treasurer corrects who the order covers before confirming it, e.g. adds the partner and the children to a family plan.
-    /// Once the order is confirmed the member pays for what it says, so it can't be changed any more.
+    /// The treasurer corrects who the order covers, e.g. adds the partner the member forgot on a couple plan. The price is per order,
+    /// so it stays the same. Possible until money is on its way or arrived: from then on the members are enrolled by the order.
     /// </summary>
     public void SetMembers(IReadOnlyCollection<int> memberIds)
     {
-        Require(Status == MembershipOrderStatus.AwaitingApproval);
+        Require(Status is MembershipOrderStatus.AwaitingApproval or MembershipOrderStatus.AwaitingPayment or MembershipOrderStatus.Failed);
         var distinctMemberIds = DistinctMembers(memberIds);
 
         members.RemoveAll(m => !distinctMemberIds.Contains(m.MemberId));
