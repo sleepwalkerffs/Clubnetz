@@ -153,8 +153,22 @@ public class MembershipNotifier(AppDbContext context, IMediator mediator, AppSet
 
 public static class MembershipTexts
 {
-    /// <summary>An amount in euro as it is written in the language, e.g. "€ 215,00".</summary>
-    public static string Amount(int amountCents, CultureInfo culture) => (amountCents / 100m).ToString("C2", culture);
+    /// <summary>An amount in euro as it is written in the language: "€ 215,00" in German, "€215.00" in English.</summary>
+    public static string Amount(int amountCents, CultureInfo culture) => (amountCents / 100m).ToString("C2", MoneyFormat(culture));
+
+    // en-AT is written like German on some systems and like English on others, depending on the ICU data.
+    // English emails always get the English form.
+    private static NumberFormatInfo MoneyFormat(CultureInfo culture)
+    {
+        if (culture.TwoLetterISOLanguageName != "en")
+            return culture.NumberFormat;
+
+        var format = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
+        format.CurrencySymbol = "€";
+        format.CurrencyPositivePattern = 0;
+        format.CurrencyNegativePattern = 1;
+        return format;
+    }
 
     public static CultureInfo Culture(Language language) => language.ToCultureInfo();
 }

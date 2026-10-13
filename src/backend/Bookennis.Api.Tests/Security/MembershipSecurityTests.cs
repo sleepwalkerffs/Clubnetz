@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Bookennis.Domain.Memberships;
 using FluentAssertions;
 using FluentAssertions.Execution;
@@ -103,7 +104,9 @@ public class MembershipSecurityTests(ApiSecurityFixture app)
         options.Status.Should().Be(HttpStatusCode.OK);
         options.Body.Should().Contain("Ownchild", "a parent sees the own family");
         options.Body.Should().NotContain("Otherchild").And.NotContain("Note of the treasurer");
-        options.Body.Should().NotContain($"\"id\":{orderId},");
+        // Only the list of orders: a plan can have the same id as the order
+        using var json = JsonDocument.Parse(options.Body);
+        json.RootElement.GetProperty("orders").EnumerateArray().Select(o => o.GetProperty("id").GetInt32()).Should().NotContain(orderId);
         await RemoveOrders(app.OtherMemberOfA.MemberId);
     }
 

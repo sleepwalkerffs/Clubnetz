@@ -117,7 +117,7 @@ public static class ClubEmailCatalog
         return new MembershipVariables(
             language == Language.German ? "Familie" : "Family",
             SampleSeason(language).Period,
-            215m.ToString("C2", culture),
+            Memberships.MembershipTexts.Amount(21500, culture),
             "Max Muster, Erika Muster, Mia Muster",
             paid ? (language == Language.German ? "Online-Zahlung" : "Online payment") : "",
             "https://www.example.com/clubs/1/membership");
