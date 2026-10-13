@@ -15,8 +15,8 @@ public class MembershipPaymentsHttpClient(HttpClient httpClient, JsonSerializerO
     public async Task<HttpResult<MembershipOrderDto>> RecordMembershipPayment(RecordMembershipPaymentModel model, CancellationToken cancellationToken = default)
         => await (await httpClient.PostAsJsonAsync("", model, jsonOptions, cancellationToken)).AsHttpResult<MembershipOrderDto>(jsonOptions, cancellationToken);
 
-    public async Task<HttpResult<MembershipOrderDto>> ApproveMembershipOrder(int orderId, CancellationToken cancellationToken = default)
-        => await (await httpClient.PostAsync($"{orderId}/approve", null, cancellationToken)).AsHttpResult<MembershipOrderDto>(jsonOptions, cancellationToken);
+    public async Task<HttpResult<MembershipOrderDto>> ApproveMembershipOrder(int orderId, ApproveMembershipOrderModel model, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsJsonAsync($"{orderId}/approve", model, jsonOptions, cancellationToken)).AsHttpResult<MembershipOrderDto>(jsonOptions, cancellationToken);
 
     public async Task<HttpResult<MembershipOrderDto>> RejectMembershipOrder(int orderId, CancellationToken cancellationToken = default)
         => await (await httpClient.PostAsync($"{orderId}/reject", null, cancellationToken)).AsHttpResult<MembershipOrderDto>(jsonOptions, cancellationToken);

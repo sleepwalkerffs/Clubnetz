@@ -296,6 +296,40 @@ public class MembershipSecurityTests(ApiSecurityFixture app)
     }
 
     [Fact]
+    public async Task Treasurer_ApprovesAnOrder_ButCannotPutAMemberOfAnotherClubOnIt()
+    {
+        var other = app.OtherMemberOfA.MemberId;
+        var orderId = await app.Db(async context =>
+        {
+            var plan = new MembershipPlan(app.ClubA.Id, app.ClubA.SeasonId, new MembershipPlan.PlanData(
+                $"Needs approval {Guid.NewGuid():N}", null, 12000, 2, true, null, null, false, false, false, true, null, null, true) with { RequiresApproval = true }, 99);
+            context.Add(plan);
+            await context.SaveChangesAsync();
+
+            var order = new MembershipOrder(plan, other, [other]);
+            context.Add(order);
+            await context.SaveChangesAsync();
+            return order.Id;
+        });
+
+        var foreign = await Send(HttpMethod.Post, $"{Payments}/{orderId}/approve", app.TreasurerOfA, $$"""{"memberIds":[{{other}},{{app.ClubB.Member.MemberId}}]}""");
+
+        foreign.Status.Should().Be(HttpStatusCode.PreconditionFailed, foreign.Body);
+        foreign.Body.Should().Contain("MembershipMemberNotInClub");
+        (await Order(orderId)).Status.Should().Be(MembershipOrderStatus.AwaitingApproval);
+        (await app.Db(c => c.MembershipOrderMembers.IgnoreQueryFilters().Where(m => m.MembershipOrderId == orderId).Select(m => m.MemberId).ToListAsync())).Should().Equal(other);
+
+        // Without a body the order is confirmed as the member placed it, with one the family is put on it
+        var child = app.FamilyOfOtherMemberOfA.ChildMemberId;
+        var approved = await Send(HttpMethod.Post, $"{Payments}/{orderId}/approve", app.TreasurerOfA, $$"""{"memberIds":[{{other}},{{child}}]}""");
+
+        approved.Status.Should().Be(HttpStatusCode.OK, approved.Body);
+        (await Order(orderId)).Status.Should().Be(MembershipOrderStatus.AwaitingPayment);
+        (await app.Db(c => c.MembershipOrderMembers.IgnoreQueryFilters().Where(m => m.MembershipOrderId == orderId).Select(m => m.MemberId).ToListAsync())).Should().BeEquivalentTo([other, child]);
+        await RemoveOrders(other);
+    }
+
+    [Fact]
     public async Task Treasurer_CannotRecordAPaymentForMembersOrPlansOfAnotherClub()
     {
         var before = await app.Fingerprint(app.ClubB);

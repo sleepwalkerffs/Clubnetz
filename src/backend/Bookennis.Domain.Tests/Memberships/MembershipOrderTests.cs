@@ -69,6 +69,32 @@ public class MembershipOrderTests
     }
 
     [Fact]
+    public void SetMembers_BeforeTheConfirmation_ReplacesWhoIsCovered()
+    {
+        var order = new MembershipOrder(Plan(requiresApproval: true), 1, [1, 5]);
+
+        order.SetMembers([1, 2, 2, 3]);
+
+        order.Members.Select(m => m.MemberId).Should().BeEquivalentTo([1, 2, 3]);
+        order.PayerMemberId.Should().Be(1);
+        order.Status.Should().Be(MembershipOrderStatus.AwaitingApproval);
+    }
+
+    [Fact]
+    public void SetMembers_NobodyOrAfterTheConfirmation_Throws()
+    {
+        var order = new MembershipOrder(Plan(requiresApproval: true), 1, [1]);
+
+        var nobody = () => order.SetMembers([]);
+        nobody.Should().Throw<PreconditionException>().Which.ErrorCode.Should().Be(nameof(MembershipOrder.ErrorCode.MembershipOrderMemberRequired));
+
+        // The member pays for what the confirmed order says
+        order.Approve(Now);
+        ShouldBeInvalid(() => order.SetMembers([1, 2]));
+        order.Members.Select(m => m.MemberId).Should().Equal(1);
+    }
+
+    [Fact]
     public void Approve_OrderThatNeedsNoConfirmation_Throws()
     {
         var order = Order();

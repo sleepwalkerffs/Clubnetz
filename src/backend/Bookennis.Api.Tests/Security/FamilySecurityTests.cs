@@ -88,6 +88,52 @@ public class FamilySecurityTests(ApiSecurityFixture app)
     }
 
     [Fact]
+    public async Task Treasurer_SetsUpTheFamilyOfAMember_AndTheNewChildBelongsToTheParent()
+    {
+        // A treasurer who records the fee of a family puts the family together
+        var family = $"{Families}/{Foreign.Id}";
+
+        var read = await Send(HttpMethod.Get, family, app.TreasurerOfA);
+        var added = await Send(HttpMethod.Post, $"{family}/NewChild", app.TreasurerOfA, """{"firstName":"Bytreasurer","lastName":"Child","birthday":"2015-01-01","gender":"Male"}""");
+
+        read.Status.Should().Be(HttpStatusCode.OK, read.Body);
+        added.Status.Should().Be(HttpStatusCode.OK, added.Body);
+
+        var child = await app.Db(c => c.Users.Where(u => u.FirstName == "Bytreasurer").Select(u => new { u.Id, u.BelongsToUserId }).SingleAsync());
+        child.BelongsToUserId.Should().Be(app.OtherMemberOfA.UserId, "the account of a child belongs to a parent, not to the treasurer");
+
+        var childMemberId = await app.Db(c => c.ClubMembers.IgnoreQueryFilters().Where(m => m.UserId == child.Id).Select(m => m.Id).SingleAsync());
+        var removed = await Send(HttpMethod.Delete, $"{family}/Member/{childMemberId}", app.TreasurerOfA);
+        removed.Status.Should().Be(HttpStatusCode.OK, removed.Body);
+        (await MembersOf(Foreign)).Should().HaveCount(2);
+
+        await app.Db(async c =>
+        {
+            await c.ClubMembers.IgnoreQueryFilters().Where(m => m.Id == childMemberId).ExecuteDeleteAsync();
+            await c.Users.Where(u => u.Id == child.Id).ExecuteDeleteAsync();
+        });
+    }
+
+    [Fact]
+    public async Task Treasurer_FoundsAFamilyForAMember_ButNotInAnotherClub()
+    {
+        var parent = app.ClubA.Member.MemberId;
+
+        var foreign = await Send(HttpMethod.Post, Families, app.TreasurerOfA, $$"""{"parentContractUserIds":[{{app.ClubB.Member.MemberId}}],"childrenUserContractIds":[],"newChildUsers":[]}""");
+        var foreignRead = await Send(HttpMethod.Get, $"/api/Clubs/{app.ClubB.Id}/Families", app.TreasurerOfA);
+        var founded = await Send(HttpMethod.Post, Families, app.TreasurerOfA, $$"""{"parentContractUserIds":[{{parent}}],"childrenUserContractIds":[],"newChildUsers":[]}""");
+
+        foreign.Status.Should().NotBe(HttpStatusCode.OK, "a member of another club can't be put into a family");
+        foreignRead.Status.Should().Be(HttpStatusCode.Forbidden);
+        founded.Status.Should().Be(HttpStatusCode.OK, founded.Body);
+        (await app.Db(c => c.FamilyMembers.IgnoreQueryFilters().CountAsync(fm => fm.MemberId == app.ClubB.Member.MemberId))).Should().Be(0);
+
+        var familyId = int.Parse(founded.Body, System.Globalization.CultureInfo.InvariantCulture);
+        (await Send(HttpMethod.Delete, $"{Families}/{familyId}", app.TreasurerOfA)).Status.Should().Be(HttpStatusCode.OK);
+        (await app.Db(c => c.FamilyMembers.IgnoreQueryFilters().CountAsync(fm => fm.MemberId == parent))).Should().Be(0);
+    }
+
+    [Fact]
     public async Task Member_CannotFoundAFamilyForOtherPeople()
     {
         // Parents would be two other members: whoever is a parent of a family may book for its children

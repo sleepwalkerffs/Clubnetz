@@ -14,7 +14,8 @@ public record CreateFamily(List<int> ParentContractUserIds, List<int> ChildrenUs
     {
         public async Task<int> Handle(CreateFamily request, CancellationToken cancellationToken)
         {
-            var newChildMemberIds = await FamilyCreateUpdateHelper.AddNewChildUsers(context, tenantService.GetTenantId()!.Value, request.NewChildUsers, request.UserId, cancellationToken);
+            var ownerUserId = await FamilyCreateUpdateHelper.GetOwnerOfNewChildren(context, request.ParentContractUserIds, request.UserId, cancellationToken);
+            var newChildMemberIds = await FamilyCreateUpdateHelper.AddNewChildUsers(context, tenantService.GetTenantId()!.Value, request.NewChildUsers, ownerUserId, cancellationToken);
             request.ChildrenUserContractIds.AddRange(newChildMemberIds);
 
             var memberIds = request.ParentContractUserIds.Union(request.ChildrenUserContractIds).Distinct().ToList();

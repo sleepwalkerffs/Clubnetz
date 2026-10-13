@@ -7,11 +7,22 @@
 
 @implements IDisposable
 
-<SectionCard Emoji="👨‍👩‍👧" Title="@FamilySharedLocale["Family"]" Subtitle="@FamilySharedLocale["FamilySubtitle"]">
-    <div class="family-group">
-        <div class="family-group__label">@FamilySharedLocale["Partner"]</div>
-        @if (Partners.Count > 0)
-        {
+@if (Embedded)
+{
+    @Body
+}
+else
+{
+    <SectionCard Emoji="👨‍👩‍👧" Title="@FamilySharedLocale["Family"]" Subtitle="@FamilySharedLocale[ManagedByClub ? "FamilySubtitleManaged" : "FamilySubtitle"]">
+        @Body
+    </SectionCard>
+}
+
+@code {
+    private RenderFragment Body => __builder =>
+    {
+        <div class="family-group">
+            <div class="family-group__label">@FamilySharedLocale[IsChild ? "Parents" : "Partner"]</div>
             @foreach (var parent in Partners)
             {
                 <div class="family-member">
@@ -29,58 +40,84 @@
                     }
                 </div>
             }
-        }
-        else if (CanManage)
-        {
-            <button type="button" class="family-add" @onclick="AddPartner">
-                <MudIcon Icon="@Icons.Material.Filled.FavoriteBorder" Size="Size.Small" />
-                @FamilySharedLocale["SelectPartner"]
-            </button>
-        }
-    </div>
+            @if (CanManage && (FamilyStore.Family?.Parents.Count ?? 1) < 2)
+            {
+                <button type="button" class="family-add" @onclick="AddPartner">
+                    <MudIcon Icon="@Icons.Material.Filled.FavoriteBorder" Size="Size.Small" />
+                    @FamilySharedLocale["SelectPartner"]
+                </button>
+            }
+            else if (Partners.Count == 0)
+            {
+                <div class="family-group__empty">–</div>
+            }
+        </div>
 
-    <div class="family-group">
-        <div class="family-group__label">@FamilySharedLocale["Children"]</div>
-        @foreach (var child in Children)
-        {
-            <div class="family-member">
-                <UserAvatar FirstName="@child.FirstName" LastName="@child.LastName" Color="Color.Tertiary" />
-                <div class="family-member__text">
-                    <div class="family-member__name">@child.FirstName @child.LastName</div>
-                    <div class="family-member__meta">@string.Format(FamilySharedLocale["ChildAge"], GetAge(child.Birthday))</div>
-                </div>
-                <div class="@(CanManage ? "d-flex" : "d-none")">
-                    @if (child.IsOwnedAccount)
+        <div class="family-group">
+            <div class="family-group__label">@FamilySharedLocale[IsChild ? "Siblings" : "Children"]</div>
+            @foreach (var child in Children)
+            {
+                <div class="family-member">
+                    <UserAvatar FirstName="@child.FirstName" LastName="@child.LastName" Color="Color.Tertiary" />
+                    <div class="family-member__text">
+                        <div class="family-member__name">@child.FirstName @child.LastName</div>
+                        <div class="family-member__meta">@string.Format(FamilySharedLocale["ChildAge"], GetAge(child.Birthday))</div>
+                    </div>
+                    @if (CanManage)
                     {
-                        <MudTooltip Text="@FamilySharedLocale["EditChild"]">
-                            <MudIconButton Size="Size.Small" Color="Color.Primary" Icon="@Icons.Material.Outlined.Edit"
-                                           aria-label="@FamilySharedLocale["EditChild"]"
-                                           OnClick="_ => OpenEditChildDialog(child)" />
-                        </MudTooltip>
+                        <div class="d-flex">
+                            @if (child.IsOwnedAccount)
+                            {
+                                <MudTooltip Text="@FamilySharedLocale["EditChild"]">
+                                    <MudIconButton Size="Size.Small" Color="Color.Primary" Icon="@Icons.Material.Outlined.Edit"
+                                                   aria-label="@FamilySharedLocale["EditChild"]"
+                                                   OnClick="_ => OpenEditChildDialog(child)" />
+                                </MudTooltip>
+                            }
+                            <MudTooltip Text="@FamilySharedLocale["RemoveFamilyMember"]">
+                                <MudIconButton Size="Size.Small" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete"
+                                               aria-label="@FamilySharedLocale["RemoveFamilyMember"]"
+                                               OnClick="_ => OpenDeleteDialog(child)" />
+                            </MudTooltip>
+                        </div>
                     }
-                    <MudTooltip Text="@FamilySharedLocale["RemoveFamilyMember"]">
-                        <MudIconButton Size="Size.Small" Color="Color.Error" Icon="@Icons.Material.Outlined.Delete"
-                                       aria-label="@FamilySharedLocale["RemoveFamilyMember"]"
-                                       OnClick="_ => OpenDeleteDialog(child)" />
-                    </MudTooltip>
                 </div>
-            </div>
-        }
-        @if (CanManage)
-        {
-            <button type="button" class="family-add" @onclick="AddChildren">
-                <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
-                @FamilySharedLocale["AddChild"]
-            </button>
-        }
-    </div>
-</SectionCard>
+            }
+            @if (CanManage)
+            {
+                <button type="button" class="family-add" @onclick="AddChildren">
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" />
+                    @FamilySharedLocale["AddChild"]
+                </button>
+            }
+            else if (Children.Count == 0)
+            {
+                <div class="family-group__empty">–</div>
+            }
+        </div>
+    };
 
-@code {
+    /// <summary>The member whose family is shown: the partner, the children, or for a child the parents and siblings.</summary>
     [Parameter]
     public required int MemberId { get; set; }
     [Parameter]
     public required int? FamilyId { get; set; }
+
+    /// <summary>The last name a new child starts with.</summary>
+    [Parameter]
+    public string? LastName { get; set; }
+
+    /// <summary>An admin or a treasurer puts the family of a member together; the API lets them change every family of the club.</summary>
+    [Parameter]
+    public bool ManagedByClub { get; set; }
+
+    /// <summary>Without the card around it, e.g. inside a dialog.</summary>
+    [Parameter]
+    public bool Embedded { get; set; }
+
+    /// <summary>The family was founded or changed; the value is its id (<c>null</c> when it no longer exists).</summary>
+    [Parameter]
+    public EventCallback<int?> OnChanged { get; set; }
 
     [Inject]
     private IFamilyStore FamilyStore { get; set; } = null!;
@@ -91,8 +128,14 @@
     [Inject]
     private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
 
+    private static readonly DialogOptions DialogOptions = new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseOnEscapeKey = true };
+
+    private (int MemberId, int? FamilyId)? shown;
+
     /// <summary>Only the parents change a family (the API refuses everybody else); without a family the member can found one.</summary>
-    private bool CanManage => FamilyStore.Family is null || FamilyStore.Family.Parents.Any(p => p.MemberId == MemberId);
+    private bool CanManage => ManagedByClub || FamilyStore.Family is null || FamilyStore.Family.Parents.Any(p => p.MemberId == MemberId);
+
+    private bool IsChild => FamilyStore.Family?.Children.Any(c => c.MemberId == MemberId) == true;
 
     private List<FamilyParentDto> Partners => FamilyStore.Family?.Parents.Where(p => p.MemberId != MemberId).ToList() ?? [];
 
@@ -105,57 +148,67 @@
         return birthday > today.AddYears(-age) ? age - 1 : age;
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized() => FamilyStore.OnFamilyChanged += StateHasChanged;
+
+    protected override async Task OnParametersSetAsync()
     {
-        await base.OnInitializedAsync();
+        if (shown == (MemberId, FamilyId))
+            return;
 
-        if (FamilyId is not null && !FamilyStore.LoadedForFamilyId(FamilyId.Value))
-            await FamilyStore.LoadFamily(FamilyId.Value);
-
-        FamilyStore.OnFamilyChanged += StateHasChanged;
-    }
-
-    private async Task LoadFamily(int familyId)
-    {
-        if (!await FamilyStore.WaitUntilLoaded() && !FamilyStore.LoadedForFamilyId(familyId))
+        shown = (MemberId, FamilyId);
+        if (FamilyId is not { } familyId)
+            FamilyStore.ResetFamily();
+        else if (!FamilyStore.LoadedForFamilyId(familyId))
             await FamilyStore.LoadFamily(familyId);
     }
 
     private async Task AddPartner()
     {
-        var parameters = new DialogParameters<SelectPartner>();
-        parameters.Add(dialog => dialog.MemberId, MemberId);
-
-        await DialogService.ShowAsync<SelectPartner>(FamilySharedLocale["SelectPartner"], parameters, new DialogOptions { FullScreen = false });
+        var parameters = new DialogParameters<SelectPartner> { { dialog => dialog.MemberId, MemberId } };
+        var dialog = await DialogService.ShowAsync<SelectPartner>(FamilySharedLocale["SelectPartner"], parameters, DialogOptions);
+        await NotifyUnlessCanceled(dialog);
     }
 
     private async Task AddChildren()
     {
-        var parameters = new DialogParameters<AddNewChild>();
-        parameters.Add(dialog => dialog.MemberId, MemberId);
-
-        await DialogService.ShowAsync<AddNewChild>(FamilySharedLocale["AddChild"], parameters, new DialogOptions());
+        var parameters = new DialogParameters<AddNewChild>
+        {
+            { dialog => dialog.MemberId, MemberId },
+            { dialog => dialog.LastName, LastName },
+        };
+        var dialog = await DialogService.ShowAsync<AddNewChild>(FamilySharedLocale["AddChild"], parameters, DialogOptions);
+        await NotifyUnlessCanceled(dialog);
     }
 
     private async Task OpenEditChildDialog(FamilyChildDto child)
     {
-        var parameters = new DialogParameters<EditChildDialog>();
-        parameters.Add(dialog => dialog.Child, child);
-
-        await DialogService.ShowAsync<EditChildDialog>(FamilySharedLocale["EditChild"], parameters, new DialogOptions());
+        var parameters = new DialogParameters<EditChildDialog> { { dialog => dialog.Child, child } };
+        var dialog = await DialogService.ShowAsync<EditChildDialog>(FamilySharedLocale["EditChild"], parameters, DialogOptions);
+        await NotifyUnlessCanceled(dialog);
     }
 
     private async Task OpenDeleteDialog(FamilyMemberDto familyMember)
     {
         var approved = await DialogService.ShowMessageBox(
             title: FamilySharedLocale["RemoveFamilyMember"],
-            message: string.Format(FamilySharedLocale["RemoveFamilyMemberConfirmation"], $"{familyMember.FirstName} {familyMember.LastName}"),
+            message: string.Format(FamilySharedLocale[ManagedByClub ? "RemoveFamilyMemberConfirmationManaged" : "RemoveFamilyMemberConfirmation"], $"{familyMember.FirstName} {familyMember.LastName}"),
             yesText: SharedLocale["Delete"],
             cancelText: SharedLocale["Cancel"]);
 
         if (approved is not null && approved.Value)
+        {
             await FamilyStore.RemoveFamilyMember(familyMember.MemberId);
+            await Notify();
+        }
     }
+
+    private async Task NotifyUnlessCanceled(IDialogReference dialog)
+    {
+        if (await dialog.Result is { Canceled: false })
+            await Notify();
+    }
+
+    private Task Notify() => OnChanged.InvokeAsync(FamilyStore.Family?.FamilyId);
 
     public void Dispose()
     {

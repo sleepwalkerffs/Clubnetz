@@ -1,0 +1,91 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Client.Services.Store.Memberships
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Memberships
+
+@* Confirming an order of a couple or family plan: the treasurer sees who it covers and can put the family on it first. *@
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@L["Payments_Approve"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@Store.IsSaving" CanSubmit="@(covered.Count > 0)" Title="@L["Approve_Title"]">
+    <div class="approve">
+        <MudText Typo="Typo.body2"><strong>@Order.PlanName · @MembershipHelpers.Amount(Order.AmountCents) · @Payer.FirstName @Payer.LastName</strong></MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@L["Approve_Intro"]</MudText>
+
+        <CoveredMembers Member="@Payer" FamilyMembers="@FamilyMembers" @bind-Values="covered" OnFamilyChanged="FamilyChanged" />
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter, EditorRequired] public MembershipPaymentOrderDto Order { get; set; } = null!;
+    [Parameter, EditorRequired] public MembershipPlanDto Plan { get; set; } = null!;
+
+    /// <summary>Who placed the order: it is their family the order can cover.</summary>
+    [Parameter, EditorRequired] public MembershipPaymentMemberDto Payer { get; set; } = null!;
+
+    [Inject] private IMembershipPaymentsStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private IReadOnlyCollection<MembershipPaymentMemberDto> covered = [];
+
+    /// <summary>The payer, the members of the order and the rest of the family, as far as they have no other membership.</summary>
+    private List<MembershipPaymentMemberDto> FamilyMembers
+    {
+        get
+        {
+            if (Store.Payments is not { } payments)
+                return [];
+
+            var free = MembershipHelpers.MembersWithoutMembership(payments).Select(m => m.MemberId).ToHashSet();
+            return payments.Members
+                .Where(m => Order.MemberIds.Contains(m.MemberId)
+                         || (free.Contains(m.MemberId) && (m.MemberId == Payer.MemberId || (Payer.FamilyId is not null && m.FamilyId == Payer.FamilyId))))
+                .OrderBy(m => m.MemberId == Payer.MemberId ? 0 : 1).ThenBy(m => m.IsChild).ThenBy(m => m.FirstName)
+                .ToList();
+        }
+    }
+
+    protected override void OnInitialized()
+        => covered = FamilyMembers.Where(m => Order.MemberIds.Contains(m.MemberId)).ToList();
+
+    /// <summary>The family changed: the plan covers it as far as it allows, as when a payment is recorded.</summary>
+    private async Task FamilyChanged(int? familyId)
+    {
+        if (Store.Payments is not { } payments)
+            return;
+
+        await Store.Load(payments.SeasonId);
+        if (Store.Payments is null)
+            return;
+
+        Payer = Store.Payments.Members.FirstOrDefault(m => m.MemberId == Payer.MemberId) ?? Payer;
+        covered = MembershipHelpers.CoveredByDefault(Plan, FamilyMembers);
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (covered.Count == 0)
+            return null;
+
+        var result = await Store.Approve(Order.Id, covered.Select(m => m.MemberId).ToList());
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Payments_Approved"], Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

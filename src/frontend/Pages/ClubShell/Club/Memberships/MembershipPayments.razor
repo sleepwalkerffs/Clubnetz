@@ -378,7 +378,33 @@ else
         await Reload();
     }
 
-    private Task Approve(Row row) => Run(Store.Approve(row.Order!.Id), "Payments_Approved");
+    /// <summary>A plan for one member is confirmed right away. For a couple or family plan the treasurer first sees who it covers.</summary>
+    private async Task Approve(Row row)
+    {
+        var order = row.Order!;
+        if (selectedSeasonId is not { } seasonId)
+            return;
+
+        await PlansStore.LoadPlans(seasonId);
+        var plan = PlansStore.Plans?.FirstOrDefault(p => p.Id == order.MembershipPlanId);
+        if (plan is not { IsGroupPlan: true } || row.Payer is not { } payer)
+        {
+            await Run(Store.Approve(order.Id), "Payments_Approved");
+            return;
+        }
+
+        var parameters = new DialogParameters<ApproveOrderDialog>
+        {
+            { d => d.Order, order },
+            { d => d.Plan, plan },
+            { d => d.Payer, payer },
+        };
+        var dialog = await DialogService.ShowAsync<ApproveOrderDialog>(L["Approve_Title"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+
+        if (await dialog.Result is { Canceled: false })
+            await Reload();
+    }
 
     private async Task Reject(Row row)
     {
@@ -424,11 +450,10 @@ else
             return;
         }
 
-        var withMembership = payments.Orders.Where(o => o.Status.IsActive()).SelectMany(o => o.MemberIds).ToHashSet();
         var parameters = new DialogParameters<RecordPaymentDialog>
         {
             { d => d.Plans, plans },
-            { d => d.Members, payments.Members.Where(m => !withMembership.Contains(m.MemberId)).ToList() },
+            { d => d.Members, MembershipHelpers.MembersWithoutMembership(payments) },
             { d => d.Member, member },
         };
         var dialog = await DialogService.ShowAsync<RecordPaymentDialog>(L["Payments_Record"], parameters,

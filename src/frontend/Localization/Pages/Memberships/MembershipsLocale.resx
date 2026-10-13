@@ -682,7 +682,7 @@
     <value>Who is covered?</value>
   </data>
   <data name="Record_NoFamily" xml:space="preserve">
-    <value>This member has no family in Clubnetz, so the plan only covers them. Add the family in the member administration to cover more members.</value>
+    <value>This member has no family in Clubnetz yet, so the plan only covers them.</value>
   </data>
   <data name="Record_Method" xml:space="preserve">
     <value>Paid by</value>
@@ -917,5 +917,20 @@
   </data>
   <data name="Card_View" xml:space="preserve">
     <value>View</value>
+  </data>
+  <data name="Record_SetUpFamily" xml:space="preserve">
+    <value>Add partner or children</value>
+  </data>
+  <data name="Record_EditFamily" xml:space="preserve">
+    <value>Edit family</value>
+  </data>
+  <data name="Record_FamilyDone" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Approve_Title" xml:space="preserve">
+    <value>Confirm the plan</value>
+  </data>
+  <data name="Approve_Intro" xml:space="preserve">
+    <value>The member gets an email and can pay then. Check who the plan covers first: the member pays one fee for all of them.</value>
   </data>
 </root>

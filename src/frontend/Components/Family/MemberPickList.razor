@@ -1,0 +1,83 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Components.Family
+@using Bookennis.Shared.Controller.Families
+
+@* Members to pick from as a list with a search field: one member, or several with Multi. *@
+<div class="pick">
+    @if (Items.Count > SearchFrom)
+    {
+        <MudTextField T="string" @bind-Value="search" Immediate="true" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"
+                      Placeholder="@L["SearchMember"]" aria-label="@L["SearchMember"]"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+    }
+
+    @if (Multi && Values.Count > 0)
+    {
+        <div class="pick__selected">
+            @foreach (var item in Items.Where(i => Values.Contains(i.MemberId)))
+            {
+                <button type="button" class="pick__chip" title="@L["RemoveSelection"]" @onclick="() => Toggle(item)">
+                    @item.FirstName @item.LastName <span aria-hidden="true">✕</span>
+                </button>
+            }
+        </div>
+    }
+
+    <div class="pick__list" role="listbox" aria-label="@Label" aria-multiselectable="@(Multi ? "true" : "false")">
+        @foreach (var item in Filtered.Take(MaxRows))
+        {
+            var selected = Values.Contains(item.MemberId);
+            <button type="button" class="pick__row @(selected ? "pick__row--selected" : null)" role="option" aria-selected="@(selected ? "true" : "false")"
+                    @onclick="() => Toggle(item)">
+                <UserAvatar FirstName="@item.FirstName" LastName="@item.LastName" Size="Size.Small" Color="@(selected ? Color.Primary : Color.Default)" />
+                <span class="pick__name">@item.FirstName @item.LastName</span>
+                <span class="pick__check" aria-hidden="true">@(selected ? "✓" : null)</span>
+            </button>
+        }
+
+        @if (Filtered.Count == 0)
+        {
+            <div class="pick__note">@L[Items.Count == 0 ? "NoMember" : "NoMemberFound"]</div>
+        }
+        else if (Filtered.Count > MaxRows)
+        {
+            <div class="pick__note">@string.Format(L["MoreMembers"], Filtered.Count - MaxRows)</div>
+        }
+    </div>
+</div>
+
+@code {
+    private const int SearchFrom = 6;
+    private const int MaxRows = 30;
+
+    [Parameter, EditorRequired] public List<FamilyMemberDto> Items { get; set; } = [];
+    [Parameter] public IReadOnlyCollection<int> Values { get; set; } = [];
+    [Parameter] public EventCallback<IReadOnlyCollection<int>> ValuesChanged { get; set; }
+    [Parameter] public bool Multi { get; set; }
+    [Parameter] public string? Label { get; set; }
+
+    [Inject] private IStringLocalizer<FamilySharedLocale> L { get; set; } = null!;
+
+    private string? search;
+
+    private List<FamilyMemberDto> Filtered
+    {
+        get
+        {
+            var terms = (search ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            return Items
+                .Where(m => terms.All(term => m.FirstName.Contains(term, StringComparison.CurrentCultureIgnoreCase) || m.LastName.Contains(term, StringComparison.CurrentCultureIgnoreCase)))
+                .OrderBy(m => m.LastName, StringComparer.CurrentCultureIgnoreCase).ThenBy(m => m.FirstName, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+        }
+    }
+
+    private Task Toggle(FamilyMemberDto item)
+    {
+        IReadOnlyCollection<int> values = Values.Contains(item.MemberId)
+            ? Values.Where(id => id != item.MemberId).ToList()
+            : Multi ? [.. Values, item.MemberId] : [item.MemberId];
+
+        return ValuesChanged.InvokeAsync(values);
+    }
+}

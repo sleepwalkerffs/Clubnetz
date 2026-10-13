@@ -37,8 +37,8 @@ public class MembershipPaymentsStore(IMembershipPaymentsHttpClient httpClient) :
     public Task<HttpResult> RecordPayment(RecordMembershipPaymentModel model)
         => RunInSavingContextAsync(async cancellationToken => await httpClient.RecordMembershipPayment(model, cancellationToken), nameof(RecordPayment));
 
-    public Task<HttpResult> Approve(int orderId)
-        => RunInSavingContextAsync(async cancellationToken => await httpClient.ApproveMembershipOrder(orderId, cancellationToken), nameof(Approve));
+    public Task<HttpResult> Approve(int orderId, IReadOnlyCollection<int>? memberIds = null)
+        => RunInSavingContextAsync(async cancellationToken => await httpClient.ApproveMembershipOrder(orderId, new ApproveMembershipOrderModel { MemberIds = memberIds?.ToList() }, cancellationToken), nameof(Approve));
 
     public Task<HttpResult> Reject(int orderId)
         => RunInSavingContextAsync(async cancellationToken => await httpClient.RejectMembershipOrder(orderId, cancellationToken), nameof(Reject));

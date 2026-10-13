@@ -96,6 +96,12 @@ public record RecordMembershipPaymentModel
     public string? Note { get; init; }
 }
 
+public record ApproveMembershipOrderModel
+{
+    /// <summary>Who the order covers from now on; <c>null</c> leaves the members as the member chose them.</summary>
+    public List<int>? MemberIds { get; init; }
+}
+
 public record MarkMembershipOrderPaidModel
 {
     public MembershipPaymentMethod Method { get; init; } = MembershipPaymentMethod.BankTransfer;

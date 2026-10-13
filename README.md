@@ -185,7 +185,7 @@ The installation is a [Stripe Connect](https://docs.stripe.com/connect) platform
 For local development use a Stripe sandbox, keep the keys in user secrets or environment variables (never commit them) and forward the events with the Stripe CLI. `AppUrl` has to be the address you open the app with, because Stripe sends the member back to it:
 
 ```bash
-stripe listen --forward-connect-to http://localhost:5080/api/Stripe/Webhook
+stripe listen --forward-connect-to http://localhost:5080/api/Stripe/Webhook --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,checkout.session.expired,charge.refunded,charge.dispute.created,account.updated,account.application.deauthorized
 ```
 
 `Stripe:ApplicationFeePercent` (default `0`) is the share of every payment that goes to the platform account. Before you take payments in production, have the terms for your clubs and the privacy policy checked: the texts in the app name Stripe as the payment provider of the club.

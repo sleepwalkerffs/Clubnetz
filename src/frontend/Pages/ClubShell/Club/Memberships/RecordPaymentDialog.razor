@@ -30,15 +30,7 @@
 
         @if (plan is { IsGroupPlan: true } && member is not null)
         {
-            @if (FamilyMembers.Count > 1)
-            {
-                <MultiChoiceChips TItem="MembershipPaymentMemberDto" Label="@L["Record_Covered"]" Items="@FamilyMembers" @bind-Values="covered"
-                                  TextFunc="@(m => m.FirstName + (m.IsChild ? " 🧒" : ""))" Dense="true" />
-            }
-            else
-            {
-                <p class="record__hint">ℹ️ @L["Record_NoFamily"]</p>
-            }
+            <CoveredMembers @key="member.MemberId" Member="@member" FamilyMembers="@FamilyMembers" @bind-Values="covered" OnFamilyChanged="FamilyChanged" />
         }
 
         @if (plan is { IsFree: false })
@@ -66,7 +58,7 @@
     /// <summary>All plans of the season, also the ones only the treasurer can assign.</summary>
     [Parameter, EditorRequired] public List<MembershipPlanDto> Plans { get; set; } = [];
 
-    /// <summary>The members who have no membership in the season yet.</summary>
+    /// <summary>The members who have no membership in the season yet. Read again from the store when a family was changed in the dialog.</summary>
     [Parameter, EditorRequired] public List<MembershipPaymentMemberDto> Members { get; set; } = [];
 
     /// <summary>The member the dialog was opened for.</summary>
@@ -137,6 +129,21 @@
         ResetCovered();
     }
 
+    /// <summary>The family of the member was set up or changed: who is in it comes with the payments list.</summary>
+    private async Task FamilyChanged(int? familyId)
+    {
+        if (member is null || Store.Payments is not { } payments)
+            return;
+
+        await Store.Load(payments.SeasonId);
+        if (Store.Payments is null)
+            return;
+
+        Members = MembershipHelpers.MembersWithoutMembership(Store.Payments);
+        member = Members.FirstOrDefault(m => m.MemberId == member.MemberId) ?? member;
+        ResetCovered();
+    }
+
     private void OnPlanChanged(MembershipPlanDto? value)
     {
         plan = value;
@@ -152,10 +159,7 @@
             return;
         }
 
-        var family = FamilyMembers;
-        var adults = family.Where(m => !m.IsChild).Take(plan.MaxAdults);
-        var children = plan.IncludesChildren ? family.Where(m => m.IsChild) : [];
-        covered = adults.Concat(children).ToList();
+        covered = MembershipHelpers.CoveredByDefault(plan, FamilyMembers);
     }
 
     private async Task<DialogResult?> Submit()

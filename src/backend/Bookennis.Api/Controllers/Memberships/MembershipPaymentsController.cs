@@ -33,10 +33,13 @@ public class MembershipPaymentsController(IMediator mediator, IUserAccessor user
             new RecordMembershipPayment(clubId, userAccessor.GetUserId(), model.MembershipPlanId, model.MemberIds ?? [], model.PayerMemberId, (MembershipPaymentMethod)model.Method, model.PaidOn, model.Note),
             cancellationToken);
 
-    /// <summary>Confirms an order of a plan that needs a confirmation. The member is told by email and can pay.</summary>
+    /// <summary>
+    /// Confirms an order of a plan that needs a confirmation. The member is told by email and can pay.
+    /// The body is optional: with <c>memberIds</c> the order covers these members from now on.
+    /// </summary>
     [HttpPost("{orderId:int}/approve")]
-    public Task<MembershipOrderDto> ApproveMembershipOrder(int clubId, int orderId, CancellationToken cancellationToken)
-        => mediator.Send(new ApproveMembershipOrder(clubId, orderId), cancellationToken);
+    public Task<MembershipOrderDto> ApproveMembershipOrder(int clubId, int orderId, [FromBody] ApproveMembershipOrderModel? model, CancellationToken cancellationToken)
+        => mediator.Send(new ApproveMembershipOrder(clubId, orderId, model?.MemberIds), cancellationToken);
 
     [HttpPost("{orderId:int}/reject")]
     public Task<MembershipOrderDto> RejectMembershipOrder(int clubId, int orderId, CancellationToken cancellationToken)

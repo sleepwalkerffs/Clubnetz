@@ -1,3 +1,5 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Family
 @using Bookennis.Client.Components.Shared.Dialogs
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Components.Family
@@ -7,60 +9,47 @@
 @using System.ComponentModel.DataAnnotations
 @using Bookennis.Shared.Controller.Shared
 
-<BaseDialog SubmitFunc="Submit" SubmitCaption=@SharedLocale["Add"] CancelFunc="Cancel" CancelCaption=@SharedLocale["Cancel"] AllowFullScreen="false">
-    @if (!FamilyStore.IsLoading)
-    {
-        @if (FamilyStore.AvailableFamilyMembers.Count != 0)
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Add"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]" CanSubmit="@(!existing || selected.Count > 0)"
+            Loading="@FamilyStore.IsSaving" Title="@FamilySharedLocale["AddChild"]" AllowFullScreen="false">
+    <div class="family-dialog">
+        @if (loaded && FamilyStore.AvailableFamilyMembers.Count > 0)
         {
-            <div class="d-flex flex-row gap-4 align-center">
-                <MudText Class="">@FamilySharedLocale["SelectMembers"]</MudText>
-                <MudSwitch T="bool" @bind-Value="selection"/>
-            </div>
+            <ChoiceChips TItem="bool" Items="@Modes" @bind-Value="existing" TextFunc="@(isMember => FamilySharedLocale[isMember ? "ChildIsMember" : "ChildIsNew"])"
+                         Label="@FamilySharedLocale["ChildMode"]" />
         }
 
-        @if (selection)
+        @if (existing)
         {
-            @if (FamilyStore.AvailableFamilyMembers.Count == 0)
-            {
-                <span>@FamilySharedLocale["NoMember"]</span>
-            }
-            else
-            {
-                <MudSelect T="FamilyMemberDto"
-                           Label=@SharedLocale["Select"]
-                           AnchorOrigin="Origin.CenterCenter"
-                           MultiSelection="true"
-                           ToStringFunc="@((value) => $"{value?.FirstName} {value?.LastName}".Trim())"
-                           @bind-SelectedValues="@selectedMembers">
-
-                    @foreach (var member in FamilyStore.AvailableFamilyMembers)
-                    {
-                        <MudSelectItem Tag="@member.MemberId" Value="@member"/>
-                    }
-                </MudSelect>
-            }
+            <p class="family-dialog__hint">@FamilySharedLocale["ChildIsMemberHint"]</p>
+            <MemberPickList Items="@FamilyStore.AvailableFamilyMembers" @bind-Values="selected" Multi="true" Label="@FamilySharedLocale["ChildIsMember"]" />
         }
         else
         {
-            <MudForm @ref="mudForm">
-                <div class="d-flex gap-2 flex-column">
-                    <MudSelect T="int" Label=@SharedLocale["Gender"] Variant="Variant.Outlined" @bind-Value="formModel.Gender" For="@(() => formModel.Gender)">
-                        <MudSelectItem T="int" Value="0">@SharedLocale["Mr"].</MudSelectItem>
-                        <MudSelectItem T="int" Value="1">@SharedLocale["Mrs"].</MudSelectItem>
-                        <MudSelectItem T="int" Value="2">@SharedLocale["None"]</MudSelectItem>
-                    </MudSelect>
-                    <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Firstname"] @bind-Value="formModel.FirstName" For="@(() => formModel.FirstName)" Required="true"/>
-                    <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Lastname"] @bind-Value="formModel.LastName" For="@(() => formModel.LastName)" Required="true"/>
-                    <MudDatePicker Variant="Variant.Outlined" Label=@SharedLocale["Birthday"] @bind-Date="formModel.Birthday" For="@(() => formModel.Birthday)" DateFormat="dd.MM.yyyy" Required="true" PickerVariant="PickerVariant.Dialog" />
+            <p class="family-dialog__hint">@FamilySharedLocale["ChildIsNewHint"]</p>
+            <MudForm @ref="mudForm" Model="formModel">
+                <div class="family-dialog__form">
+                    <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Firstname"]" @bind-Value="formModel.FirstName" For="@(() => formModel.FirstName)" Required="true" MaxLength="100" />
+                    <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Lastname"]" @bind-Value="formModel.LastName" For="@(() => formModel.LastName)" Required="true" MaxLength="100" />
+                    <MudDatePicker Variant="Variant.Outlined" Label="@SharedLocale["Birthday"]" @bind-Date="formModel.Birthday" For="@(() => formModel.Birthday)" DateFormat="dd.MM.yyyy"
+                                   Required="true" MaxDate="@DateTime.Today" OpenTo="OpenTo.Year" PickerVariant="PickerVariant.Dialog" />
+                    <ChoiceChips TItem="Gender" Items="@Genders" @bind-Value="formModel.Gender" TextFunc="@(gender => FamilySharedLocale[$"Gender_{gender}"])" Label="@SharedLocale["Gender"]" />
                 </div>
             </MudForm>
         }
-    }
+    </div>
 </BaseDialog>
 
 @code {
+    private static readonly bool[] Modes = [false, true];
+    private static readonly Gender[] Genders = [Gender.Female, Gender.Male, Gender.Diverse];
+
+    /// <summary>The member whose child is added. Without a family yet, the member becomes its parent.</summary>
     [Parameter]
     public int MemberId { get; set; }
+
+    /// <summary>The last name the form starts with: the one of the parent.</summary>
+    [Parameter]
+    public string? LastName { get; set; }
 
     [Inject]
     private IFamilyStore FamilyStore { get; set; } = null!;
@@ -69,37 +58,32 @@
     [Inject]
     private IStringLocalizer<FamilySharedLocale> FamilySharedLocale { get; set; } = null!;
 
-    private bool selection;
+    private bool existing;
+    private bool loaded;
     private MemberModel formModel = new();
     private MudForm mudForm = null!;
-    private IEnumerable<FamilyMemberDto> selectedMembers = new List<FamilyMemberDto>();
+    private IReadOnlyCollection<int> selected = [];
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
+        formModel.LastName = LastName ?? "";
         await FamilyStore.LoadAvailableFamilyMembers(MemberId);
+        loaded = true;
     }
 
     private async Task<DialogResult?> Submit()
     {
-        if (selection)
+        if (existing)
         {
-            if (!selectedMembers.Any())
+            if (selected.Count == 0)
                 return null;
 
             if (FamilyStore.Family is null)
-            {
-                await FamilyStore.CreateFamily(new CreateFamilyRequest
-                {
-                    ParentContractUserIds = [MemberId],
-                    ChildrenUserContractIds = selectedMembers.Select(i => i.MemberId).ToList()
-                });
-            }
+                await FamilyStore.CreateFamily(new CreateFamilyRequest { ParentContractUserIds = [MemberId], ChildrenUserContractIds = selected.ToList() });
             else
-            {
-                await FamilyStore.AddChildren(selectedMembers.Select(i => i.MemberId).ToList());
-            }
+                await FamilyStore.AddChildren(selected.ToList());
         }
         else
         {
@@ -107,20 +91,12 @@
             if (!mudForm.IsValid)
                 return null;
 
+            var child = new AddNewChildRequest(formModel.FirstName, formModel.LastName, DateOnly.FromDateTime(formModel.Birthday!.Value), formModel.Gender);
             if (FamilyStore.Family is null)
-            {
-                await FamilyStore.CreateFamily(new CreateFamilyRequest
-                {
-                    ParentContractUserIds = new List<int> { MemberId },
-                    NewChildUsers = new List<AddNewChildRequest> { new(formModel.FirstName, formModel.LastName, DateOnly.FromDateTime(formModel.Birthday!.Value), (Gender)formModel.Gender) }
-                });
-            }
+                await FamilyStore.CreateFamily(new CreateFamilyRequest { ParentContractUserIds = [MemberId], NewChildUsers = [child] });
             else
-            {
-                await FamilyStore.AddNewChild(new AddNewChildRequest(formModel.FirstName, formModel.LastName, DateOnly.FromDateTime(formModel.Birthday!.Value), (Gender)formModel.Gender));
-            }
+                await FamilyStore.AddNewChild(child);
         }
-
 
         return DialogResult.Ok((object?)null);
     }
@@ -129,15 +105,15 @@
 
     public class MemberModel
     {
-        public int Gender { get; set; }
+        public Gender Gender { get; set; } = Gender.Female;
 
         [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "FirstnameValidation")]
-        public string FirstName { get; set; } = null!;
+        public string FirstName { get; set; } = "";
 
         [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "LastnameValidation")]
-        public string LastName { get; set; } = null!;
+        public string LastName { get; set; } = "";
 
         [Required(ErrorMessageResourceType = typeof(AccountLocale), ErrorMessageResourceName = "BirthdayValidation")]
-        public DateTime? Birthday { get; set; } = DateTime.Now.AddYears(-6);
+        public DateTime? Birthday { get; set; }
     }
 }

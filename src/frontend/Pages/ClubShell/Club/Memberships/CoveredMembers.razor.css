@@ -1,0 +1,33 @@
+.covered__hint {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.covered__family {
+    padding: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 14px;
+}
+
+.covered__link {
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--mud-palette-primary);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.covered__link:hover {
+    text-decoration: underline;
+}
+
+.covered__link:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}

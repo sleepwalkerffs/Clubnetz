@@ -58,3 +58,7 @@
     border-color: var(--mud-palette-primary);
     background: color-mix(in srgb, var(--mud-palette-primary) 6%, transparent);
 }
+
+.family-group__empty {
+    color: var(--mud-palette-text-secondary);
+}

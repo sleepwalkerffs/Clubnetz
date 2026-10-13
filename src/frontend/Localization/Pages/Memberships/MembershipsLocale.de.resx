@@ -679,10 +679,10 @@
     <value>Tarif</value>
   </data>
   <data name="Record_Covered" xml:space="preserve">
-    <value>Für wen gilt die Zahlung?</value>
+    <value>Für wen gilt der Tarif?</value>
   </data>
   <data name="Record_NoFamily" xml:space="preserve">
-    <value>Dieses Mitglied hat keine Familie in Clubnetz, der Tarif gilt daher nur für es. Lege die Familie in der Mitgliederverwaltung an, um weitere Mitglieder einzuschließen.</value>
+    <value>Dieses Mitglied hat noch keine Familie in Clubnetz, der Tarif gilt daher nur für es.</value>
   </data>
   <data name="Record_Method" xml:space="preserve">
     <value>Bezahlt per</value>
@@ -917,5 +917,20 @@
   </data>
   <data name="Card_View" xml:space="preserve">
     <value>Ansehen</value>
+  </data>
+  <data name="Record_SetUpFamily" xml:space="preserve">
+    <value>Partner:in oder Kinder hinzufügen</value>
+  </data>
+  <data name="Record_EditFamily" xml:space="preserve">
+    <value>Familie bearbeiten</value>
+  </data>
+  <data name="Record_FamilyDone" xml:space="preserve">
+    <value>Fertig</value>
+  </data>
+  <data name="Approve_Title" xml:space="preserve">
+    <value>Tarif bestätigen</value>
+  </data>
+  <data name="Approve_Intro" xml:space="preserve">
+    <value>Das Mitglied bekommt eine E-Mail und kann dann bezahlen. Prüfe vorher, für wen der Tarif gilt: Das Mitglied zahlt einen Beitrag für alle.</value>
   </data>
 </root>

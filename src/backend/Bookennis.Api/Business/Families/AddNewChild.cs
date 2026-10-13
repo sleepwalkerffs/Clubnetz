@@ -13,10 +13,12 @@ public record AddNewChild(int FamilyId, ChildUserModel ChildUserModel, int UserI
         public async Task<Unit> Handle(AddNewChild request, CancellationToken cancellationToken)
         {
             var family = await context.Families.Where(f => f.Id == request.FamilyId).SingleAsync(cancellationToken);
+            var parentMemberIds = await context.Families.Where(f => f.Id == request.FamilyId).SelectMany(f => f.Parents).Select(p => p.MemberId).ToListAsync(cancellationToken);
+            var ownerUserId = await FamilyCreateUpdateHelper.GetOwnerOfNewChildren(context, parentMemberIds, request.UserId, cancellationToken);
             var newChildMemberId = (await FamilyCreateUpdateHelper.AddNewChildUsers(
                                         context, tenantService.GetTenantId()!.Value,
                                         newChildUsers: [request.ChildUserModel],
-                                        request.UserId,
+                                        ownerUserId,
                                         cancellationToken)).Single();
 
             var hasFamilyAlready = await (from member in context.ClubMembers

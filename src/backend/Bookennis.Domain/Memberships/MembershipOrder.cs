@@ -44,12 +44,7 @@ public class MembershipOrder : TenantDomainEntity, IAggregateRoot
 
     public MembershipOrder(MembershipPlan plan, int? payerMemberId, IReadOnlyCollection<int> memberIds, string? note = null)
     {
-        var distinctMemberIds = memberIds.Distinct().ToList();
-        if (distinctMemberIds.Count == 0)
-            throw new PreconditionException(ErrorCode.MembershipOrderMemberRequired, "An order covers at least one member.");
-
-        if (distinctMemberIds.Count > MaxMembers)
-            throw new PreconditionException(ErrorCode.MembershipOrderTooManyMembers, [MaxMembers.ToString()], "An order covers too many members.");
+        var distinctMemberIds = DistinctMembers(memberIds);
 
         ClubId = plan.ClubId;
         SeasonId = plan.SeasonId;
@@ -108,6 +103,19 @@ public class MembershipOrder : TenantDomainEntity, IAggregateRoot
         Require(Status == MembershipOrderStatus.AwaitingApproval);
         Status = MembershipOrderStatus.AwaitingPayment;
         ApprovedAt = approvedAt;
+    }
+
+    /// <summary>
+    /// The treasurer corrects who the order covers before confirming it, e.g. adds the partner and the children to a family plan.
+    /// Once the order is confirmed the member pays for what it says, so it can't be changed any more.
+    /// </summary>
+    public void SetMembers(IReadOnlyCollection<int> memberIds)
+    {
+        Require(Status == MembershipOrderStatus.AwaitingApproval);
+        var distinctMemberIds = DistinctMembers(memberIds);
+
+        members.RemoveAll(m => !distinctMemberIds.Contains(m.MemberId));
+        members.AddRange(distinctMemberIds.Where(id => members.All(m => m.MemberId != id)).Select(id => new MembershipOrderMember(this, id)).ToList());
     }
 
     public void Reject()
@@ -244,6 +252,18 @@ public class MembershipOrder : TenantDomainEntity, IAggregateRoot
 
         if (MarkedPaidByMemberId == memberId)
             MarkedPaidByMemberId = null;
+    }
+
+    private static List<int> DistinctMembers(IReadOnlyCollection<int> memberIds)
+    {
+        var distinctMemberIds = memberIds.Distinct().ToList();
+        if (distinctMemberIds.Count == 0)
+            throw new PreconditionException(ErrorCode.MembershipOrderMemberRequired, "An order covers at least one member.");
+
+        if (distinctMemberIds.Count > MaxMembers)
+            throw new PreconditionException(ErrorCode.MembershipOrderTooManyMembers, [MaxMembers.ToString()], "An order covers too many members.");
+
+        return distinctMemberIds;
     }
 
     private void Require(bool allowed)

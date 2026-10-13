@@ -127,7 +127,7 @@
     <value>Family</value>
   </data>
   <data name="NoMember" xml:space="preserve">
-    <value>No Member available</value>
+    <value>There is no member without a family.</value>
   </data>
   <data name="Partner" xml:space="preserve">
     <value>Partner</value>
@@ -136,7 +136,7 @@
     <value>Select existing members?</value>
   </data>
   <data name="SelectPartner" xml:space="preserve">
-    <value>Select partner</value>
+    <value>Add partner</value>
   </data>
   <data name="EditChild" xml:space="preserve">
     <value>Edit child</value>
@@ -152,5 +152,56 @@
   </data>
   <data name="ChildAge" xml:space="preserve">
     <value>{0} years</value>
+  </data>
+  <data name="SelectPartnerHint" xml:space="preserve">
+    <value>Choose the member who is the partner. Only members who are not in a family yet are listed.</value>
+  </data>
+  <data name="ChildMode" xml:space="preserve">
+    <value>Is the child a member already?</value>
+  </data>
+  <data name="ChildIsNew" xml:space="preserve">
+    <value>Not yet</value>
+  </data>
+  <data name="ChildIsMember" xml:space="preserve">
+    <value>Already a member</value>
+  </data>
+  <data name="ChildIsNewHint" xml:space="preserve">
+    <value>The child becomes a member of the club without a login of its own. The parents book for it.</value>
+  </data>
+  <data name="ChildIsMemberHint" xml:space="preserve">
+    <value>Choose one or more members who are not in a family yet.</value>
+  </data>
+  <data name="SearchMember" xml:space="preserve">
+    <value>Search by name</value>
+  </data>
+  <data name="NoMemberFound" xml:space="preserve">
+    <value>No member with this name.</value>
+  </data>
+  <data name="MoreMembers" xml:space="preserve">
+    <value>{0} more. Search to narrow the list.</value>
+  </data>
+  <data name="RemoveSelection" xml:space="preserve">
+    <value>Remove from selection</value>
+  </data>
+  <data name="Parents" xml:space="preserve">
+    <value>Parents</value>
+  </data>
+  <data name="Siblings" xml:space="preserve">
+    <value>Siblings</value>
+  </data>
+  <data name="FamilySubtitleManaged" xml:space="preserve">
+    <value>Partner and children. Couple and family plans cover them.</value>
+  </data>
+  <data name="RemoveFamilyMemberConfirmationManaged" xml:space="preserve">
+    <value>Do you want to remove {0} from this family?</value>
+  </data>
+  <data name="Gender_Male" xml:space="preserve">
+    <value>Male</value>
+  </data>
+  <data name="Gender_Female" xml:space="preserve">
+    <value>Female</value>
+  </data>
+  <data name="Gender_Diverse" xml:space="preserve">
+    <value>Diverse</value>
   </data>
 </root>

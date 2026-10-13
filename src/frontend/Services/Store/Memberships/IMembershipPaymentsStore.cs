@@ -18,7 +18,8 @@ public interface IMembershipPaymentsStore : ISemaphoreStore
     Task Load(int seasonId);
 
     Task<HttpResult> RecordPayment(RecordMembershipPaymentModel model);
-    Task<HttpResult> Approve(int orderId);
+    /// <summary>Confirms an order; with <paramref name="memberIds"/> it covers these members from now on.</summary>
+    Task<HttpResult> Approve(int orderId, IReadOnlyCollection<int>? memberIds = null);
     Task<HttpResult> Reject(int orderId);
     Task<HttpResult> MarkPaid(int orderId, MarkMembershipOrderPaidModel model);
     Task<HttpResult> Cancel(int orderId);

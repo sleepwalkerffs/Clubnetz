@@ -189,6 +189,21 @@ public static class MembershipHelpers
     }
 
     /// <summary>An order holds the membership of its members: it is not cancelled, failed or refunded.</summary>
+    /// <summary>The members a payment can be recorded for: those no running order of the season covers.</summary>
+    public static List<MembershipPaymentMemberDto> MembersWithoutMembership(GetMembershipPaymentsResult payments)
+    {
+        var withMembership = payments.Orders.Where(o => o.Status.IsActive()).SelectMany(o => o.MemberIds).ToHashSet();
+        return payments.Members.Where(m => !withMembership.Contains(m.MemberId)).ToList();
+    }
+
+    /// <summary>Who a couple or family plan covers unless the treasurer says otherwise: the family as far as the plan allows.</summary>
+    public static List<MembershipPaymentMemberDto> CoveredByDefault(MembershipPlanDto plan, IReadOnlyCollection<MembershipPaymentMemberDto> family)
+    {
+        var adults = family.Where(m => !m.IsChild).Take(plan.MaxAdults);
+        var children = plan.IncludesChildren ? family.Where(m => m.IsChild) : [];
+        return adults.Concat(children).ToList();
+    }
+
     public static bool IsActive(this MembershipOrderStatus status)
         => status is not (MembershipOrderStatus.Cancelled or MembershipOrderStatus.Failed or MembershipOrderStatus.Refunded);
 
