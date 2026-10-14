@@ -10,6 +10,7 @@ using Bookennis.Domain.Courts;
 using Bookennis.Domain.Families;
 using Bookennis.Domain.Guests;
 using Bookennis.Domain.Members;
+using Bookennis.Domain.Memberships;
 using Bookennis.Domain.Notifications;
 using Bookennis.Domain.SubscriptionPlans;
 using Bookennis.Domain.User;
@@ -73,6 +74,11 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<ClubEventRegistrationAnswer> ClubEventRegistrationAnswers => Set<ClubEventRegistrationAnswer>();
     public DbSet<ClubAnnouncement> ClubAnnouncements => Set<ClubAnnouncement>();
     public DbSet<ClubAnnouncementAttachment> ClubAnnouncementAttachments => Set<ClubAnnouncementAttachment>();
+    public DbSet<MembershipPlan> MembershipPlans => Set<MembershipPlan>();
+    public DbSet<MembershipOrder> MembershipOrders => Set<MembershipOrder>();
+    public DbSet<MembershipOrderMember> MembershipOrderMembers => Set<MembershipOrderMember>();
+    public DbSet<ClubPaymentAccount> ClubPaymentAccounts => Set<ClubPaymentAccount>();
+    public DbSet<StripeWebhookEvent> StripeWebhookEvents => Set<StripeWebhookEvent>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

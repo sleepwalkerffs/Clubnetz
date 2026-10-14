@@ -1,0 +1,530 @@
+@page "/clubs/{ClubId:int}/membership"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Client.Pages.ClubShell.Club.Memberships
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Memberships
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Memberships
+@using Bookennis.Shared.Controller.Shared
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+<PageTitle>@L["My_Title"]</PageTitle>
+
+@if (ClubProfileStore.IsSupportMode || ClubProfileStore.Roles.Contains(MemberRole.Guest))
+{
+    <MudAlert Severity="Severity.Info">@L["My_MembersOnly"]</MudAlert>
+}
+else if (Store.Options is not { } options || !loaded)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else if (options.SeasonId is null || options.SeasonStart is not { } seasonStart || options.SeasonEnd is not { } seasonEnd)
+{
+    <div class="my-page">
+        <AdminHero Emoji="🎾" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["My_Title"]" Subtitle="@L["My_NoSeason"]" />
+    </div>
+}
+else
+{
+    var seasonLabel = MemberAdminHelpers.SeasonLabel(seasonStart, seasonEnd);
+    var me = options.People.FirstOrDefault(p => p.IsMe);
+    var orders = options.Orders.Where(o => o.Status is not (MembershipOrderStatus.Cancelled or MembershipOrderStatus.Refunded)).ToList();
+    var myOrder = me is null ? null : orders.FirstOrDefault(o => o.Members.Any(m => m.MemberId == me.MemberId));
+    var state = State(me, myOrder);
+    var canOrder = options.People.Any(p => !p.HasMembership);
+    var eligible = options.Plans.Where(p => p.IsEligible).ToList();
+    var notEligible = options.Plans.Where(p => !p.IsEligible).ToList();
+
+    <div class="my-page">
+        <AdminHero Emoji="@StateEmoji(state)" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName"
+                   Title="@string.Format(L[$"My_State_{state}"], seasonLabel)" Subtitle="@string.Format(L[$"My_StateText_{state}"], seasonLabel)" Class="@($"my-hero my-hero--{state.ToString().ToLowerInvariant()}")">
+            <Chips>
+                <span class="hero-chip">🗓️ @MembershipHelpers.Date(seasonStart) – @MembershipHelpers.Date(seasonEnd)</span>
+                @if (options.People.Count > 1)
+                {
+                    @foreach (var person in options.People.Where(p => !p.IsMe))
+                    {
+                        <span class="hero-chip @(person.IsEnrolled ? "hero-chip--ok" : null)">@(person.IsEnrolled ? "✅" : person.HasMembership ? "⏳" : "▫️") @person.FirstName</span>
+                    }
+                }
+            </Chips>
+        </AdminHero>
+
+        @if (OtherSeasons(options.SeasonId.Value) is { Count: > 1 } seasons)
+        {
+            <ChoiceChips TItem="SeasonResult" Items="@seasons" Value="@seasons.FirstOrDefault(s => s.Id == options.SeasonId)" ValueChanged="@(s => OnSeasonChanged(s.Id))"
+                         TextFunc="@(s => string.Format(L["SeasonName"], MemberAdminHelpers.SeasonLabel(s)))" ColorFunc="@(s => s.IsActive ? "#059669" : null)" />
+        }
+
+        @if (waitingForPayment)
+        {
+            <div class="my-wait" role="status">
+                <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+                <div>
+                    <div class="my-wait__title">@L["My_WaitingTitle"]</div>
+                    <div class="my-wait__text">@L["My_WaitingText"]</div>
+                </div>
+            </div>
+        }
+        else if (paymentPending)
+        {
+            <MudAlert Severity="Severity.Info">@L["My_PendingText"]</MudAlert>
+        }
+
+        @if (orders.Count > 0)
+        {
+            <SectionCard Emoji="🧾" Title="@L["My_OrdersTitle"]" Subtitle="@string.Format(L["My_OrdersSubtitle"], seasonLabel)">
+                <div class="my-orders">
+                    @foreach (var order in orders)
+                    {
+                        <div class="my-order" style="--order-color: @MembershipHelpers.StatusColor(order.Status)">
+                            <div class="my-order__main">
+                                <div class="my-order__head">
+                                    <span class="my-order__plan">@order.PlanName</span>
+                                    <span class="my-order__status">@MembershipHelpers.StatusEmoji(order.Status) @MembershipHelpers.StatusText(L, order.Status)</span>
+                                </div>
+                                <div class="my-order__fact">
+                                    <MudIcon Icon="@Icons.Material.Filled.Group" Class="my-order__icon" />
+                                    <span>@string.Join(", ", order.Members.Select(m => $"{m.FirstName} {m.LastName}"))</span>
+                                </div>
+                                @if (order.PaidAt is { } paidAt)
+                                {
+                                    <div class="my-order__fact">
+                                        <MudIcon Icon="@Icons.Material.Filled.EventAvailable" Class="my-order__icon" />
+                                        <span>@(order.IsFree ? string.Format(L["My_ConfirmedOn"], MembershipHelpers.Date(paidAt)) : string.Format(L["My_PaidOn"], MembershipHelpers.Date(paidAt), MembershipHelpers.MethodText(L, order.PaymentMethod)))</span>
+                                    </div>
+                                }
+                                @if (OrderHint(order, options) is { } hint)
+                                {
+                                    <div class="my-order__hint">@hint</div>
+                                }
+                            </div>
+                            <div class="my-order__side">
+                                <div class="my-order__amount">@MembershipHelpers.Price(L, order.AmountCents)</div>
+                                <div class="my-order__actions">
+                                    @if (order.CanPay && order.IsFree)
+                                    {
+                                        <LoadButton Variant="Variant.Filled" Color="Color.Primary" Loading="@(busyOrderId == order.Id)" Disabled="@IsBusy" OnClick="() => Confirm(order)">@L["My_Confirm"]</LoadButton>
+                                    }
+                                    else if (order.CanPay && options.OnlinePaymentAvailable)
+                                    {
+                                        <LoadButton Variant="Variant.Filled" Color="Color.Primary" Loading="@(busyOrderId == order.Id)" Disabled="@IsBusy" OnClick="() => Pay(order)">
+                                            @string.Format(L[order.Status == MembershipOrderStatus.Failed ? "My_PayAgain" : "My_Pay"], MembershipHelpers.Amount(order.AmountCents))
+                                        </LoadButton>
+                                    }
+                                    @if (order.CanCancel)
+                                    {
+                                        <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" Disabled="@IsBusy" OnClick="() => Withdraw(order)">@L["My_Withdraw"]</MudButton>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </SectionCard>
+        }
+
+        @if (canOrder)
+        {
+            <SectionCard Emoji="🏷️" Title="@L["My_PlansTitle"]" Subtitle="@L[options.OnlinePaymentAvailable ? "My_PlansSubtitleOnline" : "My_PlansSubtitleOffline"]">
+                @if (options.Plans.Count == 0)
+                {
+                    <div class="my-empty">
+                        <div class="my-empty__emoji" aria-hidden="true">🏷️</div>
+                        <div class="my-empty__title">@L["My_NoPlansTitle"]</div>
+                        <div class="my-empty__text">@L["My_NoPlansText"]</div>
+                    </div>
+                }
+                else
+                {
+                    @if (eligible.Count == 0)
+                    {
+                        <MudAlert Severity="Severity.Info" Class="mb-3">@L["My_NoEligiblePlan"]</MudAlert>
+                    }
+
+                    <div class="my-plans">
+                        @foreach (var option in eligible)
+                        {
+                            var plan = option.Plan;
+                            var selection = Selection(option, options);
+                            <div class="my-plan">
+                                <div class="my-plan__head">
+                                    <div class="my-plan__name">@plan.Name</div>
+                                    <div class="my-plan__price @(plan.IsFree ? "my-plan__price--free" : null)">@MembershipHelpers.Price(L, plan.PriceCents)</div>
+                                </div>
+                                @if (plan.Description is not null)
+                                {
+                                    <div class="my-plan__description">@plan.Description</div>
+                                }
+                                <div class="my-plan__chips">
+                                    @foreach (var (emoji, text) in MembershipHelpers.Chips(L, plan))
+                                    {
+                                        <span class="my-chip"><span aria-hidden="true">@emoji</span> @text</span>
+                                    }
+                                </div>
+
+                                @if (plan.IsGroupPlan)
+                                {
+                                    var people = option.Choices.SelectMany(c => c.MemberIds).Distinct().Select(id => options.People.FirstOrDefault(p => p.MemberId == id)).Where(p => p is not null).Select(p => p!).ToList();
+                                    @if (people.Count > 1)
+                                    {
+                                        <MultiChoiceChips TItem="MembershipPersonDto" Label="@L["My_ForWhom"]" Items="@people" Values="@people.Where(p => selection.Contains(p.MemberId)).ToList()"
+                                                          ValuesChanged="@(values => selections[plan.Id] = values.Select(p => p.MemberId).ToList())" TextFunc="@(p => p.FirstName)" Dense="true" />
+                                    }
+                                    else if (options.People.Count == 1)
+                                    {
+                                        <div class="my-plan__hint">
+                                            👨‍👩‍👧 @L["My_FamilyHint"] <a href="@($"/clubs/{ClubId}/my-club")">@L["My_FamilyLink"]</a>
+                                        </div>
+                                    }
+                                }
+                                else if (options.People.Count > 1)
+                                {
+                                    var people = option.Choices.Where(c => c.IsEligible).SelectMany(c => c.MemberIds).Select(id => options.People.FirstOrDefault(p => p.MemberId == id)).Where(p => p is not null).Select(p => p!).ToList();
+                                    <ChoiceChips TItem="MembershipPersonDto" Label="@L["My_ForWhom"]" Items="@people" Value="@people.FirstOrDefault(p => selection.Contains(p.MemberId))"
+                                                 ValueChanged="@(person => selections[plan.Id] = [person.MemberId])" TextFunc="@(p => p.FirstName)" />
+                                }
+
+                                <div class="my-plan__foot">
+                                    <LoadButton Variant="Variant.Filled" Color="Color.Primary" Loading="@(busyPlanId == plan.Id)" Disabled="@(IsBusy || selection.Count == 0)" OnClick="() => Choose(option, options)">
+                                        @ChooseCaption(plan, options)
+                                    </LoadButton>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (notEligible.Count > 0)
+                    {
+                        <MudExpansionPanels Elevation="0" Class="my-others">
+                            <MudExpansionPanel Text="@string.Format(L["My_OtherPlans"], notEligible.Count)">
+                                <div class="my-others__list">
+                                    @foreach (var option in notEligible)
+                                    {
+                                        var choice = (me is null ? null : option.Choices.FirstOrDefault(c => c.MemberIds.Contains(me.MemberId))) ?? option.Choices.FirstOrDefault();
+                                        <div class="my-other">
+                                            <div class="my-other__head">
+                                                <span class="my-other__name">@option.Plan.Name</span>
+                                                <span class="my-other__price">@MembershipHelpers.Price(L, option.Plan.PriceCents)</span>
+                                            </div>
+                                            @foreach (var reason in choice?.Reasons ?? [])
+                                            {
+                                                <div class="my-other__reason">· @MembershipHelpers.ReasonText(L, reason)</div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </MudExpansionPanel>
+                        </MudExpansionPanels>
+                    }
+                }
+            </SectionCard>
+        }
+    </div>
+}
+
+@code {
+    private const int PollAttempts = 15;
+    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
+
+    [Parameter] public int ClubId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "season")] public int? Season { get; set; }
+
+    /// <summary>The order the member just came back from the payment page for.</summary>
+    [SupplyParameterFromQuery(Name = "order")] public int? Order { get; set; }
+
+    /// <summary>"success" or "cancelled", set by the payment page. It proves nothing: the order is asked from the server.</summary>
+    [SupplyParameterFromQuery(Name = "checkout")] public string? Checkout { get; set; }
+
+    [Inject] private IMembershipsStore Store { get; set; } = null!;
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private enum MyState
+    {
+        Enrolled,
+        Processing,
+        Paid,
+        AwaitingApproval,
+        AwaitingPayment,
+        Failed,
+        Open,
+    }
+
+    private readonly Dictionary<int, List<int>> selections = [];
+    private readonly CancellationTokenSource disposed = new();
+    private bool loaded;
+    private int? seasonId;
+    private int? busyOrderId;
+    private int? busyPlanId;
+    private bool waitingForPayment;
+    private bool paymentPending;
+
+    private bool IsBusy => busyOrderId is not null || busyPlanId is not null || waitingForPayment;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnOptionsChanged += OnChanged;
+        ClubProfileStore.OnClubProfileChanged += OnChanged;
+
+        if (ClubProfileStore.IsSupportMode || ClubProfileStore.Roles.Contains(MemberRole.Guest))
+            return;
+
+        seasonId = Season;
+        await Task.WhenAll(Store.LoadOptions(seasonId), ClubStore.LoadSeasons());
+        loaded = true;
+
+        if (Order is { } orderId && Checkout == "success")
+            await WaitForPayment(orderId);
+        else if (Checkout == "cancelled")
+            Snackbar.Add(L["My_CheckoutCancelled"], Severity.Info);
+
+        // The result of the payment page is shown once, not again when the page is reloaded
+        if (Checkout is not null)
+            NavigationManager.NavigateTo(MembershipHelpers.MembershipUrl(ClubId, seasonId), replace: true);
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    /// <summary>
+    /// The payment provider tells the app about the payment on its own way, which may take a moment longer than the way back of the member.
+    /// </summary>
+    private async Task WaitForPayment(int orderId)
+    {
+        waitingForPayment = true;
+        StateHasChanged();
+
+        MembershipOrderDto? order = null;
+        try
+        {
+            for (var attempt = 0; attempt < PollAttempts; attempt++)
+            {
+                var result = await Store.GetOrder(orderId);
+                order = result.Dto;
+                if (!result.Success || order is null || order.Status is not MembershipOrderStatus.AwaitingPayment)
+                    break;
+
+                await Task.Delay(PollInterval, disposed.Token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        waitingForPayment = false;
+        await Store.LoadOptions(seasonId);
+
+        switch (order?.Status)
+        {
+            case MembershipOrderStatus.Paid:
+                Snackbar.Add(L[order.GrantsSeasonEnrollment ? "My_PaidEnrolled" : "My_PaidPassive"], Severity.Success);
+                break;
+            case MembershipOrderStatus.Processing:
+                Snackbar.Add(L["My_ProcessingEnrolled"], Severity.Success);
+                break;
+            case MembershipOrderStatus.AwaitingPayment:
+                paymentPending = true;
+                break;
+        }
+    }
+
+    private List<SeasonResult> OtherSeasons(int currentSeasonId)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        return ClubStore.Seasons.Where(s => s.EndDate >= today || s.Id == currentSeasonId).OrderBy(s => s.StartDate).ToList();
+    }
+
+    private async Task OnSeasonChanged(int id)
+    {
+        seasonId = id;
+        selections.Clear();
+        paymentPending = false;
+        await Store.LoadOptions(id);
+    }
+
+    private static MyState State(MembershipPersonDto? me, MembershipOrderDto? myOrder) => (me, myOrder?.Status) switch
+    {
+        (_, MembershipOrderStatus.Processing) => MyState.Processing,
+        (_, MembershipOrderStatus.AwaitingApproval) => MyState.AwaitingApproval,
+        (_, MembershipOrderStatus.AwaitingPayment) => MyState.AwaitingPayment,
+        (_, MembershipOrderStatus.Failed) => MyState.Failed,
+        ({ IsEnrolled: true }, _) => MyState.Enrolled,
+        (_, MembershipOrderStatus.Paid or MembershipOrderStatus.Disputed) => MyState.Paid,
+        _ => MyState.Open,
+    };
+
+    private static string StateEmoji(MyState state) => state switch
+    {
+        MyState.Enrolled or MyState.Paid => "✅",
+        MyState.Processing => "🏦",
+        MyState.AwaitingApproval => "✋",
+        MyState.AwaitingPayment => "⏳",
+        MyState.Failed => "⚠️",
+        _ => "🎾",
+    };
+
+    /// <summary>What happens next with an order, in a sentence.</summary>
+    private string? OrderHint(MembershipOrderDto order, GetMembershipOptionsResult options) => order.Status switch
+    {
+        MembershipOrderStatus.AwaitingApproval => L["My_Hint_AwaitingApproval"],
+        MembershipOrderStatus.AwaitingPayment when order.IsFree => L["My_Hint_Free"],
+        MembershipOrderStatus.AwaitingPayment or MembershipOrderStatus.Failed when !options.OnlinePaymentAvailable => L["My_Hint_PayToClub"],
+        MembershipOrderStatus.Failed => L["My_Hint_Failed"],
+        MembershipOrderStatus.Processing => L["My_Hint_Processing"],
+        MembershipOrderStatus.Disputed => L["My_Hint_Disputed"],
+        MembershipOrderStatus.Paid when !order.GrantsSeasonEnrollment => L["My_Hint_Passive"],
+        _ => null,
+    };
+
+    /// <summary>The members a plan is ordered for: what the member chose, else everybody the plan can cover.</summary>
+    private List<int> Selection(MembershipPlanOptionDto option, GetMembershipOptionsResult options)
+    {
+        if (selections.TryGetValue(option.Plan.Id, out var chosen))
+            return chosen;
+
+        var eligible = option.Choices.Where(c => c.IsEligible).ToList();
+        if (option.Plan.IsGroupPlan)
+            return eligible.FirstOrDefault()?.MemberIds ?? [];
+
+        // A plan for one member: the member themself when they can have it, else the first of the family who can
+        var me = options.People.FirstOrDefault(p => p.IsMe)?.MemberId;
+        return (eligible.FirstOrDefault(c => c.MemberIds.Contains(me ?? 0)) ?? eligible.FirstOrDefault())?.MemberIds ?? [];
+    }
+
+    private string ChooseCaption(MembershipPlanDto plan, GetMembershipOptionsResult options) => (plan.RequiresApproval, plan.IsFree, options.OnlinePaymentAvailable) switch
+    {
+        (true, _, _) => L["My_AskForApproval"],
+        (false, true, _) => L["My_Confirm"],
+        (false, false, true) => string.Format(L["My_Pay"], MembershipHelpers.Amount(plan.PriceCents)),
+        _ => L["My_Choose"],
+    };
+
+    private async Task Choose(MembershipPlanOptionDto option, GetMembershipOptionsResult options)
+    {
+        var plan = option.Plan;
+        busyPlanId = plan.Id;
+
+        try
+        {
+            var created = await Store.CreateOrder(plan.Id, Selection(option, options));
+            if (created is not { Success: true, Dto: { } order })
+            {
+                Snackbar.ShowErrorDetails(created, BackendLocale);
+                return;
+            }
+
+            selections.Remove(plan.Id);
+
+            if (order.Status == MembershipOrderStatus.AwaitingApproval)
+                Snackbar.Add(L["My_ApprovalRequested"], Severity.Success);
+            else if (order.IsFree)
+                await ConfirmOrder(order);
+            else if (options.OnlinePaymentAvailable)
+                await StartCheckout(order);
+            else
+                Snackbar.Add(L["My_Chosen"], Severity.Success);
+        }
+        finally
+        {
+            busyPlanId = null;
+            await Store.LoadOptions(seasonId);
+        }
+    }
+
+    private async Task Pay(MembershipOrderDto order)
+    {
+        busyOrderId = order.Id;
+        try
+        {
+            await StartCheckout(order);
+        }
+        finally
+        {
+            busyOrderId = null;
+        }
+    }
+
+    private async Task Confirm(MembershipOrderDto order)
+    {
+        busyOrderId = order.Id;
+        try
+        {
+            await ConfirmOrder(order);
+        }
+        finally
+        {
+            busyOrderId = null;
+            await Store.LoadOptions(seasonId);
+        }
+    }
+
+    private async Task StartCheckout(MembershipOrderDto order)
+    {
+        var result = await Store.StartCheckout(order.Id);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            await Store.LoadOptions(seasonId);
+            return;
+        }
+
+        // The payment page belongs to the payment provider: leave the app
+        NavigationManager.NavigateTo(result.Dto.Url, forceLoad: true);
+    }
+
+    private async Task ConfirmOrder(MembershipOrderDto order)
+    {
+        var result = await Store.ConfirmOrder(order.Id);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(L[order.GrantsSeasonEnrollment ? "My_ConfirmedEnrolled" : "My_ConfirmedPassive"], Severity.Success);
+    }
+
+    private async Task Withdraw(MembershipOrderDto order)
+    {
+        var confirmed = await DialogService.ShowMessageBox(L["My_WithdrawTitle"], string.Format(L["My_WithdrawConfirm"], order.PlanName),
+            yesText: L["My_Withdraw"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true)
+            return;
+
+        var result = await Store.CancelOrder(order.Id);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+        else
+            Snackbar.Add(L["My_Withdrawn"], Severity.Success);
+
+        paymentPending = false;
+        await Store.LoadOptions(seasonId);
+    }
+
+    public void Dispose()
+    {
+        disposed.Cancel();
+        disposed.Dispose();
+        Store.OnOptionsChanged -= OnChanged;
+        ClubProfileStore.OnClubProfileChanged -= OnChanged;
+    }
+}

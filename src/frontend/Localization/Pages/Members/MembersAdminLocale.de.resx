@@ -367,4 +367,22 @@
   <data name="YearAgo" xml:space="preserve">
     <value>vor einem Jahr</value>
   </data>
+  <data name="Enrollment_ByHand" xml:space="preserve">
+    <value>von Hand freigeschaltet</value>
+  </data>
+  <data name="Enrollment_PaidOnline" xml:space="preserve">
+    <value>online bezahlt</value>
+  </data>
+  <data name="Enrollment_MarkedAsPaid" xml:space="preserve">
+    <value>als bezahlt markiert</value>
+  </data>
+  <data name="RemovePaidSeasonTitle" xml:space="preserve">
+    <value>Diese Saison wurde bezahlt</value>
+  </data>
+  <data name="RemovePaidSeasonText" xml:space="preserve">
+    <value>Der Mitgliedsbeitrag dieser Saison wurde bezahlt. Wenn du das Mitglied aus der Saison nimmst, wird die Zahlung nicht storniert und kein Geld erstattet. Das Mitglied trotzdem herausnehmen?</value>
+  </data>
+  <data name="RemovePaidSeasonConfirm" xml:space="preserve">
+    <value>Herausnehmen</value>
+  </data>
 </root>

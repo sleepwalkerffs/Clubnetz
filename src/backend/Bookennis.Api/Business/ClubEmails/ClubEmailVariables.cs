@@ -37,6 +37,12 @@ public readonly record struct MarkdownText(string Value)
 
 public record AnnouncementVariables(string Title, MarkdownText Body, string Url);
 
+/// <summary>
+/// A membership order. <c>Amount</c> is formatted with the currency, <c>Members</c> are the names of the covered members,
+/// <c>PaymentMethod</c> is empty as long as nothing was paid. <c>Url</c> leads to the page where the recipient acts on it.
+/// </summary>
+public record MembershipVariables(string Plan, string Season, string Amount, string Members, string PaymentMethod, string Url);
+
 public abstract record ClubEmailVariables(MemberVariables Member)
 {
     /// <summary>Filled in by <see cref="SendClubEmail"/> from the club the email is sent for.</summary>
@@ -61,3 +67,9 @@ public record BookingReminderEmailVariables(MemberVariables Member, BookingDetai
 
 /// <summary>Used by all emails about a club event (published, reminder, registration deadline).</summary>
 public record ClubEventEmailVariables(MemberVariables Member, EventVariables Event) : ClubEmailVariables(Member);
+
+/// <summary>Used by the emails to the payer of a membership order (payment received, plan confirmed, payment failed).</summary>
+public record MembershipEmailVariables(MemberVariables Member, MembershipVariables Membership) : ClubEmailVariables(Member);
+
+/// <summary>To the treasurers: <c>Reason</c> says what happened to the order, <c>Payer</c> who it belongs to.</summary>
+public record MembershipNeedsAttentionEmailVariables(MemberVariables Member, MembershipVariables Membership, string Reason, string Payer) : ClubEmailVariables(Member);

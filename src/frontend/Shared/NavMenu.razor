@@ -43,6 +43,8 @@
                 <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/profile")" Icon="@Icons.Material.Filled.Handyman">@Locale["ClubSettings"]</MudNavLink>
                 <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/members")" Icon="@Icons.Material.Filled.Groups2">@Locale["Members"]</MudNavLink>
                 <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/guests")" Icon="@Icons.Material.Filled.Person">@SharedLocale["Guests"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/membership-plans")" Icon="@Icons.Material.Filled.ReceiptLong">@Locale["MembershipPlans"]</MudNavLink>
+                <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/membership-payments")" Icon="@Icons.Material.Filled.Payments">@Locale["MembershipPayments"]</MudNavLink>
                 <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/booking?Start={DateOnly.FromDateTime(DateTime.Today).ToString(CultureInfo.InvariantCulture)}&End={DateOnly.FromDateTime(DateTime.Today.AddDays(6)).ToString(CultureInfo.InvariantCulture)}")"
                             Icon="@Icons.Material.Filled.SportsTennis">@Locale["BookingPlan"]</MudNavLink>
                 <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/court-blockings")" Icon="@Icons.Material.Filled.Lock">@Locale["CourtBlockings"]</MudNavLink>
@@ -62,6 +64,8 @@
 
                 @if (!ClubProfileStore.Roles.Contains(MemberRole.Guest))
                 {
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/membership")"
+                                Icon="@Icons.Material.Filled.CardMembership">@Locale["Membership"]</MudNavLink>
                     <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/news")"
                                 Icon="@Icons.Material.Filled.Campaign">@Locale["News"]</MudNavLink>
                     <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/calendar")"
@@ -80,6 +84,8 @@
                         <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/profile")" Icon="@Icons.Material.Filled.Handyman">@Locale["ClubSettings"]</MudNavLink>
                         <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/court-blockings")" Icon="@Icons.Material.Filled.Lock">@Locale["CourtBlockings"]</MudNavLink>
                         <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/members")" Icon="@Icons.Material.Filled.Groups2">@Locale["Members"]</MudNavLink>
+                        <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/membership-plans")" Icon="@Icons.Material.Filled.ReceiptLong">@Locale["MembershipPlans"]</MudNavLink>
+                        <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/membership-payments")" Icon="@Icons.Material.Filled.Payments">@Locale["MembershipPayments"]</MudNavLink>
                         <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/badge-settings")" Icon="@Icons.Material.Filled.EmojiEvents">@SharedLocale["BadgeSettings"]</MudNavLink>
                         <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/email-templates")" Icon="@Icons.Material.Filled.MarkEmailRead">@Locale["EmailTemplates"]</MudNavLink>
                         <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/api-keys")" Icon="@Icons.Material.Filled.Key">@Locale["ApiKeys"]</MudNavLink>
@@ -106,6 +112,13 @@
                 @if (ClubProfileStore.Roles.Contains(MemberRole.Treasurer))
                 {
                     <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/guests")" Icon="@Icons.Material.Filled.Person">@SharedLocale["Guests"]</MudNavLink>
+
+                    @* Admins find them in the admin group *@
+                    @if (!ClubProfileStore.Roles.Contains(MemberRole.Admin))
+                    {
+                        <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/membership-plans")" Icon="@Icons.Material.Filled.ReceiptLong">@Locale["MembershipPlans"]</MudNavLink>
+                        <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/membership-payments")" Icon="@Icons.Material.Filled.Payments">@Locale["MembershipPayments"]</MudNavLink>
+                    }
                 }
             }
             <AuthorizeView>

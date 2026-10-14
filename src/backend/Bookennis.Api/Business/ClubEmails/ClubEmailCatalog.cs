@@ -70,7 +70,19 @@ public static class ClubEmailCatalog
         new(ClubEmailType.ClubEventReminder, typeof(ClubEventEmailVariables),
             language => new ClubEventEmailVariables(SampleMember, SampleEvent(language))),
         new(ClubEmailType.ClubEventRegistrationDeadline, typeof(ClubEventEmailVariables),
-            language => new ClubEventEmailVariables(SampleMember, SampleEvent(language)))
+            language => new ClubEventEmailVariables(SampleMember, SampleEvent(language))),
+        new(ClubEmailType.MembershipPaymentReceived, typeof(MembershipEmailVariables),
+            language => new MembershipEmailVariables(SampleMember, SampleMembership(language, paid: true))),
+        new(ClubEmailType.MembershipApproved, typeof(MembershipEmailVariables),
+            language => new MembershipEmailVariables(SampleMember, SampleMembership(language, paid: false))),
+        new(ClubEmailType.MembershipPaymentFailed, typeof(MembershipEmailVariables),
+            language => new MembershipEmailVariables(SampleMember, SampleMembership(language, paid: false))),
+        new(ClubEmailType.MembershipNeedsAttention, typeof(MembershipNeedsAttentionEmailVariables),
+            language => new MembershipNeedsAttentionEmailVariables(
+                SampleMember,
+                SampleMembership(language, paid: false),
+                language == Language.German ? "Ein Mitglied möchte einen Tarif, den ihr bestätigen müsst." : "A member asks for a plan that you have to confirm.",
+                "Erika Muster"))
     ];
 
     public static ClubEmailDefinition Get(ClubEmailType type)
@@ -97,6 +109,18 @@ public static class ClubEmailCatalog
             language == Language.German ? "Clubhaus" : "Clubhouse",
             $"{new DateOnly(2025, 7, 5).ToString("D", culture)}, 18:00",
             "https://www.example.com/clubs/1/calendar/1");
+    }
+
+    private static MembershipVariables SampleMembership(Language language, bool paid)
+    {
+        var culture = language.ToCultureInfo();
+        return new MembershipVariables(
+            language == Language.German ? "Familie" : "Family",
+            SampleSeason(language).Period,
+            Memberships.MembershipTexts.Amount(21500, culture),
+            "Max Muster, Erika Muster, Mia Muster",
+            paid ? (language == Language.German ? "Online-Zahlung" : "Online payment") : "",
+            "https://www.example.com/clubs/1/membership");
     }
 
     private static SeasonVariables SampleSeason(Language language)

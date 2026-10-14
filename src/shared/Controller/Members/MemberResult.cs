@@ -14,6 +14,9 @@ public record MemberResult
     public required DateOnly Birthday { get; set; }
     public required MemberRole[] Roles { get; set; }
     public required int[] AllowedSeasonIds { get; set; }
+
+    /// <summary>The seasons the member was enrolled in by a membership order (paid online, marked as paid or a free plan), not by hand.</summary>
+    public int[] PaidSeasonIds { get; set; } = [];
     public required int BookingsPerWeek { get; set; }
 
     /// <summary>The member's email or, for children without an email, the email of a parent.</summary>

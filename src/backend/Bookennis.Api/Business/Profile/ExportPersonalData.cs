@@ -4,6 +4,7 @@ using Bookennis.Api.Infrastructure.Exceptions;
 using Bookennis.Api.Infrastructure.User;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Members;
+using Bookennis.Domain.Memberships;
 using Bookennis.Domain.Notifications;
 using Bookennis.Domain.User;
 using Fusonic.Extensions.Common.Security;
@@ -146,6 +147,29 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                 .Select(p => new PersonalDataNotificationPreference(p.Type, p.Push, p.Email))
                 .ToListAsync(cancellationToken);
 
+            // Membership fees the user paid or is covered by. The ids of the payment provider are left out.
+            var membershipOrders = await (
+                from order in context.MembershipOrders.IgnoreQueryFilters()
+                join club in context.Clubs.IgnoreQueryFilters() on order.ClubId equals club.Id
+                join season in context.Seasons.IgnoreQueryFilters() on order.SeasonId equals season.Id
+                where memberIds.Contains(order.PayerMemberId ?? 0) || order.Members.Any(m => memberIds.Contains(m.MemberId))
+                orderby order.Id
+                select new PersonalDataMembershipOrder(
+                    club.Name,
+                    order.PlanName,
+                    season.Period.From,
+                    season.Period.To,
+                    order.AmountCents / 100m,
+                    order.Currency,
+                    order.Status,
+                    order.PaymentMethod,
+                    memberIds.Contains(order.PayerMemberId ?? 0),
+                    order.Members.Any(m => memberIds.Contains(m.MemberId)),
+                    order.Metadata.Created,
+                    order.ApprovedAt,
+                    order.PaidAt)
+            ).ToListAsync(cancellationToken);
+
             return new PersonalDataExport(
                 DateTimeOffset.UtcNow,
                 new PersonalDataAccount(
@@ -179,7 +203,8 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                     p.Participants.OrderBy(x => x.SortOrder).Select(x => new PersonalDataPlanParticipant(x.Name, x.Percentage)).ToList())),
                 children,
                 pushSubscriptions.ConvertAll(s => new PersonalDataPushDevice(PushEndpoint.Host(s.Endpoint), s.Created)),
-                notificationPreferences);
+                notificationPreferences,
+                membershipOrders);
         }
 
         private static string? NullIfEmpty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
@@ -198,7 +223,8 @@ public record PersonalDataExport(
     List<PersonalDataSubscriptionPlan> SubscriptionPlans,
     List<PersonalDataChild> Children,
     List<PersonalDataPushDevice> PushDevices,
-    List<PersonalDataNotificationPreference> NotificationPreferences);
+    List<PersonalDataNotificationPreference> NotificationPreferences,
+    List<PersonalDataMembershipOrder> MembershipOrders);
 
 public record PersonalDataAccount(
     string FirstName,
@@ -247,3 +273,19 @@ public record PersonalDataPushDevice(string PushService, DateTime RegisteredAt);
 
 /// <summary>The channels the user chose for a type of notification. Types that are missing use the defaults.</summary>
 public record PersonalDataNotificationPreference(NotificationType Type, bool Push, bool Email);
+
+/// <summary>A membership fee of a season the user paid (<c>IsPayer</c>) or is covered by (<c>IsCovered</c>).</summary>
+public record PersonalDataMembershipOrder(
+    string Club,
+    string Plan,
+    DateOnly SeasonFrom,
+    DateOnly SeasonTo,
+    decimal Amount,
+    string Currency,
+    MembershipOrderStatus Status,
+    MembershipPaymentMethod? PaymentMethod,
+    bool IsPayer,
+    bool IsCovered,
+    DateTime OrderedAt,
+    DateTimeOffset? ApprovedAt,
+    DateTimeOffset? PaidAt);

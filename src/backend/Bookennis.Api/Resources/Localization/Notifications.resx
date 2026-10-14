@@ -54,4 +54,31 @@
   <data name="ReasonSeriesCancelled" xml:space="preserve">
     <value>the recurring booking being cancelled from this date on</value>
   </data>
+  <data name="Membership_Reason_ApprovalRequested" xml:space="preserve">
+    <value>A member asks for a plan that you have to confirm.</value>
+  </data>
+  <data name="Membership_Reason_PaymentFailed" xml:space="preserve">
+    <value>The payment did not go through. The members are no longer enrolled in the season until they pay again or you record the payment.</value>
+  </data>
+  <data name="Membership_Reason_Refunded" xml:space="preserve">
+    <value>The payment was refunded in Stripe. The members stay enrolled until you decide otherwise.</value>
+  </data>
+  <data name="Membership_Reason_Disputed" xml:space="preserve">
+    <value>The payer disputes the payment at their bank. Please answer the dispute in your Stripe dashboard. The members stay enrolled until you decide otherwise.</value>
+  </data>
+  <data name="Membership_Reason_UnexpectedPayment" xml:space="preserve">
+    <value>An online payment arrived for an order that was cancelled or already recorded as paid. Please check it in your Stripe dashboard and refund it or record the membership.</value>
+  </data>
+  <data name="Membership_Method_Online" xml:space="preserve">
+    <value>Online payment</value>
+  </data>
+  <data name="Membership_Method_BankTransfer" xml:space="preserve">
+    <value>Bank transfer</value>
+  </data>
+  <data name="Membership_Method_Cash" xml:space="preserve">
+    <value>Cash</value>
+  </data>
+  <data name="Membership_Method_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
 </root>

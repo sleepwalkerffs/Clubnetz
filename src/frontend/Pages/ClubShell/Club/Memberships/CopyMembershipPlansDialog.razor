@@ -1,0 +1,55 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Memberships
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+
+<BaseDialog CanSubmit="@(sourceSeasonId is not null)" SubmitFunc="Submit" SubmitCaption="@L["Copy_Submit"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@Store.IsSaving" Title="@L["Plans_Copy"]">
+    <div class="mud-width-full d-flex flex-column gap-3">
+        <MudSelect Variant="Variant.Outlined" T="int?" Label="@SharedLocale["CopySourceSeason"]" @bind-Value="sourceSeasonId">
+            @foreach (var season in AvailableSourceSeasons)
+            {
+                <MudSelectItem T="int?" Value="@((int?)season.Id)">@string.Format(L["SeasonName"], MemberAdminHelpers.SeasonLabel(season))</MudSelectItem>
+            }
+        </MudSelect>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@L["Copy_Hint"]</MudText>
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter] public int TargetSeasonId { get; set; }
+    [Parameter] public List<SeasonResult> AvailableSourceSeasons { get; set; } = [];
+
+    [Inject] private IMembershipPlansStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private int? sourceSeasonId;
+
+    protected override void OnInitialized() => sourceSeasonId = AvailableSourceSeasons.FirstOrDefault()?.Id;
+
+    private async Task<DialogResult?> Submit()
+    {
+        var result = await Store.CopyPlans(sourceSeasonId!.Value, TargetSeasonId);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

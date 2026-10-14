@@ -21,6 +21,8 @@ public class AppSettings
 
     public LegalSettings Legal { get; set; } = new();
 
+    public StripeSettings Stripe { get; set; } = new();
+
     public static IReadOnlyList<CultureInfo> SupportedCultures
         => new[] { "de-AT", "en-AT" }
           .Select(c => new CultureInfo(c))

@@ -39,4 +39,28 @@ public class AddNewChildTests(TestFixture fixture) : TestBase(fixture)
         var familyMembers = await QueryAsync(ctx => ctx.FamilyMembers.Where(fm => fm.FamilyId == familyId).ToListAsync());
         familyMembers.Should().HaveCountGreaterThan(1);
     }
+
+    [Theory]
+    [InlineData(TestDataSeed.UserId)]
+    [InlineData(TestDataSeed.AdminId)]
+    public async Task AddNewChild_TheAccountOfTheChildBelongsToTheParent_AlsoWhenSomebodyElseAddsIt(int callerUserId)
+    {
+        // Member1 (the user) is the parent. When an admin or a treasurer adds the child, it must not become theirs.
+        var familyId = await QueryAsync(async ctx =>
+        {
+            var family = new Domain.Families.Family(TestDataSeed.ClubId, [TestDataSeed.Member1Id], []);
+            ctx.Add(family);
+            await ctx.SaveChangesAsync();
+            return family.Id;
+        });
+
+        await ScopedAsync(async () =>
+        {
+            GetInstance<ITenantService>().SetTenantId(TestDataSeed.ClubId);
+            await GetInstance<IMediator>().Send(new AddNewChild(familyId, new ChildUserModel("Child", "Test", new DateOnly(2015, 1, 1), Gender.Male), callerUserId));
+        });
+
+        var owner = await QueryAsync(ctx => ctx.Users.Where(u => u.FirstName == "Child" && u.LastName == "Test").Select(u => u.BelongsToUserId).SingleAsync());
+        owner.Should().Be(TestDataSeed.UserId);
+    }
 }

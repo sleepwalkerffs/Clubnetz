@@ -1,3 +1,4 @@
+@using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Components.Shared.Dialogs
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Components.Family
@@ -5,22 +6,22 @@
 @using Bookennis.Shared.Controller.Families
 @using Bookennis.Shared.Controller.Shared
 
-<BaseDialog SubmitFunc="Submit" SubmitCaption=@SharedLocale["Update"] CancelFunc="Cancel" CancelCaption=@SharedLocale["Cancel"] AllowFullScreen="false">
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@FamilyStore.IsSaving" Title="@FamilySharedLocale["EditChild"]" AllowFullScreen="false">
     <MudForm @ref="mudForm">
-        <div class="d-flex gap-2 flex-column">
-            <MudSelect T="int" Label=@SharedLocale["Gender"] Variant="Variant.Outlined" @bind-Value="gender" For="@(() => gender)">
-                <MudSelectItem T="int" Value="0">@SharedLocale["Mr"].</MudSelectItem>
-                <MudSelectItem T="int" Value="1">@SharedLocale["Mrs"].</MudSelectItem>
-                <MudSelectItem T="int" Value="2">@SharedLocale["None"]</MudSelectItem>
-            </MudSelect>
-            <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Firstname"] @bind-Value="firstName" Required="true" />
-            <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Lastname"] @bind-Value="lastName" Required="true" />
-            <MudDatePicker Variant="Variant.Outlined" Label=@SharedLocale["Birthday"] @bind-Date="birthday" DateFormat="dd.MM.yyyy" Required="true" PickerVariant="PickerVariant.Dialog" />
+        <div class="family-dialog__form">
+            <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Firstname"]" @bind-Value="firstName" Required="true" MaxLength="100" />
+            <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Lastname"]" @bind-Value="lastName" Required="true" MaxLength="100" />
+            <MudDatePicker Variant="Variant.Outlined" Label="@SharedLocale["Birthday"]" @bind-Date="birthday" DateFormat="dd.MM.yyyy" Required="true"
+                           MaxDate="@DateTime.Today" PickerVariant="PickerVariant.Dialog" />
+            <ChoiceChips TItem="Gender" Items="@Genders" @bind-Value="gender" TextFunc="@(value => FamilySharedLocale[$"Gender_{value}"])" Label="@SharedLocale["Gender"]" />
         </div>
     </MudForm>
 </BaseDialog>
 
 @code {
+    private static readonly Gender[] Genders = [Gender.Female, Gender.Male, Gender.Diverse];
+
     [Parameter]
     public required FamilyChildDto Child { get; set; }
 
@@ -28,19 +29,21 @@
     private IFamilyStore FamilyStore { get; set; } = null!;
     [Inject]
     private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<FamilySharedLocale> FamilySharedLocale { get; set; } = null!;
 
     private MudForm mudForm = null!;
     private string firstName = string.Empty;
     private string lastName = string.Empty;
     private DateTime? birthday;
-    private int gender;
+    private Gender gender;
 
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
         firstName = Child.FirstName;
         lastName = Child.LastName;
         birthday = Child.Birthday.ToDateTime(TimeOnly.MinValue);
-        gender = (int)Child.Gender;
+        gender = Child.Gender;
     }
 
     private async Task<DialogResult?> Submit()
@@ -51,7 +54,7 @@
 
         await FamilyStore.UpdateOwnedChild(
             Child.MemberId,
-            new UpdateOwnedChildRequest(firstName, lastName, DateOnly.FromDateTime(birthday!.Value), (Gender)gender));
+            new UpdateOwnedChildRequest(firstName, lastName, DateOnly.FromDateTime(birthday!.Value), gender));
 
         return DialogResult.Ok(Child);
     }

@@ -1,0 +1,112 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Client.Services.Store.Memberships
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Memberships
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@L["Payments_MarkPaid"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@Store.IsSaving" Title="@L["Payments_MarkPaid"]">
+    <div class="d-flex flex-column gap-4">
+        <MudText Typo="Typo.body2"><strong>@Summary</strong></MudText>
+
+        @if (Order is not null && Payer is not null && Plan is { IsGroupPlan: true })
+        {
+            <CoveredMembers Member="@Payer" FamilyMembers="@FamilyMembers" @bind-Values="covered" OnFamilyChanged="FamilyChanged" />
+        }
+
+        <ChoiceChips TItem="MembershipPaymentMethod" Label="@L["Record_Method"]" Items="@Methods" @bind-Value="method" TextFunc="@(m => MembershipHelpers.MethodText(L, m))" />
+
+        <MudDatePicker @bind-Date="paidOn" Variant="Variant.Outlined" Label="@L["Record_PaidOn"]" MaxDate="@DateTime.Today" PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" />
+
+        <MudTextField Variant="Variant.Outlined" T="string" Label="@L["Record_Note"]" @bind-Value="note" Lines="2" MaxLength="500" HelperText="@L["Record_NoteHint"]" Margin="Margin.Dense" />
+
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@L["Record_EnrollHint"]</MudText>
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter] public int OrderId { get; set; }
+
+    /// <summary>Plan, amount and members of the order, shown on top.</summary>
+    [Parameter] public string Summary { get; set; } = "";
+
+    /// <summary>
+    /// For an order of a couple or family plan that is not paid yet: the order, its plan and who placed it. The treasurer then sees
+    /// who it covers and can add the partner or the children the member forgot.
+    /// </summary>
+    [Parameter] public MembershipPaymentOrderDto? Order { get; set; }
+    [Parameter] public MembershipPlanDto? Plan { get; set; }
+    [Parameter] public MembershipPaymentMemberDto? Payer { get; set; }
+
+    [Inject] private IMembershipPaymentsStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    internal static readonly MembershipPaymentMethod[] Methods = [MembershipPaymentMethod.BankTransfer, MembershipPaymentMethod.Cash, MembershipPaymentMethod.Other];
+
+    private MembershipPaymentMethod method = MembershipPaymentMethod.BankTransfer;
+    private DateTime? paidOn = DateTime.Today;
+    private string? note;
+    private IReadOnlyCollection<MembershipPaymentMemberDto>? covered;
+
+    private List<MembershipPaymentMemberDto> FamilyMembers
+        => Store.Payments is { } payments && Order is not null && Payer is not null ? MembershipHelpers.CoverableBy(payments, Order, Payer) : [];
+
+    protected override void OnInitialized()
+    {
+        if (Order is not null && Payer is not null && Plan is { IsGroupPlan: true })
+            covered = FamilyMembers.Where(m => Order.MemberIds.Contains(m.MemberId)).ToList();
+    }
+
+    /// <summary>The family changed: the plan covers it as far as it allows, as when a payment is recorded.</summary>
+    private async Task FamilyChanged(int? familyId)
+    {
+        if (Store.Payments is not { } payments || Plan is null || Payer is null)
+            return;
+
+        await Store.Load(payments.SeasonId);
+        if (Store.Payments is null)
+            return;
+
+        Payer = Store.Payments.Members.FirstOrDefault(m => m.MemberId == Payer.MemberId) ?? Payer;
+        covered = MembershipHelpers.CoveredByDefault(Plan, FamilyMembers);
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (covered is { Count: 0 })
+        {
+            Snackbar.Add(L["MarkPaid_NobodyCovered"], Severity.Warning);
+            return null;
+        }
+
+        var result = await Store.MarkPaid(OrderId, new MarkMembershipOrderPaidModel
+        {
+            Method = method,
+            PaidOn = DateOnly.FromDateTime(paidOn ?? DateTime.Today),
+            Note = string.IsNullOrWhiteSpace(note) ? null : note,
+            MemberIds = covered?.Select(m => m.MemberId).ToList(),
+        });
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Payments_MarkedPaid"], Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

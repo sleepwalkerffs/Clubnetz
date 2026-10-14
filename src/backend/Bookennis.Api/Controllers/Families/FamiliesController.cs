@@ -13,7 +13,7 @@ namespace Bookennis.Api.Controllers.Families;
 
 /// <summary>
 /// Families of the club. A member manages the own family: only its members read it and only its parents change it
-/// (<see cref="AuthorizationPolicies.FamilyMember"/>, <see cref="AuthorizationPolicies.FamilyParent"/>). Admins of the club may do both.
+/// (<see cref="AuthorizationPolicies.FamilyMember"/>, <see cref="AuthorizationPolicies.FamilyParent"/>). Admins and treasurers of the club may do both.
 /// </summary>
 [Authorize(AuthorizationPolicies.ClubMember)]
 public class FamiliesController(IMediator mediator, IAuthorizationService authorizationService) : ClubControllerBase
@@ -39,8 +39,8 @@ public class FamiliesController(IMediator mediator, IAuthorizationService author
     [HttpPost]
     public async Task<int> CreateFamily(CreateFamilyRequest request, CancellationToken cancellationToken)
     {
-        // A member founds the own family: they have to be one of its parents (admins may found any)
-        var isOneOfTheParents = false;
+        // A member founds the own family: they have to be one of its parents (admins and treasurers may found any)
+        var isOneOfTheParents = (await authorizationService.AuthorizeAsync(HttpContext.User, AuthorizationPolicies.ClubTreasurer)).Succeeded;
         foreach (var parentMemberId in request.ParentContractUserIds)
             isOneOfTheParents |= (await authorizationService.AuthorizeAsync(HttpContext.User, new MemberAuthorizationModel(parentMemberId), AuthorizationPolicies.Member)).Succeeded;
 

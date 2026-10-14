@@ -1,0 +1,33 @@
+.record {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.record__plan {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+}
+
+.record__price {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.record__hint {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.record__error {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--bk-dark-red, #B91C1C);
+    background: color-mix(in srgb, var(--bk-dark-red, #B91C1C) 10%, transparent);
+}

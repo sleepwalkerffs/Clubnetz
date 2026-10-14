@@ -1,0 +1,265 @@
+@page "/clubs/{ClubId:int}/membership-plans"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Memberships
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Memberships
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+<PageTitle>@L["Plans_Title"]</PageTitle>
+
+@if (!CanManage)
+{
+    <MudAlert Severity="Severity.Info">@L["NoAccess"]</MudAlert>
+}
+else
+{
+    var season = ClubStore.Seasons.FirstOrDefault(s => s.Id == selectedSeasonId);
+    var plans = Store.SeasonId == selectedSeasonId ? Store.Plans : null;
+
+    <div class="plans-page">
+        <AdminHero Emoji="💶" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Plans_Title"]" Subtitle="@L["Plans_Subtitle"]">
+            <Chips>
+                <span class="hero-chip">🧾 @string.Format(L["Plans_CountChip"], plans?.Count ?? 0)</span>
+                @if (AccountStore.Account is { } account)
+                {
+                    <span class="hero-chip @(account is { IsAvailable: true, ChargesEnabled: true } ? "hero-chip--ok" : null)">
+                        💳 @L[account is { IsAvailable: true, ChargesEnabled: true } ? "Plans_OnlineChipOn" : "Plans_OnlineChipOff"]
+                    </span>
+                }
+            </Chips>
+            <ChildContent>
+                <div class="plans-hero__links">
+                    <MudButton Href="@MembershipHelpers.PaymentsUrl(ClubId, selectedSeasonId)" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Payments" Class="plans-hero__link">
+                        @L["Plans_ToPayments"]
+                    </MudButton>
+                </div>
+            </ChildContent>
+        </AdminHero>
+
+        @if (ClubStore.Seasons.Count > 0)
+        {
+            <ChoiceChips TItem="SeasonResult" Items="@SeasonsNewestFirst" Value="@season" ValueChanged="@(s => OnSeasonChanged(s.Id))"
+                         TextFunc="@(s => string.Format(L["SeasonName"], MemberAdminHelpers.SeasonLabel(s)))" ColorFunc="@(s => s.IsActive ? "#059669" : null)" />
+        }
+        else if (seasonsLoaded)
+        {
+            <MudAlert Severity="Severity.Info">@L["NoSeasons"]</MudAlert>
+        }
+
+        @if (season is not null)
+        {
+            <SectionCard Emoji="🧾" Title="@L["Plans_ListTitle"]" Subtitle="@L["Plans_ListSubtitle"]">
+                <Actions>
+                    @if (plans is { Count: 0 } && OtherSeasons.Count > 0)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-label="@L["Plans_Copy"]" title="@L["Plans_Copy"]" OnClick="OpenCopyDialog" />
+                    }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenPlanDialog(null)">@L["Plans_Add"]</MudButton>
+                </Actions>
+                <ChildContent>
+                    @if (plans is null)
+                    {
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                    }
+                    else if (plans.Count == 0)
+                    {
+                        <div class="plans-empty">
+                            <div class="plans-empty__emoji" aria-hidden="true">🧾</div>
+                            <div class="plans-empty__title">@L["Plans_EmptyTitle"]</div>
+                            <div class="plans-empty__text">@L["Plans_EmptyText"]</div>
+                            <div class="plans-empty__actions">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenPlanDialog(null)">@L["Plans_AddFirst"]</MudButton>
+                                @if (OtherSeasons.Count > 0)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="OpenCopyDialog">@L["Plans_Copy"]</MudButton>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="plan-grid">
+                            @foreach (var plan in plans)
+                            {
+                                var index = plans.IndexOf(plan);
+                                <div class="plan-card @(plan.IsSelfService ? null : "plan-card--internal")">
+                                    <div class="plan-card__head">
+                                        <div class="plan-card__name">@plan.Name</div>
+                                        <div class="plan-card__price @(plan.IsFree ? "plan-card__price--free" : null)">@MembershipHelpers.Price(L, plan.PriceCents)</div>
+                                    </div>
+                                    @if (plan.Description is not null)
+                                    {
+                                        <div class="plan-card__description">@plan.Description</div>
+                                    }
+                                    <div class="plan-card__chips">
+                                        @foreach (var (emoji, text) in MembershipHelpers.Chips(L, plan))
+                                        {
+                                            <span class="plan-chip"><span aria-hidden="true">@emoji</span> @text</span>
+                                        }
+                                        @if (!plan.IsSelfService)
+                                        {
+                                            <span class="plan-chip plan-chip--internal"><span aria-hidden="true">🔒</span> @L["Chip_NotSelfService"]</span>
+                                        }
+                                    </div>
+                                    <div class="plan-card__foot">
+                                        <span class="plan-card__orders">@(plan.OrderCount == 0 ? L["Plans_NoOrders"] : string.Format(L["Plans_Orders"], plan.OrderCount))</span>
+                                        <span class="plan-card__actions">
+                                            <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" aria-label="@L["Plans_MoveUp"]" title="@L["Plans_MoveUp"]"
+                                                           Disabled="@(index == 0 || Store.IsSaving)" OnClick="() => Move(plan, -1)" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" aria-label="@L["Plans_MoveDown"]" title="@L["Plans_MoveDown"]"
+                                                           Disabled="@(index == plans.Count - 1 || Store.IsSaving)" OnClick="() => Move(plan, 1)" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@SharedLocale["Edit"]" title="@SharedLocale["Edit"]" OnClick="() => OpenPlanDialog(plan)" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@SharedLocale["Delete"]" title="@SharedLocale["Delete"]"
+                                                           Disabled="@Store.IsSaving" OnClick="() => Delete(plan)" />
+                                        </span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </ChildContent>
+            </SectionCard>
+        }
+
+        <PaymentAccountCard ClubId="@ClubId" ReturnedFromStripe="@Stripe" />
+    </div>
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    /// <summary>Set by Stripe when the admin comes back from the onboarding: "return" or "refresh" (the link ran out).</summary>
+    [SupplyParameterFromQuery(Name = "stripe")] public string? Stripe { get; set; }
+
+    [Inject] private IMembershipPlansStore Store { get; set; } = null!;
+    [Inject] private IPaymentAccountStore AccountStore { get; set; } = null!;
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private int? selectedSeasonId;
+    private bool seasonsLoaded;
+
+    private bool CanManage => MembershipHelpers.CanManage(ClubProfileStore.Roles);
+
+    private List<SeasonResult> SeasonsNewestFirst => ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList();
+    private List<SeasonResult> OtherSeasons => SeasonsNewestFirst.Where(s => s.Id != selectedSeasonId).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnPlansChanged += OnChanged;
+        AccountStore.OnAccountChanged += OnChanged;
+        ClubProfileStore.OnClubProfileChanged += OnChanged;
+
+        if (!CanManage)
+            return;
+
+        await ClubStore.LoadSeasons();
+        seasonsLoaded = true;
+
+        // The running season, else the next one, else the latest
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        selectedSeasonId = (ClubStore.Seasons.FirstOrDefault(s => s.IsActive)
+                            ?? ClubStore.Seasons.Where(s => s.StartDate > today).OrderBy(s => s.StartDate).FirstOrDefault()
+                            ?? SeasonsNewestFirst.FirstOrDefault())?.Id;
+
+        if (selectedSeasonId is { } seasonId)
+            await Store.LoadPlans(seasonId);
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task OnSeasonChanged(int seasonId)
+    {
+        selectedSeasonId = seasonId;
+        await Store.LoadPlans(seasonId);
+    }
+
+    private async Task OpenPlanDialog(MembershipPlanDto? plan)
+    {
+        if (ClubStore.Seasons.FirstOrDefault(s => s.Id == selectedSeasonId) is not { } season)
+            return;
+
+        var parameters = new DialogParameters<EditMembershipPlanDialog> { { d => d.Plan, plan }, { d => d.Season, season } };
+        var dialog = await DialogService.ShowAsync<EditMembershipPlanDialog>(L[plan is null ? "Plan_NewTitle" : "Plan_EditTitle"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+
+        if (await dialog.Result is { Canceled: false })
+            await Store.LoadPlans(season.Id);
+    }
+
+    private async Task OpenCopyDialog()
+    {
+        if (selectedSeasonId is not { } seasonId)
+            return;
+
+        var parameters = new DialogParameters<CopyMembershipPlansDialog> { { d => d.TargetSeasonId, seasonId }, { d => d.AvailableSourceSeasons, OtherSeasons } };
+        var dialog = await DialogService.ShowAsync<CopyMembershipPlansDialog>(L["Plans_Copy"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseOnEscapeKey = true });
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(L["Plans_Copied"], Severity.Success);
+            await Store.LoadPlans(seasonId);
+        }
+    }
+
+    private async Task Move(MembershipPlanDto plan, int direction)
+    {
+        if (Store.Plans is not { } plans || selectedSeasonId is not { } seasonId)
+            return;
+
+        var ids = plans.Select(p => p.Id).ToList();
+        var index = ids.IndexOf(plan.Id);
+        var target = index + direction;
+        if (index < 0 || target < 0 || target >= ids.Count)
+            return;
+
+        (ids[index], ids[target]) = (ids[target], ids[index]);
+
+        var result = await Store.SortPlans(seasonId, ids);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+
+        await Store.LoadPlans(seasonId);
+    }
+
+    private async Task Delete(MembershipPlanDto plan)
+    {
+        var confirmed = await DialogService.ShowMessageBox(L["Plans_DeleteTitle"], string.Format(L["Plans_DeleteConfirm"], plan.Name),
+            yesText: SharedLocale["Delete"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true || selectedSeasonId is not { } seasonId)
+            return;
+
+        var result = await Store.DeletePlan(plan.Id);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(L["Plans_Deleted"], Severity.Success);
+        await Store.LoadPlans(seasonId);
+    }
+
+    public void Dispose()
+    {
+        Store.OnPlansChanged -= OnChanged;
+        AccountStore.OnAccountChanged -= OnChanged;
+        ClubProfileStore.OnClubProfileChanged -= OnChanged;
+    }
+}

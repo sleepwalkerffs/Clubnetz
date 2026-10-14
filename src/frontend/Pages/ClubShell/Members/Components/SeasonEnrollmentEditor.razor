@@ -1,7 +1,9 @@
 @using System.Globalization
 @using Bookennis.Client.Localization.Pages.Members
 @using Bookennis.Shared.Controller.Club
+@using Bookennis.Client.Localization
 @using Bookennis.Shared.Controller.Members
+@using Bookennis.Shared.Controller.Memberships
 
 @if (Seasons.Count == 0)
 {
@@ -26,6 +28,10 @@ else
                         }
                     </span>
                     <span class="enrollment__dates">@season.StartDate.ToString("d", CultureInfo.CurrentCulture) – @season.EndDate.ToString("d", CultureInfo.CurrentCulture)</span>
+                    @if (enrolled && Source(season.Id) is { } source)
+                    {
+                        <span class="enrollment__source @(source == MembershipEnrollmentSource.ByHand ? null : "enrollment__source--paid")">@SourceEmoji(source) @L[$"Enrollment_{source}"]</span>
+                    }
                 </span>
                 @if (overview is not null)
                 {
@@ -52,10 +58,36 @@ else
     [Parameter] public List<MemberSeasonOverview>? Overview { get; set; }
     [Parameter] public bool Disabled { get; set; }
 
+    /// <summary>Optional: how the member got into each season, shown as a small marker (paid online, marked as paid, by hand).</summary>
+    [Parameter] public List<MemberSeasonEnrollment>? Enrollments { get; set; }
+
+    /// <summary>The seasons that came from a membership order. Switching one of them off asks for confirmation.</summary>
+    [Parameter] public IReadOnlyCollection<int> PaidSeasonIds { get; set; } = [];
+
     [Inject] private IStringLocalizer<MembersAdminLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+
+    private MembershipEnrollmentSource? Source(int seasonId) => Enrollments?.FirstOrDefault(e => e.SeasonId == seasonId)?.Source;
+
+    private static string SourceEmoji(MembershipEnrollmentSource source) => source switch
+    {
+        MembershipEnrollmentSource.PaidOnline => "💳",
+        MembershipEnrollmentSource.MarkedAsPaid => "💶",
+        _ => "🖐️",
+    };
 
     private async Task Toggle(int seasonId)
     {
+        // The fee of this season was paid: taking the member out does not cancel the order or give money back
+        if (SelectedIds.Contains(seasonId) && PaidSeasonIds.Contains(seasonId))
+        {
+            var confirmed = await DialogService.ShowMessageBox(L["RemovePaidSeasonTitle"], L["RemovePaidSeasonText"],
+                yesText: L["RemovePaidSeasonConfirm"], cancelText: SharedLocale["Cancel"]);
+            if (confirmed != true)
+                return;
+        }
+
         var selected = SelectedIds.Contains(seasonId)
             ? SelectedIds.Where(id => id != seasonId).ToList()
             : SelectedIds.Append(seasonId).ToList();

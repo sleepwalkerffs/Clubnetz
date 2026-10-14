@@ -13,6 +13,7 @@ using Bookennis.Domain.Courts;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Families;
 using Bookennis.Domain.Members;
+using Bookennis.Domain.Memberships;
 using Bookennis.Domain.User;
 using Bookennis.Global.Intervals;
 using FluentAssertions;
@@ -48,6 +49,9 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
     public const string Canary = "ZZCANARYOFCLUBB";
     public const string Marker = "AAMARKEROFCLUBA";
     public const string Password = "Sec-Test-1234!";
+
+    /// <summary>The signing secret of the Stripe webhook in the app under test. The tests sign their own events with it.</summary>
+    public const string StripeWebhookSecret = "whsec_security_test_secret";
     public static readonly DateOnly ChildBirthday = new(2016, 5, 17);
 
     private string connectionString = null!;
@@ -68,6 +72,9 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
 
     /// <summary>Another member of club A without any special role, who has nothing to do with <see cref="MemberOfA"/>.</summary>
     public SeededUser OtherMemberOfA { get; private set; } = null!;
+
+    /// <summary>A treasurer of club A who is no admin: looks after the membership fees, but must not connect the club with Stripe.</summary>
+    public SeededUser TreasurerOfA { get; private set; } = null!;
 
     /// <summary>The family of <see cref="MemberOfA"/> (the only parent) with one child that has no login of its own.</summary>
     public SeededFamily FamilyOfMemberOfA { get; private set; } = null!;
@@ -105,7 +112,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await Seed();
 
         // Signing in is limited per client address and the sweeps also hit the sign-in endpoints, so the tests sign in once up front
-        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, MemberOfA, OtherMemberOfA })
+        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, MemberOfA, OtherMemberOfA, TreasurerOfA })
             cookies[user.UserId] = await SignIn(user);
     }
 
@@ -261,6 +268,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         ClubB = await AddClub(context, Canary, administrator: false);
         MemberOfA = await AddUser(context, ClubA, "member-a", Marker, [MemberRole.User]);
         OtherMemberOfA = await AddUser(context, ClubA, "other-member-a", Marker, [MemberRole.User]);
+        TreasurerOfA = await AddUser(context, ClubA, "treasurer-a", Marker, [MemberRole.User, MemberRole.Treasurer]);
         FamilyOfMemberOfA = await AddFamily(context, ClubA, MemberOfA, "Ownchild");
         FamilyOfOtherMemberOfA = await AddFamily(context, ClubA, OtherMemberOfA, "Otherchild");
 
@@ -313,6 +321,20 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         seeded.ClubEventId = clubEvent.Id;
         seeded.ClubAnnouncementId = announcement.Id;
         seeded.CourtBlockingId = blocking.Id;
+
+        // A plan and a paid order of the plain member, with the text of the club in everything a list could show
+        var plan = new MembershipPlan(club.Id, season.Id, new MembershipPlan.PlanData(
+            $"Plan {text}", $"Description {text}", 12000, 1, false, null, null, false, false, false, true, null, null, true), 1);
+        context.Add(plan);
+        await context.SaveChangesAsync();
+
+        var order = new MembershipOrder(plan, seeded.Member.MemberId, [seeded.Member.MemberId], $"Note {text}");
+        order.MarkPaid(MembershipPaymentMethod.Cash, DateTimeOffset.UtcNow, seeded.Admin.MemberId);
+        context.Add(order);
+        await context.SaveChangesAsync();
+
+        seeded.PlanId = plan.Id;
+        seeded.OrderId = order.Id;
         return seeded;
     }
 
@@ -375,6 +397,10 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
             builder.UseSetting("Email:SmtpServer", "localhost");
             builder.UseSetting("Email:SmtpPort", "1");
 
+            // Keys that exist nowhere: online payment is switched on, so the webhook checks signatures, but nothing can reach Stripe
+            builder.UseSetting("Stripe:SecretKey", "sk_test_security_tests_only");
+            builder.UseSetting("Stripe:WebhookSecret", StripeWebhookSecret);
+
             builder.ConfigureTestServices(services => services.AddTransient<IStartupFilter, ProbeStartupFilter>());
         }
     }
@@ -426,6 +452,8 @@ public sealed class SeededClub
     public int ClubEventId { get; set; }
     public int ClubAnnouncementId { get; set; }
     public int CourtBlockingId { get; set; }
+    public int PlanId { get; set; }
+    public int OrderId { get; set; }
     public List<int> UserIds { get; } = [];
 }
 

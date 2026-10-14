@@ -35,6 +35,8 @@ public static class ClubApiDocument
 
             **Read-only keys** may only send GET requests, everything else is answered with 403.
 
+            **Not part of the API:** managing the API keys and connecting or disconnecting the club's Stripe account. Both need an admin signed in to the app.
+
             **Limits:** {RateLimitingConfiguration.ClubApiKeyRequestsPerMinute} requests per minute and key, then 429 with a `Retry-After` header.
 
             **Errors:** invalid input is answered with 412 and a JSON body with `message`, `errorCode` and `errorDetail`.

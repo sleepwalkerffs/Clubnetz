@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>$(NoWarn);CA1873</NoWarn>
+    <UserSecretsId>18e0988f-370d-49f7-a846-46369d5d13a3</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <!-- Pin transitive deps to patched versions (NU1902/NU1903 vulnerability advisories) -->
@@ -31,6 +32,8 @@
     <PackageReference Include="Hangfire.Core" />
     <PackageReference Include="Hangfire.PostgreSql" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
+    <!-- Only to pin the version of a package that comes with others, see Directory.Packages.props -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <PackageReference Include="NetEscapades.AspNetCore.SecurityHeaders" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" />
@@ -48,6 +51,7 @@
     <PackageReference Include="SimpleInjector" />
     <PackageReference Include="SimpleInjector.Integration.AspNetCore" />
     <PackageReference Include="SimpleInjector.Integration.AspNetCore.Mvc" />
+    <PackageReference Include="Stripe.net" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="OpenTelemetry.Api" />

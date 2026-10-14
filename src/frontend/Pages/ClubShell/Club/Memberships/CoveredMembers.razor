@@ -1,0 +1,44 @@
+@using Bookennis.Client.Components.Family
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Shared.Controller.Memberships
+
+@* Who a couple or family plan covers: the family of the member as chips, and the family itself can be set up right here. *@
+@if (FamilyMembers.Count > 1)
+{
+    <MultiChoiceChips TItem="MembershipPaymentMemberDto" Label="@L["Record_Covered"]" Items="@FamilyMembers" Values="@Values" ValuesChanged="@ValuesChanged"
+                      TextFunc="@(m => m.FirstName + (m.IsChild ? " 🧒" : ""))" Dense="true" />
+}
+else if (!editFamily)
+{
+    <p class="covered__hint">ℹ️ @L["Record_NoFamily"]</p>
+}
+
+@if (editFamily)
+{
+    <div class="covered__family">
+        <Family Embedded="true" ManagedByClub="true" MemberId="@Member.MemberId" FamilyId="@Member.FamilyId" LastName="@Member.LastName" OnChanged="@OnFamilyChanged" />
+    </div>
+}
+
+<button type="button" class="covered__link" aria-expanded="@(editFamily ? "true" : "false")" @onclick="() => editFamily = !editFamily">
+    👪 @L[editFamily ? "Record_FamilyDone" : Member.FamilyId is null ? "Record_SetUpFamily" : "Record_EditFamily"]
+</button>
+
+@code {
+    /// <summary>The member whose family it is about: the one the payment is recorded for, or the payer of the order.</summary>
+    [Parameter, EditorRequired] public MembershipPaymentMemberDto Member { get; set; } = null!;
+
+    /// <summary>The member and the rest of the family who can be covered.</summary>
+    [Parameter, EditorRequired] public List<MembershipPaymentMemberDto> FamilyMembers { get; set; } = [];
+
+    [Parameter] public IReadOnlyCollection<MembershipPaymentMemberDto> Values { get; set; } = [];
+    [Parameter] public EventCallback<IReadOnlyCollection<MembershipPaymentMemberDto>> ValuesChanged { get; set; }
+
+    /// <summary>The family was set up or changed; the value is its id. Who is in it comes with the payments list.</summary>
+    [Parameter] public EventCallback<int?> OnFamilyChanged { get; set; }
+
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+
+    private bool editFamily;
+}

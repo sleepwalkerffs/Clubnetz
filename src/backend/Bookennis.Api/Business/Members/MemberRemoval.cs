@@ -1,6 +1,7 @@
 using Bookennis.Api.Data;
 using Bookennis.Domain.Families;
 using Bookennis.Domain.Members;
+using Bookennis.Domain.Memberships;
 using Bookennis.Domain.User;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +13,8 @@ namespace Bookennis.Api.Business.Members;
 /// <list type="bullet">
 /// <item>Family links: <c>FamilyMember.MemberId</c> has no foreign key. Families without a parent left are deleted.</item>
 /// <item>Upcoming bookings (and recurring series) that nobody else plays in would stay as empty bookings that block the court.</item>
+/// <item>Membership orders nobody paid that would cover nobody any more. Orders that were paid stay as the record of the club's payments,
+/// without the person: the database takes the member out of them and empties the payer.</item>
 /// </list>
 /// Changes are only tracked, the caller saves them together with the removal of the members/users.
 /// </summary>
@@ -24,6 +27,7 @@ public static class MemberRemoval
 
         await RemoveFamilyLinks(context, memberIds, cancellationToken);
         await RemoveBookingsWithoutRemainingPlayers(context, memberIds, cancellationToken);
+        await RemoveOpenMembershipOrdersWithoutRemainingMembers(context, memberIds, cancellationToken);
     }
 
     /// <summary>
@@ -116,5 +120,16 @@ public static class MemberRemoval
                      && s.SeriesPlayers.All(p => memberIds.Contains(p.MemberId)))
             .ToListAsync(cancellationToken);
         context.RecurringBookingSeries.RemoveRange(series);
+    }
+
+    private static async Task RemoveOpenMembershipOrdersWithoutRemainingMembers(AppDbContext context, IReadOnlyCollection<int> memberIds, CancellationToken cancellationToken)
+    {
+        var orders = await context.MembershipOrders
+            .IgnoreQueryFilters()
+            .Where(o => (o.Status == MembershipOrderStatus.AwaitingApproval || o.Status == MembershipOrderStatus.AwaitingPayment || o.Status == MembershipOrderStatus.Failed)
+                     && o.Members.Any(m => memberIds.Contains(m.MemberId))
+                     && o.Members.All(m => memberIds.Contains(m.MemberId)))
+            .ToListAsync(cancellationToken);
+        context.MembershipOrders.RemoveRange(orders);
     }
 }

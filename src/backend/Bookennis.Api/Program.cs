@@ -1,4 +1,5 @@
 using Bookennis.Api.Business.Notifications;
+using Bookennis.Api.Business.Payments;
 using Bookennis.Api.Business.Push;
 using Bookennis.Api.Config;
 using Bookennis.Api.Data;
@@ -158,6 +159,9 @@ app.MapFallbackToFile("{**slug}", "index.html", appStaticFileOptions);
 var recurringJobs = app.Services.GetRequiredService<IRecurringJobManager>();
 recurringJobs.AddOrUpdate<BookingReminderJob>(BookingReminderJob.JobId, job => job.Run(), BookingReminderJob.Schedule);
 recurringJobs.AddOrUpdate<ClubEventReminderJob>(ClubEventReminderJob.JobId, job => job.Run(), ClubEventReminderJob.Schedule);
+
+// Stripe events the webhook missed, e.g. while the app was down
+recurringJobs.AddOrUpdate<StripeEventRecoveryJob>(StripeEventRecoveryJob.JobId, job => job.Run(), StripeEventRecoveryJob.Schedule);
 
 container.Verify();
 

@@ -1,6 +1,7 @@
 @page "/clubs/{ClubId:int}/members/{MemberId:int}"
 @using System.Globalization
 @using Bookennis.Client.Components.BookingHistory
+@using Bookennis.Client.Components.Family
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Pages.Members
@@ -114,7 +115,8 @@
             <MudItem xs="12" md="7">
                 <SectionCard Emoji="🗓️" Title="@L["SeasonEnrollment"]" Subtitle="@L["SeasonEnrollmentHint"]">
                     <SeasonEnrollmentEditor Seasons="@ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList()" Overview="@overview?.Seasons"
-                                            SelectedIds="@selectedSeasonIds" SelectedIdsChanged="@(ids => selectedSeasonIds = ids.ToList())" Disabled="@EditingDisabled" />
+                                            SelectedIds="@selectedSeasonIds" SelectedIdsChanged="@(ids => selectedSeasonIds = ids.ToList())" Disabled="@EditingDisabled"
+                                            Enrollments="@member.SeasonEnrollments" PaidSeasonIds="@member.PaidSeasonIds" />
                 </SectionCard>
             </MudItem>
             <MudItem xs="12" md="5">
@@ -139,6 +141,10 @@
                             <dd>@(member.Email ?? "–")</dd>
                         </dl>
                     </SectionCard>
+                    @if (MemberAdminHelpers.CanEdit(ClubProfileStore.Roles))
+                    {
+                        <Family MemberId="@member.MemberId" FamilyId="@member.FamilyId" LastName="@member.LastName" ManagedByClub="true" OnChanged="FamilyChanged" />
+                    }
                 </div>
             </MudItem>
         </MudGrid>
@@ -212,6 +218,9 @@ else if (MembersStore.IsLoading)
         await Task.WhenAll(MembersStore.LoadMember(MemberId), MembersStore.LoadMemberOverview(MemberId), ClubStore.LoadSeasons());
         ResetEdits();
     }
+
+    /// <summary>The family chip and the email of a child (the one of a parent) depend on the family.</summary>
+    private Task FamilyChanged(int? familyId) => MembersStore.LoadMember(MemberId);
 
     private void ResetEdits()
     {

@@ -1,0 +1,96 @@
+.pick {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pick__selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pick__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 0;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
+    color: var(--mud-palette-primary);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pick__list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: min(46vh, 340px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.pick__row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 48px;
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: var(--mud-palette-background-gray);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pick__row:hover {
+    border-color: var(--mud-palette-lines-inputs);
+}
+
+.pick__row:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 1px;
+}
+
+.pick__row--selected {
+    border-color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 10%, transparent);
+}
+
+.pick__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.pick__check {
+    flex: 0 0 22px;
+    height: 22px;
+    border: 2px solid var(--mud-palette-lines-inputs);
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    color: var(--mud-palette-primary-text);
+}
+
+.pick__row--selected .pick__check {
+    border-color: var(--mud-palette-primary);
+    background: var(--mud-palette-primary);
+}
+
+.pick__note {
+    padding: 10px 4px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}

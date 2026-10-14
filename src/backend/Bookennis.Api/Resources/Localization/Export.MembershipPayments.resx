@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FileName" xml:space="preserve">
+    <value>Membership fees</value>
+  </data>
+  <data name="SheetMembers" xml:space="preserve">
+    <value>Members</value>
+  </data>
+  <data name="SheetOrders" xml:space="preserve">
+    <value>Payments</value>
+  </data>
+  <data name="LastName" xml:space="preserve">
+    <value>Last name</value>
+  </data>
+  <data name="FirstName" xml:space="preserve">
+    <value>First name</value>
+  </data>
+  <data name="Enrolled" xml:space="preserve">
+    <value>Season</value>
+  </data>
+  <data name="Plan" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Amount" xml:space="preserve">
+    <value>Amount (EUR)</value>
+  </data>
+  <data name="Method" xml:space="preserve">
+    <value>Payment method</value>
+  </data>
+  <data name="PaidOn" xml:space="preserve">
+    <value>Paid on</value>
+  </data>
+  <data name="OrderedOn" xml:space="preserve">
+    <value>Ordered on</value>
+  </data>
+  <data name="PaidBy" xml:space="preserve">
+    <value>Paid by</value>
+  </data>
+  <data name="Members" xml:space="preserve">
+    <value>Members</value>
+  </data>
+  <data name="Note" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="Enrollment_NotEnrolled" xml:space="preserve">
+    <value>Not enrolled</value>
+  </data>
+  <data name="Enrollment_ByHand" xml:space="preserve">
+    <value>Enrolled by hand</value>
+  </data>
+  <data name="Enrollment_PaidOnline" xml:space="preserve">
+    <value>Enrolled, paid online</value>
+  </data>
+  <data name="Enrollment_MarkedAsPaid" xml:space="preserve">
+    <value>Enrolled, marked as paid</value>
+  </data>
+  <data name="Status_AwaitingApproval" xml:space="preserve">
+    <value>Needs confirmation</value>
+  </data>
+  <data name="Status_AwaitingPayment" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Status_Processing" xml:space="preserve">
+    <value>Debit in progress</value>
+  </data>
+  <data name="Status_Paid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="Status_Failed" xml:space="preserve">
+    <value>Payment failed</value>
+  </data>
+  <data name="Status_Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Status_Refunded" xml:space="preserve">
+    <value>Refunded</value>
+  </data>
+  <data name="Status_Disputed" xml:space="preserve">
+    <value>Disputed</value>
+  </data>
+  <data name="Method_Online" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="Method_BankTransfer" xml:space="preserve">
+    <value>Bank transfer</value>
+  </data>
+  <data name="Method_Cash" xml:space="preserve">
+    <value>Cash</value>
+  </data>
+  <data name="Method_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+</root>

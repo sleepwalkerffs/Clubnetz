@@ -528,4 +528,106 @@
   <data name="ApiKeyLimitReached" xml:space="preserve">
     <value>A club can have at most {0} API keys. Revoke one you no longer need.</value>
   </data>
+  <data name="MembershipPlanNameRequired" xml:space="preserve">
+    <value>Please enter a name for the plan.</value>
+  </data>
+  <data name="MembershipPlanNameTooLong" xml:space="preserve">
+    <value>The name of the plan is too long (at most {0} characters).</value>
+  </data>
+  <data name="MembershipPlanDescriptionTooLong" xml:space="preserve">
+    <value>The description of the plan is too long (at most {0} characters).</value>
+  </data>
+  <data name="MembershipPlanInvalidPrice" xml:space="preserve">
+    <value>The price is not valid.</value>
+  </data>
+  <data name="MembershipPlanInvalidMaxAdults" xml:space="preserve">
+    <value>A plan covers one or two adults.</value>
+  </data>
+  <data name="MembershipPlanInvalidBirthYears" xml:space="preserve">
+    <value>The birth years are not valid.</value>
+  </data>
+  <data name="MembershipPlanInvalidAvailability" xml:space="preserve">
+    <value>The plan must not end before it starts.</value>
+  </data>
+  <data name="MembershipPlanFamilyDiscountOnlyForOneMember" xml:space="preserve">
+    <value>A plan that needs a member in the family is for one member, not for a couple or a family.</value>
+  </data>
+  <data name="MembershipPlanNameAlreadyUsed" xml:space="preserve">
+    <value>There already is a plan with this name in the season.</value>
+  </data>
+  <data name="MembershipPlanHasOrders" xml:space="preserve">
+    <value>This plan was already chosen and can't be deleted. Switch off "Members can choose it themselves" to take it out of the list.</value>
+  </data>
+  <data name="MembershipPlanSourceSeasonEmpty" xml:space="preserve">
+    <value>The selected season has no plans to copy.</value>
+  </data>
+  <data name="MembershipPlanTargetSeasonNotEmpty" xml:space="preserve">
+    <value>This season already has plans.</value>
+  </data>
+  <data name="MembershipPlanNotSelfService" xml:space="preserve">
+    <value>This plan is assigned by the club.</value>
+  </data>
+  <data name="MembershipOrderMemberRequired" xml:space="preserve">
+    <value>Please choose at least one member.</value>
+  </data>
+  <data name="MembershipOrderTooManyMembers" xml:space="preserve">
+    <value>An order covers at most {0} members.</value>
+  </data>
+  <data name="MembershipOrderNoteTooLong" xml:space="preserve">
+    <value>The note is too long (at most {0} characters).</value>
+  </data>
+  <data name="MembershipOrderInvalidStatus" xml:space="preserve">
+    <value>This is not possible in the current state of the order. Please reload the page.</value>
+  </data>
+  <data name="MembershipOrderNotFree" xml:space="preserve">
+    <value>This plan has to be paid.</value>
+  </data>
+  <data name="MembershipOrderIsFree" xml:space="preserve">
+    <value>This plan is free: confirm it instead of paying.</value>
+  </data>
+  <data name="MembershipMemberNotInClub" xml:space="preserve">
+    <value>A member does not belong to this club.</value>
+  </data>
+  <data name="BirthYearOutOfRange" xml:space="preserve">
+    <value>This plan is for other birth years.</value>
+  </data>
+  <data name="TooManyAdults" xml:space="preserve">
+    <value>This plan covers fewer adults.</value>
+  </data>
+  <data name="ChildrenNotIncluded" xml:space="preserve">
+    <value>This plan does not cover children.</value>
+  </data>
+  <data name="NotANewMember" xml:space="preserve">
+    <value>This plan is for new members.</value>
+  </data>
+  <data name="NoEnrolledFamilyAdult" xml:space="preserve">
+    <value>This plan needs another adult of the family who is a member in this season.</value>
+  </data>
+  <data name="PlanNotAvailable" xml:space="preserve">
+    <value>This plan can't be chosen at the moment.</value>
+  </data>
+  <data name="MemberNotInFamily" xml:space="preserve">
+    <value>This plan is for the members of one family.</value>
+  </data>
+  <data name="AlreadyHasMembership" xml:space="preserve">
+    <value>One of the members already has a membership in this season.</value>
+  </data>
+  <data name="OnlyOneMember" xml:space="preserve">
+    <value>This plan is for one member.</value>
+  </data>
+  <data name="AdultRequired" xml:space="preserve">
+    <value>This plan needs at least one adult.</value>
+  </data>
+  <data name="PaymentsNotConfigured" xml:space="preserve">
+    <value>Online payment is not available in this installation.</value>
+  </data>
+  <data name="PaymentAccountNotReady" xml:space="preserve">
+    <value>The club can't take online payments at the moment. Please pay the fee to the club.</value>
+  </data>
+  <data name="PaymentProviderUnavailable" xml:space="preserve">
+    <value>The payment provider did not accept the request. Please try again later. ({0})</value>
+  </data>
+  <data name="SeasonHasPayments" xml:space="preserve">
+    <value>Membership fees were paid for this season, so it can't be deleted.</value>
+  </data>
 </root>

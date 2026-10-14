@@ -32,6 +32,10 @@ public class ClubApiKeySecurityTests(ApiSecurityFixture app)
         "BadgeTiers", "Bookings", "ClubAnnouncements", "ClubEmailTemplates", "ClubEvents", "ClubProfile", "Clubs", "CourtBlockings", "Courts",
         "Families", "Guests", "Leaderboards", "MemberBadges", "Members", "OneTimeBadges", "PlayModes", "Players", "Seasons", "Statistics",
         "SubscriptionPlans",
+
+        // Membership fees: plans, the orders of the key's creator, the treasurer's list and the status of the Stripe account.
+        // Connecting and disconnecting the Stripe account (PaymentAccount) is not open to keys.
+        "MembershipPlans", "Memberships", "MembershipPayments", "Payments",
     ];
 
     /// <summary>Ids that don't exist, for calling write endpoints with a working key without changing the seeded data.</summary>
@@ -45,6 +49,8 @@ public class ClubApiKeySecurityTests(ApiSecurityFixture app)
         ClubEventId = 987_654_321,
         ClubAnnouncementId = 987_654_321,
         CourtBlockingId = 987_654_321,
+        PlanId = 987_654_321,
+        OrderId = 987_654_321,
     };
 
     private IReadOnlyList<ApiEndpoint> Endpoints => ApiEndpoint.All(app.Services);
@@ -399,7 +405,9 @@ public class ClubApiKeySecurityTests(ApiSecurityFixture app)
               "firstName": "Attack", "lastName": "Attack", "email": "attack@security.test", "purchasedBookings": 1,
               "category": "Social", "startDate": "2031-01-01", "endDate": "2031-01-02", "timeZoneInfoId": "UTC",
               "from": "2031-01-01T10:00:00Z", "to": "2031-01-01T11:00:00Z", "scope": "ThisAndFollowing", "audience": "AllMembers",
-              "deleteConflictingBookings": true, "notifyMembers": false, "registrationEnabled": false, "isPinned": false, "headCount": 1, "answers": []
+              "deleteConflictingBookings": true, "notifyMembers": false, "registrationEnabled": false, "isPinned": false, "headCount": 1, "answers": [],
+              "membershipPlanId": {{b.PlanId}}, "planIds": [{{b.PlanId}}], "payerMemberId": {{b.Member.MemberId}}, "method": "Cash", "paidOn": "2031-01-01",
+              "priceCents": 100, "maxAdults": 1, "country": "Austria"
             }
             """;
 
@@ -796,6 +804,11 @@ public class ClubApiKeySecurityTests(ApiSecurityFixture app)
             .Should().Be(0, "a blocking of club A must not block a court of club B");
         (await app.Db(c => c.MemberSeasons.IgnoreQueryFilters().CountAsync(x => x.SeasonId == b.SeasonId && !membersOfB.Contains(x.MemberId))))
             .Should().Be(0, "a member of club A must not be enrolled in a season of club B");
+        (await app.Db(c => c.MembershipPlans.IgnoreQueryFilters().CountAsync(x => x.ClubId == a && x.SeasonId == b.SeasonId)))
+            .Should().Be(0, "a plan of club A must not belong to a season of club B");
+        (await app.Db(c => c.MembershipOrders.IgnoreQueryFilters().CountAsync(x => x.ClubId == a
+                && (x.MembershipPlanId == b.PlanId || x.SeasonId == b.SeasonId || membersOfB.Contains(x.PayerMemberId ?? 0) || x.Members.Any(m => membersOfB.Contains(m.MemberId))))))
+            .Should().Be(0, "an order of club A must not use a plan, a season or members of club B");
     }
 
     /// <summary>Hands out working keys and replaces them before one runs into the request limit, so the sweeps test the endpoints and not the limiter.</summary>

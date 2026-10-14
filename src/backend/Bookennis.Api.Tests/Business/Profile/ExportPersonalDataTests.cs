@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using Bookennis.Api.Business.Profile;
+using Bookennis.Api.Tests.Business.Memberships;
+using Bookennis.Domain.Memberships;
 using Bookennis.Api.Tests.Business.ClubEvents;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Clubs;
@@ -77,6 +79,44 @@ public class ExportPersonalDataTests(TestFixture fixture) : TestBase(fixture)
 
         export.Bookings.Should().BeEmpty();
         export.Memberships.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task Export_ContainsTheMembershipOrdersTheUserPaidOrIsCoveredBy_WithoutNoteOrPaymentProviderIds()
+    {
+        await QueryAsync(async ctx =>
+        {
+            var season = await MembershipSeed.SeedSeason(ctx);
+            var plan = await MembershipSeed.SeedPlan(ctx, season.Id, MembershipSeed.FamilyData());
+
+            var own = await MembershipSeed.SeedOrder(ctx, plan, TestDataSeed.Member1Id, TestDataSeed.Member1Id);
+            own.SetNote("Note of the treasurer");
+            own.StartCheckout("cs_secret");
+            own.MarkPaid(MembershipPaymentMethod.Online, new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero), paymentIntentId: "pi_secret");
+
+            // Paid by somebody else for the user, and an order the user has nothing to do with
+            var stranger = await MembershipSeed.AddMember(ctx, "Stranger");
+            var otherSeason = await MembershipSeed.SeedSeason(ctx, new DateOnly(2020, 1, 1), new DateOnly(2020, 12, 31));
+            var oldPlan = await MembershipSeed.SeedPlan(ctx, otherSeason.Id, MembershipSeed.Data("Old plan", 9000));
+            await MembershipSeed.SeedOrder(ctx, oldPlan, stranger, TestDataSeed.Member1Id);
+            await MembershipSeed.SeedOrder(ctx, plan, stranger, stranger);
+            await ctx.SaveChangesAsync();
+        });
+        SetCurrentUser(TestDataSeed.UserId);
+
+        var export = await SendAsync(new ExportPersonalData());
+
+        export.MembershipOrders.Select(o => o.Plan).Should().BeEquivalentTo(["Family", "Old plan"]);
+
+        var paid = export.MembershipOrders.Single(o => o.Plan == "Family");
+        paid.Should().BeEquivalentTo(new { Club = "TestClub", Amount = 215m, Currency = "eur", Status = MembershipOrderStatus.Paid, PaymentMethod = MembershipPaymentMethod.Online, IsPayer = true, IsCovered = true }, o => o.ExcludingMissingMembers());
+        paid.PaidAt.Should().Be(new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero));
+
+        var covered = export.MembershipOrders.Single(o => o.Plan == "Old plan");
+        covered.Should().BeEquivalentTo(new { IsPayer = false, IsCovered = true, SeasonFrom = new DateOnly(2020, 1, 1), Status = MembershipOrderStatus.AwaitingPayment }, o => o.ExcludingMissingMembers());
+
+        var json = System.Text.Json.JsonSerializer.Serialize(export);
+        json.Should().NotContain("Note of the treasurer").And.NotContain("cs_secret").And.NotContain("pi_secret").And.NotContain("Stranger");
     }
 
     private void SetCurrentUser(int userId)

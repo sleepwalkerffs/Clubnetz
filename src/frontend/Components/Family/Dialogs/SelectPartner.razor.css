@@ -1,0 +1,11 @@
+.family-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.family-dialog__hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}

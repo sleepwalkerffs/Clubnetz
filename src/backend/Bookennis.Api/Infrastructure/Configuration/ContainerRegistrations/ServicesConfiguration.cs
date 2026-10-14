@@ -1,6 +1,9 @@
 using Bookennis.Api.Business.Badges;
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.Memberships;
 using Bookennis.Api.Business.Notifications;
+using Bookennis.Api.Business.Payments;
+using Bookennis.Api.Business.Payments.Stripe;
 using Bookennis.Api.Business.Push;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure.Tenant;
@@ -33,6 +36,12 @@ public static class ServicesConfiguration
         container.Register<IBookingPushNotifier, BookingPushNotifier>();
         container.Register<IBookingEmailNotifier, BookingEmailNotifier>();
         container.Register<IClubEventNotifier, ClubEventNotifier>();
+        container.RegisterSingleton<IStripeGateway, StripeGateway>();
+        container.Register<IPaymentAvailability, PaymentAvailability>();
+        container.Register<IMembershipCheckout, MembershipCheckout>();
+        container.Register<IMembershipFulfillment, MembershipFulfillment>();
+        container.Register<IMembershipSettlement, MembershipSettlement>();
+        container.Register<IMembershipNotifier, MembershipNotifier>();
         container.Register<BookingReminderJob>();
         container.Register<ClubEventReminderJob>();
     }

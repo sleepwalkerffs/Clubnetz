@@ -11,7 +11,8 @@ namespace Bookennis.Api.Infrastructure.Authorization.Handler;
 
 /// <summary>
 /// A family belongs to its members: they may read it, its parents may change it, and a member may take themself out of it.
-/// Everybody else in the club has no access to it, except the admins of the club.
+/// Everybody else in the club has no access to it, except the admins and the treasurers of the club: a treasurer sets up
+/// the family when a fee for a couple or a family is recorded.
 /// </summary>
 public class FamilyAuthorizationHandler(AppDbContext dbContext, ITenantService tenantService, AuthorizationHandlerService handlerService)
     : AuthorizationHandler<FamilyAccessRequirement, FamilyAuthorizationModel>
@@ -34,7 +35,7 @@ public class FamilyAuthorizationHandler(AppDbContext dbContext, ITenantService t
         if (memberId is null || roles is null)
             return;
 
-        if (roles.Contains(MemberRole.Admin))
+        if (roles.Contains(MemberRole.Admin) || roles.Contains(MemberRole.Treasurer))
         {
             context.Succeed(requirement);
             return;

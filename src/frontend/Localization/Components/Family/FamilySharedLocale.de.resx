@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AddChild" xml:space="preserve">
-    <value>Kind anlegen</value>
+    <value>Kind hinzufügen</value>
   </data>
   <data name="Children" xml:space="preserve">
     <value>Kinder</value>
@@ -127,16 +127,16 @@
     <value>Familie</value>
   </data>
   <data name="NoMember" xml:space="preserve">
-    <value>Kein Mitglied verfügbar</value>
+    <value>Es gibt kein Mitglied ohne Familie.</value>
   </data>
   <data name="Partner" xml:space="preserve">
-    <value>Partner</value>
+    <value>Partner:in</value>
   </data>
   <data name="SelectMembers" xml:space="preserve">
     <value>Bestehendes Mitglied auswählen?</value>
   </data>
   <data name="SelectPartner" xml:space="preserve">
-    <value>Partner auswählen</value>
+    <value>Partner:in hinzufügen</value>
   </data>
   <data name="EditChild" xml:space="preserve">
     <value>Kind bearbeiten</value>
@@ -145,12 +145,63 @@
     <value>Familienmitglied entfernen</value>
   </data>
   <data name="RemoveFamilyMemberConfirmation" xml:space="preserve">
-    <value>Möchten Sie {0} aus Ihrer Familie entfernen?</value>
+    <value>Möchtest du {0} aus deiner Familie entfernen?</value>
   </data>
   <data name="FamilySubtitle" xml:space="preserve">
     <value>Buchungen für und mit der Familie</value>
   </data>
   <data name="ChildAge" xml:space="preserve">
     <value>{0} Jahre</value>
+  </data>
+  <data name="SelectPartnerHint" xml:space="preserve">
+    <value>Wähle das Mitglied, das Partner:in ist. Es stehen nur Mitglieder zur Auswahl, die noch in keiner Familie sind.</value>
+  </data>
+  <data name="ChildMode" xml:space="preserve">
+    <value>Ist das Kind schon Mitglied?</value>
+  </data>
+  <data name="ChildIsNew" xml:space="preserve">
+    <value>Noch nicht</value>
+  </data>
+  <data name="ChildIsMember" xml:space="preserve">
+    <value>Schon Mitglied</value>
+  </data>
+  <data name="ChildIsNewHint" xml:space="preserve">
+    <value>Das Kind wird Mitglied im Verein, ohne eigenen Login. Die Eltern buchen für das Kind.</value>
+  </data>
+  <data name="ChildIsMemberHint" xml:space="preserve">
+    <value>Wähle ein oder mehrere Mitglieder, die noch in keiner Familie sind.</value>
+  </data>
+  <data name="SearchMember" xml:space="preserve">
+    <value>Nach Namen suchen</value>
+  </data>
+  <data name="NoMemberFound" xml:space="preserve">
+    <value>Kein Mitglied mit diesem Namen.</value>
+  </data>
+  <data name="MoreMembers" xml:space="preserve">
+    <value>{0} weitere. Suche, um die Liste einzugrenzen.</value>
+  </data>
+  <data name="RemoveSelection" xml:space="preserve">
+    <value>Aus der Auswahl entfernen</value>
+  </data>
+  <data name="Parents" xml:space="preserve">
+    <value>Eltern</value>
+  </data>
+  <data name="Siblings" xml:space="preserve">
+    <value>Geschwister</value>
+  </data>
+  <data name="FamilySubtitleManaged" xml:space="preserve">
+    <value>Partner:in und Kinder. Für sie gelten Paar- und Familientarife.</value>
+  </data>
+  <data name="RemoveFamilyMemberConfirmationManaged" xml:space="preserve">
+    <value>Möchtest du {0} aus dieser Familie entfernen?</value>
+  </data>
+  <data name="Gender_Male" xml:space="preserve">
+    <value>Männlich</value>
+  </data>
+  <data name="Gender_Female" xml:space="preserve">
+    <value>Weiblich</value>
+  </data>
+  <data name="Gender_Diverse" xml:space="preserve">
+    <value>Divers</value>
   </data>
 </root>

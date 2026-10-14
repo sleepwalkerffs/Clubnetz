@@ -1,0 +1,113 @@
+.plan-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.plan-edit__title {
+    margin: 0 0 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.plan-edit__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+}
+
+.plan-edit__row--name {
+    grid-template-columns: minmax(0, 2fr) minmax(120px, 1fr);
+}
+
+.plan-edit__seasonhint,
+.plan-edit__hint {
+    margin: 6px 0 0;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.plan-edit__box {
+    padding: 4px 12px 8px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.plan-edit__box--on {
+    padding-bottom: 12px;
+    border-color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 4%, transparent);
+}
+
+.plan-edit__switches {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.plan-edit__switch {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+    line-height: 1.3;
+}
+
+.plan-edit__switch strong {
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.plan-edit__switch span {
+    font-size: 0.78rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.plan-edit__summary {
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-left: 4px solid var(--mud-palette-primary);
+    background: var(--mud-palette-background-gray);
+}
+
+.plan-edit__summary-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    font-weight: 700;
+}
+
+.plan-edit__summary-name {
+    overflow-wrap: anywhere;
+}
+
+.plan-edit__summary-price {
+    flex: 0 0 auto;
+    font-variant-numeric: tabular-nums;
+}
+
+.plan-edit__summary ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.plan-edit__error {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--bk-dark-red, #B91C1C);
+    background: color-mix(in srgb, var(--bk-dark-red, #B91C1C) 10%, transparent);
+}
+
+@media (max-width: 479.98px) {
+    .plan-edit__row--name {
+        grid-template-columns: 1fr;
+    }
+}

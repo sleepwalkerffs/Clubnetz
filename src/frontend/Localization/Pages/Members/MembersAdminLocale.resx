@@ -367,4 +367,22 @@
   <data name="YearAgo" xml:space="preserve">
     <value>a year ago</value>
   </data>
+  <data name="Enrollment_ByHand" xml:space="preserve">
+    <value>enrolled by hand</value>
+  </data>
+  <data name="Enrollment_PaidOnline" xml:space="preserve">
+    <value>paid online</value>
+  </data>
+  <data name="Enrollment_MarkedAsPaid" xml:space="preserve">
+    <value>marked as paid</value>
+  </data>
+  <data name="RemovePaidSeasonTitle" xml:space="preserve">
+    <value>This season was paid</value>
+  </data>
+  <data name="RemovePaidSeasonText" xml:space="preserve">
+    <value>The membership fee of this season was paid. Taking the member out of the season does not cancel the payment and gives no money back. Take the member out anyway?</value>
+  </data>
+  <data name="RemovePaidSeasonConfirm" xml:space="preserve">
+    <value>Take out</value>
+  </data>
 </root>

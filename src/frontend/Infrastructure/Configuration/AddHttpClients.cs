@@ -17,6 +17,7 @@ using Bookennis.Client.Services.HttpClients.Guests;
 using Bookennis.Client.Services.HttpClients.ClubAnnouncements;
 using Bookennis.Client.Services.HttpClients.ClubEvents;
 using Bookennis.Client.Services.HttpClients.CourtBlockings;
+using Bookennis.Client.Services.HttpClients.Memberships;
 using Bookennis.Client.Services.HttpClients.SubscriptionPlans;
 using Bookennis.Client.Services.HttpClients.ClubApiKeys;
 using Bookennis.Client.Services.HttpClients.ClubEmailTemplates;
@@ -28,6 +29,22 @@ namespace Bookennis.Client.Infrastructure.Configuration;
 public static class AddHttpClients
 {
     private static void AddDefaultHeaders(this HttpClient client) => client.DefaultRequestHeaders.Add("X-Timezone-Offset", $"{TimeZoneInfo.Local.GetUtcOffset(DateTime.Now).Hours}");
+
+    /// <summary>A client for a controller of the current club: <c>api/Clubs/{clubId}/{controller}/</c>.</summary>
+    private static void AddClubHttpClient<TClient, TImplementation>(this IServiceCollection services, string controller)
+        where TClient : class
+        where TImplementation : class, TClient
+        => services
+           .AddHttpClient<TClient, TImplementation>(
+                (serviceProvider, client) =>
+                {
+                    var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
+                    client.AddDefaultHeaders();
+                    client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/{controller}/");
+                }
+            )
+           .AddHttpMessageHandler<TenantDelegatingHandler>()
+           .AddHttpMessageHandler<RedirectToLoginOnUnauthorizedHandler>();
 
     public static void ConfigureHttpClients(this IServiceCollection services)
     {
@@ -202,6 +219,11 @@ public static class AddHttpClients
             )
            .AddHttpMessageHandler<TenantDelegatingHandler>()
            .AddHttpMessageHandler<RedirectToLoginOnUnauthorizedHandler>();
+
+        services.AddClubHttpClient<IMembershipPlansHttpClient, MembershipPlansHttpClient>("MembershipPlans");
+        services.AddClubHttpClient<IMembershipsHttpClient, MembershipsHttpClient>("Memberships");
+        services.AddClubHttpClient<IMembershipPaymentsHttpClient, MembershipPaymentsHttpClient>("MembershipPayments");
+        services.AddClubHttpClient<IPaymentAccountHttpClient, PaymentAccountHttpClient>("Payments");
 
         services
            .AddHttpClient<IClubApiKeysHttpClient, ClubApiKeysHttpClient>(

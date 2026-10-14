@@ -385,4 +385,52 @@
   <data name="Variable_event.url" xml:space="preserve">
     <value>Link to the event in the app</value>
   </data>
+  <data name="Type_MembershipPaymentReceived" xml:space="preserve">
+    <value>Membership fee received</value>
+  </data>
+  <data name="TypeDescription_MembershipPaymentReceived" xml:space="preserve">
+    <value>Sent to the payer when a membership fee was paid online or recorded by the treasurer.</value>
+  </data>
+  <data name="Type_MembershipApproved" xml:space="preserve">
+    <value>Plan confirmed</value>
+  </data>
+  <data name="TypeDescription_MembershipApproved" xml:space="preserve">
+    <value>Sent to the member when the treasurer confirmed a plan that needs a confirmation. The member can pay now.</value>
+  </data>
+  <data name="Type_MembershipPaymentFailed" xml:space="preserve">
+    <value>Membership payment failed</value>
+  </data>
+  <data name="TypeDescription_MembershipPaymentFailed" xml:space="preserve">
+    <value>Sent to the payer when an online payment did not go through, e.g. a returned direct debit.</value>
+  </data>
+  <data name="Type_MembershipNeedsAttention" xml:space="preserve">
+    <value>Membership fee needs attention</value>
+  </data>
+  <data name="TypeDescription_MembershipNeedsAttention" xml:space="preserve">
+    <value>Sent to the treasurers and admins: a plan waits for confirmation, a payment failed, was refunded or is disputed.</value>
+  </data>
+  <data name="Variable_membership.plan" xml:space="preserve">
+    <value>Name of the plan</value>
+  </data>
+  <data name="Variable_membership.season" xml:space="preserve">
+    <value>Season of the membership</value>
+  </data>
+  <data name="Variable_membership.amount" xml:space="preserve">
+    <value>Amount with currency</value>
+  </data>
+  <data name="Variable_membership.members" xml:space="preserve">
+    <value>Names of the covered members</value>
+  </data>
+  <data name="Variable_membership.payment_method" xml:space="preserve">
+    <value>How it was paid (empty as long as nothing was paid)</value>
+  </data>
+  <data name="Variable_membership.url" xml:space="preserve">
+    <value>Link to the page in the app</value>
+  </data>
+  <data name="Variable_reason" xml:space="preserve">
+    <value>What happened to the order</value>
+  </data>
+  <data name="Variable_payer" xml:space="preserve">
+    <value>Name of the member who pays</value>
+  </data>
 </root>
