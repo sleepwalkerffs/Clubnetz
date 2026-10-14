@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Clubnetz – free, open-source club management and court booking for tennis clubs</title>
-    <meta name="description" content="Clubnetz is a free, open-source web app for tennis clubs. Members book courts from their phone, the board manages members, seasons, guests, events and news. Self-hostable." />
+    <meta name="description" content="Clubnetz is a free, open-source web app for tennis clubs. Members book courts from their phone and pay their fee online, the board manages members, seasons, fees, guests, events and news. Self-hostable." />
     <link rel="canonical" href="https://clubnetz.app/" />
     <link rel="alternate" hreflang="en" href="https://clubnetz.app/" />
     <link rel="alternate" hreflang="de" href="https://clubnetz.app/de/" />
@@ -39,11 +39,13 @@
             "Court booking with play modes, opening hours and prime time rules",
             "Recurring bookings",
             "Member, season and family management",
+            "Membership plans and online payment of membership fees",
             "Guest cards",
             "Club calendar with event registration",
             "Club news and email announcements",
             "Court blockings for tournaments, maintenance and weather",
             "Statistics, leaderboards and badges",
+            "Subscription planner for shared winter courts",
             "Push and email notifications",
             "API with API keys for own scripts and integrations",
             "Multi-tenant: one installation serves many clubs"
@@ -78,7 +80,12 @@
             {
                 "@type": "Question",
                 "name": "What about data protection?",
-                "acceptedAnswer": { "@type": "Answer", "text": "The hosted Clubnetz runs on servers in the EU. Members can export their personal data, leave a club and delete their account themselves." }
+                "acceptedAnswer": { "@type": "Answer", "text": "The hosted Clubnetz runs on servers in the EU. Other members only see your name and profile picture. Members can export their personal data, leave a club and delete their account themselves." }
+            },
+            {
+                "@type": "Question",
+                "name": "Can members pay their membership fee online?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes, if the club wants to. The club enters its price list as membership plans, members choose a plan for themselves or their family and pay by card or SEPA direct debit. The money goes straight to the club's own Stripe account, and a paid fee enrolls the members in the season. Bank transfers and cash are recorded by the treasurer." }
             },
             {
                 "@type": "Question",
@@ -99,6 +106,7 @@
                 Clubnetz
             </a>
             <nav class="top__nav" aria-label="Main">
+                <a class="nav-section" href="#tour">Tour</a>
                 <a class="nav-section" href="#members">For members</a>
                 <a class="nav-section" href="#board">For the board</a>
                 <a class="nav-section" href="#open-source">Open source</a>
@@ -115,7 +123,7 @@
             <div class="wrap hero__grid">
                 <div>
                     <h1>Club management and court booking for tennis clubs</h1>
-                    <p class="hero__lead">Clubnetz is a free, open-source web app. Members book a court in a few taps on their phone. The board manages members, seasons, guests, events and news in one place.</p>
+                    <p class="hero__lead">Clubnetz is a free, open-source web app. Members book a court in a few taps on their phone and pay their membership fee online. The board manages members, seasons, fees, guests, events and news in one place.</p>
                     <div class="hero__actions">
                         <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20for%20our%20club">Get your club on Clubnetz</a>
                         <a class="btn btn--ghost" href="https://github.com/sleepwalkerffs/Clubnetz">View the code on GitHub</a>
@@ -123,35 +131,12 @@
                     <p class="hero__note">Free for clubs and members. No advertising.</p>
                 </div>
 
-                <div class="board" aria-hidden="true">
-                    <div class="board__head">Saturday <span>3 courts</span></div>
-                    <div class="board__grid">
-                        <div></div>
-                        <div class="court">Court 1</div>
-                        <div class="court">Court 2</div>
-                        <div class="court">Court 3</div>
-
-                        <div class="time">9:00</div>
-                        <div class="taken">Singles</div>
-                        <div class="free"></div>
-                        <div class="blocked">Tournament</div>
-
-                        <div class="time">10:00</div>
-                        <div class="free"></div>
-                        <div class="series">Weekly</div>
-                        <div class="blocked">Tournament</div>
-
-                        <div class="time">11:00</div>
-                        <div class="pick">Book</div>
-                        <div class="taken">Doubles</div>
-                        <div class="free"></div>
-
-                        <div class="time">12:00</div>
-                        <div class="free"></div>
-                        <div class="free"></div>
-                        <div class="taken">Training</div>
-                    </div>
-                </div>
+                <figure class="shot shot--hero">
+                    <img class="shot__desktop" src="/screenshots/en/dashboard.webp" width="2560" height="1600" fetchpriority="high"
+                         alt="The member's start page in Clubnetz: greeting, the next match, season statistics and upcoming bookings" />
+                    <img class="shot__phone" src="/screenshots/en/phone-booking.webp" width="780" height="1688"
+                         alt="The booking grid on a phone, with the bookings of all courts for one day" />
+                </figure>
             </div>
         </div>
 
@@ -167,7 +152,108 @@
             </div>
         </div>
 
-        <section id="members">
+        <section id="tour">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">A look inside</p>
+                    <h2>This is what your club gets</h2>
+                    <p>Real screens of a club with more than 600 members. Only the names are invented.</p>
+                </div>
+
+                <div class="tour">
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <h3>Every court and every booking at a glance</h3>
+                            <p>The booking grid shows all courts of a day with play modes, prime time, blocked courts and your own matches. Tap a free slot to book it, partners included.</p>
+                            <ul class="checks">
+                                <li>Opening hours, prime time and quotas are checked automatically</li>
+                                <li>Weekly series, court blockings and tournaments in the same grid</li>
+                                <li>All upcoming club events in the calendar</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/en/booking.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Booking grid for one day with seven courts and singles, doubles, training and tournament bookings" />
+                            <img class="shot__phone" src="/screenshots/en/phone-calendar.webp" width="780" height="1688" loading="lazy"
+                                 alt="The club calendar on a phone with the club championship and the end-of-season barbecue" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <p class="tour__new">New</p>
+                            <h3>Membership fees without the spreadsheet</h3>
+                            <p>The club enters its price list once per season. Members choose their plan, for themselves or the whole family, and pay online. The treasurer sees at a glance who has paid and who has not.</p>
+                            <ul class="checks">
+                                <li>Card and SEPA direct debit through the club's own Stripe account</li>
+                                <li>A paid fee enrolls the members in the season</li>
+                                <li>Bank transfers and cash recorded by hand, export to Excel</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/en/membership-fees.webp" width="2560" height="1600" loading="lazy"
+                                 alt="The treasurer's overview of membership fees: amounts received and open, and who has paid" />
+                            <img class="shot__phone" src="/screenshots/en/phone-membership.webp" width="780" height="1688" loading="lazy"
+                                 alt="A member chooses a membership plan on the phone and pays it online" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <h3>Events people actually sign up for</h3>
+                            <p>Work efforts, parties, tournaments and meetings with registration, head count and the organizer's questions. News reach members by push notification or email.</p>
+                            <ul class="checks">
+                                <li>"Sausage or steak?" answered right in the registration</li>
+                                <li>Share an event by link or WhatsApp</li>
+                                <li>Pinned news, attachments and expiry dates</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/en/event.webp" width="2560" height="1600" loading="lazy"
+                                 alt="An event page with description, registration, a question about the food and the list of participants" />
+                            <img class="shot__phone" src="/screenshots/en/phone-news.webp" width="780" height="1688" loading="lazy"
+                                 alt="Club news on a phone with a pinned announcement" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <h3>A season to look back on</h3>
+                            <p>The board sees how the courts are used, hour by hour and court by court. Members collect badges by playing and keep them in their trophy case.</p>
+                            <ul class="checks">
+                                <li>Occupancy, prime time share and the busiest days</li>
+                                <li>Comparison with last season at the same point</li>
+                                <li>Leaderboards, tier badges and special awards</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/en/statistics.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Club statistics for the season: hours played, bookings, active players and court occupancy per hour" />
+                            <img class="shot__phone" src="/screenshots/en/phone-trophies.webp" width="780" height="1688" loading="lazy"
+                                 alt="The trophy case of a member with the top badge" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <h3>A member list that stays up to date</h3>
+                            <p>Members keep their own details current. The board filters by season, age group and role, and copies email addresses for its mailings.</p>
+                            <ul class="checks">
+                                <li>Who is new this season and who has not come back yet</li>
+                                <li>Families, roles and season enrollment in one place</li>
+                                <li>Other members only see name and profile picture</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/en/members.webp" width="2560" height="1600" loading="lazy"
+                                 alt="The member administration with filters for the season and the list of members" />
+                        </figure>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="members" class="alt">
             <div class="wrap">
                 <div class="section-head">
                     <p class="eyebrow">For members</p>
@@ -184,6 +270,11 @@
                         <div class="card__icon" aria-hidden="true">🔁</div>
                         <h3>Recurring bookings</h3>
                         <p>Reserve the same slot every week or every few weeks. Change or cancel one date, or all following ones.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">💳</div>
+                        <h3>Membership</h3>
+                        <p>Choose a plan for yourself or the whole family and pay the fee online by card or SEPA direct debit.</p>
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">👨‍👩‍👧</div>
@@ -205,11 +296,21 @@
                         <h3>Statistics and badges</h3>
                         <p>Who plays the most and with whom, leaderboards, and badges earned over the season.</p>
                     </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🗓️</div>
+                        <h3>Subscription planner</h3>
+                        <p>Plans a fair schedule for shared winter court subscriptions and exports it to Excel.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🔀</div>
+                        <h3>Several clubs, one account</h3>
+                        <p>Member of two clubs? Join both with the same account and switch between them in the menu.</p>
+                    </li>
                 </ul>
             </div>
         </section>
 
-        <section id="board" class="alt">
+        <section id="board">
             <div class="wrap">
                 <div class="section-head">
                     <p class="eyebrow">For the board</p>
@@ -221,6 +322,11 @@
                         <div class="card__icon" aria-hidden="true">👥</div>
                         <h3>Members and seasons</h3>
                         <p>Member list, roles such as sports director, treasurer or trainer, and enrollment per season.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">💶</div>
+                        <h3>Membership fees</h3>
+                        <p>Your own price list per season: adult, youth by birth year, couple, family, student and more. Members pay online straight to the club's account and are enrolled automatically. The treasurer sees who has paid, records transfers and cash, and exports the list.</p>
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">🏟️</div>
@@ -257,7 +363,7 @@
             </div>
         </section>
 
-        <section id="start">
+        <section id="start" class="alt">
             <div class="wrap">
                 <div class="section-head">
                     <p class="eyebrow">Getting started</p>
@@ -281,7 +387,7 @@
             </div>
         </section>
 
-        <section id="open-source" class="alt">
+        <section id="open-source">
             <div class="wrap split">
                 <div>
                     <p class="eyebrow">Open source</p>
@@ -302,7 +408,7 @@ docker build -t clubnetz .</code></pre>
             </div>
         </section>
 
-        <section id="api">
+        <section id="api" class="alt">
             <div class="wrap split">
                 <div>
                     <p class="eyebrow">For tinkerers</p>
@@ -326,7 +432,7 @@ curl -H "Authorization: Bearer cnz_..." \
             </div>
         </section>
 
-        <section id="faq" class="alt">
+        <section id="faq">
             <div class="wrap">
                 <div class="section-head">
                     <p class="eyebrow">Questions</p>
@@ -351,7 +457,11 @@ curl -H "Authorization: Bearer cnz_..." \
                     </details>
                     <details>
                         <summary>What about data protection?</summary>
-                        <p>The hosted Clubnetz runs on servers in the EU. Members can export their personal data, leave a club and delete their account themselves.</p>
+                        <p>The hosted Clubnetz runs on servers in the EU. Other members only see your name and profile picture. Members can export their personal data, leave a club and delete their account themselves.</p>
+                    </details>
+                    <details>
+                        <summary>Can members pay their membership fee online?</summary>
+                        <p>Yes, if the club wants to. The club enters its price list as membership plans, members choose a plan for themselves or their family and pay by card or SEPA direct debit. The money goes straight to the club's own Stripe account, and a paid fee enrolls the members in the season. Bank transfers and cash are recorded by the treasurer.</p>
                     </details>
                     <details>
                         <summary>Is there an API?</summary>
