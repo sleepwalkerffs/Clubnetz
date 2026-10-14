@@ -24,8 +24,8 @@ public class MembershipPaymentsHttpClient(HttpClient httpClient, JsonSerializerO
     public async Task<HttpResult<MembershipOrderDto>> MarkMembershipOrderPaid(int orderId, MarkMembershipOrderPaidModel model, CancellationToken cancellationToken = default)
         => await (await httpClient.PostAsJsonAsync($"{orderId}/mark-paid", model, jsonOptions, cancellationToken)).AsHttpResult<MembershipOrderDto>(jsonOptions, cancellationToken);
 
-    public async Task<HttpResult<MembershipOrderDto>> CancelMembershipOrder(int orderId, CancellationToken cancellationToken = default)
-        => await (await httpClient.PostAsync($"{orderId}/cancel", null, cancellationToken)).AsHttpResult<MembershipOrderDto>(jsonOptions, cancellationToken);
+    public async Task<HttpResult<MembershipOrderDto>> CancelMembershipOrder(int orderId, bool removeEnrollments, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsync($"{orderId}/cancel?removeEnrollments={(removeEnrollments ? "true" : "false")}", null, cancellationToken)).AsHttpResult<MembershipOrderDto>(jsonOptions, cancellationToken);
 
     public async Task<HttpResult<FileDownload>> ExportMembershipPayments(int seasonId, CancellationToken cancellationToken = default)
         => await (await httpClient.GetAsync($"export?seasonId={seasonId}", cancellationToken)).AsFileHttpResult(jsonOptions, cancellationToken);

@@ -634,7 +634,7 @@
     <value>Cancel the order "{0}" of {1}? They can choose a plan again afterwards.</value>
   </data>
   <data name="Payments_CancelPaidConfirm" xml:space="preserve">
-    <value>Cancel the paid order "{0}" of {1}? Clubnetz does not refund anything: give the money back yourself (for online payments in your Stripe dashboard). The members stay enrolled until you change that in the member administration.</value>
+    <value>Cancel the paid order "{0}" of {1}? Clubnetz refunds nothing: give the money back yourself (for online payments in your Stripe dashboard).</value>
   </data>
   <data name="Payments_NoPlans" xml:space="preserve">
     <value>This season has no plans yet. Create a plan first.</value>
@@ -883,7 +883,7 @@
     <value>The payment did not go through. You can pay again.</value>
   </data>
   <data name="My_Hint_Processing" xml:space="preserve">
-    <value>Your direct debit takes a few days. You are already enrolled.</value>
+    <value>Your direct debit takes a few days. You are already enrolled; if the debit fails, you are taken out again.</value>
   </data>
   <data name="My_Hint_Disputed" xml:space="preserve">
     <value>The payment is disputed at the bank. Please get in touch with the club.</value>
@@ -935,5 +935,11 @@
   </data>
   <data name="MarkPaid_NobodyCovered" xml:space="preserve">
     <value>Choose at least one member the plan covers.</value>
+  </data>
+  <data name="Cancel_RemoveEnrollments" xml:space="preserve">
+    <value>Also remove the members from the season</value>
+  </data>
+  <data name="Cancel_RemoveEnrollmentsHint" xml:space="preserve">
+    <value>Untick it when they only get another plan. Members enrolled by hand stay enrolled.</value>
   </data>
 </root>

@@ -13,6 +13,12 @@ public interface IMembershipFulfillment
     /// Members who are already enrolled are left as they are, so calling it twice does no harm.
     /// </summary>
     Task Complete(MembershipOrder order, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Takes back what <see cref="Complete"/> gave: removes the season enrollments this order created, e.g. when its SEPA debit failed.
+    /// Members enrolled by hand or by another order keep their enrollment. Save together with the status change.
+    /// </summary>
+    Task Revoke(MembershipOrder order, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -43,5 +49,15 @@ public class MembershipFulfillment(AppDbContext context) : IMembershipFulfillmen
 
         foreach (var memberId in memberIds.Except(alreadyEnrolled).Except(pending))
             context.MemberSeasons.Add(new MemberSeason(memberId, order.SeasonId, order.Id));
+    }
+
+    public async Task Revoke(MembershipOrder order, CancellationToken cancellationToken)
+    {
+        // Bookings the members already made stay; they just can't book anything new in the season
+        var enrollments = await context.MemberSeasons
+            .Where(ms => ms.MembershipOrderId == order.Id && ms.SeasonId == order.SeasonId)
+            .ToListAsync(cancellationToken);
+
+        context.MemberSeasons.RemoveRange(enrollments);
     }
 }

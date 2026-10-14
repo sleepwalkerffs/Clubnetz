@@ -106,6 +106,7 @@ public class TestFixture : SimpleInjectorTestFixture
                 container.Register<IPaymentAvailability, PaymentAvailability>();
                 container.Register<IMembershipCheckout, MembershipCheckout>();
                 container.Register<IMembershipFulfillment, MembershipFulfillment>();
+                container.Register<IMembershipSettlement, MembershipSettlement>();
             }
         );
 

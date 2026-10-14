@@ -58,7 +58,7 @@
     <value>Ein Mitglied möchte einen Tarif, den ihr bestätigen müsst.</value>
   </data>
   <data name="Membership_Reason_PaymentFailed" xml:space="preserve">
-    <value>Die Zahlung ist fehlgeschlagen. Die Mitglieder bleiben für die Saison freigeschaltet, bis ihr etwas anderes entscheidet.</value>
+    <value>Die Zahlung ist fehlgeschlagen. Die Mitglieder sind für die Saison nicht mehr freigeschaltet, bis sie erneut bezahlen oder ihr die Zahlung eintragt.</value>
   </data>
   <data name="Membership_Reason_Refunded" xml:space="preserve">
     <value>Die Zahlung wurde in Stripe erstattet. Die Mitglieder bleiben für die Saison freigeschaltet, bis ihr etwas anderes entscheidet.</value>

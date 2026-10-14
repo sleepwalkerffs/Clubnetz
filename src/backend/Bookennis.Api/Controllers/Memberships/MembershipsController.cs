@@ -28,10 +28,12 @@ public class MembershipsController(IMediator mediator, IUserAccessor userAccesso
     public Task<MembershipOrderDto> CreateMembershipOrder(int clubId, [FromBody] CreateMembershipOrderModel model, CancellationToken cancellationToken)
         => mediator.Send(new CreateMembershipOrder(clubId, userAccessor.GetUserId(), model.MembershipPlanId, model.MemberIds ?? []), cancellationToken);
 
+    /// <summary>An order of the caller. While it waits for a payment whose page was opened, Stripe is asked how the payment went.</summary>
     [HttpGet("orders/{orderId:int}")]
     public async Task<MembershipOrderDto> GetMembershipOrder(int clubId, int orderId, CancellationToken cancellationToken)
     {
         await EnsureOwnsOrder(orderId);
+        await mediator.Send(new SyncMembershipCheckout(clubId, orderId), cancellationToken);
         return await mediator.Send(new GetMembershipOrder(clubId, orderId), cancellationToken);
     }
 

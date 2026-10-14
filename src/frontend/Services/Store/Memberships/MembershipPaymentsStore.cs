@@ -46,8 +46,8 @@ public class MembershipPaymentsStore(IMembershipPaymentsHttpClient httpClient) :
     public Task<HttpResult> MarkPaid(int orderId, MarkMembershipOrderPaidModel model)
         => RunInSavingContextAsync(async cancellationToken => await httpClient.MarkMembershipOrderPaid(orderId, model, cancellationToken), nameof(MarkPaid));
 
-    public Task<HttpResult> Cancel(int orderId)
-        => RunInSavingContextAsync(async cancellationToken => await httpClient.CancelMembershipOrder(orderId, cancellationToken), nameof(Cancel));
+    public Task<HttpResult> Cancel(int orderId, bool removeEnrollments)
+        => RunInSavingContextAsync(async cancellationToken => await httpClient.CancelMembershipOrder(orderId, removeEnrollments, cancellationToken), nameof(Cancel));
 
     public async Task<HttpResult<FileDownload>> Export(int seasonId)
         => (HttpResult<FileDownload>)await RunInSavingContextAsync(async cancellationToken => await httpClient.ExportMembershipPayments(seasonId, cancellationToken), nameof(Export));

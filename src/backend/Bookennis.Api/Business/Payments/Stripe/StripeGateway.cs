@@ -3,6 +3,7 @@ using System.Net;
 using Bookennis.Api.Config;
 using Stripe;
 using Stripe.Checkout;
+using V2Core = global::Stripe.V2.Core;
 
 namespace Bookennis.Api.Business.Payments.Stripe;
 
@@ -21,42 +22,56 @@ public class StripeGateway(AppSettings appSettings) : IStripeGateway
         ? new StripeClient(settings.SecretKey)
         : throw new PaymentsNotConfiguredException();
 
+    // Accounts are created with the Accounts v2 API: Stripe refuses v1 for new Connect platforms.
     public async Task<string> CreateAccount(StripeAccountData data, CancellationToken cancellationToken)
     {
-        var options = new AccountCreateOptions
+        var options = new V2Core.AccountCreateOptions
         {
-            Country = data.Country,
-            Email = data.Email,
-            BusinessProfile = new AccountBusinessProfileOptions { Name = data.ClubName, Url = PublicUrl(data.WebsiteUrl) },
+            DisplayName = data.ClubName,
+            ContactEmail = data.Email,
+            Identity = new V2Core.AccountCreateIdentityOptions { Country = data.Country.ToLowerInvariant() },
             // The club is the merchant: it uses the Stripe dashboard itself, pays the Stripe fees and answers its disputes
-            Controller = new AccountControllerOptions
+            Dashboard = "full",
+            Defaults = new V2Core.AccountCreateDefaultsOptions
             {
-                StripeDashboard = new AccountControllerStripeDashboardOptions { Type = "full" },
-                Fees = new AccountControllerFeesOptions { Payer = "account" },
-                Losses = new AccountControllerLossesOptions { Payments = "stripe" },
-                RequirementCollection = "stripe",
+                Responsibilities = new V2Core.AccountCreateDefaultsResponsibilitiesOptions { FeesCollector = "stripe", LossesCollector = "stripe" },
+                Profile = PublicUrl(data.WebsiteUrl) is { } url ? new V2Core.AccountCreateDefaultsProfileOptions { BusinessUrl = url } : null,
             },
-            Capabilities = new AccountCapabilitiesOptions
+            Configuration = new V2Core.AccountCreateConfigurationOptions
             {
-                CardPayments = new AccountCapabilitiesCardPaymentsOptions { Requested = true },
-                SepaDebitPayments = new AccountCapabilitiesSepaDebitPaymentsOptions { Requested = true },
+                Merchant = new V2Core.AccountCreateConfigurationMerchantOptions
+                {
+                    Capabilities = new V2Core.AccountCreateConfigurationMerchantCapabilitiesOptions
+                    {
+                        CardPayments = new V2Core.AccountCreateConfigurationMerchantCapabilitiesCardPaymentsOptions { Requested = true },
+                        SepaDebitPayments = new V2Core.AccountCreateConfigurationMerchantCapabilitiesSepaDebitPaymentsOptions { Requested = true },
+                    },
+                },
             },
             Metadata = new Dictionary<string, string> { [ClubIdMetadataKey] = data.ClubId.ToString(CultureInfo.InvariantCulture) },
         };
 
-        var account = await new AccountService(Client).CreateAsync(options, cancellationToken: cancellationToken);
+        var account = await Client.V2.Core.Accounts.CreateAsync(options, cancellationToken: cancellationToken);
         return account.Id;
     }
 
     public async Task<string> CreateAccountLink(string accountId, string refreshUrl, string returnUrl, CancellationToken cancellationToken)
     {
-        var link = await new AccountLinkService(Client).CreateAsync(
-            new AccountLinkCreateOptions { Account = accountId, RefreshUrl = refreshUrl, ReturnUrl = returnUrl, Type = "account_onboarding" },
-            cancellationToken: cancellationToken);
+        var options = new V2Core.AccountLinkCreateOptions
+        {
+            Account = accountId,
+            UseCase = new V2Core.AccountLinkCreateUseCaseOptions
+            {
+                Type = "account_onboarding",
+                AccountOnboarding = new V2Core.AccountLinkCreateUseCaseAccountOnboardingOptions { RefreshUrl = refreshUrl, ReturnUrl = returnUrl },
+            },
+        };
 
+        var link = await Client.V2.Core.AccountLinks.CreateAsync(options, cancellationToken: cancellationToken);
         return link.Url;
     }
 
+    // Read with the v1 endpoint, which also answers for accounts created with v2: it tells in three flags what the app needs
     public Task<StripeAccountInfo?> GetAccount(string accountId, CancellationToken cancellationToken)
         => OrNull(async () =>
         {
@@ -136,6 +151,24 @@ public class StripeGateway(AppSettings appSettings) : IStripeGateway
             var dispute = await new DisputeService(Client).GetAsync(disputeId, requestOptions: ForAccount(accountId), cancellationToken: cancellationToken);
             return new StripeDisputeInfo(dispute.Id, dispute.PaymentIntentId);
         });
+
+    public async Task<IReadOnlyList<StripeEventInfo>> ListUndeliveredEvents(string accountId, IReadOnlyCollection<string> types, int limit, CancellationToken cancellationToken)
+    {
+        var options = new EventListOptions { DeliverySuccess = false, Types = types.ToList(), Limit = 100 };
+        var events = new List<StripeEventInfo>();
+
+        await foreach (var stripeEvent in new EventService(Client).ListAutoPagingAsync(options, ForAccount(accountId), cancellationToken))
+        {
+            if ((stripeEvent.Data?.Object as IHasId)?.Id is not { Length: > 0 } objectId)
+                continue;
+
+            events.Add(new StripeEventInfo(stripeEvent.Id, stripeEvent.Type, stripeEvent.Account ?? accountId, objectId));
+            if (events.Count >= limit)
+                break;
+        }
+
+        return events;
+    }
 
     public StripeEventInfo ParseWebhookEvent(string payload, string? signatureHeader)
     {

@@ -65,7 +65,7 @@ public class ProcessStripeEventTests(TestFixture fixture) : StripeWebhookTestBas
     }
 
     [Fact]
-    public async Task CheckoutAsyncPaymentFailed_MarksFailedTellsPayerAndTreasurersAndKeepsTheEnrollment()
+    public async Task CheckoutAsyncPaymentFailed_MarksFailedTellsPayerAndTreasurersAndTakesTheMembersOut_PayingAgainEnrollsThemAgain()
     {
         var (family, orderId) = await SeedOrderInCheckout();
         StripeHasSession(orderId, "unpaid");
@@ -76,10 +76,17 @@ public class ProcessStripeEventTests(TestFixture fixture) : StripeWebhookTestBas
         var order = await Order(orderId);
         order.Status.Should().Be(MembershipOrderStatus.Failed);
         order.IsPayable.Should().BeTrue();
-        (await EnrolledMemberIds()).Should().BeEquivalentTo(family.Everybody, "the treasurer decides what happens to the enrollment");
+        (await EnrolledMemberIds()).Should().BeEmpty("the debit that enrolled them failed");
 
         await Notifier.Received(1).PaymentFailed(Arg.Is<MembershipOrder>(o => o.Id == orderId), Arg.Any<CancellationToken>());
         await Notifier.Received(1).NeedsAttention(Arg.Is<MembershipOrder>(o => o.Id == orderId), MembershipAttentionReason.PaymentFailed, Arg.Any<CancellationToken>());
+
+        // The member pays again, this time by card
+        StripeHasSession(orderId, "paid");
+        await Process(ProcessStripeEvent.CheckoutCompleted, SessionId);
+
+        (await Order(orderId)).Status.Should().Be(MembershipOrderStatus.Paid);
+        (await EnrolledMemberIds()).Should().BeEquivalentTo(family.Everybody);
     }
 
     [Fact]

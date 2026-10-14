@@ -6,11 +6,13 @@ namespace Bookennis.Api.Business.Memberships;
 
 /// <summary>
 /// Cancels an order. A member can withdraw an order as long as nothing was paid; the treasurer (<c>ByTreasurer</c>) can also cancel
-/// a paid one, e.g. to record another plan. Enrollments are never removed by this, and money is given back outside of Clubnetz.
+/// a paid one, e.g. to record another plan. Money is given back outside of Clubnetz.
+/// The season enrollments the order created go with it when a member withdraws (nothing was paid for them) and, for the treasurer,
+/// when <paramref name="RemoveEnrollments"/> is set: someone who leaves goes, someone who only gets another plan stays.
 /// </summary>
-public record CancelMembershipOrder(int ClubId, int MembershipOrderId, bool ByTreasurer) : ICommand<MembershipOrderDto>
+public record CancelMembershipOrder(int ClubId, int MembershipOrderId, bool ByTreasurer, bool RemoveEnrollments = false) : ICommand<MembershipOrderDto>
 {
-    public class Handler(AppDbContext context, IMembershipCheckout checkout) : IRequestHandler<CancelMembershipOrder, MembershipOrderDto>
+    public class Handler(AppDbContext context, IMembershipCheckout checkout, IMembershipFulfillment fulfillment) : IRequestHandler<CancelMembershipOrder, MembershipOrderDto>
     {
         public async Task<MembershipOrderDto> Handle(CancelMembershipOrder request, CancellationToken cancellationToken)
         {
@@ -21,6 +23,9 @@ public record CancelMembershipOrder(int ClubId, int MembershipOrderId, bool ByTr
                 order.CancelByTreasurer();
             else
                 order.CancelByMember();
+
+            if (!request.ByTreasurer || request.RemoveEnrollments)
+                await fulfillment.Revoke(order, cancellationToken);
 
             await context.SaveChangesAsync(cancellationToken);
 

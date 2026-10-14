@@ -204,4 +204,7 @@
   <data name="MembershipPayments" xml:space="preserve">
     <value>Membership fees</value>
   </data>
+  <data name="Membership" xml:space="preserve">
+    <value>My membership</value>
+  </data>
 </root>

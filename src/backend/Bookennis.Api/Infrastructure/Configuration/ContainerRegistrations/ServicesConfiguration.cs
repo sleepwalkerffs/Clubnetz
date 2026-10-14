@@ -40,6 +40,7 @@ public static class ServicesConfiguration
         container.Register<IPaymentAvailability, PaymentAvailability>();
         container.Register<IMembershipCheckout, MembershipCheckout>();
         container.Register<IMembershipFulfillment, MembershipFulfillment>();
+        container.Register<IMembershipSettlement, MembershipSettlement>();
         container.Register<IMembershipNotifier, MembershipNotifier>();
         container.Register<BookingReminderJob>();
         container.Register<ClubEventReminderJob>();

@@ -52,8 +52,8 @@ public class MembershipPaymentsController(IMediator mediator, IUserAccessor user
 
     /// <summary>Cancels an order, also a paid one. Enrollments stay, and money is given back outside of the app.</summary>
     [HttpPost("{orderId:int}/cancel")]
-    public Task<MembershipOrderDto> CancelMembershipOrder(int clubId, int orderId, CancellationToken cancellationToken)
-        => mediator.Send(new CancelMembershipOrder(clubId, orderId, ByTreasurer: true), cancellationToken);
+    public Task<MembershipOrderDto> CancelMembershipOrder(int clubId, int orderId, [FromQuery] bool removeEnrollments, CancellationToken cancellationToken)
+        => mediator.Send(new CancelMembershipOrder(clubId, orderId, ByTreasurer: true, removeEnrollments), cancellationToken);
 
     /// <summary>The list as an Excel workbook, in the language of the request.</summary>
     [HttpGet("export")]

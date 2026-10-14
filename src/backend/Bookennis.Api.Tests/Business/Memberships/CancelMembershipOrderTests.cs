@@ -61,8 +61,48 @@ public class CancelMembershipOrderTests : TestBase
         var result = await SendAsync(new CancelMembershipOrder(TestDataSeed.ClubId, orderId, ByTreasurer: true));
 
         result.Status.Should().Be(OrderStatus.Cancelled);
-        (await QueryAsync(ctx => ctx.MemberSeasons.CountAsync())).Should().Be(1, "an order never removes an enrollment by itself");
+        (await QueryAsync(ctx => ctx.MemberSeasons.CountAsync())).Should().Be(1, "e.g. the member only gets another plan");
         await gateway.DidNotReceiveWithAnyArgs().ExpireCheckoutSession(default!, default!, default);
+    }
+
+    [Fact]
+    public async Task CancelMembershipOrder_ByTreasurerWithRemoveEnrollments_TakesOutWhoTheOrderEnrolled_ButNotWhoWasEnrolledByHand()
+    {
+        var orderId = await SeedPaidOrder();
+        var byHand = await QueryAsync(async ctx =>
+        {
+            var seasonId = await ctx.MembershipOrders.Where(o => o.Id == orderId).Select(o => o.SeasonId).SingleAsync();
+            ctx.Add(new Bookennis.Domain.Members.MemberSeason(TestDataSeed.Member2Id, seasonId));
+            await ctx.SaveChangesAsync();
+            return seasonId;
+        });
+
+        await SendAsync(new CancelMembershipOrder(TestDataSeed.ClubId, orderId, ByTreasurer: true, RemoveEnrollments: true));
+
+        var enrolled = await QueryAsync(ctx => ctx.MemberSeasons.Where(ms => ms.SeasonId == byHand).Select(ms => ms.MemberId).ToListAsync());
+        enrolled.Should().Equal(TestDataSeed.Member2Id);
+    }
+
+    [Fact]
+    public async Task CancelMembershipOrder_ByMemberAfterTheDebitFailed_TheMemberIsNoLongerEnrolled()
+    {
+        // An enrollment from a debit that was started; the debit failed and the member withdraws the order
+        var orderId = await QueryAsync(async ctx =>
+        {
+            var season = await MembershipSeed.SeedSeason(ctx);
+            var plan = await MembershipSeed.SeedPlan(ctx, season.Id);
+            var order = await MembershipSeed.SeedOrder(ctx, plan, TestDataSeed.Member1Id, TestDataSeed.Member1Id);
+            order.MarkProcessing("pi_1");
+            ctx.Add(new Bookennis.Domain.Members.MemberSeason(TestDataSeed.Member1Id, season.Id, order.Id));
+            order.MarkFailed();
+            await ctx.SaveChangesAsync();
+            return order.Id;
+        });
+
+        var result = await SendAsync(new CancelMembershipOrder(TestDataSeed.ClubId, orderId, ByTreasurer: false));
+
+        result.Status.Should().Be(OrderStatus.Cancelled);
+        (await QueryAsync(ctx => ctx.MemberSeasons.CountAsync(ms => ms.MemberId == TestDataSeed.Member1Id))).Should().Be(0);
     }
 
     private Task<int> SeedPaidOrder() => QueryAsync(async ctx =>

@@ -1,0 +1,59 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Memberships
+@using Bookennis.Client.Services.Store.Memberships
+@using Bookennis.Client.Utils
+
+@* The treasurer cancels an order. For a paid one they decide whether its members leave the season with it. *@
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@L["Payments_Cancel"]" SubmitColor="Color.Error" CancelFunc="Cancel" CancelCaption="@SharedLocale["Close"]"
+            Loading="@Store.IsSaving" Title="@L["Payments_CancelTitle"]">
+    <div class="d-flex flex-column gap-3">
+        <MudText Typo="Typo.body2">@Message</MudText>
+
+        @if (Paid)
+        {
+            <MudCheckBox T="bool" @bind-Value="removeEnrollments" Color="Color.Primary" Dense="true">
+                <span>@L["Cancel_RemoveEnrollments"]</span>
+                <span class="d-block mud-text-secondary" style="font-size: 0.8rem;">@L["Cancel_RemoveEnrollmentsHint"]</span>
+            </MudCheckBox>
+        }
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter, EditorRequired] public int OrderId { get; set; }
+
+    /// <summary>The order was paid (or the payment is disputed): its members are enrolled by it.</summary>
+    [Parameter] public bool Paid { get; set; }
+
+    [Parameter, EditorRequired] public string Message { get; set; } = "";
+
+    [Inject] private IMembershipPaymentsStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private bool removeEnrollments = true;
+
+    private async Task<DialogResult?> Submit()
+    {
+        var result = await Store.Cancel(OrderId, Paid && removeEnrollments);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Payments_Cancelled"], Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

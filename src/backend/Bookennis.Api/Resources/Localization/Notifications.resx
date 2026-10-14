@@ -58,7 +58,7 @@
     <value>A member asks for a plan that you have to confirm.</value>
   </data>
   <data name="Membership_Reason_PaymentFailed" xml:space="preserve">
-    <value>The payment did not go through. The members stay enrolled until you decide otherwise.</value>
+    <value>The payment did not go through. The members are no longer enrolled in the season until they pay again or you record the payment.</value>
   </data>
   <data name="Membership_Reason_Refunded" xml:space="preserve">
     <value>The payment was refunded in Stripe. The members stay enrolled until you decide otherwise.</value>

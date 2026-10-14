@@ -64,6 +64,8 @@
 
                 @if (!ClubProfileStore.Roles.Contains(MemberRole.Guest))
                 {
+                    <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/membership")"
+                                Icon="@Icons.Material.Filled.CardMembership">@Locale["Membership"]</MudNavLink>
                     <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/news")"
                                 Icon="@Icons.Material.Filled.Campaign">@Locale["News"]</MudNavLink>
                     <MudNavLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/calendar")"

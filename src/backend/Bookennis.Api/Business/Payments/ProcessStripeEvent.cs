@@ -35,6 +35,7 @@ public record ProcessStripeEvent(int StripeWebhookEventId) : ICommand
         AppDbContext context,
         IStripeGateway gateway,
         IMembershipFulfillment fulfillment,
+        IMembershipSettlement settlement,
         IMembershipNotifier notifier,
         ILogger<ProcessStripeEvent> logger) : IRequestHandler<ProcessStripeEvent>
     {
@@ -147,20 +148,21 @@ public record ProcessStripeEvent(int StripeWebhookEventId) : ICommand
 
             switch (stripeEvent.Type)
             {
-                case CheckoutCompleted when session.IsPaid:
-                case CheckoutAsyncPaymentSucceeded:
-                    await Settle(order, emails, () => order.MarkPaid(MembershipPaymentMethod.Online, DateTimeOffset.UtcNow, paymentIntentId: session.PaymentIntentId), cancellationToken);
-                    break;
-
-                // The member confirmed a SEPA debit that settles in a few days. They are enrolled now; a debit that fails is reported to the treasurers.
+                // Paid by card, or a SEPA debit that settles in a few days: the members are enrolled now
                 case CheckoutCompleted:
-                    await Settle(order, emails, () => order.MarkProcessing(session.PaymentIntentId), cancellationToken);
+                    await settlement.SettleCompletedSession(order, session, emails, cancellationToken);
                     break;
 
+                case CheckoutAsyncPaymentSucceeded:
+                    await settlement.Settle(order, () => order.MarkPaid(MembershipPaymentMethod.Online, DateTimeOffset.UtcNow, paymentIntentId: session.PaymentIntentId), emails, cancellationToken);
+                    break;
+
+                // The money is not coming: the members are no longer enrolled by this order. Paying again enrolls them again.
                 case CheckoutAsyncPaymentFailed:
                     if (order.Status is MembershipOrderStatus.AwaitingPayment or MembershipOrderStatus.Processing)
                     {
                         order.MarkFailed();
+                        await fulfillment.Revoke(order, cancellationToken);
                         emails.Add(() => notifier.PaymentFailed(order, cancellationToken));
                         emails.Add(() => notifier.NeedsAttention(order, MembershipAttentionReason.PaymentFailed, cancellationToken));
                     }
@@ -171,31 +173,6 @@ public record ProcessStripeEvent(int StripeWebhookEventId) : ICommand
                     order.CheckoutExpired(session.Id);
                     break;
             }
-        }
-
-        /// <summary>Books a payment (or a started debit) on the order and enrolls its members, once.</summary>
-        private async Task Settle(MembershipOrder order, List<Func<Task>> emails, Action book, CancellationToken cancellationToken)
-        {
-            // Money arrived for an order that can't take it any more, e.g. it was cancelled while the payment page was open
-            if (!order.Status.IsSettledOrSettling() && !order.CanBeMarkedPaid)
-            {
-                emails.Add(() => notifier.NeedsAttention(order, MembershipAttentionReason.UnexpectedPayment, cancellationToken));
-                return;
-            }
-
-            var wasSettled = order.Status.IsSettledOrSettling();
-            var wasPaidAnotherWay = order.Status == MembershipOrderStatus.Paid && order.PaymentMethod != MembershipPaymentMethod.Online;
-            book();
-
-            // The treasurer already recorded the fee as paid by cash or transfer: it may have been paid twice
-            if (wasPaidAnotherWay)
-                emails.Add(() => notifier.NeedsAttention(order, MembershipAttentionReason.UnexpectedPayment, cancellationToken));
-
-            if (wasSettled)
-                return;
-
-            await fulfillment.Complete(order, cancellationToken);
-            emails.Add(() => notifier.PaymentReceived(order, cancellationToken));
         }
 
         private async Task<MembershipOrder?> FindOrderByPayment(ClubPaymentAccount account, string? paymentIntentId, CancellationToken cancellationToken)

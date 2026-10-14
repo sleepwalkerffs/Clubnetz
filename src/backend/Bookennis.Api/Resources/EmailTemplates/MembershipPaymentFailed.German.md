@@ -9,7 +9,7 @@ leider ist die Zahlung deines Mitgliedsbeitrags für {{ club.name }} fehlgeschla
 - **Betrag:** {{ membership.amount }}
 - **Für:** {{ membership.members }}
 
-Bitte versuche es noch einmal oder melde dich beim Verein, wenn du anders bezahlen möchtest.
+Bis der Beitrag bezahlt ist, bist du für die Saison nicht freigeschaltet und kannst keine neuen Plätze buchen. Bitte versuche es noch einmal oder melde dich beim Verein, wenn du anders bezahlen möchtest.
 
 [Erneut bezahlen]({{ membership.url }}){.btn}
 

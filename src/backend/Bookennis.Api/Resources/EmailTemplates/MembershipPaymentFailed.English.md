@@ -9,7 +9,7 @@ unfortunately the payment of your membership fee for {{ club.name }} did not go 
 - **Amount:** {{ membership.amount }}
 - **For:** {{ membership.members }}
 
-Please try again, or get in touch with the club if you would like to pay another way.
+Until the fee is paid you are not enrolled in the season and can't book new courts. Please try again, or get in touch with the club if you would like to pay another way.
 
 [Pay again]({{ membership.url }}){.btn}
 

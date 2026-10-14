@@ -22,6 +22,7 @@ public interface IMembershipPaymentsStore : ISemaphoreStore
     Task<HttpResult> Approve(int orderId, IReadOnlyCollection<int>? memberIds = null);
     Task<HttpResult> Reject(int orderId);
     Task<HttpResult> MarkPaid(int orderId, MarkMembershipOrderPaidModel model);
-    Task<HttpResult> Cancel(int orderId);
+    /// <summary>Cancels an order; with <paramref name="removeEnrollments"/> the members it enrolled leave the season.</summary>
+    Task<HttpResult> Cancel(int orderId, bool removeEnrollments);
     Task<HttpResult<FileDownload>> Export(int seasonId);
 }

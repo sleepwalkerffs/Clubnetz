@@ -634,7 +634,7 @@
     <value>Die Bestellung „{0}“ von {1} stornieren? Danach kann wieder ein Tarif gewählt werden.</value>
   </data>
   <data name="Payments_CancelPaidConfirm" xml:space="preserve">
-    <value>Die bezahlte Bestellung „{0}“ von {1} stornieren? Clubnetz erstattet nichts: gib das Geld selbst zurück (bei Online-Zahlungen in eurem Stripe-Dashboard). Die Mitglieder bleiben freigeschaltet, bis du das in der Mitgliederverwaltung änderst.</value>
+    <value>Die bezahlte Bestellung „{0}“ von {1} stornieren? Clubnetz erstattet nichts: Gib das Geld selbst zurück (bei Online-Zahlungen in eurem Stripe-Dashboard).</value>
   </data>
   <data name="Payments_NoPlans" xml:space="preserve">
     <value>Diese Saison hat noch keine Tarife. Lege zuerst einen Tarif an.</value>
@@ -883,7 +883,7 @@
     <value>Die Zahlung ist fehlgeschlagen. Du kannst noch einmal bezahlen.</value>
   </data>
   <data name="My_Hint_Processing" xml:space="preserve">
-    <value>Deine Lastschrift braucht ein paar Tage. Du bist schon freigeschaltet.</value>
+    <value>Deine Lastschrift braucht ein paar Tage. Du bist schon freigeschaltet; scheitert die Lastschrift, wirst du wieder abgemeldet.</value>
   </data>
   <data name="My_Hint_Disputed" xml:space="preserve">
     <value>Die Zahlung wurde bei der Bank beanstandet. Melde dich bitte beim Verein.</value>
@@ -935,5 +935,11 @@
   </data>
   <data name="MarkPaid_NobodyCovered" xml:space="preserve">
     <value>Wähle mindestens ein Mitglied, für das der Tarif gilt.</value>
+  </data>
+  <data name="Cancel_RemoveEnrollments" xml:space="preserve">
+    <value>Mitglieder auch aus der Saison nehmen</value>
+  </data>
+  <data name="Cancel_RemoveEnrollmentsHint" xml:space="preserve">
+    <value>Nimm das Häkchen weg, wenn sie nur einen anderen Tarif bekommen. Von Hand freigeschaltete Mitglieder bleiben freigeschaltet.</value>
   </data>
 </root>

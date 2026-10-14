@@ -33,6 +33,12 @@ public interface IStripeGateway
     Task<StripeDisputeInfo?> GetDispute(string accountId, string disputeId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// The events of the connected account of these types whose delivery to a webhook endpoint of the platform failed, newest first,
+    /// at most <paramref name="limit"/>. Stripe keeps events for 30 days.
+    /// </summary>
+    Task<IReadOnlyList<StripeEventInfo>> ListUndeliveredEvents(string accountId, IReadOnlyCollection<string> types, int limit, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Verifies the signature of a webhook request and reads what the event is about.
     /// Throws <see cref="StripeSignatureException"/> when the request was not sent by Stripe.
     /// </summary>

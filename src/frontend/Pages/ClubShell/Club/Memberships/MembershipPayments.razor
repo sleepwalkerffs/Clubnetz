@@ -417,11 +417,17 @@ else
     private async Task Cancel(Row row)
     {
         var paid = row.Order!.Status is MembershipOrderStatus.Paid or MembershipOrderStatus.Disputed;
-        var confirmed = await DialogService.ShowMessageBox(L["Payments_CancelTitle"],
-            string.Format(L[paid ? "Payments_CancelPaidConfirm" : "Payments_CancelConfirm"], row.Order.PlanName, Names(row)),
-            yesText: L["Payments_Cancel"], cancelText: SharedLocale["Close"]);
-        if (confirmed == true)
-            await Run(Store.Cancel(row.Order.Id), "Payments_Cancelled");
+        var parameters = new DialogParameters<CancelOrderDialog>
+        {
+            { d => d.OrderId, row.Order.Id },
+            { d => d.Paid, paid },
+            { d => d.Message, string.Format(L[paid ? "Payments_CancelPaidConfirm" : "Payments_CancelConfirm"], row.Order.PlanName, Names(row)) },
+        };
+        var dialog = await DialogService.ShowAsync<CancelOrderDialog>(L["Payments_CancelTitle"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseOnEscapeKey = true });
+
+        if (await dialog.Result is { Canceled: false })
+            await Reload();
     }
 
     private async Task OpenMarkPaidDialog(Row row)

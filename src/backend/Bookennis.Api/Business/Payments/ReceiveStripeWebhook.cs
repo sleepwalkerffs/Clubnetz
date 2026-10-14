@@ -1,7 +1,5 @@
 using Bookennis.Api.Business.Payments.Stripe;
 using Bookennis.Api.Data;
-using Bookennis.Domain.Memberships;
-using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Payments;
 
@@ -18,36 +16,7 @@ public record ReceiveStripeWebhook(string Payload, string? SignatureHeader) : IC
         public async Task<Unit> Handle(ReceiveStripeWebhook request, CancellationToken cancellationToken)
         {
             var stripeEvent = gateway.ParseWebhookEvent(request.Payload, request.SignatureHeader);
-
-            if (stripeEvent.Id.Length > StripeWebhookEvent.MaxIdLength
-             || stripeEvent.Type.Length > StripeWebhookEvent.MaxTypeLength
-             || stripeEvent.ObjectId.Length > StripeWebhookEvent.MaxIdLength
-             || stripeEvent.AccountId?.Length > StripeWebhookEvent.MaxIdLength)
-            {
-                throw new StripeSignatureException("The webhook event is invalid.");
-            }
-
-            // Events the app does not act on are not stored
-            if (!ProcessStripeEvent.HandledTypes.Contains(stripeEvent.Type))
-                return default;
-
-            if (await context.StripeWebhookEvents.AnyAsync(e => e.EventId == stripeEvent.Id, cancellationToken))
-                return default;
-
-            var entry = new StripeWebhookEvent(stripeEvent.Id, stripeEvent.Type, stripeEvent.AccountId, stripeEvent.ObjectId, DateTimeOffset.UtcNow);
-            context.StripeWebhookEvents.Add(entry);
-
-            try
-            {
-                await context.SaveChangesAsync(cancellationToken);
-            }
-            catch (DbUpdateException e) when (e.InnerException is Npgsql.PostgresException { SqlState: Npgsql.PostgresErrorCodes.UniqueViolation })
-            {
-                // The same event arrived twice at the same moment: the other request handles it
-                return default;
-            }
-
-            await mediator.Send(new ProcessStripeEvent(entry.Id), cancellationToken);
+            await StripeEventInbox.Accept(context, mediator, stripeEvent, cancellationToken);
             return default;
         }
     }
