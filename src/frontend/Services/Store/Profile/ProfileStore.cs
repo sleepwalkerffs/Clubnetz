@@ -8,6 +8,7 @@ namespace Bookennis.Client.Services.Store.Profile;
 public sealed class ProfileStore(IProfileHttpClient profileHttpClient) : SemaphoreStore, IProfileStore
 {
     private List<int> availableClubIds = [];
+    private List<ProfileClubDto> clubs = [];
     private List<string> missingProfileFields = [];
 
     public event Action? OnProfileChanged;
@@ -25,6 +26,7 @@ public sealed class ProfileStore(IProfileHttpClient profileHttpClient) : Semapho
     public bool IsGuestSession { get; private set; }
 
     public IReadOnlyList<int> AvailableClubs => availableClubIds;
+    public IReadOnlyList<ProfileClubDto> Clubs => clubs;
 
     public Task LoadProfileAsync()
         => RunInLoadingContextAsync(async cancellationToken =>
@@ -35,6 +37,7 @@ public sealed class ProfileStore(IProfileHttpClient profileHttpClient) : Semapho
             if (profileResponse is { Success: true, Dto: not null })
             {
                 availableClubIds = profileResponse.Dto.AvailableClubIds;
+                clubs = profileResponse.Dto.Clubs;
                 FavoriteClubId = profileResponse.Dto.FavoriteClubId;
                 ProfilePictureUrl = profileResponse.Dto.ProfilePictureUrl is not null
                     ? $"{profileResponse.Dto.ProfilePictureUrl}?v={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}"

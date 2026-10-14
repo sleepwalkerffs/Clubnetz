@@ -1,0 +1,97 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Navigation
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Profile
+@using Bookennis.Shared.Controller.Shared
+
+@implements IDisposable
+
+@* The open club in the drawer: shows the own roles there and switches to the other clubs of the user or joins another one *@
+@if (ClubProfileStore.SelectedClub is { } selectedClub)
+{
+    <MudMenu FullWidth="true" Class="club-switcher" ListClass="club-switcher__list" PopoverClass="club-switcher__popover"
+             AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" AriaLabel="@Locale["ClubSwitcher_Switch"]">
+        <ActivatorContent>
+            <button type="button" class="club-switcher__current" title="@Locale["ClubSwitcher_Switch"]">
+                <ClubAvatar ClubId="@selectedClub.ClubId" Name="@selectedClub.ClubName" SizeInPx="40" />
+                <span class="club-switcher__text">
+                    <span class="club-switcher__name">@selectedClub.ClubName</span>
+                    <span class="club-switcher__meta">@(ClubProfileStore.IsSupportMode ? Locale["SupportMode"] : RoleSummary(ClubProfileStore.Roles))</span>
+                </span>
+                <MudIcon Icon="@Icons.Material.Filled.UnfoldMore" Size="Size.Small" Class="club-switcher__chevron" />
+            </button>
+        </ActivatorContent>
+        <ChildContent>
+            <div class="club-switcher__heading">@Locale["ClubSwitcher_YourClubs"]</div>
+            @foreach (var club in ProfileStore.Clubs)
+            {
+                var isOpen = club.Id == selectedClub.ClubId && !ClubProfileStore.IsSupportMode;
+                <MudMenuItem OnClick="@(() => SwitchTo(club.Id))" Disabled="@isOpen" Class="@($"club-switcher__item{(isOpen ? " club-switcher__item--open" : "")}")">
+                    <div class="d-flex align-center gap-3">
+                        <ClubAvatar ClubId="@club.Id" Name="@club.Name" SizeInPx="32" />
+                        <div class="d-flex flex-column flex-grow-1" style="min-width: 0;">
+                            <span class="club-switcher__item-name">@club.Name</span>
+                            <span class="club-switcher__item-meta">@RoleSummary(club.Roles)</span>
+                        </div>
+                        @if (isOpen)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Primary" aria-label="@Locale["ClubSwitcher_Current"]" />
+                        }
+                    </div>
+                </MudMenuItem>
+            }
+            <MudDivider Class="my-1" />
+            <MudMenuItem Icon="@Icons.Material.Filled.AddCircleOutline" OnClick="JoinClub">@Locale["ClubSwitcher_Join"]</MudMenuItem>
+            @if (ClubProfileStore.IsSupportMode)
+            {
+                <MudMenuItem Icon="@Icons.Material.Filled.AdminPanelSettings" OnClick="@(() => NavigationManager.LeaveSupportMode(selectedClub.ClubId))">@Locale["SupportModeExit"]</MudMenuItem>
+            }
+        </ChildContent>
+    </MudMenu>
+}
+
+@code {
+    [Inject]
+    private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject]
+    private IProfileStore ProfileStore { get; set; } = null!;
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<NavigationLocale> Locale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        ClubProfileStore.OnClubProfileChanged += StateHasChanged;
+        ProfileStore.OnProfileChanged += StateHasChanged;
+    }
+
+    /// <summary>The roles that mean something beyond being a member, e.g. "Admin · Treasurer".</summary>
+    private string RoleSummary(IEnumerable<MemberRole> roles)
+    {
+        var special = roles.Where(r => r != MemberRole.User).Select(r => SharedLocale[$"Role_{r}"].Value).ToList();
+        return special.Count == 0 ? Locale["ClubSwitcher_Member"] : string.Join(" · ", special);
+    }
+
+    private void SwitchTo(int clubId) => NavigationManager.SwitchToClub(clubId);
+
+    private async Task JoinClub()
+    {
+        var dialog = await DialogService.ShowAsync<SelectClubDialog>(Locale["ClubSwitcher_Join"], new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: int clubId })
+            NavigationManager.SwitchToClub(clubId);
+    }
+
+    public void Dispose()
+    {
+        ClubProfileStore.OnClubProfileChanged -= StateHasChanged;
+        ProfileStore.OnProfileChanged -= StateHasChanged;
+    }
+}

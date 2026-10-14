@@ -3,6 +3,7 @@
 @using Bookennis.Client.Services.Store.ClubProfile
 @inherits LayoutComponentBase
 @layout BaseLayout
+@implements IDisposable
 
 <MudAppBar Elevation="0" Class="bookennis-appbar">
     <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
@@ -37,6 +38,10 @@
     private IClubProfileStore ClubProfileStore { get; set; } = null!;
 
     private bool drawerOpen = true;
+
+    protected override void OnInitialized() => ClubProfileStore.OnClubProfileChanged += StateHasChanged;
+
+    public void Dispose() => ClubProfileStore.OnClubProfileChanged -= StateHasChanged;
 
     void DrawerToggle()
     {

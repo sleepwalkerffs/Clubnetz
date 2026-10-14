@@ -1,0 +1,27 @@
+@* The club has no logo yet: its initials on a color that stays the same for the club *@
+<div class="club-avatar @Class" style="@($"--club-avatar-color: {Color}; --club-avatar-size: {SizeInPx}px;")" aria-hidden="true">@Initials</div>
+
+@code {
+    private static readonly string[] Palette = ["#059669", "#2563EB", "#7C3AED", "#DB2777", "#D97706", "#0891B2", "#DC2626", "#4B5563"];
+
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+    [Parameter, EditorRequired] public string Name { get; set; } = null!;
+    [Parameter] public int SizeInPx { get; set; } = 40;
+    [Parameter] public string? Class { get; set; }
+
+    private string Color => Palette[Math.Abs(ClubId) % Palette.Length];
+
+    private string Initials
+    {
+        get
+        {
+            var words = Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            return words.Length switch
+            {
+                0 => "?",
+                1 => words[0][..Math.Min(2, words[0].Length)].ToUpperInvariant(),
+                _ => $"{char.ToUpperInvariant(words[0][0])}{char.ToUpperInvariant(words[1][0])}"
+            };
+        }
+    }
+}

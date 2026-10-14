@@ -411,4 +411,16 @@
   <data name="NoBadge" xml:space="preserve">
     <value>Kein Badge</value>
   </data>
+  <data name="JoinClub_Intro" xml:space="preserve">
+    <value>Wähle den Klub, in dem du spielst. Weiteren Klubs kannst du später beitreten und im Menü zwischen ihnen wechseln.</value>
+  </data>
+  <data name="JoinClub_Search" xml:space="preserve">
+    <value>Klubs suchen</value>
+  </data>
+  <data name="JoinClub_NoMatch" xml:space="preserve">
+    <value>Kein Klub passt zu deiner Suche.</value>
+  </data>
+  <data name="JoinClub_AllJoined" xml:space="preserve">
+    <value>Du bist bereits Mitglied in allen Klubs auf Clubnetz.</value>
+  </data>
 </root>

@@ -7,10 +7,6 @@
 
 <PageTitle>@SharedLocale["MemberProfile"]</PageTitle>
 
-<PageHeader>
-    <Content>@SharedLocale["MemberProfile"]</Content>
-</PageHeader>
-
 <TrophyCaseView ClubId="@ClubId" MemberId="@MemberId"
                 Eyebrow="@(ClubProfileStore.SelectedClub is { } club ? string.Format(Locale["ProfileEyebrow"], club.ClubName) : SharedLocale["MemberProfile"].Value)" />
 

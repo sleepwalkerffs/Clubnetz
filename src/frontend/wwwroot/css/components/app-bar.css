@@ -12,3 +12,8 @@
     color: #FFFFFF !important;
     background-color: rgba(255, 255, 255, 0.1) !important;
 }
+
+/* FocusOnNavigate focuses the title for screen readers after every navigation, it is not something the user tabbed to */
+.bookennis-appbar h1:focus {
+    outline: none;
+}

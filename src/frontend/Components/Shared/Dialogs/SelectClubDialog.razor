@@ -1,3 +1,4 @@
+@using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Components.Shared.Dialogs
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Services.Store.Profile
@@ -6,24 +7,48 @@
 <BaseDialog SubmitFunc="Submit" SubmitCaption=@SharedLocale["Join"] CancelFunc="Cancel" CancelCaption=@SharedLocale["Cancel"] CanSubmit="@(selectedClubId.HasValue)" Loading="@loading">
     @if (clubs is null)
     {
-        <MudProgressCircular Indeterminate="true" />
+        <div class="d-flex justify-center pa-6">
+            <MudProgressCircular Indeterminate="true" />
+        </div>
     }
     else if (clubs.Count == 0)
     {
-        <MudText>@SharedLocale["NoClubsAvailable"]</MudText>
+        <MudText>@SharedLocale[ProfileStore.HasClubsAssigned ? "JoinClub_AllJoined" : "NoClubsAvailable"]</MudText>
     }
     else
     {
-        <MudSelect T="int?" Label=@SharedLocale["SelectClub"] Variant="Variant.Outlined" @bind-Value="selectedClubId">
-            @foreach (var club in clubs)
+        <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">@SharedLocale["JoinClub_Intro"]</MudText>
+
+        @if (clubs.Count > SearchThreshold)
+        {
+            <MudTextField T="string" @bind-Value="search" Immediate="true" Placeholder="@SharedLocale["JoinClub_Search"]"
+                          Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          Clearable="true" Class="mb-3" autofocus />
+        }
+
+        <div class="club-picker" role="radiogroup" aria-label="@SharedLocale["SelectClub"]">
+            @foreach (var club in FilteredClubs)
             {
-                <MudSelectItem T="int?" Value="@club.Id">@club.Name</MudSelectItem>
+                var isSelected = club.Id == selectedClubId;
+                <button type="button" role="radio" aria-checked="@(isSelected ? "true" : "false")"
+                        class="@($"club-picker__option{(isSelected ? " club-picker__option--selected" : "")}")"
+                        @onclick="@(() => selectedClubId = club.Id)">
+                    <ClubAvatar ClubId="@club.Id" Name="@club.Name" SizeInPx="36" />
+                    <span class="club-picker__name">@club.Name</span>
+                    <MudIcon Icon="@(isSelected ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)" Size="Size.Small" Class="club-picker__check" />
+                </button>
             }
-        </MudSelect>
+            @if (!FilteredClubs.Any())
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary pa-2">@SharedLocale["JoinClub_NoMatch"]</MudText>
+            }
+        </div>
     }
 </BaseDialog>
 
 @code {
+    private const int SearchThreshold = 5;
+
     [Inject]
     private IProfileStore ProfileStore { get; set; } = null!;
 
@@ -32,15 +57,24 @@
 
     private List<AvailableClubDto>? clubs;
     private int? selectedClubId;
+    private string? search;
     private bool loading;
+
+    private IEnumerable<AvailableClubDto> FilteredClubs => string.IsNullOrWhiteSpace(search)
+        ? clubs ?? []
+        : (clubs ?? []).Where(c => c.Name.Contains(search.Trim(), StringComparison.CurrentCultureIgnoreCase));
 
     protected override async Task OnInitializedAsync()
     {
         var result = await ProfileStore.GetAvailableClubs();
-        if (result is { Success: true, Dto: not null })
-            clubs = result.Dto.Clubs;
-        else
-            clubs = [];
+
+        // The clubs the user is already a member of are opened in the club switcher
+        clubs = result is { Success: true, Dto: not null }
+            ? result.Dto.Clubs.Where(c => !ProfileStore.IsClubAssigned(c.Id)).ToList()
+            : [];
+
+        if (clubs.Count == 1)
+            selectedClubId = clubs[0].Id;
     }
 
     private async Task<DialogResult?> Submit()

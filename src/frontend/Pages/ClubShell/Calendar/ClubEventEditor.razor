@@ -21,10 +21,6 @@
     </MudButton>
 </div>
 
-<PageHeader>
-    <Content>@Locale[IsNew ? "NewEvent" : "EditEvent"]</Content>
-</PageHeader>
-
 @if (!CanManage)
 {
     <div class="editor-muted">@Locale["NotAllowedToManage"]</div>

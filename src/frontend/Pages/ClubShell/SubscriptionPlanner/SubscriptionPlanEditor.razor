@@ -18,9 +18,6 @@
 
 <div class="d-flex align-center gap-1">
     <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Href="@($"/clubs/{ClubId}/subscription-planner")" aria-label="@L["BackToPlans"]" Class="mb-4" />
-    <PageHeader>
-        <Content>@(draft?.Name ?? L["SubscriptionPlanner"])</Content>
-    </PageHeader>
 </div>
 
 @if (draft is null || Store.Plan is null)
