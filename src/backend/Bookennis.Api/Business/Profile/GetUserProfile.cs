@@ -3,6 +3,7 @@ using Bookennis.Domain.Members;
 using Bookennis.Shared.Controller.Profile;
 using Bookennis.Shared.Controller.Shared;
 using Fusonic.Extensions.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Profile;
 
@@ -42,6 +43,15 @@ public record GetUserProfile(int UserId) : IQuery<GetUserProfileResult>
                                            }
                                           ).SingleRequiredAsync(cancellationToken);
 
+            // Not limited to the club of the request: the club switcher lists all of them
+            var clubs = await (from member in context.Set<Member>().IgnoreQueryFilters()
+                               join club in context.Clubs.IgnoreQueryFilters() on member.ClubId equals club.Id
+                               where member.UserId == request.UserId
+                               orderby club.Name
+                               select new { club.Id, club.Name, member.UserRoles })
+                              .AsNoTracking()
+                              .ToListAsync(cancellationToken);
+
             return new GetUserProfileResult
             {
                 FirstName = userProfileResult.FirstName,
@@ -56,6 +66,12 @@ public record GetUserProfile(int UserId) : IQuery<GetUserProfileResult>
                 ZipCode = userProfileResult.ZipCode,
                 Country = userProfileResult.Country,
                 AvailableClubIds = userProfileResult.AvailableClubs,
+                Clubs = clubs.ConvertAll(c => new ProfileClubDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Roles = Array.ConvertAll(c.UserRoles, role => (Bookennis.Shared.Controller.Shared.MemberRole)role)
+                }),
                 FavoriteClubId = userProfileResult.AvailableClubs.FirstOrDefault(),
                 ProfilePictureUrl = userProfileResult.HasProfilePicture ? $"/api/Profile/picture/{request.UserId}" : null,
                 ProfileCompletionBannerDismissed = userProfileResult.BannerDismissed

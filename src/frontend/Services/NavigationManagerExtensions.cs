@@ -31,6 +31,11 @@ public static class NavigationManagerExtensions
     public static void NavigateToNotFound(this NavigationManager nav) => nav.NavigateTo("/notfound");
     public static void NavigateToProfile(this NavigationManager nav) => nav.NavigateTo("account/profile");
     public static void NavigateToClub(this NavigationManager nav, int clubId) => nav.NavigateTo($"/clubs/{clubId}/my-club");
+
+    /// <summary>
+    /// Opens another club of the user. The page is loaded from scratch, because the stores still hold the data of the club that was open before.
+    /// </summary>
+    public static void SwitchToClub(this NavigationManager nav, int clubId) => nav.NavigateTo($"/clubs/{clubId}/my-club", forceLoad: true);
     public static void NavigateToClubEvent(this NavigationManager nav, int clubId, int clubEventId) => nav.NavigateTo($"/clubs/{clubId}/calendar/{clubEventId}");
     public static void NavigateToBooking(this NavigationManager nav, int clubId, int bookingEntryId) => nav.NavigateTo($"/clubs/{clubId}/booking/{bookingEntryId}");
     public static void NavigateToMember(this NavigationManager nav, int clubId, int memberId) => nav.NavigateTo($"/clubs/{clubId}/members/{memberId}");

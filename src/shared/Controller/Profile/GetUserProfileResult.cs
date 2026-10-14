@@ -16,6 +16,8 @@ public record GetUserProfileResult
     public required string ZipCode { get; init; }
     public required Country Country { get; init; }
     public required List<int> AvailableClubIds { get; init; }
+    /// <summary>The clubs of <see cref="AvailableClubIds"/> with their names, ordered by name.</summary>
+    public List<ProfileClubDto> Clubs { get; init; } = [];
     public required int FavoriteClubId { get; init; }
     public string? ProfilePictureUrl { get; init; }
     public bool ProfileCompletionBannerDismissed { get; init; }

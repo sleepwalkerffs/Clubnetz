@@ -228,9 +228,6 @@
   <data name="Send" xml:space="preserve">
     <value>Senden</value>
   </data>
-  <data name="EditAnnouncement" xml:space="preserve">
-    <value>Mitteilung bearbeiten</value>
-  </data>
   <data name="BackToAnnouncement" xml:space="preserve">
     <value>Zurück zur Mitteilung</value>
   </data>

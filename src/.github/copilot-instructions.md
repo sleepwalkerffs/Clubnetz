@@ -300,7 +300,7 @@ Maintainers, sports directors and admins block one or more courts for a time win
 
 - `Pages/ClubShell/Club/CourtBlockings.razor` (`/clubs/{id}/court-blockings`, list with status, edit, delete, past blockings toggle) and `Dialogs/EditCourtBlockingDialog.razor`: reason with templates, courts, period, all day, repetition. Saving first loads the conflicts; if there are any, they are listed and the submit button turns into "Delete n bookings and block" (second click confirms). Changing an input asks the server again.
 - `Components/Booking/Day.razor` renders the occurrences (`Blockings` parameter, `.day__blocking`, violet stripes with title and time). `Booking.razor` loads them with the bookings (`ICourtBlockingsStore.LoadOccurrences`), shows chips, a legend entry and a dot in the day strip, and a lock button to the management page for managers.
-- `NavMenu.razor` shows the link in the admin group and to maintainers and sports directors. Texts are in `CourtBlockingsLocale(.de).resx`.
+- `NavMenu.razor` shows the link (section "Courts & play") to admins, maintainers and sports directors. Texts are in `CourtBlockingsLocale(.de).resx`.
 
 ## Play Mode Quotas
 
@@ -513,7 +513,14 @@ Club admins connect their own scripts and tools to their club with an API key (`
 
 ### FE
 
-- `Pages/ClubShell/Club/ApiKeys.razor` (`/clubs/{id}/api-keys`, admins only, link in the admin group of the `NavMenu`) and `Dialogs/CreateApiKeyDialog.razor` (name, validity, read-only or read and write). The new key is shown once in the page and only kept in the component. The page also explains the usage (curl example, link to the OpenAPI document and to the guide on the landing page). Texts are in `ClubApiKeysLocale(.de).resx`, store: `IClubApiKeysStore`.
+- `Pages/ClubShell/Club/ApiKeys.razor` (`/clubs/{id}/api-keys`, admins only, link in the "Club setup" section of the `NavMenu`) and `Dialogs/CreateApiKeyDialog.razor` (name, validity, read-only or read and write). The new key is shown once in the page and only kept in the component. The page also explains the usage (curl example, link to the OpenAPI document and to the guide on the landing page). Texts are in `ClubApiKeysLocale(.de).resx`, store: `IClubApiKeysStore`.
+
+## Navigation & Club Switcher
+
+- `Shared/NavMenu.razor` builds its links in `Sections` (one place for all role rules): the club section without a title (My Club, Book, News, Calendar, Leaderboard), "Personal" (membership, own statistics, subscription planner), then the management sections "Members & fees", "Courts & play" and "Club setup", and "Account" at the bottom. A link is only listed in the section of its topic, whatever role sees it; empty sections are hidden. Support mode shows the management sections as for an admin. Section texts are `Section_*` in `NavigationLocale(.de).resx`.
+- Who sees what must match the backend policies: Members (Admin, Maintainer), Guests / Membership plans / Membership fees (Admin, Treasurer), Court blockings (Admin, Maintainer, SportsDirector), Badges (Admin, SportsDirector, YouthSportsDirector), Club statistics (Admin, Maintainer), Club setup (Admin).
+- Pages have no title heading in the content (no `PageHeader`): the nav shows where the user is, the browser tab gets the `<PageTitle>`.
+- `Components/Shared/ClubSwitcher.razor` (top of the drawer) shows the open club with the own roles and lists the clubs of the user (`IProfileStore.Clubs`, from `GetUserProfileResult.Clubs` with name and roles). Switching is `NavigationManager.SwitchToClub` (full page load, the stores still hold the data of the other club). "Join another club" opens `SelectClubDialog` (searchable cards, without the clubs the user is already a member of), which `App.razor` also shows to a user without a club. `ClubAvatar` draws the club initials on a color derived from the club id.
 
 ## Admin Panel & Support Mode
 
@@ -653,7 +660,7 @@ Every one of them has a `NotificationType` and, except where noted, an email cou
 
 - **Booking added**: `NotifyBookingPlayersHandler` (`BookingAddedDomainEvent`) -> `IBookingPushNotifier.BookingAdded`. Bookings of a series are skipped; the series is announced once via `EntityCreated<RecurringBookingSeries>` -> `RecurringBookingAdded`.
 - **Booking deleted**: `DeleteBooking`, `DeleteRecurringBooking` (one notification for "this and following") and `DeleteBookingsNotificationHandler` (overbooked / court set inactive / court blocked) call `IBookingPushNotifier.BookingDeleted` / `RecurringBookingDeleted` **before** removing the booking, because the players are read from it.
-- **Booking reminder**: `SendBookingReminders`, run every 5 minutes for all clubs by the recurring Hangfire job `BookingReminderJob` (registered in `Program.cs`). Reminds the players of bookings that start within `BookingReminderLeadMinutes` (default 120) by push and email and marks them with `Booking.ReminderSentAt` (reset when a booking is moved). Bookings made within the lead time are marked without a reminder. The emails are also sent when push is not configured.
+- **Booking reminder**: `SendBookingReminders`, run every 5 minutes for all clubs by the recurring Hangfire job `BookingReminderJob` (scheduled in `Program.cs`). **Every recurring job class must also be registered in the container** (`ServicesConfiguration.AddServices`, checked by `RecurringJobRegistrationTests`): Hangfire resolves it from SimpleInjector, which does not create unregistered types, and the job would only fail when it runs. Reminds the players of bookings that start within `BookingReminderLeadMinutes` (default 120) by push and email and marks them with `Booking.ReminderSentAt` (reset when a booking is moved). Bookings made within the lead time are marked without a reminder. The emails are also sent when push is not configured.
 - **Club event created**: `NotifyClubEventCreatedHandler` (`EntityCreated<ClubEvent>`) -> `IClubEventNotifier.EventCreated`, all club members except the creator. Not for events in the past or with `NotifyMembers = false`.
 - **Club event reminder / registration deadline**: `SendClubEventReminders` (see Notifications).
 - **Club announcement published**: `NotifyClubAnnouncementCreatedHandler` (`EntityCreated<ClubAnnouncement>`), all club members except the author; not for announcements that are already expired. The email is only sent when a manager sends the announcement as email.

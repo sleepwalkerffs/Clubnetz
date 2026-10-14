@@ -10,6 +10,8 @@ public interface IProfileStore : ISemaphoreStore
     bool IsProfileLoaded { get; }
     bool HasClubsAssigned { get; }
     IReadOnlyList<int> AvailableClubs { get; }
+    /// <summary>The clubs of the user with name and roles, for the club switcher.</summary>
+    IReadOnlyList<ProfileClubDto> Clubs { get; }
     string? ProfilePictureUrl { get; }
     bool IsProfileComplete { get; }
     IReadOnlyList<string> MissingProfileFields { get; }

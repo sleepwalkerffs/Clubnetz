@@ -26,10 +26,6 @@
 
 <PageTitle>@Locale["MyClub"]</PageTitle>
 
-<PageHeader>
-    <Content>@Locale["MyClub"]</Content>
-</PageHeader>
-
 @if (!isInitialized || MembersStore.MemberDetail is null)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />

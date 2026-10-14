@@ -1,9 +1,57 @@
 /* ===== Navigation Menu Styles ===== */
+/* The drawer is dark in both themes, so the colors in it are fixed */
 
-/* Profile section in drawer */
+/* Profile and club section in drawer */
 .bookennis-nav-profile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 12px 14px;
   background: linear-gradient(135deg, #022C22 0%, #064E3B 100%);
   border-bottom: 1px solid rgba(110, 231, 183, 0.12);
+}
+
+.bookennis-nav-profile__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 4px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.bookennis-nav-profile__user:hover,
+.bookennis-nav-profile__user:focus-visible {
+  background-color: rgba(110, 231, 183, 0.08);
+  outline: none;
+}
+
+.bookennis-nav-profile__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bookennis-nav-profile__name {
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bookennis-nav-profile__link {
+  color: #6EE7B7;
+  font-size: 0.75rem;
 }
 
 .bookennis-nav-avatar {
@@ -13,11 +61,143 @@
   box-shadow: 0 2px 8px rgba(5, 150, 105, 0.4);
 }
 
+/* Club switcher */
+.club-switcher,
+.club-switcher > .mud-menu-activator {
+  display: block;
+  width: 100%;
+}
+
+.club-switcher__current {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px 8px 8px;
+  border: 1px solid rgba(110, 231, 183, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.club-switcher__current:hover,
+.club-switcher__current:focus-visible {
+  background: rgba(110, 231, 183, 0.1);
+  border-color: rgba(110, 231, 183, 0.35);
+  outline: none;
+}
+
+.club-switcher__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.club-switcher__name {
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.club-switcher__meta {
+  color: #A7F3D0;
+  font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.club-switcher__chevron {
+  color: #6EE7B7;
+  flex-shrink: 0;
+}
+
+/* The menu opens on the page surface, so it follows the theme */
+.club-switcher__popover {
+  min-width: 256px;
+  max-width: 320px;
+  border-radius: 12px !important;
+}
+
+.club-switcher__heading {
+  padding: 10px 16px 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mud-palette-text-secondary);
+}
+
+.club-switcher__item-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.club-switcher__item-meta {
+  font-size: 0.75rem;
+  color: var(--mud-palette-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The open club is shown, not greyed out like a disabled item */
+.club-switcher__item--open.mud-disabled,
+.club-switcher__item--open.mud-disabled * {
+  color: var(--mud-palette-text-primary) !important;
+  opacity: 1;
+}
+
+.club-switcher__item--open .club-switcher__item-meta {
+  color: var(--mud-palette-text-secondary) !important;
+}
+
+/* Club initials (ClubAvatar) */
+.club-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--club-avatar-size);
+  height: var(--club-avatar-size);
+  border-radius: calc(var(--club-avatar-size) * 0.28);
+  background: linear-gradient(135deg, var(--club-avatar-color), color-mix(in srgb, var(--club-avatar-color) 70%, #000));
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: calc(var(--club-avatar-size) * 0.38);
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  user-select: none;
+}
+
+/* Section labels */
+.bookennis-nav-section {
+  padding: 18px 12px 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(167, 243, 208, 0.55);
+}
+
 /* Nav links in dark drawer */
 .mud-drawer .mud-navmenu .mud-nav-link {
   color: var(--mud-palette-drawer-text) !important;
   border-radius: 10px !important;
-  margin: 2px 0;
+  margin: 1px 0;
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
   transition: all 0.15s ease !important;
 }
 
@@ -27,9 +207,10 @@
 }
 
 .mud-drawer .mud-navmenu .mud-nav-link.active {
-  background-color: rgba(5, 150, 105, 0.2) !important;
+  background-color: rgba(5, 150, 105, 0.25) !important;
   color: #FFFFFF !important;
   font-weight: 600;
+  box-shadow: inset 3px 0 0 #34D399;
 }
 
 .mud-drawer .mud-navmenu .mud-nav-link .mud-nav-link-icon {
@@ -42,15 +223,53 @@
   color: #A7F3D0 !important;
 }
 
-/* Nav group */
-.mud-drawer .mud-navmenu .mud-nav-group .mud-nav-group-title {
-  color: var(--mud-palette-drawer-text) !important;
+/* Club picker (SelectClubDialog) */
+.club-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 2px;
 }
 
-.mud-drawer .mud-navmenu .mud-nav-group .mud-nav-group-title:hover {
-  background-color: rgba(110, 231, 183, 0.1) !important;
+.club-picker__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--mud-palette-lines-default);
+  border-radius: 12px;
+  background: var(--mud-palette-surface);
+  color: var(--mud-palette-text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.mud-drawer .mud-navmenu .mud-collapse-container .mud-nav-link {
-  padding-left: 48px !important;
+.club-picker__option:hover,
+.club-picker__option:focus-visible {
+  border-color: var(--mud-palette-primary);
+  outline: none;
+}
+
+.club-picker__option--selected {
+  border-color: var(--mud-palette-primary);
+  background: rgba(5, 150, 105, 0.08);
+  box-shadow: 0 0 0 1px var(--mud-palette-primary);
+}
+
+.club-picker__name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.club-picker__check {
+  color: var(--mud-palette-text-disabled);
+}
+
+.club-picker__option--selected .club-picker__check {
+  color: var(--mud-palette-primary);
 }

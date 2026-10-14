@@ -19,4 +19,15 @@ public class GetUserProfileTests(TestFixture fixture) : TestBase(fixture)
         result.Email.Should().Be(user.Email);
         result.AvailableClubIds.Should().NotBeEmpty();
     }
+
+    [Fact]
+    public async Task GetUserProfile_ReturnsClubsWithNames()
+    {
+        var (user, club) = Query(ctx => (ctx.TestData().User, ctx.TestData().Club));
+
+        var result = await SendAsync(new GetUserProfile(user.Id));
+
+        result.Clubs.Select(c => c.Id).Should().BeEquivalentTo(result.AvailableClubIds);
+        result.Clubs.Should().Contain(c => c.Id == club.Id && c.Name == club.Name && c.Roles.Length > 0);
+    }
 }
