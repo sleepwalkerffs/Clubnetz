@@ -44,5 +44,6 @@ public static class ServicesConfiguration
         container.Register<IMembershipNotifier, MembershipNotifier>();
         container.Register<BookingReminderJob>();
         container.Register<ClubEventReminderJob>();
+        container.Register<StripeEventRecoveryJob>();
     }
 }
