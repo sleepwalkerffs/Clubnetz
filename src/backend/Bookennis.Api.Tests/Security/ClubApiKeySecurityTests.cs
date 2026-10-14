@@ -33,6 +33,9 @@ public class ClubApiKeySecurityTests(ApiSecurityFixture app)
         "Families", "Guests", "Leaderboards", "MemberBadges", "Members", "OneTimeBadges", "PlayModes", "Players", "Seasons", "Statistics",
         "SubscriptionPlans",
 
+        // Season review (Wrapped) of the key's creator; releasing it is an admin action like the rest of the club setup.
+        "Wrapped",
+
         // Membership fees: plans, the orders of the key's creator, the treasurer's list and the status of the Stripe account.
         // Connecting and disconnecting the Stripe account (PaymentAccount) is not open to keys.
         "MembershipPlans", "Memberships", "MembershipPayments", "Payments",

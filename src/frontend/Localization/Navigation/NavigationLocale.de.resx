@@ -243,4 +243,7 @@
   <data name="ClubSwitcher_Current" xml:space="preserve">
     <value>Geöffnet</value>
   </data>
+  <data name="Wrapped" xml:space="preserve">
+    <value>Saisonrückblick</value>
+  </data>
 </root>

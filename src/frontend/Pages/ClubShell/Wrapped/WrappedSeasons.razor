@@ -1,0 +1,150 @@
+@page "/clubs/{ClubId:int}/wrapped"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Wrapped
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Wrapped
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Wrapped
+
+@implements IDisposable
+
+<PageTitle>@L["PageTitle"]</PageTitle>
+
+<div class="wrapped-list">
+    <div class="wrapped-hero">
+        <div class="wrapped-hero__text">
+            <div class="wrapped-hero__kicker">✨ @L["HeroKicker"]</div>
+            <div class="wrapped-hero__title">@L["HeroTitle"]</div>
+            <div class="wrapped-hero__subtitle">@L["HeroSubtitle"]</div>
+        </div>
+        <div class="wrapped-hero__art" aria-hidden="true">🎾</div>
+    </div>
+
+    @if (WrappedStore.Seasons is null)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+    }
+    else
+    {
+        var seasons = WrappedStore.Seasons;
+
+        @if (seasons.CanManage)
+        {
+            <div class="wrapped-admin-hint">
+                <span aria-hidden="true">🛠️</span>
+                <span>@L["AdminHint"]</span>
+            </div>
+        }
+
+        @if (seasons.Seasons.Count == 0)
+        {
+            <div class="wrapped-empty">
+                <div class="wrapped-empty__emoji" aria-hidden="true">🎁</div>
+                <div class="wrapped-empty__title">@L["EmptyTitle"]</div>
+                <div class="wrapped-empty__text">@L[seasons.CanManage ? "EmptyTextAdmin" : "EmptyText"]</div>
+            </div>
+        }
+        else
+        {
+            <div class="wrapped-grid">
+                @foreach (var season in seasons.Seasons)
+                {
+                    var released = season.PublishedAt is not null;
+                    var label = MemberAdminHelpers.SeasonLabel(season.StartDate, season.EndDate);
+
+                    <div class="wrapped-card @(released ? "" : "wrapped-card--draft")">
+                        <a class="wrapped-card__cover" href="@($"/clubs/{ClubId}/wrapped/{season.SeasonId}")" aria-label="@string.Format(L["OpenSeason"], label)">
+                            <span class="wrapped-card__season">@string.Format(L["SeasonLabel"], label)</span>
+                            <span class="wrapped-card__wordmark">Wrapped</span>
+                            <span class="wrapped-card__matches">
+                                @if (season.Matches > 0)
+                                {
+                                    @string.Format(L[season.Matches == 1 ? "CardMatchesSingular" : "CardMatches"], season.Matches)
+                                }
+                                else
+                                {
+                                    @L["CardNoMatches"]
+                                }
+                            </span>
+                            <span class="wrapped-card__play" aria-hidden="true">
+                                <MudIcon Icon="@Icons.Material.Filled.PlayArrow" />
+                            </span>
+                        </a>
+
+                        <div class="wrapped-card__footer">
+                            <span class="wrapped-card__dates">
+                                @season.StartDate.ToString("d. MMM yyyy", CultureInfo.CurrentCulture) – @season.EndDate.ToString("d. MMM yyyy", CultureInfo.CurrentCulture)
+                            </span>
+                            @if (seasons.CanManage)
+                            {
+                                <div class="wrapped-card__admin">
+                                    @if (released)
+                                    {
+                                        <span class="wrapped-chip wrapped-chip--released">✅ @string.Format(L["ReleasedOn"], season.PublishedAt!.Value.ToLocalTime().ToString("d. MMM yyyy", CultureInfo.CurrentCulture))</span>
+                                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" Disabled="@WrappedStore.IsSaving" OnClick="() => Unpublish(season)">@L["TakeBack"]</MudButton>
+                                    }
+                                    else
+                                    {
+                                        <span class="wrapped-chip">🔒 @L[season.IsActive ? "NotReleasedRunning" : "NotReleased"]</span>
+                                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@WrappedStore.IsSaving"
+                                                   StartIcon="@Icons.Material.Filled.Celebration" OnClick="() => Publish(season)">@L["Release"]</MudButton>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [Inject] private IWrappedStore WrappedStore { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<WrappedLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        WrappedStore.OnSeasonsChanged += OnChanged;
+        await WrappedStore.LoadSeasons();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task Publish(WrappedSeasonDto season)
+    {
+        var label = MemberAdminHelpers.SeasonLabel(season.StartDate, season.EndDate);
+        var text = string.Format(L["ReleaseConfirmation"], label) + (season.IsActive ? " " + L["ReleaseConfirmationRunning"] : "");
+        var confirmed = await DialogService.ShowMessageBox(string.Format(L["ReleaseTitle"], label), text, yesText: L["Release"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true)
+            return;
+
+        var response = await WrappedStore.Publish(season.SeasonId);
+        if (response.Success)
+            Snackbar.Add(string.Format(L["Released"], label), Severity.Success);
+        else
+            Snackbar.ShowErrorDetails(response, BackendLocale);
+    }
+
+    private async Task Unpublish(WrappedSeasonDto season)
+    {
+        var label = MemberAdminHelpers.SeasonLabel(season.StartDate, season.EndDate);
+        var confirmed = await DialogService.ShowMessageBox(L["TakeBack"], string.Format(L["TakeBackConfirmation"], label), yesText: L["TakeBack"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true)
+            return;
+
+        var response = await WrappedStore.Unpublish(season.SeasonId);
+        if (!response.Success)
+            Snackbar.ShowErrorDetails(response, BackendLocale);
+    }
+
+    public void Dispose() => WrappedStore.OnSeasonsChanged -= OnChanged;
+}

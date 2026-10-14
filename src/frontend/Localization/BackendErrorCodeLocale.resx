@@ -630,4 +630,10 @@
   <data name="SeasonHasPayments" xml:space="preserve">
     <value>Membership fees were paid for this season, so it can't be deleted.</value>
   </data>
+  <data name="WrappedSeasonNotStarted" xml:space="preserve">
+    <value>The season has not started yet, so there is nothing to look back on.</value>
+  </data>
+  <data name="WrappedNotPublished" xml:space="preserve">
+    <value>Your club has not released the review of this season yet.</value>
+  </data>
 </root>

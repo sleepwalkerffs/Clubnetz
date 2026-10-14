@@ -630,4 +630,10 @@
   <data name="SeasonHasPayments" xml:space="preserve">
     <value>Für diese Saison wurden Mitgliedsbeiträge bezahlt, sie kann daher nicht gelöscht werden.</value>
   </data>
+  <data name="WrappedSeasonNotStarted" xml:space="preserve">
+    <value>Die Saison hat noch nicht begonnen, es gibt also noch nichts zum Zurückblicken.</value>
+  </data>
+  <data name="WrappedNotPublished" xml:space="preserve">
+    <value>Dein Club hat den Rückblick auf diese Saison noch nicht freigegeben.</value>
+  </data>
 </root>

@@ -409,4 +409,10 @@
   <data name="PlayersFixedOne" xml:space="preserve">
     <value>{0} Spieler</value>
   </data>
+  <data name="WrappedLink" xml:space="preserve">
+    <value>Saisonrückblick</value>
+  </data>
+  <data name="WrappedReleased" xml:space="preserve">
+    <value>Saisonrückblick freigegeben</value>
+  </data>
 </root>

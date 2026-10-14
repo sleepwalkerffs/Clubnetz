@@ -146,3 +146,8 @@
     font-weight: 700;
     color: var(--bk-dark-red, #B91C1C);
 }
+
+.season__wrapped {
+    font-size: 0.9rem;
+    line-height: 1;
+}

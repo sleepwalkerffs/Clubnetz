@@ -18,7 +18,7 @@ namespace Bookennis.Api.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.6")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -914,6 +914,9 @@ namespace Bookennis.Api.Data.Migrations
 
                     b.Property<int>("ClubId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("WrappedPublishedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 

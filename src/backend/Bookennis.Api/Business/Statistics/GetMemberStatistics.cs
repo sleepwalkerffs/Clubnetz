@@ -356,7 +356,7 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
             };
         }
 
-        private static PlayerType? GetPlayerType(int totalBookings, int[] weekdayCounts, int[] hourCounts)
+        internal static PlayerType? GetPlayerType(int totalBookings, int[] weekdayCounts, int[] hourCounts)
         {
             if (totalBookings < MinBookingsForPlayerType)
                 return null;
@@ -380,7 +380,7 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
             return PlayerType.AllRounder;
         }
 
-        private static int GetLongestWeekStreak(HashSet<DateOnly> weeks)
+        internal static int GetLongestWeekStreak(HashSet<DateOnly> weeks)
         {
             var longest = 0;
             foreach (var monday in weeks)
