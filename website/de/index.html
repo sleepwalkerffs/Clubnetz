@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Clubnetz – kostenlose Open-Source-Vereinsverwaltung und Platzbuchung für Tennisvereine</title>
-    <meta name="description" content="Clubnetz ist eine kostenlose Open-Source-Web-App für Tennisvereine. Mitglieder buchen Plätze am Handy, der Vorstand verwaltet Mitglieder, Saisonen, Gäste, Termine und Neuigkeiten. Auch zum Selbsthosten." />
+    <meta name="description" content="Clubnetz ist eine kostenlose Open-Source-Web-App für Tennisvereine. Mitglieder buchen Plätze am Handy und zahlen den Mitgliedsbeitrag online, der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Gäste, Termine und Neuigkeiten. Auch zum Selbsthosten." />
     <link rel="canonical" href="https://clubnetz.app/de/" />
     <link rel="alternate" hreflang="en" href="https://clubnetz.app/" />
     <link rel="alternate" hreflang="de" href="https://clubnetz.app/de/" />
@@ -39,11 +39,13 @@
             "Platzbuchung mit Spielarten, Öffnungszeiten und Prime-Time-Regeln",
             "Serienbuchungen",
             "Verwaltung von Mitgliedern, Saisonen und Familien",
+            "Mitgliedstarife und Online-Zahlung des Mitgliedsbeitrags",
             "Gästekarten",
             "Vereinskalender mit Anmeldung zu Terminen",
             "Vereinsneuigkeiten und Aussendungen per E-Mail",
             "Platzsperren für Turniere, Wartung und Wetter",
             "Statistiken, Ranglisten und Abzeichen",
+            "Abo-Planer für gemeinsame Winterabos",
             "Benachrichtigungen per Push und E-Mail",
             "API mit API-Schlüsseln für eigene Skripte und Anbindungen",
             "Mandantenfähig: eine Installation für viele Vereine"
@@ -78,7 +80,12 @@
             {
                 "@type": "Question",
                 "name": "Wie steht es um den Datenschutz?",
-                "acceptedAnswer": { "@type": "Answer", "text": "Das gehostete Clubnetz läuft auf Servern in der EU. Mitglieder können ihre personenbezogenen Daten selbst exportieren, einen Verein verlassen und ihr Konto löschen." }
+                "acceptedAnswer": { "@type": "Answer", "text": "Das gehostete Clubnetz läuft auf Servern in der EU. Andere Mitglieder sehen nur Name und Profilbild. Mitglieder können ihre personenbezogenen Daten selbst exportieren, einen Verein verlassen und ihr Konto löschen." }
+            },
+            {
+                "@type": "Question",
+                "name": "Können Mitglieder den Mitgliedsbeitrag online bezahlen?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Ja, wenn der Verein das möchte. Der Verein trägt seine Tarife ein, Mitglieder wählen einen Tarif für sich oder ihre Familie und zahlen mit Karte oder SEPA-Lastschrift. Das Geld geht direkt auf das eigene Stripe-Konto des Vereins, und ein bezahlter Beitrag schaltet die Mitglieder für die Saison frei. Überweisungen und Barzahlungen trägt der Kassier ein." }
             },
             {
                 "@type": "Question",
@@ -99,6 +106,7 @@
                 Clubnetz
             </a>
             <nav class="top__nav" aria-label="Hauptnavigation">
+                <a class="nav-section" href="#tour">Rundgang</a>
                 <a class="nav-section" href="#members">Für Mitglieder</a>
                 <a class="nav-section" href="#board">Für den Vorstand</a>
                 <a class="nav-section" href="#open-source">Open Source</a>
@@ -115,7 +123,7 @@
             <div class="wrap hero__grid">
                 <div>
                     <h1>Vereinsverwaltung und Platzbuchung für Tennisvereine</h1>
-                    <p class="hero__lead">Clubnetz ist eine kostenlose Open-Source-Web-App. Mitglieder buchen einen Platz mit wenigen Klicks am Handy. Der Vorstand verwaltet Mitglieder, Saisonen, Gäste, Termine und Neuigkeiten an einem Ort.</p>
+                    <p class="hero__lead">Clubnetz ist eine kostenlose Open-Source-Web-App. Mitglieder buchen einen Platz mit wenigen Klicks am Handy und zahlen ihren Mitgliedsbeitrag online. Der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Gäste, Termine und Neuigkeiten an einem Ort.</p>
                     <div class="hero__actions">
                         <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20f%C3%BCr%20unseren%20Verein">Clubnetz für euren Verein</a>
                         <a class="btn btn--ghost" href="https://github.com/sleepwalkerffs/Clubnetz">Quellcode auf GitHub</a>
@@ -123,35 +131,12 @@
                     <p class="hero__note">Kostenlos für Vereine und Mitglieder. Ohne Werbung.</p>
                 </div>
 
-                <div class="board" aria-hidden="true">
-                    <div class="board__head">Samstag <span>3 Plätze</span></div>
-                    <div class="board__grid">
-                        <div></div>
-                        <div class="court">Platz 1</div>
-                        <div class="court">Platz 2</div>
-                        <div class="court">Platz 3</div>
-
-                        <div class="time">9:00</div>
-                        <div class="taken">Einzel</div>
-                        <div class="free"></div>
-                        <div class="blocked">Turnier</div>
-
-                        <div class="time">10:00</div>
-                        <div class="free"></div>
-                        <div class="series">Serie</div>
-                        <div class="blocked">Turnier</div>
-
-                        <div class="time">11:00</div>
-                        <div class="pick">Buchen</div>
-                        <div class="taken">Doppel</div>
-                        <div class="free"></div>
-
-                        <div class="time">12:00</div>
-                        <div class="free"></div>
-                        <div class="free"></div>
-                        <div class="taken">Training</div>
-                    </div>
-                </div>
+                <figure class="shot shot--hero">
+                    <img class="shot__desktop" src="/screenshots/de/dashboard.webp" width="2560" height="1600" fetchpriority="high"
+                         alt="Die Startseite eines Mitglieds in Clubnetz: Begrüßung, das nächste Spiel, Statistik der Saison und kommende Buchungen" />
+                    <img class="shot__phone" src="/screenshots/de/phone-booking.webp" width="780" height="1688"
+                         alt="Der Buchungsplan am Handy mit den Buchungen aller Plätze eines Tages" />
+                </figure>
             </div>
         </div>
 
@@ -167,7 +152,108 @@
             </div>
         </div>
 
-        <section id="members">
+        <section id="tour">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">Ein Blick hinein</p>
+                    <h2>Das bekommt euer Verein</h2>
+                    <p>Echte Ansichten eines Vereins mit über 600 Mitgliedern. Nur die Namen sind erfunden.</p>
+                </div>
+
+                <div class="tour">
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <h3>Alle Plätze und Buchungen auf einen Blick</h3>
+                            <p>Der Buchungsplan zeigt alle Plätze eines Tages mit Spielarten, Prime Time, gesperrten Plätzen und den eigenen Spielen. Ein Tipp auf einen freien Platz bucht ihn, samt Mitspielern.</p>
+                            <ul class="checks">
+                                <li>Öffnungszeiten, Prime Time und Kontingente werden automatisch geprüft</li>
+                                <li>Serien, Platzsperren und Turniere im selben Plan</li>
+                                <li>Alle kommenden Vereinstermine im Kalender</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/de/booking.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Buchungsplan eines Tages mit sieben Plätzen und Einzel-, Doppel-, Training- und Turnierbuchungen" />
+                            <img class="shot__phone" src="/screenshots/de/phone-calendar.webp" width="780" height="1688" loading="lazy"
+                                 alt="Der Vereinskalender am Handy mit der Clubmeisterschaft und dem Saisonabschluss" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <p class="tour__new">Neu</p>
+                            <h3>Mitgliedsbeiträge ohne Excel-Liste</h3>
+                            <p>Der Verein trägt seine Tarife einmal pro Saison ein. Mitglieder wählen ihren Tarif, für sich oder die ganze Familie, und zahlen online. Der Kassier sieht auf einen Blick, wer bezahlt hat und wer nicht.</p>
+                            <ul class="checks">
+                                <li>Karte und SEPA-Lastschrift über das eigene Stripe-Konto des Vereins</li>
+                                <li>Ein bezahlter Beitrag schaltet die Mitglieder für die Saison frei</li>
+                                <li>Überweisung und Barzahlung von Hand eintragen, Export nach Excel</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/de/membership-fees.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Die Übersicht des Kassiers über die Mitgliedsbeiträge: eingegangene und offene Beträge und wer bezahlt hat" />
+                            <img class="shot__phone" src="/screenshots/de/phone-membership.webp" width="780" height="1688" loading="lazy"
+                                 alt="Ein Mitglied wählt am Handy seinen Tarif und bezahlt ihn online" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <h3>Termine, zu denen sich alle anmelden</h3>
+                            <p>Arbeitseinsätze, Feste, Turniere und Sitzungen mit Anmeldung, Personenzahl und den Fragen der Veranstalter. Neuigkeiten erreichen die Mitglieder per Push oder E-Mail.</p>
+                            <ul class="checks">
+                                <li>„Bratwurst oder Steak?“ gleich bei der Anmeldung beantworten</li>
+                                <li>Termine per Link oder WhatsApp teilen</li>
+                                <li>Angeheftete Neuigkeiten, Anhänge und Ablaufdatum</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/de/event.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Ein Termin mit Beschreibung, Anmeldung, einer Frage zum Essen und der Liste der Teilnehmer" />
+                            <img class="shot__phone" src="/screenshots/de/phone-news.webp" width="780" height="1688" loading="lazy"
+                                 alt="Vereinsneuigkeiten am Handy mit einer angehefteten Meldung" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <h3>Eine Saison zum Zurückblicken</h3>
+                            <p>Der Vorstand sieht, wie die Plätze genutzt werden, Stunde für Stunde und Platz für Platz. Mitglieder erspielen sich Abzeichen und sammeln sie in ihrer Trophäenvitrine.</p>
+                            <ul class="checks">
+                                <li>Auslastung, Anteil der Prime Time und die stärksten Tage</li>
+                                <li>Vergleich mit der Vorsaison zum selben Zeitpunkt</li>
+                                <li>Bestenlisten, Stufen-Abzeichen und Sonderauszeichnungen</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/de/statistics.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Vereinsstatistik der Saison: gespielte Stunden, Buchungen, aktive Spieler und Platzauslastung je Stunde" />
+                            <img class="shot__phone" src="/screenshots/de/phone-trophies.webp" width="780" height="1688" loading="lazy"
+                                 alt="Die Trophäenvitrine eines Mitglieds mit dem höchsten Abzeichen" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <h3>Eine Mitgliederliste, die aktuell bleibt</h3>
+                            <p>Mitglieder halten ihre Daten selbst aktuell. Der Vorstand filtert nach Saison, Altersgruppe und Rolle und kopiert E-Mail-Adressen für Aussendungen.</p>
+                            <ul class="checks">
+                                <li>Wer ist neu in dieser Saison und wer ist noch nicht zurück</li>
+                                <li>Familien, Rollen und Saisonanmeldung an einem Ort</li>
+                                <li>Andere Mitglieder sehen nur Name und Profilbild</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/de/members.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Die Mitgliederverwaltung mit Filtern für die Saison und der Liste der Mitglieder" />
+                        </figure>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="members" class="alt">
             <div class="wrap">
                 <div class="section-head">
                     <p class="eyebrow">Für Mitglieder</p>
@@ -184,6 +270,11 @@
                         <div class="card__icon" aria-hidden="true">🔁</div>
                         <h3>Serienbuchungen</h3>
                         <p>Denselben Termin jede Woche oder alle paar Wochen reservieren. Einzelne Termine oder alle folgenden lassen sich ändern und absagen.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">💳</div>
+                        <h3>Mitgliedschaft</h3>
+                        <p>Einen Tarif für sich oder die ganze Familie wählen und den Beitrag online mit Karte oder SEPA-Lastschrift bezahlen.</p>
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">👨‍👩‍👧</div>
@@ -205,11 +296,21 @@
                         <h3>Statistiken und Abzeichen</h3>
                         <p>Wer spielt am meisten und mit wem, Ranglisten und Abzeichen, die man sich über die Saison erspielt.</p>
                     </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🗓️</div>
+                        <h3>Abo-Planer</h3>
+                        <p>Plant einen fairen Spielplan für gemeinsame Winterabos und exportiert ihn nach Excel.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🔀</div>
+                        <h3>Mehrere Vereine, ein Konto</h3>
+                        <p>Mitglied in zwei Vereinen? Mit demselben Konto beiden beitreten und im Menü zwischen ihnen wechseln.</p>
+                    </li>
                 </ul>
             </div>
         </section>
 
-        <section id="board" class="alt">
+        <section id="board">
             <div class="wrap">
                 <div class="section-head">
                     <p class="eyebrow">Für den Vorstand</p>
@@ -221,6 +322,11 @@
                         <div class="card__icon" aria-hidden="true">👥</div>
                         <h3>Mitglieder und Saisonen</h3>
                         <p>Mitgliederliste, Rollen wie Sportwart, Kassier oder Trainer und die Anmeldung je Saison.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">💶</div>
+                        <h3>Mitgliedsbeiträge</h3>
+                        <p>Eigene Tarife je Saison: Erwachsene, Jugend nach Jahrgang, Paar, Familie, Studierende und mehr. Mitglieder zahlen online direkt auf das Konto des Vereins und werden automatisch freigeschaltet. Der Kassier sieht, wer bezahlt hat, trägt Überweisungen und Barzahlungen ein und exportiert die Liste.</p>
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">🏟️</div>
@@ -257,7 +363,7 @@
             </div>
         </section>
 
-        <section id="start">
+        <section id="start" class="alt">
             <div class="wrap">
                 <div class="section-head">
                     <p class="eyebrow">So geht es los</p>
@@ -281,7 +387,7 @@
             </div>
         </section>
 
-        <section id="open-source" class="alt">
+        <section id="open-source">
             <div class="wrap split">
                 <div>
                     <p class="eyebrow">Open Source</p>
@@ -302,7 +408,7 @@ docker build -t clubnetz .</code></pre>
             </div>
         </section>
 
-        <section id="api">
+        <section id="api" class="alt">
             <div class="wrap split">
                 <div>
                     <p class="eyebrow">Für Bastler</p>
@@ -326,7 +432,7 @@ curl -H "Authorization: Bearer cnz_..." \
             </div>
         </section>
 
-        <section id="faq" class="alt">
+        <section id="faq">
             <div class="wrap">
                 <div class="section-head">
                     <p class="eyebrow">Fragen</p>
@@ -351,7 +457,11 @@ curl -H "Authorization: Bearer cnz_..." \
                     </details>
                     <details>
                         <summary>Wie steht es um den Datenschutz?</summary>
-                        <p>Das gehostete Clubnetz läuft auf Servern in der EU. Mitglieder können ihre personenbezogenen Daten selbst exportieren, einen Verein verlassen und ihr Konto löschen.</p>
+                        <p>Das gehostete Clubnetz läuft auf Servern in der EU. Andere Mitglieder sehen nur Name und Profilbild. Mitglieder können ihre personenbezogenen Daten selbst exportieren, einen Verein verlassen und ihr Konto löschen.</p>
+                    </details>
+                    <details>
+                        <summary>Können Mitglieder den Mitgliedsbeitrag online bezahlen?</summary>
+                        <p>Ja, wenn der Verein das möchte. Der Verein trägt seine Tarife ein, Mitglieder wählen einen Tarif für sich oder ihre Familie und zahlen mit Karte oder SEPA-Lastschrift. Das Geld geht direkt auf das eigene Stripe-Konto des Vereins, und ein bezahlter Beitrag schaltet die Mitglieder für die Saison frei. Überweisungen und Barzahlungen trägt der Kassier ein.</p>
                     </details>
                     <details>
                         <summary>Gibt es eine API?</summary>
