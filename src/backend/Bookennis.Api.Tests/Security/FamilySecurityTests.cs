@@ -205,4 +205,37 @@ public class FamilySecurityTests(ApiSecurityFixture app)
 
         (await MembersOf(Foreign)).Should().Equal(before);
     }
+
+    [Fact]
+    public async Task Parent_CanOnlyBookForTheOwnChildren()
+    {
+        var before = await app.Fingerprint(app.ClubA);
+        var day = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(25).ToString("yyyy-MM-dd");
+        var bookings = $"/api/Clubs/{app.ClubA.Id}/Bookings";
+
+        string Single(int player) => $$"""
+            {"courtId":{{app.ClubA.CourtId}},"from":"{{day}}T10:00:00Z","to":"{{day}}T11:00:00Z","timeZoneInfoId":"UTC","playModeId":{{app.ClubA.PlayModeId}},"players":[{{player}}]}
+            """;
+        string Batch(int player) => $$"""
+            {"slots":[{"courtId":{{app.ClubA.CourtId}},"from":"{{day}}T12:00:00Z","to":"{{day}}T13:00:00Z"}],"timeZoneInfoId":"UTC","playModeId":{{app.ClubA.PlayModeId}},"players":[{{player}}],"comment":null,"dryRun":true}
+            """;
+
+        // Being the parent of a family gives no right to book for the child of another family or for another member
+        foreach (var player in new[] { Foreign.ChildMemberId, Foreign.ParentMemberId })
+        {
+            foreach (var (url, body) in new[] { ($"{bookings}/BookCourt", Single(player)), ($"{bookings}/Batch", Batch(player)) })
+            {
+                var response = await Send(HttpMethod.Post, url, app.MemberOfA, body);
+                response.Status.Should().Be(HttpStatusCode.PreconditionFailed, $"{url} for member {player}");
+                response.Body.Should().Contain("UserNotAllowedToBook");
+            }
+        }
+
+        // The own child passes the check (the dry run answers per slot)
+        var ownChild = await Send(HttpMethod.Post, $"{bookings}/Batch", app.MemberOfA, Batch(Own.ChildMemberId));
+        ownChild.Status.Should().Be(HttpStatusCode.OK);
+        ownChild.Body.Should().NotContain("UserNotAllowedToBook");
+
+        (await app.Fingerprint(app.ClubA)).Should().Be(before);
+    }
 }
