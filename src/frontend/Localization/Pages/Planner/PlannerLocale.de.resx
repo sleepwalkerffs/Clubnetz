@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Title" xml:space="preserve">
+    <value>Planer</value>
+  </data>
+  <data name="LargeScreenTitle" xml:space="preserve">
+    <value>Der Planer braucht einen größeren Bildschirm</value>
+  </data>
+  <data name="LargeScreenText" xml:space="preserve">
+    <value>Plane Buchungen über mehrere Tage am Computer. Auf diesem Gerät nutzt du die Buchungsseite.</value>
+  </data>
+  <data name="LargeScreenLink" xml:space="preserve">
+    <value>Zur Buchungsseite</value>
+  </data>
+  <data name="PreviousDays" xml:space="preserve">
+    <value>Vorherige Tage</value>
+  </data>
+  <data name="NextDays" xml:space="preserve">
+    <value>Nächste Tage</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Heute</value>
+  </data>
+  <data name="GoToDate" xml:space="preserve">
+    <value>Gehe zu Datum</value>
+  </data>
+  <data name="DaysOption" xml:space="preserve">
+    <value>{0} Tage</value>
+  </data>
+  <data name="Zoom" xml:space="preserve">
+    <value>Zoom</value>
+  </data>
+  <data name="ZoomIn" xml:space="preserve">
+    <value>Vergrößern</value>
+  </data>
+  <data name="ZoomOut" xml:space="preserve">
+    <value>Verkleinern</value>
+  </data>
+  <data name="Courts" xml:space="preserve">
+    <value>Plätze</value>
+  </data>
+  <data name="SelectionSummary" xml:space="preserve">
+    <value>{0} Bereiche ausgewählt · {1} Buchungen</value>
+  </data>
+  <data name="SelectionHint" xml:space="preserve">
+    <value>Ziehe über freie Zeit, um sie auszuwählen, halte Strg gedrückt, um mehrere Bereiche auszuwählen, Esc hebt die Auswahl auf. Ziehe eine Buchung, um sie zu verschieben, ziehe an ihren Rändern, um die Dauer zu ändern.</value>
+  </data>
+  <data name="MoveHint" xml:space="preserve">
+    <value>Ziehe eine Buchung, um sie zu verschieben, ziehe an ihren Rändern, um die Dauer zu ändern.</value>
+  </data>
+  <data name="SupportModeHint" xml:space="preserve">
+    <value>Im Support-Modus gibt es kein Mitglied, für das gebucht werden kann: Buchungen lassen sich verschieben, aber keine neuen anlegen.</value>
+  </data>
+  <data name="BookSelection" xml:space="preserve">
+    <value>Auswahl buchen</value>
+  </data>
+  <data name="ClearSelection" xml:space="preserve">
+    <value>Aufheben</value>
+  </data>
+  <data name="Saving" xml:space="preserve">
+    <value>Speichern…</value>
+  </data>
+  <data name="PrimeTime" xml:space="preserve">
+    <value>Prime Time</value>
+  </data>
+  <data name="CourtBlocking" xml:space="preserve">
+    <value>Platzsperre</value>
+  </data>
+  <data name="CourtClosed" xml:space="preserve">
+    <value>Platz gesperrt</value>
+  </data>
+  <data name="Overbooks" xml:space="preserve">
+    <value>überbucht</value>
+  </data>
+  <data name="OverbookHint" xml:space="preserve">
+    <value>Dieser Spielmodus ersetzt die Buchungen, auf die er gelegt wird.</value>
+  </data>
+  <data name="LockedHint" xml:space="preserve">
+    <value>Buchungen, die du nicht ändern darfst, öffnen ihre Details</value>
+  </data>
+  <data name="NoCourts" xml:space="preserve">
+    <value>Der Verein hat noch keine Plätze.</value>
+  </data>
+  <data name="ReasonPast" xml:space="preserve">
+    <value>In der Vergangenheit</value>
+  </data>
+  <data name="ReasonBlocked" xml:space="preserve">
+    <value>Platz gesperrt</value>
+  </data>
+  <data name="ReasonInactive" xml:space="preserve">
+    <value>Platz geschlossen</value>
+  </data>
+  <data name="ReasonConflict" xml:space="preserve">
+    <value>Überschneidet eine Buchung</value>
+  </data>
+  <data name="ReasonOverbook" xml:space="preserve">
+    <value>Ersetzt Buchungen</value>
+  </data>
+  <data name="ReasonOverlap" xml:space="preserve">
+    <value>Überschneidet die Auswahl</value>
+  </data>
+  <data name="CannotOverbook" xml:space="preserve">
+    <value>{0} kann nicht auf eine andere Buchung gelegt werden.</value>
+  </data>
+  <data name="OverbookTitle" xml:space="preserve">
+    <value>Buchungen ersetzen?</value>
+  </data>
+  <data name="OverbookText" xml:space="preserve">
+    <value>Der Spielmodus {0} ersetzt diese Buchungen auf {1}:</value>
+  </data>
+  <data name="OverbookNotify" xml:space="preserve">
+    <value>Sie werden gelöscht und ihre Spieler*innen werden benachrichtigt.</value>
+  </data>
+  <data name="OverbookConfirm" xml:space="preserve">
+    <value>Ersetzen</value>
+  </data>
+  <data name="BookingMoved" xml:space="preserve">
+    <value>Buchung geändert</value>
+  </data>
+  <data name="BookingMovedReplaced" xml:space="preserve">
+    <value>Buchung geändert, {0} Buchungen ersetzt</value>
+  </data>
+  <data name="PlayMode" xml:space="preserve">
+    <value>Spielmodus</value>
+  </data>
+  <data name="Comment" xml:space="preserve">
+    <value>Kommentar</value>
+  </data>
+  <data name="SlotsTitle" xml:space="preserve">
+    <value>{0} Buchungen</value>
+  </data>
+  <data name="Checking" xml:space="preserve">
+    <value>Wird geprüft…</value>
+  </data>
+  <data name="SlotsInvalid" xml:space="preserve">
+    <value>{0} von {1} können nicht gebucht werden</value>
+  </data>
+  <data name="SlotsAllValid" xml:space="preserve">
+    <value>Alle können gebucht werden</value>
+  </data>
+  <data name="CheckFailed" xml:space="preserve">
+    <value>Die Auswahl konnte nicht geprüft werden. Bitte versuche es noch einmal.</value>
+  </data>
+  <data name="FixedDurationMismatch" xml:space="preserve">
+    <value>{0} dauert immer {1}</value>
+  </data>
+  <data name="DurationMinutes" xml:space="preserve">
+    <value>{0} Min.</value>
+  </data>
+  <data name="DurationHours" xml:space="preserve">
+    <value>{0} Std.</value>
+  </data>
+  <data name="BookingsToRemoveTitle" xml:space="preserve">
+    <value>{0} Buchungen werden ersetzt</value>
+  </data>
+  <data name="CreateBookings" xml:space="preserve">
+    <value>{0} Buchungen anlegen</value>
+  </data>
+  <data name="BookingsCreated" xml:space="preserve">
+    <value>{0} Buchungen angelegt</value>
+  </data>
+  <data name="BookingChangedMeanwhile" xml:space="preserve">
+    <value>Die Buchung wurde in der Zwischenzeit geändert. Der Planer zeigt jetzt den aktuellen Stand.</value>
+  </data>
+</root>

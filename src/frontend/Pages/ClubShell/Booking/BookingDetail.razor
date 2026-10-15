@@ -347,7 +347,7 @@ else
                     editRecurringScope.Value,
                     RecurrenceIntervalWeeks: null,
                     EndDate: null,
-                    editComment);
+                    (editPlayMode ?? booking.PlayMode).CommentAllowed ? editComment : null);
 
                 var recurringResponse = await BookingStore.EditRecurringBooking(booking.BookingEntryId, recurringModel);
 
@@ -367,7 +367,7 @@ else
                     TimeZoneInfo.Local.Id,
                     editPlayMode?.Id ?? booking.PlayMode.Id,
                     players,
-                    editComment);
+                    (editPlayMode ?? booking.PlayMode).CommentAllowed ? editComment : null);
 
                 var response = await BookingStore.EditBooking(booking.BookingEntryId, model);
 

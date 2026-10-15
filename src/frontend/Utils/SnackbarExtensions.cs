@@ -23,10 +23,7 @@ public static class SnackbarExtensions
                 // 429 comes from the rate limiter (TooManyRequests)
                 if (response.StatusCode is HttpStatusCode.PreconditionFailed or HttpStatusCode.TooManyRequests && response.ErrorCodeResponse.ErrorCode is not null)
                 {
-                    if (response.ErrorCodeResponse.ErrorDetail is not null)
-                        errorToDisplay = locale[response.ErrorCodeResponse.ErrorCode, response.ErrorCodeResponse.ErrorDetail];
-                    else
-                        errorToDisplay = locale[response.ErrorCodeResponse.ErrorCode];
+                    errorToDisplay = locale.LocalizeErrorCode(response.ErrorCodeResponse.ErrorCode, response.ErrorCodeResponse.ErrorDetail);
                 }
                 else
                 {
@@ -38,4 +35,13 @@ public static class SnackbarExtensions
 
         snackbar.Add(errorToDisplay, Severity.Error);
     }
+
+    /// <summary>
+    /// The message of a backend error code (the key in <c>BackendErrorCodeLocale</c>) with its error details as format arguments,
+    /// e.g. for the per-slot errors of a batch booking.
+    /// </summary>
+    public static string LocalizeErrorCode(this IStringLocalizer locale, string errorCode, string[]? errorDetails)
+        => errorDetails is not null
+            ? locale[errorCode, errorDetails]
+            : locale[errorCode];
 }

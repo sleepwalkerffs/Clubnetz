@@ -108,6 +108,9 @@
     public required PlayerResult? FixedPlayer { get; set; }
     [Parameter]
     public List<PlayerResult> InitialPlayers { get; set; } = [];
+    /// <summary>Raised after the user added, removed or switched a player (e.g. to check the booking again).</summary>
+    [Parameter]
+    public EventCallback OnSelectionChanged { get; set; }
 
     [Inject]
     private IStringLocalizer<PlayerSelectionLocale> Locale { get; set; } = null!;
@@ -156,9 +159,13 @@
         }
     }
 
-    private void RemovePlayer(PlayerResult player) => selectedPlayers.Remove(player);
+    private async Task RemovePlayer(PlayerResult player)
+    {
+        selectedPlayers.Remove(player);
+        await OnSelectionChanged.InvokeAsync();
+    }
 
-    private void CycleFixedPlayer()
+    private async Task CycleFixedPlayer()
     {
         if (currentFixedPlayer is null || FixedPlayerAlternative.Count == 0)
             return;
@@ -166,6 +173,7 @@
         var index = FixedPlayerAlternative.FindIndex(p => p.MemberId == currentFixedPlayer.MemberId);
         currentFixedPlayer = FixedPlayerAlternative[(index + 1) % FixedPlayerAlternative.Count];
         selectedPlayers.RemoveAll(p => p.MemberId == currentFixedPlayer.MemberId);
+        await OnSelectionChanged.InvokeAsync();
     }
 
     private async Task OnValueChanged(PlayerResult? value)
@@ -177,6 +185,8 @@
 
         if (autocomplete is not null)
             await autocomplete.ClearAsync();
+
+        await OnSelectionChanged.InvokeAsync();
     }
 
     private Task<IEnumerable<PlayerResult>> Search(string searchValue, CancellationToken cancellationToken)

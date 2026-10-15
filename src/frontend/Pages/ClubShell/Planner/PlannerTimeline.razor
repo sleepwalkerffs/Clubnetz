@@ -1,0 +1,452 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Pages.Planner
+@using Bookennis.Client.Services
+@using Bookennis.Client.Utils
+@using Bookennis.Global.Intervals
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.CourtBlockings
+
+@implements IAsyncDisposable
+
+@*
+    Resource timeline: one row per court, the days side by side, each day split into 30 minute slots of its opening hours.
+    Everything inside .planner-lanes is positioned absolutely; planner-interop.js does the pointer work (move, resize, select)
+    and draws the ghost and the selected regions into .planner-overlay, which Blazor never renders into.
+*@
+<div class="planner-scroll" @ref="scroller"
+     style="--slot-width: @Px(SlotWidth); --row-height: @Px(RowHeight); --name-width: @Px(NameColumnWidth); --header-height: @Px(HeaderHeight)">
+    <div class="planner-canvas" style="width: @Px(NameColumnWidth + TotalWidth)">
+        <div class="planner-header">
+            <div class="planner-header__corner">@Locale["Courts"]</div>
+            @foreach (var day in days)
+            {
+                var date = day.Date;
+                <div class="planner-day @(date == Today ? "planner-day--today" : null) @(IsWeekend(date) ? "planner-day--weekend" : null)" style="width: @Px(day.Width)">
+                    <div class="planner-day__label">
+                        <span class="planner-day__weekday">@date.ToString("ddd", CultureInfo.CurrentCulture)</span>
+                        <span>@date.ToString(DayFormat, CultureInfo.CurrentCulture)</span>
+                    </div>
+                    <div class="planner-day__hours">
+                        @for (var slot = 0; slot < day.Slots; slot++)
+                        {
+                            // A label on every full hour (opening hours can start at half past)
+                            var time = day.Open.AddMinutes(slot * PlannerHelpers.SlotMinutes);
+                            <span class="planner-day__slot @(time.Minute == 0 ? "planner-day__slot--hour" : null)">@(time.Minute == 0 ? HourLabel(time.Hour) : null)</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="planner-body">
+            <div class="planner-names">
+                @foreach (var court in Courts)
+                {
+                    <div class="planner-name" title="@court.Name">
+                        <span class="planner-name__alias">@court.Alias</span>
+                        <span class="planner-name__full">@court.Name</span>
+                    </div>
+                }
+            </div>
+
+            <div class="planner-lanes @(CanSelect ? "planner-lanes--selectable" : null) @(Busy ? "planner-lanes--busy" : null)" @ref="lanes"
+                 style="width: @Px(TotalWidth); height: @Px(Courts.Count * RowHeight)">
+
+                @* Day separators and hour lines, per day because days can start at different times *@
+                @foreach (var day in days)
+                {
+                    <div class="planner-daycol" style="left: @Px(day.Left); width: @Px(day.Width); --hour-offset: @Px(day.Open.Minute == 0 ? 0 : SlotWidth)"></div>
+                }
+
+                @* Prime time per day *@
+                @foreach (var band in primeTimeBands)
+                {
+                    <div class="planner-prime" style="left: @Px(band.Left); width: @Px(band.Width)"></div>
+                }
+
+                @* Time that already passed *@
+                @if (pastWidth > 0)
+                {
+                    <div class="planner-past" style="width: @Px(pastWidth)"></div>
+                }
+
+                @* Closed courts and court blockings *@
+                @foreach (var shade in shades)
+                {
+                    <div class="@(shade.IsBlocking ? "planner-blocking" : "planner-inactive")"
+                         style="left: @Px(shade.Left); width: @Px(shade.Width); top: @Px(shade.Row * RowHeight)"
+                         title="@shade.Title">
+                        <span class="planner-shade__text">@(shade.IsBlocking ? "🔒 " : null)@shade.Title</span>
+                    </div>
+                }
+
+                @* Bookings *@
+                @foreach (var block in blocks)
+                {
+                    var booking = block.Booking;
+                    <div @key="booking.BookingEntryId"
+                         class="planner-block @(block.Editable ? "planner-block--editable" : "planner-block--locked") @(block.IsMine ? "planner-block--mine" : null) @(block.IsPast ? "planner-block--past" : null) @(block.Width < 56 ? "planner-block--narrow" : null)"
+                         style="left: @Px(block.Left); width: @Px(block.Width); top: @Px(block.Row * RowHeight); --mode-color: @BookingColors.ToHex(booking.PlayMode.Color)"
+                         data-booking-id="@booking.BookingEntryId"
+                         title="@block.Tooltip"
+                         role="button" tabindex="0" aria-label="@block.Tooltip">
+                        @if (block.Editable && block.Resizable)
+                        {
+                            <span class="planner-block__handle planner-block__handle--start" data-edge="start"></span>
+                        }
+                        <div class="planner-block__line">
+                            <span class="planner-block__time">@booking.Interval.From.ToString("HH:mm")–@booking.Interval.To.ToString("HH:mm")</span>
+                            <span class="planner-block__mode">@booking.PlayMode.Name</span>
+                            @if (booking.RecurringBookingSeriesId is not null)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Repeat" Class="planner-block__icon" />
+                            }
+                        </div>
+                        <div class="planner-block__players">@block.PlayerNames</div>
+                        @if (block.Editable && block.Resizable)
+                        {
+                            <span class="planner-block__handle planner-block__handle--end" data-edge="end"></span>
+                        }
+                    </div>
+                }
+
+                @* Current time *@
+                @if (nowLeft is { } nowX)
+                {
+                    <div class="planner-now" style="left: @Px(nowX)"></div>
+                }
+
+                <div class="planner-overlay"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public const int RowHeight = 48;
+    public const int NameColumnWidth = 148;
+    public const int HeaderHeight = 52;
+
+    /// <summary>First day shown.</summary>
+    [Parameter, EditorRequired] public DateOnly Start { get; set; }
+    /// <summary>Number of days shown.</summary>
+    [Parameter, EditorRequired] public int Days { get; set; }
+    /// <summary>The rows, already in display order.</summary>
+    [Parameter, EditorRequired] public List<CourtResult> Courts { get; set; } = [];
+    [Parameter, EditorRequired] public List<BookingResult> Bookings { get; set; } = [];
+    [Parameter, EditorRequired] public List<CourtBlockingOccurrenceDto> Blockings { get; set; } = [];
+    [Parameter, EditorRequired] public ClubInformationResult ClubInformation { get; set; } = null!;
+    /// <summary>Width of a 30 minute slot in pixels.</summary>
+    [Parameter, EditorRequired] public int SlotWidth { get; set; }
+    /// <summary>Changes whenever the page loaded new bookings, so the data for the pointer interaction is sent again.</summary>
+    [Parameter, EditorRequired] public int DataVersion { get; set; }
+    /// <summary>Elevated roles may place bookings in the past.</summary>
+    [Parameter] public bool AllowPast { get; set; }
+    /// <summary>Whether regions can be selected to create bookings.</summary>
+    [Parameter] public bool CanSelect { get; set; }
+    /// <summary>While a change is saved nothing can be dragged.</summary>
+    [Parameter] public bool Busy { get; set; }
+    [Parameter, EditorRequired] public Func<BookingResult, bool> CanEdit { get; set; } = null!;
+    [Parameter, EditorRequired] public Func<BookingResult, bool> IsMine { get; set; } = null!;
+    /// <summary>A booking was dropped at a new place; returns whether it was saved.</summary>
+    [Parameter, EditorRequired] public Func<PlannerMove, Task<bool>> OnMove { get; set; } = null!;
+    [Parameter] public EventCallback<int> OnOpenBooking { get; set; }
+    [Parameter] public EventCallback<List<PlannerRegion>> OnSelectionChanged { get; set; }
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<PlannerLocale> Locale { get; set; } = null!;
+
+    private sealed record Block(BookingResult Booking, int Row, int Day, double Left, double Width, bool Editable, bool Resizable, bool IsMine, bool IsPast, string Tooltip, string PlayerNames);
+
+    private sealed record Shade(int Row, double Left, double Width, string Title, bool IsBlocking);
+
+    private sealed record Band(double Left, double Width);
+
+    private ElementReference scroller;
+    private ElementReference lanes;
+    private IJSObjectReference? module;
+    private DotNetObjectReference<PlannerTimeline>? dotNetReference;
+    // Identifies this planner in planner-interop.js (the module is shared by all instances)
+    private int instanceId;
+    private Timer? clockTimer;
+
+    /// <summary>One day of the timeline: its opening hours (local, can differ per day because of daylight saving time) and where it is drawn.</summary>
+    private sealed record PlannerDay(DateOnly Date, DateTimeOffset Open, DateTimeOffset Close, int Slots, double Left)
+    {
+        public double Width { get; init; }
+    }
+
+    private List<PlannerDay> days = [];
+    private List<Block> blocks = [];
+    private List<Shade> shades = [];
+    private List<Band> primeTimeBands = [];
+    private double pastWidth;
+    private double? nowLeft;
+
+    // What the JS module last got, so it is only updated when something changed
+    private (int Version, DateOnly Start, int Days, int SlotWidth, bool Busy, bool CanSelect, long Minute)? sentState;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+    private double TotalWidth => days.Count == 0 ? 0 : days[^1].Left + days[^1].Width;
+    private string DayFormat => CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "de" ? "d. MMM" : "MMM d";
+
+    private static string Px(double value) => value.ToString("0.##", CultureInfo.InvariantCulture) + "px";
+
+    private static bool IsWeekend(DateOnly date) => date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+
+    // Narrow hours only show the hour, wider ones "08:00"
+    private string HourLabel(int hour) => SlotWidth * 2 >= 56 ? $"{hour % 24:00}:00" : $"{hour % 24:00}";
+
+    protected override void OnInitialized()
+    {
+        // Keeps the past overlay, the current time line and the "in the past" check up to date
+        clockTimer = new Timer(_ => InvokeAsync(() =>
+        {
+            Build();
+            StateHasChanged();
+        }), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+    }
+
+    protected override void OnParametersSet() => Build();
+
+    private void Build()
+    {
+        days = [];
+        var left = 0d;
+        for (var i = 0; i < Days; i++)
+        {
+            var date = Start.AddDays(i);
+            var (open, close) = PlannerHelpers.DailyWindow(date, ClubInformation.OpeningHours);
+            // Opening hours that don't end on a full slot still get the last (partial) slot
+            var slots = Math.Max((int)Math.Ceiling((close - open).TotalMinutes / PlannerHelpers.SlotMinutes), 1);
+            var day = new PlannerDay(date, open, close, slots, left) { Width = slots * SlotWidth };
+            days.Add(day);
+            left += day.Width;
+        }
+
+        BuildBlocks();
+        BuildShades();
+        BuildPrimeTime();
+        BuildNow();
+    }
+
+    private void BuildNow()
+    {
+        var now = DateTimeOffset.Now;
+        var past = 0d;
+        double? nowX = null;
+        for (var day = 0; day < Days; day++)
+        {
+            if (now >= days[day].Close)
+                past = days[day].Left + days[day].Width;
+            else if (now > days[day].Open)
+            {
+                past = X(day, now);
+                nowX = past;
+            }
+        }
+
+        pastWidth = past;
+        nowLeft = nowX;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                module = await JS.InvokeAsync<IJSObjectReference>("import", "/planner-interop.js");
+                dotNetReference = DotNetObjectReference.Create(this);
+                instanceId = await module.InvokeAsync<int>("init", lanes, scroller, dotNetReference);
+            }
+            catch (JSDisconnectedException)
+            {
+                return;
+            }
+        }
+
+        if (module is null)
+            return;
+
+        var minute = DateTimeOffset.Now.ToUnixTimeMilliseconds() / 60_000;
+        var state = (DataVersion, Start, Days, SlotWidth, Busy, CanSelect, minute);
+        if (sentState == state)
+            return;
+
+        sentState = state;
+        await module.InvokeVoidAsync("update", instanceId, BuildInteropData());
+    }
+
+    /// <summary>Removes the selected regions (e.g. after they were booked or the days changed).</summary>
+    public async Task ClearSelection()
+    {
+        if (module is not null)
+            await module.InvokeVoidAsync("clearSelection", instanceId);
+    }
+
+    private double X(int day, DateTimeOffset time) => days[day].Left + (time - days[day].Open).TotalMinutes / PlannerHelpers.SlotMinutes * SlotWidth;
+
+    /// <summary>The parts of a time span that lie within the opening hours of the days shown.</summary>
+    private IEnumerable<(int Day, DateTimeOffset From, DateTimeOffset To)> Segments(DateTimeOffset from, DateTimeOffset to)
+    {
+        for (var day = 0; day < Days; day++)
+        {
+            var start = from > days[day].Open ? from : days[day].Open;
+            var end = to < days[day].Close ? to : days[day].Close;
+            if (start < end)
+                yield return (day, start, end);
+        }
+    }
+
+    private void BuildBlocks()
+    {
+        var rows = Courts.Select((court, index) => (court.CourtId, index)).ToDictionary(c => c.CourtId, c => c.index);
+        var now = DateTimeOffset.Now;
+        blocks = [];
+        foreach (var booking in Bookings)
+        {
+            if (!rows.TryGetValue(booking.CourtId, out var row))
+                continue;
+
+            var segment = Segments(booking.Interval.From, booking.Interval.To).FirstOrDefault();
+            if (segment == default)
+                continue;
+
+            var left = X(segment.Day, segment.From);
+            var width = Math.Max(X(segment.Day, segment.To) - left, 4);
+            var names = string.Join(", ", booking.Players.Select(p => p.IsAtpPlayer ? $"{p.FirstName} {p.LastName} (ATP)" : $"{p.FirstName} {p.LastName}"));
+            var tooltip = $"{booking.Interval.From:HH:mm}–{booking.Interval.To:HH:mm} · {booking.PlayMode.Name}\n{names}";
+            blocks.Add(new Block(booking, row, segment.Day, left, width, CanEdit(booking), booking.PlayMode.FixedDuration is null,
+                IsMine(booking), booking.Interval.To <= now, tooltip, names));
+        }
+    }
+
+    private void BuildShades()
+    {
+        shades = [];
+        for (var row = 0; row < Courts.Count; row++)
+        {
+            var court = Courts[row];
+            if (court.Inactive is { } inactive)
+            {
+                foreach (var segment in Segments(inactive.From, inactive.To))
+                    shades.Add(new Shade(row, X(segment.Day, segment.From), X(segment.Day, segment.To) - X(segment.Day, segment.From), Locale["CourtClosed"], false));
+            }
+
+            foreach (var blocking in Blockings.Where(b => b.CourtIds.Contains(court.CourtId)))
+            {
+                foreach (var segment in Segments(blocking.Interval.From, blocking.Interval.To))
+                    shades.Add(new Shade(row, X(segment.Day, segment.From), X(segment.Day, segment.To) - X(segment.Day, segment.From), blocking.Title, true));
+            }
+        }
+    }
+
+    private void BuildPrimeTime()
+    {
+        primeTimeBands = [];
+        var primeTime = ClubInformation.PrimeTimeSettings;
+        if (!primeTime.IsEnabled)
+            return;
+
+        for (var day = 0; day < Days; day++)
+        {
+            var date = Start.AddDays(day);
+            if (!primeTime.ApplicableWeekdays.Contains(date.DayOfWeek))
+                continue;
+
+            var (from, to) = PlannerHelpers.DailyWindow(date, primeTime.PrimeTimeHours);
+            foreach (var segment in Segments(from, to))
+                primeTimeBands.Add(new Band(X(segment.Day, segment.From), X(segment.Day, segment.To) - X(segment.Day, segment.From)));
+        }
+    }
+
+    private object BuildInteropData()
+    {
+        var rows = Courts.Select((court, index) => (court.CourtId, index)).ToDictionary(c => c.CourtId, c => c.index);
+        static long Ms(DateTimeOffset value) => value.ToUnixTimeMilliseconds();
+
+        var courts = Courts.Select(court =>
+        {
+            var occupied = Bookings
+                .Where(b => b.CourtId == court.CourtId)
+                .Select(b => new { from = Ms(b.Interval.From), to = Ms(b.Interval.To), kind = "booking", bookingId = b.BookingEntryId })
+                .Concat(Blockings
+                    .Where(b => b.CourtIds.Contains(court.CourtId))
+                    .Select(b => new { from = Ms(b.Interval.From), to = Ms(b.Interval.To), kind = "blocked", bookingId = 0 }));
+            if (court.Inactive is { } inactive)
+                occupied = occupied.Append(new { from = Ms(inactive.From), to = Ms(inactive.To), kind = "inactive", bookingId = 0 });
+
+            return new { courtId = court.CourtId, occupied = occupied.ToList() };
+        }).ToList();
+
+        var bookings = blocks.Select(block => new
+        {
+            id = block.Booking.BookingEntryId,
+            court = block.Row,
+            day = block.Day,
+            from = Ms(block.Booking.Interval.From),
+            to = Ms(block.Booking.Interval.To),
+            canOverbook = block.Booking.PlayMode.CanOverbook,
+            resizable = block.Resizable,
+            draggable = block.Editable,
+        }).ToList();
+
+        return new
+        {
+            days = days.Select(day => new { open = Ms(day.Open), close = Ms(day.Close), slots = day.Slots, left = day.Left }).ToList(),
+            slotMinutes = PlannerHelpers.SlotMinutes,
+            slotWidth = SlotWidth,
+            rowHeight = RowHeight,
+            nameColumnWidth = NameColumnWidth,
+            headerHeight = HeaderHeight,
+            now = Ms(DateTimeOffset.Now),
+            allowPast = AllowPast,
+            canSelect = CanSelect,
+            busy = Busy,
+            texts = new
+            {
+                past = Locale["ReasonPast"].Value,
+                blocked = Locale["ReasonBlocked"].Value,
+                inactive = Locale["ReasonInactive"].Value,
+                conflict = Locale["ReasonConflict"].Value,
+                overbook = Locale["ReasonOverbook"].Value,
+                overlap = Locale["ReasonOverlap"].Value,
+            },
+            courts,
+            bookings,
+        };
+    }
+
+    [JSInvokable]
+    public Task<bool> OnBookingDropped(int bookingId, int courtId, long from, long to)
+        => OnMove(new PlannerMove(bookingId, courtId, from, to));
+
+    [JSInvokable]
+    public Task OnBookingClicked(int bookingId) => OnOpenBooking.InvokeAsync(bookingId);
+
+    [JSInvokable("OnSelectionChanged")]
+    public Task SelectionChanged(List<PlannerRegion> regions) => OnSelectionChanged.InvokeAsync(regions);
+
+    public async ValueTask DisposeAsync()
+    {
+        clockTimer?.Dispose();
+        if (module is not null)
+        {
+            try
+            {
+                await module.InvokeVoidAsync("dispose", instanceId);
+                await module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // The page is being left, the module is gone anyway
+            }
+        }
+
+        dotNetReference?.Dispose();
+    }
+}

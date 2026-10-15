@@ -9,6 +9,7 @@ public interface IBookingsHttpClient
     public Task<HttpResult<GetBookingsResult>> GetBookings(int clubId, DateOnly dayFrom, DateOnly dayTo, CancellationToken cancellationToken = default);
     public Task<HttpResult<GetUpcomingBookingsResult>> GetUpcomingBookings(int amount, CancellationToken cancellationToken = default);
     public Task<HttpResult<BookCourtResult>> BookCourt(BookCourtModel model, CancellationToken cancellationToken = default);
+    public Task<HttpResult<BookCourtsResult>> BookCourts(BookCourtsModel model, CancellationToken cancellationToken = default);
     public Task<HttpResult> EditBooking(int bookingId, EditBookingModel model, CancellationToken cancellationToken = default);
     public Task<HttpResult> DeleteBooking(int bookingId, CancellationToken cancellationToken = default);
     public Task<HttpResult<BookCourtResult>> BookRecurringCourt(BookRecurringCourtModel model, CancellationToken cancellationToken = default);

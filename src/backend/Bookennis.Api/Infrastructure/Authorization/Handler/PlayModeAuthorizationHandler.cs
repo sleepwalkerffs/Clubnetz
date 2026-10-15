@@ -20,7 +20,12 @@ public class PlayModeAuthorizationHandler(
             return;
         }
 
-        var clubId = (await modelService.GetClubIds(context)).Single();
+        // The tenant filter hides play modes of other clubs: an unknown play mode fails instead of throwing (500)
+        var clubIds = await modelService.GetClubIds(context);
+        if (clubIds.Length != 1)
+            return;
+
+        var clubId = clubIds[0];
         var (_, role) = await handlerService.GetMember(context.User.GetId(), clubId, context.User);
 
         if (role is null)
@@ -35,7 +40,9 @@ public class PlayModeAuthorizationHandler(
         var playModes = await handlerService.GetPlayModes(clubId);
         var playModeId = modelService.GetPlayModeId(context);
 
-        if (playModes.Single(playMode => playMode.Id == playModeId).AllowedRoles.Any(role.Contains))
+        // A play mode of another club (or one that does not exist) can't be booked: fail instead of throwing (500)
+        var playMode = playModes.SingleOrDefault(p => p.Id == playModeId);
+        if (playMode is not null && playMode.AllowedRoles.Any(role.Contains))
         {
             context.Succeed(requirement);
             return;

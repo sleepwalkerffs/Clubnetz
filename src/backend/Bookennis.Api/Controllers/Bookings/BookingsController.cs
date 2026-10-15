@@ -31,6 +31,29 @@ public class BookingsController(IMediator mediator, IAuthorizationService servic
                    cancellationToken);
     }
 
+    /// <summary>
+    /// Books several slots (court and time) at once with the same play mode and players, as the multi-day planner does.
+    /// Every slot follows the rules of a single booking; nothing is saved unless every slot is valid.
+    /// With <c>dryRun</c> nothing is saved and the result tells which slots would fail and which bookings an overbooking play mode would remove.
+    /// </summary>
+    [HttpPost("Batch")]
+    public async Task<BookCourtsResult> BookCourts([FromBody] BookCourtsModel model, CancellationToken cancellationToken)
+    {
+        await service.AuthorizeAsync(HttpContext.User, new PlayModeAuthorizationModel(model.PlayModeId), AuthorizationPolicies.CanBookPlayMode).EnsureSucceeded();
+        return await mediator.Send(
+            new BookCourts(
+                model.Slots,
+                model.TimeZoneInfoId,
+                model.PlayModeId,
+                model.Players,
+                model.Comment,
+                model.DryRun,
+                HttpContext.GetRequestTimeZoneOffset(),
+                HttpContext.User.GetId(),
+                model.ExpectedBookingIdsToRemove),
+            cancellationToken);
+    }
+
     [HttpGet]
     public Task<GetBookingsResult> GetBookings(DateOnly dayFrom, DateOnly dayTo, CancellationToken cancellationToken) => mediator.Send(new GetBookings(dayFrom, dayTo), cancellationToken);
 

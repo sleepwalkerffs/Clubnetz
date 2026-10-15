@@ -50,114 +50,26 @@ public record EditRecurringBooking(
             }
         }
 
+        /// <summary>
+        /// Moves or changes one occurrence: exactly the rules of <see cref="EditBooking"/> (shared <see cref="BookingEditRules"/> and
+        /// <see cref="BookingContextBuilder"/>), then the occurrence is excluded from later series edits.
+        /// </summary>
         private async Task HandleSingleEdit(EditRecurringBooking request, Booking booking, CancellationToken cancellationToken)
         {
-            var queryResult = await (
-                from club in context.Clubs
-                join court in context.Courts on club.Id equals court.ClubId
-                join playMode in context.PlayModes on club.Id equals playMode.ClubId
-                where court.Id == request.CourtId && playMode.Id == request.PlayModeId
-                select new { Club = club, Court = court, PlayMode = playMode }
-            ).AsNoTracking().SingleRequiredAsync(cancellationToken);
+            var hasElevatedRole = await BookingEditRules.EnsureMayEdit(context, booking, request.UserId, cancellationToken);
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var activeSeason = await context.Seasons
-                .Where(s => s.ClubId == queryResult.Club.Id && s.Period.From <= today && today <= s.Period.To)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+            var builder = await BookingContextBuilder.Load(
+                context,
+                request.PlayModeId,
+                [request.CourtId],
+                request.Players,
+                request.UserId,
+                [request.Interval],
+                cancellationToken,
+                editedBookingId: booking.Id);
 
-            var memberSeasonMemberIds = activeSeason is not null
-                ? await context.MemberSeasons
-                    .Where(ms => ms.SeasonId == activeSeason.Id && request.Players.Contains(ms.MemberId))
-                    .Select(ms => ms.MemberId)
-                    .ToListAsync(cancellationToken)
-                : [];
-
-            var participants = await (
-                from member in context.Set<Member>()
-                join user in context.Users on member.UserId equals user.Id
-
-                let isChild = user.Birthday.AddYears(queryResult.Club.PrimeTimeSettings.ChildAgeThreshold) > DateOnly.FromDateTime(DateTime.UtcNow)
-
-                let upcomingBookingsCount = (
-                    from bookingPlayer in context.BookingPlayers
-                    join pm in context.PlayModes on bookingPlayer.Booking.PlayModeId equals pm.Id
-                    where pm.IsChargingBookingSubscription && bookingPlayer.MemberId == member.Id && bookingPlayer.Booking.Interval.To > DateTimeOffset.UtcNow
-                    select bookingPlayer.Id
-                ).Count()
-
-                let activeBookingsCount = (
-                    from bookingPlayer in context.BookingPlayers
-                    join pm in context.PlayModes on bookingPlayer.Booking.PlayModeId equals pm.Id
-                    where pm.IsChargingBookingSubscription && bookingPlayer.MemberId == member.Id && bookingPlayer.Booking.Interval.Intersects(request.Interval)
-                        && bookingPlayer.BookingEntryId != booking.Id
-                    select bookingPlayer.Id
-                ).Count()
-
-                let bookingsOnThatDay = (
-                    from bookingPlayer in context.BookingPlayers
-                    join pm in context.PlayModes on bookingPlayer.Booking.PlayModeId equals pm.Id
-                    where pm.IsChargingBookingSubscription && bookingPlayer.MemberId == member.Id && bookingPlayer.Booking.Interval.To.Date == request.Interval.From.Date
-                        && bookingPlayer.BookingEntryId != booking.Id
-                    select bookingPlayer.Id
-                ).Count()
-
-                let playModeBookingsInSeasonCount = (
-                    from bookingPlayer in context.BookingPlayers
-                    where bookingPlayer.MemberId == member.Id && bookingPlayer.Booking.PlayModeId == request.PlayModeId
-                    join season in context.Seasons on queryResult.Club.Id equals season.ClubId
-                    let td = DateOnly.FromDateTime(DateTime.UtcNow)
-                    where season.Period.From <= td && td <= season.Period.To
-                    where DateOnly.FromDateTime(bookingPlayer.Booking.Interval.From.DateTime) >= season.Period.From
-                        && DateOnly.FromDateTime(bookingPlayer.Booking.Interval.To.DateTime) <= season.Period.To
-                    select bookingPlayer.Id
-                ).Count()
-
-                where request.Players.Contains(member.Id)
-                select new
-                {
-                    Member = member,
-                    user.FullName,
-                    IsChild = isChild,
-                    UpcomingBookingsCount = upcomingBookingsCount,
-                    ActiveBookingsCount = activeBookingsCount,
-                    BookingsOnThatDay = bookingsOnThatDay,
-                    PlayModeBookingsInSeasonCount = playModeBookingsInSeasonCount,
-                }
-            ).AsSingleQuery().AsNoTracking().ExpandProjectables().ToListAsync(cancellationToken);
-
-            var intersectingBookings = await context
-                .Bookings.Where(b => b.CourtId == request.CourtId && b.Interval.Intersects(request.Interval) && b.Id != booking.Id)
-                .AsNoTracking()
-                .ExpandProjectables()
-                .ToListAsync(cancellationToken);
-
-            var bookingContext = new BookingDomainService.Context
-            {
-                ClubId = queryResult.Club.Id,
-                Court = queryResult.Court,
-                OpeningHours = queryResult.Club.OpeningHours,
-                PrimeTimeSettings = queryResult.Club.PrimeTimeSettings,
-                BookingMemberRole = [MemberRole.User],
-                Participants = participants.ConvertAll(i => new BookingDomainService.Context.PlayerContext
-                {
-                    Member = i.Member,
-                    FullName = i.FullName,
-                    IsChild = i.IsChild,
-                    UpcomingBookingsCount = i.UpcomingBookingsCount,
-                    ActiveBookingsAtTimeOfReservation = i.ActiveBookingsCount,
-                    BookingsOnThatDay = i.BookingsOnThatDay,
-                    IsAllowedInCurrentSeason = memberSeasonMemberIds.Contains(i.Member.Id),
-                    IsAtpParticipant = false,
-                    PlayModeBookingsInSeasonCount = i.PlayModeBookingsInSeasonCount,
-                }),
-                IntersectingBookings = intersectingBookings,
-                PlayMode = queryResult.PlayMode,
-                ClientTimeZoneOffset = request.ClientTimeZoneOffset,
-                BookingGracePeriodInMinutes = queryResult.Club.BookingGracePeriodInMinutes,
-                ActiveSeasonId = activeSeason?.Id,
-                CourtBlockingTitles = await context.GetCourtBlockingTitles(request.CourtId, request.Interval, cancellationToken),
-            };
+            var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, request.ClientTimeZoneOffset, [], cancellationToken)
+                with { SkipPastBookingValidation = hasElevatedRole };
 
             bookingService.EditBooking(bookingContext, booking, request.Interval, request.TimeZoneInfoId, request.Comment);
             booking.ExcludeFromSeries();

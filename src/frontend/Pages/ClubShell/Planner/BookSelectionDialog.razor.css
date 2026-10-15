@@ -1,0 +1,110 @@
+.book-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.book-selection__mode {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+}
+
+.book-selection__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--mode-color);
+}
+
+.book-selection__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.book-selection__checking,
+.book-selection__summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+.book-selection__summary--ok {
+    color: var(--bk-dark-green, #047857);
+}
+
+.book-selection__summary--error {
+    color: var(--mud-palette-error);
+}
+
+.book-selection__slots {
+    max-height: 280px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+}
+
+.book-selection__slot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 7px 12px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.book-selection__slot:last-child {
+    border-bottom: none;
+}
+
+.book-selection__slot--error {
+    background: color-mix(in srgb, var(--mud-palette-error) 6%, transparent);
+}
+
+.book-selection__slot-text {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+}
+
+.book-selection__time {
+    font-variant-numeric: tabular-nums;
+}
+
+::deep .book-selection__pending {
+    opacity: 0.35;
+}
+
+.book-selection__error {
+    flex-basis: 100%;
+    padding-left: 30px;
+    font-size: 0.78rem;
+    color: var(--mud-palette-error);
+}
+
+.book-selection__remove-title {
+    font-weight: 700;
+}
+
+.book-selection__remove {
+    margin: 6px 0;
+    padding-left: 18px;
+    font-size: 0.85rem;
+}

@@ -152,6 +152,9 @@
             yield return new(Locale["Section_MembersAndFees"], membersAndFees);
 
             var courtsAndPlay = new List<NavItem>();
+            // The roles that may move any booking (see BookingDetail); the page itself needs a large screen
+            if (isAdmin || isSportsDirector || Has(MemberRole.YouthSportsDirector) || isMaintainer || Has(MemberRole.Trainer))
+                courtsAndPlay.Add(new($"{club}/planner", Icons.Material.Filled.ViewTimeline, Locale["Planner"]));
             if (isAdmin || isMaintainer || isSportsDirector)
                 courtsAndPlay.Add(new($"{club}/court-blockings", Icons.Material.Filled.Lock, Locale["CourtBlockings"]));
             if (isAdmin || isSportsDirector || Has(MemberRole.YouthSportsDirector))
