@@ -58,6 +58,17 @@ public class BookingStore(IBookingsHttpClient bookingsHttpClient) : SemaphoreSto
         return response;
     }
 
+    public async Task<HttpResult<BookCourtsResult>> BookCourts(BookCourtsModel model)
+    {
+        HttpResult<BookCourtsResult> response = null!;
+        await RunInSavingContextAsync(async cancellationToken =>
+        {
+            response = await bookingsHttpClient.BookCourts(model, cancellationToken);
+            return response;
+        }, model.DryRun ? $"{nameof(BookCourts)}DryRun" : nameof(BookCourts));
+        return response;
+    }
+
     public Task<HttpResult> DeleteBooking(int bookingId) => RunInSavingContextAsync(async cancellationToken =>
     {
         var result = await bookingsHttpClient.DeleteBooking(bookingId, cancellationToken);

@@ -636,4 +636,13 @@
   <data name="WrappedNotPublished" xml:space="preserve">
     <value>Dein Club hat den Rückblick auf diese Saison noch nicht freigegeben.</value>
   </data>
+  <data name="InvalidSlotCount" xml:space="preserve">
+    <value>Wähle zwischen 1 und {0} Zeitfenster aus, die auf einmal gebucht werden sollen.</value>
+  </data>
+  <data name="BookingSlotsOverlap" xml:space="preserve">
+    <value>Dieses Zeitfenster überschneidet sich auf demselben Platz mit dem ausgewählten Zeitfenster {0}.</value>
+  </data>
+  <data name="BookingsToRemoveChanged" xml:space="preserve">
+    <value>Die Buchungen auf den gewählten Plätzen haben sich inzwischen geändert. Bitte prüfe die Auswahl erneut.</value>
+  </data>
 </root>

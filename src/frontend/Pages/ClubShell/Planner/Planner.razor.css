@@ -1,0 +1,185 @@
+.planner-page {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.planner-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.planner-toolbar__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mud-palette-primary);
+}
+
+.planner-toolbar__title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.planner-toolbar__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.planner-toolbar__nav,
+.planner-toolbar__zoom {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+::deep .planner-toolbar__picker {
+    width: 150px;
+    margin-left: 8px;
+}
+
+/* Selection bar: hint while nothing is selected, the summary and actions otherwise */
+.planner-selection {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 6px 8px 6px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+    border: 1px dashed var(--mud-palette-lines-default);
+}
+
+.planner-selection--active {
+    color: var(--mud-palette-text-primary);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 45%, transparent);
+    background: color-mix(in srgb, var(--mud-palette-primary) 8%, var(--mud-palette-surface));
+}
+
+::deep .planner-selection__icon {
+    flex-shrink: 0;
+}
+
+.planner-selection--active ::deep .planner-selection__icon {
+    color: var(--mud-palette-primary);
+}
+
+.planner-selection__text {
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.planner-selection__saving {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--mud-palette-primary);
+}
+
+/* Legend */
+.planner-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 0.78rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.planner-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.planner-legend__item--hint {
+    margin-left: auto;
+}
+
+.planner-legend__swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+}
+
+.planner-legend__swatch--prime {
+    background: color-mix(in srgb, #F59E0B 30%, transparent);
+    border: 1px solid color-mix(in srgb, #F59E0B 60%, transparent);
+}
+
+.planner-legend__swatch--blocked {
+    background: repeating-linear-gradient(135deg,
+            color-mix(in srgb, #8B5CF6 45%, transparent) 0 3px,
+            color-mix(in srgb, #8B5CF6 15%, transparent) 3px 6px);
+    border: 1px solid color-mix(in srgb, #8B5CF6 60%, transparent);
+}
+
+.planner-legend__swatch--closed {
+    background: repeating-linear-gradient(135deg,
+            color-mix(in srgb, var(--mud-palette-error) 40%, transparent) 0 3px,
+            color-mix(in srgb, var(--mud-palette-error) 12%, transparent) 3px 6px);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 55%, transparent);
+}
+
+.planner-legend__tag {
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--bk-dark-amber, #B45309);
+    background: color-mix(in srgb, #F59E0B 16%, transparent);
+}
+
+.planner-grid {
+    position: relative;
+}
+
+::deep .planner-grid__loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    border-radius: 16px 16px 0 0;
+}
+
+/* Hint on small screens */
+.planner-small {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    max-width: 420px;
+    margin: 48px auto;
+    padding: 28px 20px;
+    border-radius: 20px;
+    text-align: center;
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.planner-small__emoji {
+    font-size: 2.6rem;
+    line-height: 1;
+}
+
+.planner-small__title {
+    margin: 4px 0 0;
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+.planner-small__text {
+    margin: 0 0 8px;
+    color: var(--mud-palette-text-secondary);
+}

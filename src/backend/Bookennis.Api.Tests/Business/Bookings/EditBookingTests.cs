@@ -161,6 +161,34 @@ public class EditBookingTests : TestBase
         capturedContext!.IntersectingBookings.Should().NotContain(b => b.Id == bookingId);
     }
 
+    [Fact]
+    public async Task EditBooking_TheMovedBookingIsLeftOutOfEveryCount()
+    {
+        var day = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(3);
+        var (bookingId, playModeId) = await QueryAsync(async ctx =>
+        {
+            var playModeId = ctx.TestData().Club.PlayModes[0].Id;
+            var booking = new Booking(TestDataSeed.ClubId, TestDataSeed.Court1Id, playModeId, Business.CourtBlockings.CourtBlockingSeed.At(day, 10, 12), TimeZoneInfo.Utc.Id, [TestDataSeed.Member1Id]);
+            ctx.Add(booking);
+            await ctx.SaveChangesAsync();
+            return (booking.Id, playModeId);
+        });
+
+        BookingDomainService.Context? capturedContext = null;
+        bookingService.When(x => x.EditBooking(Arg.Any<BookingDomainService.Context>(), Arg.Any<Booking>(), Arg.Any<DateTimeOffsetInterval>(), Arg.Any<string>(), Arg.Any<string?>()))
+            .Do(x => capturedContext = x.Arg<BookingDomainService.Context>());
+
+        await SendAsync(new EditBooking(bookingId, TestDataSeed.Court2Id, Business.CourtBlockings.CourtBlockingSeed.At(day, 11, 12), TimeZoneInfo.Utc.Id, playModeId,
+            [TestDataSeed.Member1Id], Comment: null, ClientTimeZoneOffset: null, TestDataSeed.UserId));
+
+        var player = capturedContext!.Participants.Single();
+        player.UpcomingBookingsCount.Should().Be(0);
+        player.ActiveBookingsAtTimeOfReservation.Should().Be(0);
+        player.BookingsOnThatDay.Should().Be(0);
+        player.PlayModeBookingsInSeasonCount.Should().Be(0);
+        capturedContext.SkipPastBookingValidation.Should().BeFalse();
+    }
+
     private void SetupBookingService(int bookingId, int courtId, int playModeId, DateTimeOffsetInterval interval)
     {
         bookingService.EditBooking(

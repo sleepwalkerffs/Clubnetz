@@ -29,6 +29,9 @@ public class BookingsHttpClient(HttpClient httpClient, JsonSerializerOptions jso
         return await (await httpClient.GetAsync(QueryHelpers.AddQueryString(httpClient.BaseAddress!.AbsoluteUri, query!), cancellationToken)).AsHttpResult<GetBookingsResult>(jsonOptions, cancellationToken);
     }
 
+    public async Task<HttpResult<BookCourtsResult>> BookCourts(BookCourtsModel model, CancellationToken cancellationToken)
+        => await (await httpClient.PostAsJsonAsync("Batch", model, jsonOptions, cancellationToken)).AsHttpResult<BookCourtsResult>(jsonOptions, cancellationToken);
+
     public async Task<HttpResult> DeleteBooking(int bookingId, CancellationToken cancellationToken)
         => await (await httpClient.DeleteAsync($"{bookingId}", cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
 

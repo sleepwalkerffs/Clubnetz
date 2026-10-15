@@ -1,0 +1,333 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Booking
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Planner
+@using Bookennis.Client.Services.Store.Bookings
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Booking
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Club
+
+@implements IDisposable
+
+@*
+    Books all selected slots with one play mode, the same players and comment.
+    Every change of the inputs is checked by the server (dry run), so the user sees per slot whether it can be booked
+    and which bookings an overbooking play mode would replace before anything is saved.
+*@
+<BaseDialog SubmitFunc="Submit" Title="@Locale["BookSelection"]" SubmitCaption="@SubmitCaption" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@CanSubmit" Loading="@submitting">
+    <div class="book-selection">
+        @if (PlayModes.Count > 1)
+        {
+            <ChoiceChips TItem="PlayModeDto" Label="@Locale["PlayMode"]" Items="@PlayModes" Value="@selectedPlayMode"
+                         ValueChanged="OnPlayModeChanged" TextFunc="@(playMode => playMode.Name)"
+                         ColorFunc="@(playMode => BookingColors.ToHex(playMode.Color))" />
+        }
+        else
+        {
+            <div class="book-selection__mode" style="--mode-color: @BookingColors.ToHex(selectedPlayMode.Color)">
+                <span class="book-selection__dot"></span>@selectedPlayMode.Name
+            </div>
+        }
+
+        @if (ShowPlayerSelection)
+        {
+            <PlayerSelection @ref="playerSelection" AvailablePlayers="@Players" MaxPlayers="@selectedPlayMode.FixedPlayerCount"
+                             FixedPlayer="@FixedPlayer" FixedPlayerAlternative="@FixedPlayerAlternatives" OnSelectionChanged="ScheduleCheck" />
+        }
+
+        @if (selectedPlayMode.CommentAllowed)
+        {
+            <MudTextField T="string" Value="@comment" ValueChanged="OnCommentChanged" Variant="Variant.Outlined" Label="@Locale["Comment"]"
+                          Lines="2" AutoGrow="true" Immediate="true"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ChatBubbleOutline" />
+        }
+
+        <div>
+            <div class="book-selection__heading">
+                <span>@string.Format(Locale["SlotsTitle"], Slots.Count)</span>
+                @if (checking)
+                {
+                    <span class="book-selection__checking"><MudProgressCircular Size="Size.Small" Indeterminate="true" /> @Locale["Checking"]</span>
+                }
+                else if (InvalidCount > 0)
+                {
+                    <span class="book-selection__summary book-selection__summary--error">@string.Format(Locale["SlotsInvalid"], InvalidCount, Slots.Count)</span>
+                }
+                else if (checkResult is not null)
+                {
+                    <span class="book-selection__summary book-selection__summary--ok">@Locale["SlotsAllValid"]</span>
+                }
+            </div>
+
+            <ul class="book-selection__slots">
+                @for (var i = 0; i < Slots.Count; i++)
+                {
+                    var slot = Slots[i];
+                    var error = SlotError(i);
+                    <li class="book-selection__slot @(error is not null ? "book-selection__slot--error" : null)">
+                        @if (error is not null)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" Color="Color.Error" />
+                        }
+                        else if (checkResult is not null && !checking)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Outlined.Circle" Size="Size.Small" Class="book-selection__pending" />
+                        }
+                        <span class="book-selection__slot-text">
+                            <strong>@slot.CourtName</strong>
+                            <span>@slot.From.ToString("ddd d.M.", CultureInfo.CurrentCulture)</span>
+                            <span class="book-selection__time">@slot.From.ToString("HH:mm")–@slot.To.ToString("HH:mm")</span>
+                        </span>
+                        @if (error is not null)
+                        {
+                            <span class="book-selection__error">@error</span>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+
+        @if (checkError is not null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">@checkError</MudAlert>
+        }
+
+        @if (checkResult is { BookingsToRemove.Count: > 0 } result)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+                <div class="book-selection__remove-title">@string.Format(Locale["BookingsToRemoveTitle"], result.BookingsToRemove.Count)</div>
+                <ul class="book-selection__remove">
+                    @foreach (var booking in result.BookingsToRemove.OrderBy(b => b.Interval.From))
+                    {
+                        var from = booking.Interval.From.ToLocalTime();
+                        var to = booking.Interval.To.ToLocalTime();
+                        <li>
+                            <strong>@booking.PlayModeName</strong> · @CourtName(booking.CourtId) · @from.ToString("ddd d.M.", CultureInfo.CurrentCulture) @from.ToString("HH:mm")–@to.ToString("HH:mm")
+                            @if (booking.PlayerNames.Count > 0)
+                            {
+                                <span> · @string.Join(", ", booking.PlayerNames)</span>
+                            }
+                        </li>
+                    }
+                </ul>
+                <div>@Locale["OverbookNotify"]</div>
+            </MudAlert>
+        }
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter, EditorRequired] public List<PlannerSlot> Slots { get; set; } = [];
+    [Parameter, EditorRequired] public List<PlayModeDto> PlayModes { get; set; } = [];
+    /// <summary>The players that can be added (club members without guests, like the booking dialog).</summary>
+    [Parameter, EditorRequired] public List<PlayerResult> Players { get; set; } = [];
+    [Parameter, EditorRequired] public List<PlayerResult> MemberChildren { get; set; } = [];
+    [Parameter, EditorRequired] public List<CourtResult> Courts { get; set; } = [];
+    [Parameter, EditorRequired] public int MemberId { get; set; }
+
+    [Inject]
+    private IBookingStore BookingStore { get; set; } = null!;
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<PlannerLocale> Locale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private PlayModeDto selectedPlayMode = null!;
+    private PlayerSelection? playerSelection;
+    private string? comment;
+    private BookCourtsResult? checkResult;
+    private bool checking;
+    /// <summary>Why the whole selection could not be checked (an error response instead of per-slot results).</summary>
+    private string? checkError;
+    private bool submitting;
+    private int checkVersion;
+    private CancellationTokenSource? debounce;
+
+    // Same as the booking dialog: the booker is fixed and can be switched to a child
+    private PlayerResult? FixedPlayer => Players.SingleOrDefault(player => player.MemberId == MemberId);
+    private List<PlayerResult> FixedPlayerAlternatives => FixedPlayer is null ? [] : [.. MemberChildren, FixedPlayer];
+
+    private bool ShowPlayerSelection => selectedPlayMode.FixedPlayerCount.HasValue;
+
+    private List<int> SelectedPlayers => ShowPlayerSelection && playerSelection is not null
+        ? playerSelection.SelectedPlayers.ConvertAll(player => player.MemberId)
+        : [MemberId];
+
+    private int InvalidCount => Enumerable.Range(0, Slots.Count).Count(i => SlotError(i) is not null);
+
+    private bool CanSubmit => !submitting && !checking && checkResult is not null && checkError is null && InvalidCount == 0 && Slots.Count > 0;
+
+    private string SubmitCaption => string.Format(Locale["CreateBookings"], Slots.Count);
+
+    protected override void OnInitialized()
+    {
+        selectedPlayMode = PlayModes.First();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // After the first render, so the player selection (and its default player) exists
+        if (firstRender)
+            await Check();
+    }
+
+    private string CourtName(int courtId) => Courts.FirstOrDefault(c => c.CourtId == courtId)?.Name ?? string.Empty;
+
+    /// <summary>The reason a slot can't be booked: a fixed duration that doesn't fit (checked here) or the error of the server.</summary>
+    private string? SlotError(int index)
+    {
+        var slot = Slots[index];
+        if (selectedPlayMode.FixedDuration is { } fixedDuration && slot.To - slot.From != fixedDuration)
+            return string.Format(Locale["FixedDurationMismatch"], selectedPlayMode.Name, FormatDuration(fixedDuration));
+
+        var check = checkResult?.Slots.FirstOrDefault(s => s.Index == index);
+        return check?.ErrorCode is { } errorCode ? BackendLocale.LocalizeErrorCode(errorCode, check.ErrorDetails) : null;
+    }
+
+    private string FormatDuration(TimeSpan duration)
+        => duration.TotalMinutes < 60
+            ? string.Format(Locale["DurationMinutes"], (int)duration.TotalMinutes)
+            : string.Format(Locale["DurationHours"], duration.TotalHours.ToString("0.#", CultureInfo.CurrentCulture));
+
+    private async Task OnPlayModeChanged(PlayModeDto playMode)
+    {
+        selectedPlayMode = playMode;
+        playerSelection?.ClearSelection();
+        if (!playMode.CommentAllowed)
+            comment = null;
+        InvalidateCheck();
+
+        // The player selection appears or disappears with the play mode, check after it rendered
+        await Task.Yield();
+        await ScheduleCheck();
+    }
+
+    private async Task OnCommentChanged(string? value)
+    {
+        comment = value;
+        await ScheduleCheck();
+    }
+
+    /// <summary>Checks again shortly after the last change, so typing or picking several players sends one request.</summary>
+    private async Task ScheduleCheck()
+    {
+        debounce?.Cancel();
+        debounce?.Dispose();
+        debounce = new CancellationTokenSource();
+        var token = debounce.Token;
+        InvalidateCheck();
+        try
+        {
+            await Task.Delay(300, token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        await Check();
+    }
+
+    /// <summary>An input changed: the last result no longer applies and submitting waits for the next check.</summary>
+    private void InvalidateCheck()
+    {
+        checkVersion++;
+        checking = true;
+        checkResult = null;
+        checkError = null;
+    }
+
+    private BookCourtsModel CreateModel(bool dryRun, List<int>? expectedBookingIdsToRemove = null) => new(
+        Slots.ConvertAll(slot => new BookingSlotModel(slot.CourtId, slot.From, slot.To)),
+        TimeZoneInfo.Local.Id,
+        selectedPlayMode.Id,
+        SelectedPlayers,
+        // The server refuses a comment for a play mode that doesn't allow one
+        selectedPlayMode.CommentAllowed ? comment : null,
+        dryRun,
+        expectedBookingIdsToRemove);
+
+    private async Task Check()
+    {
+        var version = ++checkVersion;
+        checking = true;
+        checkError = null;
+        StateHasChanged();
+        try
+        {
+            var response = await BookingStore.BookCourts(CreateModel(dryRun: true));
+            if (version != checkVersion)
+                return;
+
+            checkResult = response is { Success: true, Dto: not null } ? response.Dto : null;
+            if (checkResult is null)
+            {
+                checkError = response.ErrorCodeResponse?.ErrorCode is { } errorCode
+                    ? BackendLocale.LocalizeErrorCode(errorCode, response.ErrorCodeResponse.ErrorDetail)
+                    : Locale["CheckFailed"];
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer check replaced this one
+            return;
+        }
+        catch (Exception)
+        {
+            if (version != checkVersion)
+                return;
+            // E.g. no connection: submitting stays disabled until a check succeeds
+            checkResult = null;
+            checkError = Locale["CheckFailed"];
+        }
+
+        checking = false;
+        StateHasChanged();
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        submitting = true;
+        try
+        {
+            // The server rejects the save (BookingsToRemoveChanged) when an overbooking mode would now replace other bookings than the user saw
+            var expectedToRemove = checkResult?.BookingsToRemove.ConvertAll(b => b.BookingEntryId) ?? [];
+            var response = await BookingStore.BookCourts(CreateModel(dryRun: false, expectedToRemove));
+            if (!response.Success)
+            {
+                Snackbar.ShowErrorDetails(response, BackendLocale);
+                // Something changed in the meantime (e.g. somebody else booked or BookingsToRemoveChanged): check again and show it per slot
+                InvalidateCheck();
+                await Check();
+                return null;
+            }
+
+            Snackbar.Add(string.Format(Locale["BookingsCreated"], response.Dto?.CreatedBookingIds.Count ?? Slots.Count), Severity.Success);
+            return DialogResult.Ok(response.Dto);
+        }
+        finally
+        {
+            submitting = false;
+        }
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+
+    public void Dispose()
+    {
+        debounce?.Cancel();
+        debounce?.Dispose();
+    }
+}

@@ -1,0 +1,549 @@
+@page "/clubs/{ClubId:int}/planner"
+@using System.Globalization
+@using System.Net
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Planner
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.Store.Bookings
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.CourtBlockings
+@using Bookennis.Client.Services.Store.Family
+@using Bookennis.Client.Services.Store.Members
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Booking
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.CourtBlockings
+
+@implements IAsyncDisposable
+
+<PageTitle>@Locale["Title"]</PageTitle>
+
+@* The planner is made for a mouse and a wide screen; phones get a hint and the normal booking page *@
+<MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+    <div class="planner-small">
+        <div class="planner-small__emoji" aria-hidden="true">🖥️</div>
+        <h2 class="planner-small__title">@Locale["LargeScreenTitle"]</h2>
+        <p class="planner-small__text">@Locale["LargeScreenText"]</p>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SportsTennis" Href="@BookingPageUrl">
+            @Locale["LargeScreenLink"]
+        </MudButton>
+    </div>
+</MudHidden>
+
+<MudHidden Breakpoint="Breakpoint.SmAndDown">
+    @if (!loaded)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+    else
+    {
+        <div class="planner-page">
+            <div class="planner-toolbar">
+                <div class="planner-toolbar__range">
+                    <div class="planner-toolbar__eyebrow">@Locale["Title"]</div>
+                    <div class="planner-toolbar__title">@RangeLabel</div>
+                </div>
+
+                <div class="planner-toolbar__controls">
+                    <div class="planner-toolbar__nav">
+                        <MudTooltip Text="@Locale["PreviousDays"]">
+                            <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small" OnClick="@(() => GoTo(Start.AddDays(-Days)))"
+                                           aria-label="@Locale["PreviousDays"]" Disabled="@saving" />
+                        </MudTooltip>
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary" OnClick="@(() => GoTo(Today))"
+                                   Disabled="@(saving || Start == Today)">
+                            @Locale["Today"]
+                        </MudButton>
+                        <MudTooltip Text="@Locale["NextDays"]">
+                            <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" OnClick="@(() => GoTo(Start.AddDays(Days)))"
+                                           aria-label="@Locale["NextDays"]" Disabled="@saving" />
+                        </MudTooltip>
+                        <MudDatePicker Date="@Start.ToDateTime(TimeOnly.MinValue)" DateChanged="OnDatePicked" Disabled="@saving"
+                                       PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                       Label="@Locale["GoToDate"]" DateFormat="dd.MM.yy" Class="planner-toolbar__picker" />
+                    </div>
+
+                    <ChoiceChips TItem="int" Items="@PlannerHelpers.DayOptions" Value="@Days" ValueChanged="OnDaysChanged"
+                                 TextFunc="@(days => string.Format(Locale["DaysOption"], days))" Disabled="@saving" />
+
+                    <div class="planner-toolbar__zoom" role="group" aria-label="@Locale["Zoom"]">
+                        <MudTooltip Text="@Locale["ZoomOut"]">
+                            <MudIconButton Icon="@Icons.Material.Filled.ZoomOut" Size="Size.Small" OnClick="@(() => Zoom(-1))"
+                                           Disabled="@(ZoomIndex == 0)" aria-label="@Locale["ZoomOut"]" />
+                        </MudTooltip>
+                        <MudTooltip Text="@Locale["ZoomIn"]">
+                            <MudIconButton Icon="@Icons.Material.Filled.ZoomIn" Size="Size.Small" OnClick="@(() => Zoom(1))"
+                                           Disabled="@(ZoomIndex == PlannerHelpers.SlotWidths.Length - 1)" aria-label="@Locale["ZoomIn"]" />
+                        </MudTooltip>
+                    </div>
+                </div>
+            </div>
+
+            <div class="planner-selection @(regions.Count > 0 ? "planner-selection--active" : null)" aria-live="polite">
+                <MudIcon Icon="@(regions.Count > 0 ? Icons.Material.Filled.SelectAll : Icons.Material.Outlined.Info)" Size="Size.Small" Class="planner-selection__icon" />
+                <div class="planner-selection__text">
+                    @if (regions.Count > 0)
+                    {
+                        <strong>@string.Format(Locale["SelectionSummary"], regions.Count, SelectedSlots.Count)</strong>
+                    }
+                    else if (ClubProfileStore.IsSupportMode)
+                    {
+                        @Locale["SupportModeHint"]
+                    }
+                    else if (!CanSelect)
+                    {
+                        @Locale["MoveHint"]
+                    }
+                    else
+                    {
+                        @Locale["SelectionHint"]
+                    }
+                </div>
+                @if (saving)
+                {
+                    <span class="planner-selection__saving"><MudProgressCircular Size="Size.Small" Indeterminate="true" /> @Locale["Saving"]</span>
+                }
+                @if (regions.Count > 0)
+                {
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Default" OnClick="ClearSelection" Disabled="@saving">
+                        @Locale["ClearSelection"]
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.EventAvailable"
+                               OnClick="OpenBookSelection" Disabled="@(saving || !CanSelect)">
+                        @Locale["BookSelection"]
+                    </MudButton>
+                }
+            </div>
+
+            <div class="planner-legend">
+                @foreach (var playMode in Bookings.Select(b => b.PlayMode).DistinctBy(p => p.Id).OrderBy(p => p.Name))
+                {
+                    <span class="planner-legend__item">
+                        <span class="planner-legend__swatch" style="background: @BookingColors.ToHex(playMode.Color)"></span>@playMode.Name
+                        @if (playMode.CanOverbook)
+                        {
+                            <span class="planner-legend__tag" title="@Locale["OverbookHint"]">@Locale["Overbooks"]</span>
+                        }
+                    </span>
+                }
+                @if (ClubStore.ClubDetails.PrimeTimeSettings.IsEnabled)
+                {
+                    <span class="planner-legend__item"><span class="planner-legend__swatch planner-legend__swatch--prime"></span>@Locale["PrimeTime"]</span>
+                }
+                @if (Blockings.Count > 0)
+                {
+                    <span class="planner-legend__item"><span class="planner-legend__swatch planner-legend__swatch--blocked"></span>@Locale["CourtBlocking"]</span>
+                }
+                @if (Courts.Any(c => c.Inactive is not null))
+                {
+                    <span class="planner-legend__item"><span class="planner-legend__swatch planner-legend__swatch--closed"></span>@Locale["CourtClosed"]</span>
+                }
+                <span class="planner-legend__item planner-legend__item--hint">
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" /> @Locale["LockedHint"]
+                </span>
+            </div>
+
+            <div class="planner-grid">
+                @if (BookingStore.IsLoading || saving)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="planner-grid__loading" />
+                }
+                @if (Courts.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">@Locale["NoCourts"]</MudAlert>
+                }
+                else
+                {
+                    <PlannerTimeline @ref="timeline"
+                                     Start="@Start"
+                                     Days="@Days"
+                                     Courts="@Courts"
+                                     Bookings="@Bookings"
+                                     Blockings="@Blockings"
+                                     ClubInformation="@ClubStore.ClubDetails"
+                                     SlotWidth="@SlotWidth"
+                                     DataVersion="@dataVersion"
+                                     AllowPast="@HasElevatedRole"
+                                     CanSelect="@CanSelect"
+                                     Busy="@saving"
+                                     CanEdit="@CanEdit"
+                                     IsMine="@IsOwnBooking"
+                                     OnMove="@OnMove"
+                                     OnOpenBooking="@OpenBooking"
+                                     OnSelectionChanged="@OnSelectionChanged" />
+                }
+            </div>
+        </div>
+    }
+</MudHidden>
+
+@code {
+    [Parameter]
+    public int ClubId { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "Start")]
+    public DateOnly? StartQuery { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "Days")]
+    public int? DaysQuery { get; set; }
+
+    [Inject]
+    private IBookingStore BookingStore { get; set; } = null!;
+    [Inject]
+    private ICourtBlockingsStore CourtBlockingsStore { get; set; } = null!;
+    [Inject]
+    private IClubStore ClubStore { get; set; } = null!;
+    [Inject]
+    private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject]
+    private IMembersStore MembersStore { get; set; } = null!;
+    [Inject]
+    private IFamilyStore FamilyStore { get; set; } = null!;
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavManager { get; set; } = null!;
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<PlannerLocale> Locale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private DateOnly Start { get; set; }
+    private int Days { get; set; } = PlannerHelpers.DefaultDays;
+    private int SlotWidth { get; set; } = PlannerHelpers.DefaultSlotWidth;
+
+    private List<CourtResult> Courts { get; set; } = [];
+    private List<BookingResult> Bookings { get; set; } = [];
+    private List<CourtBlockingOccurrenceDto> Blockings { get; set; } = [];
+    private List<PlayerResult> MemberChildren { get; set; } = [];
+    private List<PlayModeDto> AllowedPlayModes { get; set; } = [];
+    private List<PlannerRegion> regions = [];
+    private PlannerTimeline? timeline;
+    private IJSObjectReference? module;
+    private bool loaded;
+    private bool saving;
+    private int dataVersion;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    private DateOnly End => Start.AddDays(Days - 1);
+
+    private int MemberId => ClubProfileStore.MemberId;
+
+    private bool HasElevatedRole => ClubProfileStore.IsSupportMode || PlannerHelpers.HasElevatedRole(ClubProfileStore.Roles);
+
+    /// <summary>Creating needs a member to book for, so support mode can only move bookings.</summary>
+    private bool CanSelect => !ClubProfileStore.IsSupportMode && MemberId > 0 && AllowedPlayModes.Count > 0;
+
+    private int ZoomIndex => Math.Max(Array.IndexOf(PlannerHelpers.SlotWidths, SlotWidth), 0);
+
+    private string BookingPageUrl
+        => $"/clubs/{ClubId}/booking?Start={Today.ToString(CultureInfo.InvariantCulture)}&End={Today.AddDays(6).ToString(CultureInfo.InvariantCulture)}";
+
+    private string RangeLabel
+    {
+        get
+        {
+            // "M" is the month and day pattern of the culture ("October 15" / "15. Oktober")
+            var culture = CultureInfo.CurrentCulture;
+            var end = End;
+            return Start.Year == end.Year
+                ? $"{Start.ToString("M", culture)} – {end.ToString("M", culture)} {end.Year}"
+                : $"{Start.ToString("M", culture)} {Start.Year} – {end.ToString("M", culture)} {end.Year}";
+        }
+    }
+
+    private List<PlannerSlot> SelectedSlots
+        => regions
+            .OrderBy(r => r.From)
+            .SelectMany(region => Enumerable.Range(region.CourtStart, region.CourtEnd - region.CourtStart + 1)
+                .Where(index => index < Courts.Count)
+                .Select(index => new PlannerSlot(Courts[index].CourtId, Courts[index].Name,
+                    PlannerHelpers.FromUnixMilliseconds(region.From), PlannerHelpers.FromUnixMilliseconds(region.To))))
+            .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Start = StartQuery is { } start && start != default ? start : Today;
+        Days = DaysQuery is { } days && PlannerHelpers.DayOptions.Contains(days) ? days : PlannerHelpers.DefaultDays;
+
+        // Support mode has no member (and no family): nothing is "own", only moving works
+        var isSupportMode = ClubProfileStore.IsSupportMode;
+        var loadMember = isSupportMode || MembersStore.LoadedMemberId(MemberId) ? Task.CompletedTask : MembersStore.LoadMember(MemberId);
+        await Task.WhenAll(
+            ClubStore.LoadCourts(),
+            ClubStore.LoadPlayers(),
+            ClubStore.LoadClubDetails(),
+            ClubStore.LoadPlayModes(),
+            loadMember,
+            LoadBookings());
+
+        var familyId = isSupportMode ? null : MembersStore.MemberDetail?.FamilyId;
+        if (familyId is not null && !FamilyStore.LoadedForFamilyId(familyId.Value))
+            await FamilyStore.LoadFamily(familyId.Value);
+
+        Courts = ClubStore.Courts.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToList();
+        AllowedPlayModes = ClubStore.PlayModes.Where(mode => PlannerHelpers.MayUsePlayMode(mode, ClubProfileStore.Roles, isSupportMode)).ToList();
+        MemberChildren = familyId is null ? [] : FamilyStore.Family?.Children.ConvertAll(child => new PlayerResult(child.MemberId, child.FirstName, child.LastName, false)) ?? [];
+
+        loaded = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        // The zoom is remembered per browser
+        module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "/planner-interop.js");
+        var savedZoom = await module.InvokeAsync<int>("loadZoom");
+        if (PlannerHelpers.SlotWidths.Contains(savedZoom) && savedZoom != SlotWidth)
+        {
+            SlotWidth = savedZoom;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>Loads the bookings and blockings of the visible days; <c>false</c> when a newer load (fast navigation) replaced this one.</summary>
+    private async Task<bool> LoadBookings()
+    {
+        try
+        {
+            await Task.WhenAll(
+                BookingStore.LoadBookings(ClubProfileStore.SelectedClubId, Start, End),
+                CourtBlockingsStore.LoadOccurrences(Start, End));
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+
+        Bookings = BookingStore.Bookings;
+        Blockings = CourtBlockingsStore.Occurrences;
+        dataVersion++;
+        return true;
+    }
+
+    private async Task Reload()
+    {
+        await LoadBookings();
+        StateHasChanged();
+    }
+
+    private async Task GoTo(DateOnly start)
+    {
+        Start = start;
+        await ClearSelection();
+        await UpdateUrl();
+        await Reload();
+    }
+
+    private async Task OnDatePicked(DateTime? date)
+    {
+        if (date is not null)
+            await GoTo(DateOnly.FromDateTime(date.Value));
+    }
+
+    private async Task OnDaysChanged(int days)
+    {
+        Days = days;
+        await ClearSelection();
+        await UpdateUrl();
+        await Reload();
+    }
+
+    private async Task Zoom(int direction)
+    {
+        var index = Math.Clamp(ZoomIndex + direction, 0, PlannerHelpers.SlotWidths.Length - 1);
+        SlotWidth = PlannerHelpers.SlotWidths[index];
+        if (module is not null)
+            await module.InvokeVoidAsync("saveZoom", SlotWidth);
+    }
+
+    private async Task UpdateUrl()
+    {
+        var url = NavManager.BaseUri + $"clubs/{ClubProfileStore.SelectedClubId}/planner?Start={Start.ToString(CultureInfo.InvariantCulture)}&Days={Days}";
+        await JSRuntime.InvokeVoidAsync("ChangeUrl", url);
+    }
+
+    private bool IsOwnBooking(BookingResult booking)
+        => booking.Players.Any(p => (MemberId > 0 && p.MemberId == MemberId) || MemberChildren.Any(c => c.MemberId == p.MemberId));
+
+    /// <summary>
+    /// Same rules as the booking detail: elevated roles may change every booking (also past ones), others only their own
+    /// (or their children's) before the grace period has passed; in both cases the user has to be allowed to book the play mode.
+    /// </summary>
+    private bool CanEdit(BookingResult booking)
+    {
+        if (!PlannerHelpers.MayUsePlayMode(booking.PlayMode, ClubProfileStore.Roles, ClubProfileStore.IsSupportMode))
+            return false;
+        if (HasElevatedRole)
+            return true;
+
+        var gracePeriodPassed = booking.Interval.From < DateTimeOffset.Now.AddMinutes(-(ClubStore.ClubDetails.BookingGracePeriodInMinutes ?? 0));
+        return IsOwnBooking(booking) && !gracePeriodPassed;
+    }
+
+    private void OpenBooking(int bookingId)
+    {
+        if (!saving)
+            NavManager.NavigateToBooking(ClubId, bookingId);
+    }
+
+    private void OnSelectionChanged(List<PlannerRegion> selected) => regions = selected;
+
+    private async Task ClearSelection()
+    {
+        regions = [];
+        if (timeline is not null)
+            await timeline.ClearSelection();
+    }
+
+    private string CourtName(int courtId) => Courts.FirstOrDefault(c => c.CourtId == courtId)?.Name ?? string.Empty;
+
+    /// <summary>A booking was dropped at a new court or time: confirm overbooking, then save it like the edit on the booking detail.</summary>
+    private async Task<bool> OnMove(PlannerMove move)
+    {
+        if (saving || Bookings.FirstOrDefault(b => b.BookingEntryId == move.BookingId) is not { } dropped || !CanEdit(dropped))
+            return false;
+
+        var from = PlannerHelpers.FromUnixMilliseconds(move.From);
+        var to = PlannerHelpers.FromUnixMilliseconds(move.To);
+
+        saving = true;
+        StateHasChanged();
+        try
+        {
+            // The grid may be old: check the target (and what an overbooking mode would replace) against fresh data
+            if (!await LoadBookings())
+                return false;
+            StateHasChanged();
+
+            if (Bookings.FirstOrDefault(b => b.BookingEntryId == move.BookingId) is not { } booking || !CanEdit(booking))
+            {
+                Snackbar.Add(Locale["BookingChangedMeanwhile"], Severity.Warning);
+                return false;
+            }
+
+            if (TargetUnavailableReason(move.CourtId, from, to) is { } reason)
+            {
+                Snackbar.Add(reason, Severity.Warning);
+                return false;
+            }
+
+            var conflicts = Bookings
+                .Where(b => b.BookingEntryId != booking.BookingEntryId && b.CourtId == move.CourtId && b.Interval.From < to && b.Interval.To > from)
+                .OrderBy(b => b.Interval.From)
+                .ToList();
+            if (conflicts.Count > 0)
+            {
+                if (!booking.PlayMode.CanOverbook)
+                {
+                    Snackbar.Add(string.Format(Locale["CannotOverbook"], booking.PlayMode.Name), Severity.Warning);
+                    return false;
+                }
+
+                if (!await ConfirmOverbooking(booking, move.CourtId, conflicts))
+                    return false;
+            }
+
+            var players = booking.Players.ConvertAll(p => p.MemberId);
+            // The server refuses a comment for a play mode that doesn't allow one
+            var comment = booking.PlayMode.CommentAllowed ? booking.Comment : null;
+            var result = booking.RecurringBookingSeriesId is not null
+                // Moving one occurrence takes it out of the series, like "only this booking" on the detail page
+                ? await BookingStore.EditRecurringBooking(booking.BookingEntryId, new EditRecurringBookingModel(
+                    booking.BookingEntryId, move.CourtId, from, to, TimeZoneInfo.Local.Id, booking.PlayMode.Id, players,
+                    RecurringEditScope.Single, RecurrenceIntervalWeeks: null, EndDate: null, comment))
+                : await BookingStore.EditBooking(booking.BookingEntryId, new EditBookingModel(
+                    booking.BookingEntryId, move.CourtId, from, to, TimeZoneInfo.Local.Id, booking.PlayMode.Id, players, comment));
+
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return false;
+            }
+
+            Snackbar.Add(conflicts.Count > 0 ? string.Format(Locale["BookingMovedReplaced"], conflicts.Count) : Locale["BookingMoved"], Severity.Success);
+            await LoadBookings();
+            return true;
+        }
+        finally
+        {
+            saving = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>Why a court can't take a booking at that time (blocked or closed), <c>null</c> when it can.</summary>
+    private string? TargetUnavailableReason(int courtId, DateTimeOffset from, DateTimeOffset to)
+    {
+        if (Blockings.Any(b => b.CourtIds.Contains(courtId) && b.Interval.From < to && b.Interval.To > from))
+            return Locale["ReasonBlocked"];
+        if (Courts.FirstOrDefault(c => c.CourtId == courtId)?.Inactive is { } inactive && inactive.From < to && inactive.To > from)
+            return Locale["ReasonInactive"];
+        return null;
+    }
+
+    private async Task<bool> ConfirmOverbooking(BookingResult booking, int courtId, List<BookingResult> conflicts)
+    {
+        var items = string.Join(string.Empty, conflicts.Select(c =>
+            $"<li><strong>{WebUtility.HtmlEncode(c.PlayMode.Name)}</strong> · {c.Interval.From:HH:mm}–{c.Interval.To:HH:mm} · "
+            + $"{WebUtility.HtmlEncode(string.Join(", ", c.Players.Select(p => $"{p.FirstName} {p.LastName}")))}</li>"));
+        var text = WebUtility.HtmlEncode(string.Format(Locale["OverbookText"], booking.PlayMode.Name, CourtName(courtId)));
+        var message = new MarkupString($"<p>{text}</p><ul class=\"planner-confirm-list\">{items}</ul><p>{WebUtility.HtmlEncode(Locale["OverbookNotify"])}</p>");
+
+        var confirmed = await DialogService.ShowMessageBox(Locale["OverbookTitle"], message,
+            yesText: Locale["OverbookConfirm"], cancelText: SharedLocale["Cancel"]);
+        return confirmed == true;
+    }
+
+    private async Task OpenBookSelection()
+    {
+        var slots = SelectedSlots;
+        if (slots.Count == 0 || !CanSelect)
+            return;
+
+        var parameters = new DialogParameters<BookSelectionDialog>
+        {
+            { dialog => dialog.Slots, slots },
+            { dialog => dialog.PlayModes, AllowedPlayModes },
+            { dialog => dialog.Players, ClubStore.ClubPlayers.Where(p => !p.IsGuest).ToList() },
+            { dialog => dialog.MemberId, MemberId },
+            { dialog => dialog.MemberChildren, MemberChildren },
+            { dialog => dialog.Courts, Courts },
+        };
+        var dialog = await DialogService.ShowAsync<BookSelectionDialog>(Locale["BookSelection"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var result = await dialog.Result;
+        if (result is { Canceled: false })
+        {
+            await ClearSelection();
+            await Reload();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null)
+        {
+            try
+            {
+                await module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Leaving the page
+            }
+        }
+    }
+}

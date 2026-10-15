@@ -636,4 +636,13 @@
   <data name="WrappedNotPublished" xml:space="preserve">
     <value>Your club has not released the review of this season yet.</value>
   </data>
+  <data name="InvalidSlotCount" xml:space="preserve">
+    <value>Select between 1 and {0} time slots to book at once.</value>
+  </data>
+  <data name="BookingSlotsOverlap" xml:space="preserve">
+    <value>This time slot overlaps selected time slot {0} on the same court.</value>
+  </data>
+  <data name="BookingsToRemoveChanged" xml:space="preserve">
+    <value>The bookings on the selected courts changed in the meantime. Please check the selection again.</value>
+  </data>
 </root>

@@ -1,0 +1,513 @@
+.planner-scroll {
+    --planner-line: color-mix(in srgb, var(--mud-palette-lines-default) 70%, transparent);
+    --planner-day-line: color-mix(in srgb, var(--mud-palette-text-primary) 35%, transparent);
+    --planner-blocking: var(--bk-dark-violet, #6D28D9);
+    position: relative;
+    overflow: auto;
+    max-height: calc(100dvh - 17rem);
+    min-height: 320px;
+    border-radius: 16px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    overscroll-behavior: contain;
+}
+
+.planner-canvas {
+    position: relative;
+    min-width: 100%;
+}
+
+/* Header: day with date, then the hours; sticky on top, the corner also on the left */
+.planner-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    height: var(--header-height);
+    background: var(--mud-palette-surface);
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.planner-header__corner {
+    position: sticky;
+    left: 0;
+    z-index: 21;
+    flex: 0 0 var(--name-width);
+    display: flex;
+    align-items: flex-end;
+    padding: 0 12px 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+    background: var(--mud-palette-surface);
+    border-right: 1px solid var(--mud-palette-lines-default);
+}
+
+.planner-day {
+    position: relative;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* A pseudo element instead of a border, so the hours line up with the lanes */
+.planner-day::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    background: var(--planner-day-line);
+}
+
+.planner-day--weekend {
+    background: color-mix(in srgb, var(--mud-palette-text-primary) 3%, transparent);
+}
+
+.planner-day__label {
+    position: sticky;
+    left: var(--name-width);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    width: max-content;
+    max-width: 100%;
+    padding: 6px 8px 2px;
+    overflow: hidden;
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.planner-day__weekday {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.planner-day--today .planner-day__label,
+.planner-day--today .planner-day__weekday {
+    color: var(--mud-palette-primary);
+}
+
+.planner-day--today {
+    box-shadow: inset 0 -3px 0 var(--mud-palette-primary);
+}
+
+.planner-day__hours {
+    display: flex;
+    margin-top: auto;
+}
+
+.planner-day__slot {
+    flex: 0 0 var(--slot-width);
+    min-height: 18px;
+    padding: 0 0 4px 3px;
+    font-size: 0.66rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* Labels may run into the next (half hour) slot */
+.planner-day__slot--hour {
+    position: relative;
+    z-index: 1;
+    border-left: 1px solid var(--planner-line);
+}
+
+.planner-day__slot--hour:first-child {
+    border-left: none;
+}
+
+/* Body: sticky court names on the left, the lanes next to them */
+.planner-body {
+    display: flex;
+}
+
+.planner-names {
+    position: sticky;
+    left: 0;
+    z-index: 15;
+    flex: 0 0 var(--name-width);
+    background: var(--mud-palette-surface);
+    border-right: 1px solid var(--mud-palette-lines-default);
+}
+
+.planner-name {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: var(--row-height);
+    padding: 0 12px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--planner-line);
+}
+
+.planner-name__alias {
+    font-size: 0.85rem;
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.planner-name__full {
+    font-size: 0.68rem;
+    color: var(--mud-palette-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.planner-lanes {
+    position: relative;
+    flex: 0 0 auto;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    background-image:
+        linear-gradient(to right, color-mix(in srgb, var(--planner-line) 45%, transparent) 1px, transparent 1px),
+        linear-gradient(to bottom, transparent calc(var(--row-height) - 1px), var(--planner-line) calc(var(--row-height) - 1px));
+    background-size:
+        var(--slot-width) 100%,
+        100% var(--row-height);
+}
+
+/* One column per day: the day separator and the hour lines (shifted when the day opens at half past) */
+.planner-daycol {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: linear-gradient(to right, var(--planner-line) 1px, transparent 1px);
+    background-size: calc(var(--slot-width) * 2) 100%;
+    background-position: var(--hour-offset) 0;
+    box-shadow: inset 2px 0 0 var(--planner-day-line);
+}
+
+.planner-lanes--selectable {
+    cursor: crosshair;
+}
+
+.planner-lanes--busy {
+    cursor: progress;
+}
+
+/* Prime time, past and now span all courts */
+.planner-prime {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: color-mix(in srgb, #F59E0B 8%, transparent);
+    box-shadow: inset 0 2px 0 color-mix(in srgb, #F59E0B 45%, transparent);
+}
+
+.planner-past {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: repeating-linear-gradient(135deg,
+            color-mix(in srgb, var(--mud-palette-text-primary) 5%, transparent) 0 6px,
+            transparent 6px 12px);
+}
+
+.planner-now {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 6;
+    width: 0;
+    pointer-events: none;
+    border-left: 2px solid var(--mud-palette-error);
+}
+
+/* Closed courts and blockings: like the day view */
+.planner-inactive,
+.planner-blocking {
+    position: absolute;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    height: calc(var(--row-height) - 6px);
+    margin-top: 3px;
+    padding: 0 6px;
+    overflow: hidden;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.planner-inactive {
+    color: var(--mud-palette-error);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 40%, transparent);
+    background: repeating-linear-gradient(135deg,
+            color-mix(in srgb, var(--mud-palette-error) 12%, transparent) 0 8px,
+            color-mix(in srgb, var(--mud-palette-error) 4%, transparent) 8px 16px);
+}
+
+.planner-blocking {
+    color: var(--planner-blocking);
+    border: 1px solid color-mix(in srgb, var(--planner-blocking) 45%, transparent);
+    background: repeating-linear-gradient(135deg,
+            color-mix(in srgb, var(--planner-blocking) 16%, var(--mud-palette-surface)) 0 8px,
+            color-mix(in srgb, var(--planner-blocking) 6%, var(--mud-palette-surface)) 8px 16px);
+}
+
+.planner-shade__text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Bookings */
+.planner-block {
+    position: absolute;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    height: calc(var(--row-height) - 8px);
+    margin-top: 4px;
+    padding: 0 6px 0 7px;
+    overflow: hidden;
+    border-radius: 8px;
+    border-left: 4px solid var(--mode-color);
+    background: color-mix(in srgb, var(--mode-color) 22%, var(--mud-palette-surface));
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+    transition: box-shadow 0.12s ease, opacity 0.12s ease;
+}
+
+.planner-block:focus-visible {
+    z-index: 5;
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 1px;
+}
+
+.planner-block--editable {
+    cursor: grab;
+}
+
+.planner-block--editable:hover {
+    z-index: 5;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+}
+
+.planner-block--locked {
+    cursor: pointer;
+}
+
+.planner-block--mine {
+    background: color-mix(in srgb, var(--mode-color) 34%, var(--mud-palette-surface));
+    box-shadow: inset 0 0 0 2px var(--mud-palette-primary);
+}
+
+.planner-block--past {
+    opacity: 0.6;
+}
+
+.planner-block--narrow {
+    padding: 0 2px 0 3px;
+    border-left-width: 3px;
+}
+
+.planner-block--narrow .planner-block__mode,
+.planner-block--narrow .planner-block__players {
+    display: none;
+}
+
+.planner-block.is-dragging {
+    opacity: 0.3;
+}
+
+.planner-block__line {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+}
+
+.planner-block__time {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.planner-block--narrow .planner-block__time {
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: clip;
+}
+
+.planner-block__mode {
+    min-width: 0;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: color-mix(in srgb, var(--mode-color) 70%, var(--mud-palette-text-primary));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .planner-block__icon {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    opacity: 0.75;
+}
+
+.planner-block__players {
+    min-width: 0;
+    font-size: 0.7rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Resize handles on the start and end edge */
+.planner-block__handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 1;
+    width: 6px;
+    cursor: ew-resize;
+}
+
+.planner-block__handle--start {
+    left: 0;
+}
+
+.planner-block__handle--end {
+    right: 0;
+}
+
+.planner-block__handle::after {
+    content: "";
+    position: absolute;
+    top: 30%;
+    bottom: 30%;
+    left: 2px;
+    width: 2px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--mode-color) 70%, var(--mud-palette-text-primary));
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.planner-block:hover .planner-block__handle::after {
+    opacity: 0.8;
+}
+
+/* The ghost while moving or resizing (a clone of the booking, drawn by planner-interop.js) */
+.planner-block.planner-ghost {
+    z-index: 30;
+    pointer-events: none;
+    opacity: 0.95;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.28);
+    transition: none;
+}
+
+.planner-block.planner-ghost.is-valid {
+    outline: 2px solid var(--bk-dark-green, #059669);
+    outline-offset: 1px;
+}
+
+.planner-block.planner-ghost.is-overbook {
+    outline: 2px dashed var(--bk-dark-amber, #D97706);
+    outline-offset: 1px;
+}
+
+.planner-block.planner-ghost.is-invalid {
+    outline: 2px solid var(--mud-palette-error);
+    outline-offset: 1px;
+    background: repeating-linear-gradient(135deg,
+            color-mix(in srgb, var(--mud-palette-error) 22%, var(--mud-palette-surface)) 0 6px,
+            color-mix(in srgb, var(--mud-palette-error) 10%, var(--mud-palette-surface)) 6px 12px);
+}
+
+.planner-block.planner-ghost.is-saving {
+    opacity: 0.7;
+    outline-style: dotted;
+}
+
+/* Selected regions (drawn by planner-interop.js, so they need ::deep) */
+.planner-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    pointer-events: none;
+}
+
+::deep .planner-region {
+    position: absolute;
+    box-sizing: border-box;
+    border: 2px solid var(--mud-palette-primary);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--mud-palette-primary) 16%, transparent);
+}
+
+::deep .planner-region::after {
+    content: attr(data-label);
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    padding: 0 5px;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--mud-palette-primary-text);
+    background: var(--mud-palette-primary);
+}
+
+::deep .planner-region--band {
+    border-style: dashed;
+}
+
+::deep .planner-region.is-invalid {
+    border-color: var(--mud-palette-error);
+    background: color-mix(in srgb, var(--mud-palette-error) 14%, transparent);
+}
+
+::deep .planner-region.is-invalid::after {
+    color: #FFFFFF;
+    background: var(--mud-palette-error);
+}
+
+/* Why a drop or selection is refused, next to the pointer (outside the lanes, so it is never clipped) */
+::deep .planner-tip {
+    position: fixed;
+    z-index: 2000;
+    max-width: 260px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    pointer-events: none;
+    color: #FFFFFF;
+    background: var(--mud-palette-error);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+}
+
+::deep .planner-tip--overbook {
+    background: var(--bk-dark-amber, #D97706);
+}

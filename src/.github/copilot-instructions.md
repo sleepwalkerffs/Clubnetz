@@ -270,6 +270,24 @@ There are two kinds of badges, both **scoped to a season** and per-club (not per
 - Parameters: `FirstName`, `LastName`, `ProfilePictureUrl`, `BadgeImageUrl`, `BadgeLevel` (`int?` — `null` for one-time badges), `Size`, `Class` (outer div), `AvatarClass` (inner `MudAvatar`).
 - **Important**: Use `AvatarClass` (not `Class`) when applying CSS classes that should style the circular avatar (e.g., gold/silver/bronze leaderboard rings). `Class` applies to the outer wrapper div.
 
+## Booking Planner (desktop)
+
+### Overview
+
+Sports directors, admins and the other elevated booking roles plan bookings (e.g. tournaments) over several days on `Pages/ClubShell/Planner/Planner.razor` (`/clubs/{id}/planner?Start=&Days=`, link in "Courts & play" of the `NavMenu` for Admin, Maintainer, SportsDirector, YouthSportsDirector, Trainer). Desktop only: below 960px the page shows a hint to the booking page. Courts are rows, the opening hours of 3/7/14 days run horizontally in 30-minute slots.
+
+- **Drag** a booking to move it (time, day, court), **drag its edges** to resize it (not for play modes with `FixedDuration`), **drag over free time** to select a region (courts × time within one day), **Ctrl/Cmd + drag** adds regions; "Book selection" opens `BookSelectionDialog`, which creates one booking per court per region.
+- The pointer handling lives in `wwwroot/planner-interop.js` (instance id per timeline, `[JSInvokable]` callbacks on `PlannerTimeline`). It pre-checks drops (past, blockings, closed courts, opening hours, overlaps for play modes that can't overbook) only to give feedback - **the server decides**.
+- Opening hours and prime time are UTC `TimeOnly`s that the client converter shifts with today's offset; `PlannerHelpers.DailyWindow` rebuilds them per day so days after a DST change are right.
+
+### Rules (top priority: the play mode rules always hold)
+
+- Moves and resizes use `EditBooking`, or `EditRecurringBooking` with `RecurringEditScope.Single` for occurrences of a series. Both build the domain context with `BookingContextBuilder` (with the edited booking left out of intersections and counts) and `BookingEditRules.EnsureMayEdit` - exactly the rules of a new booking.
+- `POST Bookings/Batch` (`BookCourts`, policy `CanBookPlayMode`) books up to 100 slots with one play mode. Every slot runs through `BookingDomainService.BookCourt` with a context from `BookingContextBuilder` (shared with `BookCourt`); earlier slots of the batch count toward the quotas of later ones, and slots may not overlap each other on a court (`BookingSlotsOverlap`, also for overbooking modes). `DryRun` returns per-slot errors and the bookings an overbooking mode would remove without saving; a real run is all-or-nothing.
+- **Overbooking only removes what the user confirmed**: the dialog sends the ids of the dry run's `BookingsToRemove` as `ExpectedBookingIdsToRemove`, and the server rejects the save with `BookingsToRemoveChanged` when they differ. A move with an overbooking mode reloads the bookings and asks with the fresh list before saving.
+- Never send a comment for a play mode with `CommentAllowed = false` (the domain throws).
+- `BookCourtsTests`, `EditRecurringBookingTests` and `BookingPlannerSecurityTests` cover it.
+
 ## Court Blockings
 
 ### Overview
