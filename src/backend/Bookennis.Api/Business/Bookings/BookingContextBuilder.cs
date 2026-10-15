@@ -226,10 +226,11 @@ internal sealed class BookingContextBuilder
                 select bookingPlayer.Id
             ).Count()
 
+            // The user plays themself or the player is a child of a family the user is a parent of
             let isAllowedUser = user.Id == userId
-                || (from familyMember in context.FamilyMembers join member in context.ClubMembers on familyMember.MemberId equals member.Id select member.UserId).Any(familyUserId =>
-                    familyUserId == userId
-                )
+                || context.Families.Any(family =>
+                    family.Children.Any(child => child.MemberId == member.Id)
+                    && family.Parents.Any(parent => context.ClubMembers.Any(parentMember => parentMember.Id == parent.MemberId && parentMember.UserId == userId)))
 
             where players.Contains(member.Id)
             select new ParticipantInfo
