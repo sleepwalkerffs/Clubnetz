@@ -9,6 +9,7 @@ public class SeasonEntityConfiguration : IEntityTypeConfiguration<Season>
     public void Configure(EntityTypeBuilder<Season> builder)
     {
         builder.OwnsDateOnlyInterval(n => n.Period);
+        builder.Ignore(n => n.IsWrappedPublished);
         // Tenant relation (ClubId FK) is configured via ClubEntityConfiguration.HasMany(n => n.Seasons)
     }
 }

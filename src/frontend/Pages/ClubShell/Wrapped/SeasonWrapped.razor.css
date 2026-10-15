@@ -1,0 +1,637 @@
+/* The story player covers the whole app (also the app bar and the navigation) like a full-screen story */
+.wrapped {
+    position: fixed;
+    inset: 0;
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 30% 20%, #1E293B 0%, #020617 70%);
+    outline: none;
+}
+
+.wrapped__frame {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    color: #FFFFFF;
+    background: var(--wrapped-bg);
+    transition: background 0.6s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Desktop: a phone-sized card in the middle of the screen */
+@media (min-width: 600px) and (min-height: 640px) {
+    .wrapped__frame {
+        width: min(440px, 100vw - 32px);
+        height: min(860px, 100dvh - 48px);
+        border-radius: 28px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+    }
+}
+
+/* Decorative rings: a tennis ball in the corner of every slide */
+.wrapped__frame::before,
+.wrapped__frame::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.wrapped__frame::before {
+    right: -90px;
+    top: -90px;
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle at 35% 35%, rgba(217, 249, 157, 0.35), rgba(217, 249, 157, 0.05) 70%);
+}
+
+.wrapped__frame::after {
+    left: -120px;
+    bottom: -140px;
+    width: 340px;
+    height: 340px;
+    border: 3px solid rgba(255, 255, 255, 0.14);
+}
+
+.wrapped__frame--intro { --wrapped-bg: linear-gradient(160deg, #312E81 0%, #6D28D9 55%, #DB2777 120%); }
+.wrapped__frame--matches { --wrapped-bg: linear-gradient(160deg, #064E3B 0%, #059669 60%, #A3E635 140%); }
+.wrapped__frame--rank { --wrapped-bg: linear-gradient(160deg, #7C2D12 0%, #EA580C 55%, #FACC15 130%); }
+.wrapped__frame--partner { --wrapped-bg: linear-gradient(160deg, #831843 0%, #DB2777 55%, #A78BFA 130%); }
+.wrapped__frame--rhythm { --wrapped-bg: linear-gradient(160deg, #1E3A8A 0%, #4F46E5 55%, #22D3EE 140%); }
+.wrapped__frame--court { --wrapped-bg: linear-gradient(160deg, #7C2D12 0%, #C2410C 50%, #F97316 120%); }
+.wrapped__frame--records { --wrapped-bg: linear-gradient(160deg, #450A0A 0%, #DC2626 55%, #FB923C 130%); }
+.wrapped__frame--regular { --wrapped-bg: linear-gradient(160deg, #134E4A 0%, #0D9488 55%, #5EEAD4 140%); }
+.wrapped__frame--badges { --wrapped-bg: linear-gradient(160deg, #713F12 0%, #CA8A04 55%, #FDE047 140%); }
+.wrapped__frame--events { --wrapped-bg: linear-gradient(160deg, #4C1D95 0%, #9333EA 55%, #F472B6 130%); }
+.wrapped__frame--club { --wrapped-bg: linear-gradient(160deg, #0F172A 0%, #065F46 60%, #10B981 140%); }
+.wrapped__frame--summary { --wrapped-bg: linear-gradient(160deg, #022C22 0%, #047857 45%, #4F46E5 130%); }
+
+/* ---------- progress ---------- */
+
+.wrapped__progress {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    gap: 4px;
+    padding: max(12px, env(safe-area-inset-top)) 14px 0;
+}
+
+.wrapped__segment {
+    flex: 1;
+    height: 3px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.wrapped__fill {
+    display: block;
+    height: 100%;
+    background: #FFFFFF;
+}
+
+.wrapped__fill--todo { width: 0; }
+.wrapped__fill--done { width: 100%; }
+
+.wrapped__fill--active {
+    width: 0;
+    animation: wrapped-progress var(--wrapped-duration, 7s) linear forwards;
+}
+
+/* Pausing only stops the clock: the content of a slide opened while paused must still appear */
+.wrapped__frame--paused .wrapped__fill--active {
+    animation-play-state: paused;
+}
+
+@keyframes wrapped-progress {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+/* ---------- top bar ---------- */
+
+.wrapped__top {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 10px 0 16px;
+}
+
+.wrapped__brand {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.2;
+}
+
+.wrapped__brand-club {
+    font-weight: 700;
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wrapped__brand-season {
+    font-size: 0.75rem;
+    opacity: 0.75;
+}
+
+.wrapped__preview {
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #0F172A;
+    background: #FDE047;
+}
+
+.wrapped__icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.14);
+    cursor: pointer;
+}
+
+.wrapped__icon-button:hover,
+.wrapped__icon-button:focus-visible {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+/* ---------- slide ---------- */
+
+.wrapped__slide {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    padding: 12px 24px max(24px, env(safe-area-inset-bottom));
+    overflow: hidden;
+}
+
+.wrapped__slide-inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.wrapped__slide--center {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+/* Tap zones: left = back, right = forward (above the slide, below the top bar) */
+.wrapped__tap {
+    position: absolute;
+    z-index: 2;
+    top: 70px;
+    bottom: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.wrapped__tap:disabled {
+    cursor: default;
+}
+
+.wrapped__tap--prev { left: 0; width: 30%; }
+.wrapped__tap--next { right: 0; width: 70%; }
+
+/* On the summary the buttons need the space, only a narrow strip on the left goes back */
+.wrapped__frame--summary .wrapped__tap--prev { width: 14%; }
+
+/* ---------- building blocks of the slides ---------- */
+
+::deep .w-kicker {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+::deep .w-mega {
+    font-size: clamp(4rem, 22vw, 7rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+}
+
+::deep .w-mega--words {
+    font-size: clamp(2.2rem, 11vw, 3.4rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+}
+
+::deep .w-title {
+    font-size: clamp(1.3rem, 6vw, 1.7rem);
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+::deep .w-text {
+    font-size: 1.05rem;
+    line-height: 1.45;
+    opacity: 0.92;
+    max-width: 30ch;
+}
+
+::deep .w-text strong,
+::deep .w-fact strong {
+    font-weight: 800;
+}
+
+::deep .w-note {
+    margin-top: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.16);
+}
+
+::deep .w-hint {
+    margin-top: 24px;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+::deep .w-emoji {
+    font-size: 3.6rem;
+    line-height: 1;
+}
+
+.wrapped__logo {
+    font-style: italic;
+    letter-spacing: 0.02em;
+    color: #D9F99D;
+}
+
+::deep .w-facts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+::deep .w-facts--center {
+    align-items: center;
+}
+
+::deep .w-fact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 1rem;
+    line-height: 1.35;
+    text-align: left;
+    background: rgba(255, 255, 255, 0.13);
+}
+
+::deep .w-fact__emoji {
+    font-size: 1.4rem;
+}
+
+::deep .w-meter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 16px;
+}
+
+::deep .w-meter__track {
+    width: 100%;
+    max-width: 280px;
+    height: 12px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.22);
+}
+
+::deep .w-meter__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: #FFFFFF;
+    transform-origin: left center;
+    animation: wrapped-grow 1.4s 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes wrapped-grow {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
+::deep .w-partner__avatar {
+    width: 128px !important;
+    height: 128px !important;
+    font-size: 2.6rem !important;
+    border: 4px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+::deep .w-partners {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+::deep .w-partners__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px 4px 4px;
+    border-radius: 999px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.16);
+}
+
+/* A court seen from above */
+.wrapped__court {
+    position: relative;
+    width: 120px;
+    height: 170px;
+    margin: 6px 0;
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.wrapped__court::before {
+    content: "";
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    top: 0;
+    bottom: 0;
+    border-left: 2px solid rgba(255, 255, 255, 0.8);
+    border-right: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.wrapped__court::after {
+    content: "";
+    position: absolute;
+    left: -8px;
+    right: -8px;
+    top: 50%;
+    border-top: 3px dashed #FFFFFF;
+}
+
+.wrapped__court span {
+    position: absolute;
+    left: 50%;
+    top: 26%;
+    width: 16px;
+    height: 16px;
+    margin-left: -8px;
+    border-radius: 50%;
+    background: #D9F99D;
+    box-shadow: 0 0 12px rgba(217, 249, 157, 0.9);
+    animation: wrapped-ball 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes wrapped-ball {
+    from { transform: translate(-26px, 0); }
+    to { transform: translate(26px, 70px); }
+}
+
+::deep .w-records {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 12px;
+}
+
+::deep .w-record {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 14px;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.13);
+}
+
+::deep .w-record__emoji {
+    grid-row: 1 / span 2;
+    font-size: 2rem;
+}
+
+::deep .w-record__value {
+    font-size: 1.9rem;
+    font-weight: 900;
+    line-height: 1.05;
+}
+
+::deep .w-record__label {
+    font-size: 0.9rem;
+    opacity: 0.85;
+}
+
+::deep .w-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 14px;
+}
+
+::deep .w-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 92px;
+}
+
+::deep .w-badge .badge-icon {
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+::deep .w-badge__name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+}
+
+::deep .w-club {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+::deep .w-club__tile {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.13);
+}
+
+::deep .w-club__value {
+    font-size: 1.9rem;
+    font-weight: 900;
+    line-height: 1.05;
+}
+
+::deep .w-club__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+::deep .w-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    max-width: 340px;
+    padding: 20px;
+    border-radius: 24px;
+    text-align: left;
+    background: rgba(2, 6, 23, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+::deep .w-summary__head {
+    display: flex;
+    flex-direction: column;
+}
+
+::deep .w-summary__title {
+    font-size: 1.35rem;
+    font-weight: 900;
+}
+
+::deep .w-summary__club {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+::deep .w-summary__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+::deep .w-summary__brand {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
+
+.wrapped__actions {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+::deep .wrapped__cta {
+    border-radius: 999px;
+    text-transform: none;
+    font-weight: 700;
+    color: #0F172A;
+    background: #FFFFFF;
+}
+
+::deep .wrapped__cta--ghost {
+    color: #FFFFFF;
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.7);
+}
+
+::deep .wrapped__cta--text {
+    color: #FFFFFF;
+    background: transparent;
+}
+
+/* ---------- entrance animations, replayed for every slide ---------- */
+
+::deep .w-in {
+    animation: wrapped-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--d, 0) * 0.18s);
+}
+
+::deep .w-pop {
+    animation: wrapped-pop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: calc(var(--d, 0) * 0.18s);
+}
+
+@keyframes wrapped-in {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes wrapped-pop {
+    from { opacity: 0; transform: scale(0.6); }
+    to { opacity: 1; transform: none; }
+}
+
+.wrapped__bounce {
+    animation: wrapped-bounce 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes wrapped-bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-18px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::deep .w-in,
+    ::deep .w-pop,
+    ::deep .w-meter__fill,
+    .wrapped__court span,
+    .wrapped__bounce {
+        animation: none;
+    }
+}
+
+@media (max-height: 640px) {
+    ::deep .w-mega { font-size: clamp(3rem, 16vw, 5rem); }
+    ::deep .w-emoji { font-size: 2.6rem; }
+    ::deep .w-facts { margin-top: 8px; gap: 6px; }
+    .wrapped__court { width: 90px; height: 120px; }
+}

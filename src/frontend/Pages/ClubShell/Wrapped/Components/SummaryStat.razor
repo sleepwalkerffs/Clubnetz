@@ -1,0 +1,12 @@
+<div class="summary-stat @(Wide ? "summary-stat--wide" : "")">
+    <span class="summary-stat__value">@Value</span>
+    <span class="summary-stat__label">@Label</span>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+
+    /// <summary>Texts (names, play style) take the whole row, numbers share it.</summary>
+    [Parameter] public bool Wide { get; set; }
+}

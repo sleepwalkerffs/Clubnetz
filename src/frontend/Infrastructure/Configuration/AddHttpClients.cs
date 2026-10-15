@@ -12,6 +12,7 @@ using Bookennis.Client.Services.HttpClients.Notifications;
 using Bookennis.Client.Services.HttpClients.Account;
 using Bookennis.Client.Services.HttpClients.Statistics;
 using Bookennis.Client.Services.HttpClients.Leaderboards;
+using Bookennis.Client.Services.HttpClients.Wrapped;
 using Microsoft.AspNetCore.Components;
 using Bookennis.Client.Services.HttpClients.Guests;
 using Bookennis.Client.Services.HttpClients.ClubAnnouncements;
@@ -191,6 +192,18 @@ public static class AddHttpClients
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
                     client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/Statistics/");
+                }
+            )
+           .AddHttpMessageHandler<TenantDelegatingHandler>()
+           .AddHttpMessageHandler<RedirectToLoginOnUnauthorizedHandler>();
+
+        services
+           .AddHttpClient<IWrappedHttpClient, WrappedHttpClient>(
+                (serviceProvider, client) =>
+                {
+                    var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
+                    client.AddDefaultHeaders();
+                    client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/Wrapped/");
                 }
             )
            .AddHttpMessageHandler<TenantDelegatingHandler>()

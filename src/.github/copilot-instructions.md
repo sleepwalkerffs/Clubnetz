@@ -302,6 +302,29 @@ Maintainers, sports directors and admins block one or more courts for a time win
 - `Components/Booking/Day.razor` renders the occurrences (`Blockings` parameter, `.day__blocking`, violet stripes with title and time). `Booking.razor` loads them with the bookings (`ICourtBlockingsStore.LoadOccurrences`), shows chips, a legend entry and a dot in the day strip, and a lock button to the management page for managers.
 - `NavMenu.razor` shows the link (section "Courts & play") to admins, maintainers and sports directors. Texts are in `CourtBlockingsLocale(.de).resx`.
 
+## Season Wrapped (Saisonrückblick)
+
+### Overview
+
+At the end of a season every club member (not guests) gets a story-style review of their season ("Wrapped"): matches, hours, place among the enrolled members, favourite partners, play style, home court, records, regular slot, badges, events and the numbers of the whole club. A season is the club's existing `Season` (`Period`), nothing new to define.
+
+- **The club admins release it** (`Season.WrappedPublishedAt`, `PublishWrapped`/`UnpublishWrapped`): any season that has started, also past ones and the running one (`ErrorCode.WrappedSeasonNotStarted` for upcoming seasons). Repeating keeps the first date. Before that only `ClubAdministrator`s can open it, as a preview.
+- **Nothing is stored**: `GetSeasonWrapped` calculates it from the bookings whenever it is opened, so every past season can be generated and the numbers always match the statistics. Same counting rule as statistics and badges (`WrappedBookings.Load`: play modes with `IsChargingBookingSubscription`, local date of the booking within the season). Reuses `GetMemberStatistics.Handler.GetPlayerType`/`GetLongestWeekStreak`.
+- Rank: place by matches among the members enrolled in the season (ties share a place), only for a member who played. Other members only appear as top partners with name and picture (see Member Data & Privacy); club numbers are anonymous totals.
+
+### API
+
+- `WrappedController` (`api/Clubs/{clubId}/Wrapped`): `GET` (seasons the caller can open + `CanManage`; members get released seasons only), `GET {seasonId}` (`GetSeasonWrapped`, `ClubMember`; `ErrorCode.WrappedNotPublished` for members on an unreleased season), `PUT|DELETE {seasonId}/publish` (`ClubAdministrator`). `CanManage` comes from the controller (`IAuthorizationService`, like the announcements).
+- Support mode has no member: the Wrapped then only shows the club.
+- `WrappedSecurityTests` checks who may release and open it over HTTP.
+
+### FE
+
+- `Pages/ClubShell/Wrapped/WrappedSeasons.razor` (`/clubs/{id}/wrapped`, nav "Personal" → Season Wrapped): one card per season, admins get release/take back and preview. `SeasonWrapped.razor` (`/clubs/{id}/wrapped/{seasonId}`): full-screen story player (fixed overlay above the app bar, phone-sized card on desktop) with progress segments, tap left/right, hold or space to pause, arrow keys, Escape, and a summary card with share (`App.shareOrCopy`). Slides without data are left out (`BuildSlides`).
+- Auto-advance is driven by the CSS animation of the active progress segment (`@onanimationend`); pausing only pauses that animation, never the entrance animations of the slide content (they would stay invisible).
+- `WrappedTeaser` on My Club advertises a season released within the last `WrappedHelpers.TeaserDays` (60) days. `SeasonsCard` links to the page and marks released seasons with 🎁. Store: `IWrappedStore`, texts in `WrappedLocale(.de).resx`. Times of day are sent as `TimeSpan` (the client converts `TimeOnly` to UTC).
+- Not built yet: a notification when a season is released, Wrapped for the children of a family.
+
 ## Play Mode Quotas
 
 ### Overview

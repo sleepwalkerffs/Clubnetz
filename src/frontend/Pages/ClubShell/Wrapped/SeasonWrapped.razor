@@ -1,0 +1,554 @@
+@page "/clubs/{ClubId:int}/wrapped/{SeasonId:int}"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Statistics
+@using Bookennis.Client.Localization.Pages.Wrapped
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Pages.ClubShell.Wrapped.Components
+@using Bookennis.Client.Services.Store.Wrapped
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Statistics
+@using Bookennis.Shared.Controller.Wrapped
+
+@implements IDisposable
+
+<PageTitle>@L["PageTitle"]</PageTitle>
+
+<div class="wrapped" tabindex="0" @ref="root" @onkeydown="OnKeyDown" role="dialog" aria-modal="true" aria-label="@L["PageTitle"]">
+    @if (WrappedStore.Wrapped is { SeasonId: var loadedId } wrapped && loadedId == SeasonId)
+    {
+        var slide = slides[Math.Clamp(index, 0, slides.Count - 1)];
+        var isLast = index >= slides.Count - 1;
+
+        <div class="wrapped__frame wrapped__frame--@slide.Theme @(paused ? "wrapped__frame--paused" : "")">
+            <div class="wrapped__progress" aria-hidden="true">
+                @for (var i = 0; i < slides.Count; i++)
+                {
+                    var state = i < index ? "done" : i == index ? (isLast ? "done" : "active") : "todo";
+                    <span class="wrapped__segment">
+                        @if (state == "active")
+                        {
+                            <span @key="@($"fill-{index}-{round}")" class="wrapped__fill wrapped__fill--active" style="--wrapped-duration: @(slide.Seconds)s" @onanimationend="Next"></span>
+                        }
+                        else
+                        {
+                            <span class="wrapped__fill wrapped__fill--@state"></span>
+                        }
+                    </span>
+                }
+            </div>
+
+            <div class="wrapped__top">
+                <span class="wrapped__brand">
+                    <span class="wrapped__brand-club">@wrapped.ClubName</span>
+                    <span class="wrapped__brand-season">@string.Format(L["SeasonLabel"], SeasonLabel(wrapped))</span>
+                </span>
+                @if (!wrapped.IsPublished)
+                {
+                    <span class="wrapped__preview">@L["Preview"]</span>
+                }
+                <button type="button" class="wrapped__icon-button" aria-label="@(paused ? L["Play"] : L["Pause"])" @onclick="TogglePause">
+                    <MudIcon Icon="@(paused ? Icons.Material.Filled.PlayArrow : Icons.Material.Filled.Pause)" Size="Size.Small" />
+                </button>
+                <button type="button" class="wrapped__icon-button" aria-label="@SharedLocale["Close"]" @onclick="Close">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
+            </div>
+
+            <div class="wrapped__slide" @key="@($"slide-{index}-{round}")" aria-live="polite">
+                @RenderSlide(slide.Key, wrapped)
+            </div>
+
+            <button type="button" class="wrapped__tap wrapped__tap--prev" aria-label="@L["Previous"]"
+                    @onclick="TapPrevious" @onpointerdown="Hold" @onpointerup="Release" @onpointerleave="Release" disabled="@(index == 0)"></button>
+            @if (!isLast)
+            {
+                <button type="button" class="wrapped__tap wrapped__tap--next" aria-label="@L["Next"]"
+                        @onclick="TapNext" @onpointerdown="Hold" @onpointerup="Release" @onpointerleave="Release"></button>
+            }
+        </div>
+    }
+    else if (WrappedStore.WrappedError is { } error && !WrappedStore.IsLoading)
+    {
+        <div class="wrapped__frame wrapped__frame--intro">
+            <div class="wrapped__top">
+                <span class="wrapped__brand"></span>
+                <button type="button" class="wrapped__icon-button" aria-label="@SharedLocale["Close"]" @onclick="Close">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
+            </div>
+            <div class="wrapped__slide wrapped__slide--center">
+                <div class="w-emoji w-in">🔒</div>
+                <div class="w-title w-in" style="--d: 1">@L["UnavailableTitle"]</div>
+                <div class="w-text w-in" style="--d: 2">@ErrorText(error)</div>
+                <MudButton Class="w-in wrapped__cta" Style="--d: 3" Variant="Variant.Filled" Href="@ListUrl">@L["BackToList"]</MudButton>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="wrapped__frame wrapped__frame--intro wrapped__frame--loading">
+            <div class="wrapped__slide wrapped__slide--center">
+                <div class="w-emoji wrapped__bounce">🎾</div>
+                <div class="w-text">@L["Loading"]</div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+    [Parameter] public int SeasonId { get; set; }
+
+    [Inject] private IWrappedStore WrappedStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<WrappedLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<StatisticsLocale> StatisticsLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private sealed record Slide(string Key, string Theme, int Seconds = 7);
+
+    private ElementReference root;
+    private List<Slide> slides = [];
+    private int index;
+    // Restarting replays the same slides: a new round re-creates the animated elements
+    private int round;
+    private bool paused;
+    private bool focused;
+    private DateTime pressedAt;
+
+    private string ListUrl => $"/clubs/{ClubId}/wrapped";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        WrappedStore.OnWrappedChanged -= OnWrappedChanged;
+        WrappedStore.OnWrappedChanged += OnWrappedChanged;
+        index = 0;
+        await WrappedStore.LoadWrapped(SeasonId);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Focus the player so the arrow keys work right away
+        if (!focused && WrappedStore.Wrapped is not null)
+        {
+            focused = true;
+            await root.FocusAsync();
+        }
+    }
+
+    private void OnWrappedChanged()
+    {
+        slides = WrappedStore.Wrapped is { } wrapped ? BuildSlides(wrapped) : [];
+        InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>Only the slides with something to tell. Intro, club and summary are always there.</summary>
+    private static List<Slide> BuildSlides(SeasonWrappedResult w)
+    {
+        var list = new List<Slide> { new("intro", "intro", 5) };
+
+        if (w.Matches == 0)
+        {
+            list.Add(new("no-matches", "matches"));
+        }
+        else
+        {
+            list.Add(new("matches", "matches"));
+            if (w.Rank is not null && w.EnrolledMembers > 1)
+                list.Add(new("rank", "rank"));
+            if (w.TopPartners.Count > 0)
+                list.Add(new("partner", "partner", 8));
+            if (w.PlayerType is not null || w.FavouriteWeekday is not null)
+                list.Add(new("rhythm", "rhythm"));
+            if (w.FavouriteCourt is not null)
+                list.Add(new("court", "court"));
+            if (w.LongestWeekStreak > 1 || w.BusiestMonth is { Count: > 1 })
+                list.Add(new("records", "records", 8));
+            if (w.RegularSlot is not null)
+                list.Add(new("regular", "regular"));
+        }
+
+        if (w.Badges.Count > 0)
+            list.Add(new("badges", "badges", 8));
+        if (w.EventsAttended > 0)
+            list.Add(new("events", "events", 6));
+
+        list.Add(new("club", "club", 9));
+        list.Add(new("summary", "summary"));
+        return list;
+    }
+
+    private RenderFragment RenderSlide(string key, SeasonWrappedResult w) => key switch
+    {
+        "intro" => @<div class="wrapped__slide-inner wrapped__slide--center">
+                        <div class="w-kicker w-in">@w.ClubName</div>
+                        <div class="w-mega w-in" style="--d: 1">@SeasonLabel(w)</div>
+                        <div class="w-title w-in wrapped__logo" style="--d: 2">Wrapped</div>
+                        <div class="w-text w-in" style="--d: 4">@(w.FirstName is { Length: > 0 } name ? string.Format(L["IntroGreeting"], name) : L["IntroGreetingAnonymous"])</div>
+                        @if (w.IsActive)
+                        {
+                            <div class="w-note w-in" style="--d: 5">@L["SeasonStillRunning"]</div>
+                        }
+                        <div class="w-hint w-in" style="--d: 6">@L["TapHint"]</div>
+                    </div>,
+
+        "no-matches" => @<div class="wrapped__slide-inner wrapped__slide--center">
+                             <div class="w-emoji w-in">🌱</div>
+                             <div class="w-title w-in" style="--d: 1">@L["NoMatchesTitle"]</div>
+                             <div class="w-text w-in" style="--d: 2">@L["NoMatchesText"]</div>
+                         </div>,
+
+        "matches" => @<div class="wrapped__slide-inner">
+                          <div class="w-kicker w-in">@L["MatchesKicker"]</div>
+                          <div class="w-mega w-pop" style="--d: 1">@w.Matches</div>
+                          <div class="w-title w-in" style="--d: 2">@L[w.Matches == 1 ? "MatchSingular" : "MatchPlural"]</div>
+                          <div class="w-facts">
+                              <div class="w-fact w-in" style="--d: 4">
+                                  <span class="w-fact__emoji">⏱️</span>
+                                  <span>@((MarkupString)string.Format(L["HoursOnCourt"], Strong(Number(w.HoursOnCourt)), Strong(Number(Math.Round(w.HoursOnCourt * 60)))))</span>
+                              </div>
+                              <div class="w-fact w-in" style="--d: 5">
+                                  <span class="w-fact__emoji">📅</span>
+                                  <span>@((MarkupString)string.Format(L["DaysPlayed"], Strong(w.DaysPlayed.ToString(CultureInfo.CurrentCulture)), Strong(w.ActiveWeeks.ToString(CultureInfo.CurrentCulture))))</span>
+                              </div>
+                              @if (w.FirstMatch is { } first)
+                              {
+                                  <div class="w-fact w-in" style="--d: 6">
+                                      <span class="w-fact__emoji">🚀</span>
+                                      <span>@((MarkupString)string.Format(L["FirstMatch"], Strong(first.ToString("d. MMMM", CultureInfo.CurrentCulture))))</span>
+                                  </div>
+                              }
+                          </div>
+                      </div>,
+
+        "rank" => @<div class="wrapped__slide-inner wrapped__slide--center">
+                       <div class="w-kicker w-in">@L["RankKicker"]</div>
+                       <div class="w-emoji w-pop" style="--d: 1">@RankEmoji(w.Rank!.Value)</div>
+                       <div class="w-mega w-pop" style="--d: 2">#@w.Rank</div>
+                       <div class="w-title w-in" style="--d: 3">@string.Format(L["RankOf"], w.EnrolledMembers)</div>
+                       @if (w.BetterThanPercentage is { } better)
+                       {
+                           <div class="w-meter w-in" style="--d: 5">
+                               <div class="w-meter__track"><div class="w-meter__fill" style="width: @better.ToString(CultureInfo.InvariantCulture)%"></div></div>
+                               <div class="w-text">@((MarkupString)string.Format(L["BetterThan"], Strong($"{better}%")))</div>
+                           </div>
+                       }
+                   </div>,
+
+        "partner" => RenderPartners(w),
+
+        "rhythm" => @<div class="wrapped__slide-inner wrapped__slide--center">
+                         <div class="w-kicker w-in">@L["RhythmKicker"]</div>
+                         @if (w.PlayerType is { } type)
+                         {
+                             <div class="w-emoji w-pop" style="--d: 1">@PlayerTypeEmoji(type)</div>
+                             <div class="w-mega w-mega--words w-in" style="--d: 2">@StatisticsLocale[$"PlayerType_{type}"]</div>
+                             <div class="w-text w-in" style="--d: 3">@StatisticsLocale[$"PlayerType_{type}_Description"]</div>
+                         }
+                         @if (w.FavouriteWeekday is { } day)
+                         {
+                             <div class="w-facts w-facts--center">
+                                 <div class="w-fact w-in" style="--d: 5">
+                                     <span class="w-fact__emoji">📆</span>
+                                     <span>@((MarkupString)string.Format(L["FavouriteDay"], Strong(CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(day))))</span>
+                                 </div>
+                                 @if (w.FavouriteHour is { } hour)
+                                 {
+                                     <div class="w-fact w-in" style="--d: 6">
+                                         <span class="w-fact__emoji">🕖</span>
+                                         <span>@((MarkupString)string.Format(L["FavouriteHour"], Strong($"{hour:00}:00")))</span>
+                                     </div>
+                                 }
+                             </div>
+                         }
+                     </div>,
+
+        "court" => @<div class="wrapped__slide-inner wrapped__slide--center">
+                        <div class="w-kicker w-in">@L["CourtKicker"]</div>
+                        <div class="wrapped__court w-pop" style="--d: 1" aria-hidden="true"><span></span></div>
+                        <div class="w-mega w-mega--words w-in" style="--d: 2">@CourtName(w.FavouriteCourt!.Name)</div>
+                        <div class="w-text w-in" style="--d: 3">@((MarkupString)string.Format(L["CourtShare"], Strong($"{w.FavouriteCourt.SharePercentage}%"), Strong(w.FavouriteCourt.Matches.ToString(CultureInfo.CurrentCulture))))</div>
+                        @if (w.CourtsPlayed > 1)
+                        {
+                            <div class="w-note w-in" style="--d: 5">@string.Format(L["CourtsPlayed"], w.CourtsPlayed)</div>
+                        }
+                    </div>,
+
+        "records" => @<div class="wrapped__slide-inner">
+                          <div class="w-kicker w-in">@L["RecordsKicker"]</div>
+                          <div class="w-records">
+                              @if (w.LongestWeekStreak > 1)
+                              {
+                                  <div class="w-record w-in" style="--d: 1">
+                                      <span class="w-record__emoji">🔥</span>
+                                      <span class="w-record__value">@w.LongestWeekStreak</span>
+                                      <span class="w-record__label">@L["StreakLabel"]</span>
+                                  </div>
+                              }
+                              @if (w.BusiestMonth is { } month)
+                              {
+                                  <div class="w-record w-in" style="--d: 3">
+                                      <span class="w-record__emoji">📈</span>
+                                      <span class="w-record__value">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month.Month)</span>
+                                      <span class="w-record__label">@string.Format(L["BusiestMonthLabel"], month.Count)</span>
+                                  </div>
+                              }
+                              @if (w.BestWeek is { Count: > 1 } week)
+                              {
+                                  <div class="w-record w-in" style="--d: 5">
+                                      <span class="w-record__emoji">⚡</span>
+                                      <span class="w-record__value">@week.Count</span>
+                                      <span class="w-record__label">@string.Format(L["BestWeekLabel"], week.WeekStart.ToString("d. MMM", CultureInfo.CurrentCulture))</span>
+                                  </div>
+                              }
+                          </div>
+                      </div>,
+
+        "regular" => @<div class="wrapped__slide-inner wrapped__slide--center">
+                          <div class="w-kicker w-in">@L["RegularKicker"]</div>
+                          <div class="w-emoji w-pop" style="--d: 1">🔁</div>
+                          <div class="w-mega w-mega--words w-in" style="--d: 2">@string.Format(L["RegularEvery"], CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(w.RegularSlot!.DayOfWeek))</div>
+                          <div class="w-title w-in" style="--d: 3">@string.Format(L["RegularAt"], w.RegularSlot.StartTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture), CourtName(w.RegularSlot.CourtName))</div>
+                          <div class="w-text w-in" style="--d: 5">@((MarkupString)string.Format(L["RegularMatches"], Strong(w.RegularSlot.Matches.ToString(CultureInfo.CurrentCulture))))</div>
+                      </div>,
+
+        "badges" => @<div class="wrapped__slide-inner wrapped__slide--center">
+                         <div class="w-kicker w-in">@L["BadgesKicker"]</div>
+                         <div class="w-title w-in" style="--d: 1">@string.Format(L[w.Badges.Count == 1 ? "BadgesCountSingular" : "BadgesCount"], w.Badges.Count)</div>
+                         <div class="w-badges">
+                             @for (var i = 0; i < Math.Min(w.Badges.Count, 6); i++)
+                             {
+                                 var badge = w.Badges[i];
+                                 <div class="w-badge w-pop" style="--d: @(i + 2)">
+                                     <BadgeIcon ImageUrl="@badge.ImageUrl" Level="@badge.Level" Alt="@badge.Name" Size="Size.Large" ExtraStyle="width: 72px; height: 72px;" />
+                                     <span class="w-badge__name">@badge.Name</span>
+                                 </div>
+                             }
+                         </div>
+                     </div>,
+
+        "events" => @<div class="wrapped__slide-inner wrapped__slide--center">
+                         <div class="w-emoji w-pop">🎉</div>
+                         <div class="w-mega w-pop" style="--d: 1">@w.EventsAttended</div>
+                         <div class="w-title w-in" style="--d: 2">@L[w.EventsAttended == 1 ? "EventsSingular" : "EventsPlural"]</div>
+                         <div class="w-text w-in" style="--d: 4">@L["EventsText"]</div>
+                     </div>,
+
+        "club" => @<div class="wrapped__slide-inner">
+                       <div class="w-kicker w-in">@string.Format(L["ClubKicker"], w.ClubName)</div>
+                       <div class="w-club">
+                           <div class="w-club__tile w-pop" style="--d: 1"><span class="w-club__value">@Number(w.Club.Matches)</span><span class="w-club__label">@L["ClubMatches"]</span></div>
+                           <div class="w-club__tile w-pop" style="--d: 2"><span class="w-club__value">@Number(w.Club.HoursOnCourt)</span><span class="w-club__label">@L["ClubHours"]</span></div>
+                           <div class="w-club__tile w-pop" style="--d: 3"><span class="w-club__value">@Number(w.Club.ActivePlayers)</span><span class="w-club__label">@L["ClubPlayers"]</span></div>
+                           @if (w.Club.GuestPlayers > 0)
+                           {
+                               <div class="w-club__tile w-pop" style="--d: 4"><span class="w-club__value">@Number(w.Club.GuestPlayers)</span><span class="w-club__label">@L["ClubGuests"]</span></div>
+                           }
+                           @if (w.Club.Events > 0)
+                           {
+                               <div class="w-club__tile w-pop" style="--d: 4"><span class="w-club__value">@Number(w.Club.Events)</span><span class="w-club__label">@L["ClubEvents"]</span></div>
+                           }
+                       </div>
+                       <div class="w-facts">
+                           @if (w.Club.BusiestCourt is { } court)
+                           {
+                               <div class="w-fact w-in" style="--d: 6"><span class="w-fact__emoji">🏟️</span><span>@((MarkupString)string.Format(L["ClubBusiestCourt"], Strong(CourtName(court))))</span></div>
+                           }
+                           @if (w.Club.BusiestWeekday is { } busiestDay)
+                           {
+                               <div class="w-fact w-in" style="--d: 7"><span class="w-fact__emoji">📆</span><span>@((MarkupString)string.Format(L["ClubBusiestDay"], Strong(CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(busiestDay))))</span></div>
+                           }
+                           @if (w.Matches > 0)
+                           {
+                               <div class="w-fact w-in" style="--d: 8"><span class="w-fact__emoji">💚</span><span>@((MarkupString)string.Format(L["ClubOwnShare"], Strong($"{Number(w.Club.OwnSharePercentage)}%")))</span></div>
+                           }
+                       </div>
+                   </div>,
+
+        _ => RenderSummary(w),
+    };
+
+    private RenderFragment RenderPartners(SeasonWrappedResult w) => __builder =>
+    {
+        var top = w.TopPartners[0];
+        <div class="wrapped__slide-inner wrapped__slide--center">
+            <div class="w-kicker w-in">@L["PartnerKicker"]</div>
+            <div class="w-partner w-pop" style="--d: 1">
+                <UserAvatar FirstName="@top.FirstName" LastName="@top.LastName" ProfilePictureUrl="@top.ProfilePictureUrl"
+                            Size="Size.Large" Color="Color.Secondary" AvatarClass="w-partner__avatar" />
+            </div>
+            <div class="w-mega w-mega--words w-in" style="--d: 2">@top.FirstName @top.LastName</div>
+            <div class="w-title w-in" style="--d: 3">@string.Format(L[top.Matches == 1 ? "TogetherSingular" : "Together"], top.Matches)</div>
+            @if (w.TopPartners.Count > 1)
+            {
+                <div class="w-partners w-in" style="--d: 5">
+                    @foreach (var partner in w.TopPartners.Skip(1))
+                    {
+                        <div class="w-partners__item">
+                            <UserAvatar FirstName="@partner.FirstName" LastName="@partner.LastName" ProfilePictureUrl="@partner.ProfilePictureUrl" Size="Size.Small" Color="Color.Secondary" />
+                            <span>@partner.FirstName · @partner.Matches</span>
+                        </div>
+                    }
+                </div>
+            }
+            @if (w.DistinctPartners > 1)
+            {
+                <div class="w-note w-in" style="--d: 6">@string.Format(L["DistinctPartners"], w.DistinctPartners)</div>
+            }
+        </div>
+    };
+
+    private RenderFragment RenderSummary(SeasonWrappedResult w) => __builder =>
+    {
+        <div class="wrapped__slide-inner wrapped__slide--center">
+            <div class="w-summary w-pop">
+                <div class="w-summary__head">
+                    <span class="w-summary__title">@string.Format(L["SummaryTitle"], SeasonLabel(w))</span>
+                    <span class="w-summary__club">@w.ClubName</span>
+                </div>
+                <div class="w-summary__grid">
+                    <SummaryStat Label="@L["SummaryMatches"]" Value="@Number(w.Matches)" />
+                    <SummaryStat Label="@L["SummaryHours"]" Value="@Number(w.HoursOnCourt)" />
+                    @if (w.Rank is { } rank && w.EnrolledMembers > 1)
+                    {
+                        <SummaryStat Label="@L["SummaryRank"]" Value="@($"#{rank}")" />
+                    }
+                    @if (w.LongestWeekStreak > 1)
+                    {
+                        <SummaryStat Label="@L["SummaryStreak"]" Value="@string.Format(L["WeeksValue"], w.LongestWeekStreak)" />
+                    }
+                    @if (w.TopPartners.FirstOrDefault() is { } partner)
+                    {
+                        <SummaryStat Label="@L["SummaryPartner"]" Value="@partner.FirstName" Wide="true" />
+                    }
+                    @if (w.FavouriteCourt is { } court)
+                    {
+                        <SummaryStat Label="@L["SummaryCourt"]" Value="@CourtName(court.Name)" Wide="true" />
+                    }
+                    @if (w.PlayerType is { } type)
+                    {
+                        <SummaryStat Label="@L["SummaryType"]" Value="@($"{PlayerTypeEmoji(type)} {StatisticsLocale[$"PlayerType_{type}"]}")" Wide="true" />
+                    }
+                    @if (w.Badges.Count > 0)
+                    {
+                        <SummaryStat Label="@L["SummaryBadges"]" Value="@Number(w.Badges.Count)" />
+                    }
+                </div>
+                <div class="w-summary__brand">Clubnetz · Wrapped</div>
+            </div>
+            <div class="wrapped__actions w-in" style="--d: 3">
+                <MudButton Variant="Variant.Filled" Class="wrapped__cta" StartIcon="@Icons.Material.Filled.Replay" OnClick="Restart">@L["WatchAgain"]</MudButton>
+                <MudButton Variant="Variant.Outlined" Class="wrapped__cta wrapped__cta--ghost" StartIcon="@Icons.Material.Filled.IosShare" OnClick="() => Share(w)">@L["Share"]</MudButton>
+                <MudButton Variant="Variant.Text" Class="wrapped__cta wrapped__cta--text" Href="@ListUrl">@L["AllSeasons"]</MudButton>
+            </div>
+        </div>
+    };
+
+    private static string SeasonLabel(SeasonWrappedResult w) => MemberAdminHelpers.SeasonLabel(w.StartDate, w.EndDate);
+
+    /// <summary>Many clubs number their courts: "2" alone reads oddly in a sentence.</summary>
+    private string CourtName(string name) => name.All(char.IsDigit) && name.Length > 0 ? string.Format(L["CourtNumber"], name) : name;
+
+    private static string Number(double value) => value.ToString("#,0.#", CultureInfo.CurrentCulture);
+
+    private static string Strong(string value) => $"<strong>{System.Net.WebUtility.HtmlEncode(value)}</strong>";
+
+    private static string RankEmoji(int rank) => rank switch { 1 => "🥇", 2 => "🥈", 3 => "🥉", <= 10 => "🏅", _ => "🎾" };
+
+    private static string PlayerTypeEmoji(PlayerType type) => type switch
+    {
+        PlayerType.EarlyBird => "🌅",
+        PlayerType.AfternoonAce => "☀️",
+        PlayerType.NightOwl => "🦉",
+        PlayerType.WeekendWarrior => "🏖️",
+        _ => "🎾",
+    };
+
+    private string ErrorText(Services.HttpClients.HttpResult error)
+        => error.ErrorCodeResponse?.ErrorCode is { } code && BackendLocale[code] is { ResourceNotFound: false } text
+            ? text.Value
+            : L["UnavailableText"];
+
+    private void Next()
+    {
+        if (index < slides.Count - 1)
+            index++;
+        StateHasChanged();
+    }
+
+    private void Previous()
+    {
+        if (index > 0)
+            index--;
+        StateHasChanged();
+    }
+
+    private void Restart()
+    {
+        index = 0;
+        round++;
+        paused = false;
+    }
+
+    private void TogglePause() => paused = !paused;
+
+    private void Hold()
+    {
+        pressedAt = DateTime.UtcNow;
+        paused = true;
+    }
+
+    private void Release() => paused = false;
+
+    // Holding a finger on the story pauses it; letting go after a long press must not also skip the slide
+    private bool WasLongPress => (DateTime.UtcNow - pressedAt).TotalMilliseconds > 350;
+
+    private void TapNext()
+    {
+        if (!WasLongPress)
+            Next();
+    }
+
+    private void TapPrevious()
+    {
+        if (!WasLongPress)
+            Previous();
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "ArrowRight":
+                Next();
+                break;
+            case "ArrowLeft":
+                Previous();
+                break;
+            case " ":
+                TogglePause();
+                break;
+            case "Escape":
+                Close();
+                break;
+        }
+    }
+
+    private void Close() => NavigationManager.NavigateTo(ListUrl);
+
+    private async Task Share(SeasonWrappedResult w)
+    {
+        var url = NavigationManager.ToAbsoluteUri($"/clubs/{ClubId}/wrapped/{SeasonId}").ToString();
+        var text = string.Format(L["ShareText"], SeasonLabel(w), w.ClubName, w.Matches, Number(w.HoursOnCourt));
+        var result = await JsRuntime.InvokeAsync<string>("App.shareOrCopy", string.Format(L["SummaryTitle"], SeasonLabel(w)), text, url);
+        if (result == "copied")
+            Snackbar.Add(L["LinkCopied"], Severity.Success);
+    }
+
+    public void Dispose() => WrappedStore.OnWrappedChanged -= OnWrappedChanged;
+}

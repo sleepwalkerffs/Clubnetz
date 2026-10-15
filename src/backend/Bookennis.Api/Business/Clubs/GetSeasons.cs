@@ -19,7 +19,8 @@ public record GetSeasons() : IQuery<GetSeasonsResult>
                     Id = s.Id,
                     StartDate = s.Period.From,
                     EndDate = s.Period.To,
-                    IsActive = s.Period.From <= today && today <= s.Period.To
+                    IsActive = s.Period.From <= today && today <= s.Period.To,
+                    WrappedPublishedAt = s.WrappedPublishedAt,
                 })
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);

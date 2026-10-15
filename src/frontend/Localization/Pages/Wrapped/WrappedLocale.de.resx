@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="PageTitle" xml:space="preserve">
+    <value>Saisonrückblick</value>
+  </data>
+  <data name="SeasonLabel" xml:space="preserve">
+    <value>Saison {0}</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Vorschau</value>
+  </data>
+  <data name="Play" xml:space="preserve">
+    <value>Abspielen</value>
+  </data>
+  <data name="Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Previous" xml:space="preserve">
+    <value>Zurück</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Weiter</value>
+  </data>
+  <data name="UnavailableTitle" xml:space="preserve">
+    <value>Noch nicht verfügbar</value>
+  </data>
+  <data name="UnavailableText" xml:space="preserve">
+    <value>Dieser Saisonrückblick kann nicht geöffnet werden.</value>
+  </data>
+  <data name="BackToList" xml:space="preserve">
+    <value>Alle Saisonen</value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Deine Matches werden gezählt…</value>
+  </data>
+  <data name="IntroGreeting" xml:space="preserve">
+    <value>Hallo {0}! Bereit für einen Blick zurück auf deine Saison?</value>
+  </data>
+  <data name="IntroGreetingAnonymous" xml:space="preserve">
+    <value>Bereit für einen Blick zurück auf die Saison?</value>
+  </data>
+  <data name="SeasonStillRunning" xml:space="preserve">
+    <value>Die Saison läuft noch – die Zahlen wachsen weiter.</value>
+  </data>
+  <data name="TapHint" xml:space="preserve">
+    <value>Tippen zum Weiterblättern · halten zum Pausieren</value>
+  </data>
+  <data name="NoMatchesTitle" xml:space="preserve">
+    <value>Keine Matches in dieser Saison</value>
+  </data>
+  <data name="NoMatchesText" xml:space="preserve">
+    <value>Diesmal warst du nicht am Platz – dein Club aber schon. Das ist passiert.</value>
+  </data>
+  <data name="MatchesKicker" xml:space="preserve">
+    <value>Diese Saison hast du gespielt</value>
+  </data>
+  <data name="MatchSingular" xml:space="preserve">
+    <value>Match</value>
+  </data>
+  <data name="MatchPlural" xml:space="preserve">
+    <value>Matches</value>
+  </data>
+  <data name="HoursOnCourt" xml:space="preserve">
+    <value>{0} Stunden am Platz – das sind {1} Minuten Tennis</value>
+  </data>
+  <data name="DaysPlayed" xml:space="preserve">
+    <value>An {0} Tagen in {1} verschiedenen Wochen</value>
+  </data>
+  <data name="FirstMatch" xml:space="preserve">
+    <value>Deine Saison begann am {0}</value>
+  </data>
+  <data name="RankKicker" xml:space="preserve">
+    <value>Unter den Mitgliedern deines Clubs</value>
+  </data>
+  <data name="RankOf" xml:space="preserve">
+    <value>von {0} Mitgliedern nach Matches</value>
+  </data>
+  <data name="BetterThan" xml:space="preserve">
+    <value>Du hast mehr Matches gespielt als {0} der Mitglieder</value>
+  </data>
+  <data name="RhythmKicker" xml:space="preserve">
+    <value>Dein Spielstil</value>
+  </data>
+  <data name="FavouriteDay" xml:space="preserve">
+    <value>Lieblingstag: {0}</value>
+  </data>
+  <data name="FavouriteHour" xml:space="preserve">
+    <value>Meistens um {0}</value>
+  </data>
+  <data name="CourtKicker" xml:space="preserve">
+    <value>Dein Heimplatz</value>
+  </data>
+  <data name="CourtShare" xml:space="preserve">
+    <value>{0} deiner Matches – {1} insgesamt</value>
+  </data>
+  <data name="CourtsPlayed" xml:space="preserve">
+    <value>Du hast auf {0} verschiedenen Plätzen gespielt</value>
+  </data>
+  <data name="RecordsKicker" xml:space="preserve">
+    <value>Deine Rekorde</value>
+  </data>
+  <data name="StreakLabel" xml:space="preserve">
+    <value>Wochen in Folge mit einem Match</value>
+  </data>
+  <data name="BusiestMonthLabel" xml:space="preserve">
+    <value>dein stärkster Monat – {0} Matches</value>
+  </data>
+  <data name="BestWeekLabel" xml:space="preserve">
+    <value>Matches in deiner besten Woche (ab {0})</value>
+  </data>
+  <data name="RegularKicker" xml:space="preserve">
+    <value>Dein Stammtermin</value>
+  </data>
+  <data name="RegularEvery" xml:space="preserve">
+    <value>Jeden {0}</value>
+  </data>
+  <data name="RegularAt" xml:space="preserve">
+    <value>um {0} · {1}</value>
+  </data>
+  <data name="RegularMatches" xml:space="preserve">
+    <value>{0} Matches an deinem Stammtermin</value>
+  </data>
+  <data name="BadgesKicker" xml:space="preserve">
+    <value>Deine Trophäen</value>
+  </data>
+  <data name="BadgesCount" xml:space="preserve">
+    <value>{0} Abzeichen verdient</value>
+  </data>
+  <data name="BadgesCountSingular" xml:space="preserve">
+    <value>{0} Abzeichen verdient</value>
+  </data>
+  <data name="EventsSingular" xml:space="preserve">
+    <value>Clubveranstaltung</value>
+  </data>
+  <data name="EventsPlural" xml:space="preserve">
+    <value>Clubveranstaltungen</value>
+  </data>
+  <data name="EventsText" xml:space="preserve">
+    <value>Du warst dabei, wenn der Club zusammengekommen ist. Danke dafür!</value>
+  </data>
+  <data name="ClubKicker" xml:space="preserve">
+    <value>{0} in dieser Saison</value>
+  </data>
+  <data name="ClubMatches" xml:space="preserve">
+    <value>Matches</value>
+  </data>
+  <data name="ClubHours" xml:space="preserve">
+    <value>Stunden am Platz</value>
+  </data>
+  <data name="ClubPlayers" xml:space="preserve">
+    <value>Mitglieder haben gespielt</value>
+  </data>
+  <data name="ClubGuests" xml:space="preserve">
+    <value>Gäste haben gespielt</value>
+  </data>
+  <data name="ClubEvents" xml:space="preserve">
+    <value>Clubveranstaltungen</value>
+  </data>
+  <data name="ClubBusiestCourt" xml:space="preserve">
+    <value>Beliebtester Platz: {0}</value>
+  </data>
+  <data name="ClubBusiestDay" xml:space="preserve">
+    <value>Meistgespielter Tag: {0}</value>
+  </data>
+  <data name="ClubOwnShare" xml:space="preserve">
+    <value>Du warst bei {0} aller Matches dabei</value>
+  </data>
+  <data name="PartnerKicker" xml:space="preserve">
+    <value>Dein Lieblingspartner</value>
+  </data>
+  <data name="Together" xml:space="preserve">
+    <value>{0} Matches miteinander</value>
+  </data>
+  <data name="TogetherSingular" xml:space="preserve">
+    <value>{0} Match miteinander</value>
+  </data>
+  <data name="DistinctPartners" xml:space="preserve">
+    <value>{0} verschiedene Mitspieler:innen in dieser Saison</value>
+  </data>
+  <data name="SummaryTitle" xml:space="preserve">
+    <value>Meine Saison {0}</value>
+  </data>
+  <data name="SummaryMatches" xml:space="preserve">
+    <value>Matches</value>
+  </data>
+  <data name="SummaryHours" xml:space="preserve">
+    <value>Stunden</value>
+  </data>
+  <data name="SummaryRank" xml:space="preserve">
+    <value>Platz</value>
+  </data>
+  <data name="SummaryStreak" xml:space="preserve">
+    <value>Beste Serie</value>
+  </data>
+  <data name="WeeksValue" xml:space="preserve">
+    <value>{0} Wo.</value>
+  </data>
+  <data name="SummaryPartner" xml:space="preserve">
+    <value>Top-Partner</value>
+  </data>
+  <data name="SummaryCourt" xml:space="preserve">
+    <value>Heimplatz</value>
+  </data>
+  <data name="SummaryType" xml:space="preserve">
+    <value>Spielstil</value>
+  </data>
+  <data name="SummaryBadges" xml:space="preserve">
+    <value>Abzeichen</value>
+  </data>
+  <data name="WatchAgain" xml:space="preserve">
+    <value>Nochmal ansehen</value>
+  </data>
+  <data name="Share" xml:space="preserve">
+    <value>Teilen</value>
+  </data>
+  <data name="AllSeasons" xml:space="preserve">
+    <value>Alle Saisonen</value>
+  </data>
+  <data name="ShareText" xml:space="preserve">
+    <value>Meine Saison {0} beim {1}: {2} Matches und {3} Stunden am Platz 🎾 Hier geht's zu deinem Saisonrückblick:</value>
+  </data>
+  <data name="LinkCopied" xml:space="preserve">
+    <value>Link kopiert</value>
+  </data>
+  <data name="HeroKicker" xml:space="preserve">
+    <value>Saisonrückblick</value>
+  </data>
+  <data name="HeroTitle" xml:space="preserve">
+    <value>Deine Saisonen im Rückblick</value>
+  </data>
+  <data name="HeroSubtitle" xml:space="preserve">
+    <value>Deine Highlights jeder Saison: Matches, Partner, Rekorde und Abzeichen – als Story. Jederzeit wieder ansehen.</value>
+  </data>
+  <data name="AdminHint" xml:space="preserve">
+    <value>Als Club-Admin gibst du den Rückblick einer Saison frei – am besten am Saisonende, auch für vergangene Saisonen. Bis dahin sehen ihn nur Admins als Vorschau. Die Zahlen werden immer aus den aktuellen Buchungen berechnet.</value>
+  </data>
+  <data name="EmptyTitle" xml:space="preserve">
+    <value>Noch kein Saisonrückblick</value>
+  </data>
+  <data name="EmptyText" xml:space="preserve">
+    <value>Dein Club gibt den Saisonrückblick am Ende der Saison frei. Sobald er da ist, siehst du ihn auf Mein Club.</value>
+  </data>
+  <data name="EmptyTextAdmin" xml:space="preserve">
+    <value>Sobald eine Saison begonnen hat, erscheint sie hier und du kannst ihren Rückblick ansehen und freigeben.</value>
+  </data>
+  <data name="OpenSeason" xml:space="preserve">
+    <value>Rückblick der Saison {0} öffnen</value>
+  </data>
+  <data name="CardMatches" xml:space="preserve">
+    <value>{0} Matches</value>
+  </data>
+  <data name="CardMatchesSingular" xml:space="preserve">
+    <value>{0} Match</value>
+  </data>
+  <data name="CardNoMatches" xml:space="preserve">
+    <value>Sieh, was im Club los war</value>
+  </data>
+  <data name="ReleasedOn" xml:space="preserve">
+    <value>Freigegeben am {0}</value>
+  </data>
+  <data name="TakeBack" xml:space="preserve">
+    <value>Zurückziehen</value>
+  </data>
+  <data name="NotReleased" xml:space="preserve">
+    <value>Nicht freigegeben</value>
+  </data>
+  <data name="NotReleasedRunning" xml:space="preserve">
+    <value>Saison läuft</value>
+  </data>
+  <data name="Release" xml:space="preserve">
+    <value>Freigeben</value>
+  </data>
+  <data name="ReleaseTitle" xml:space="preserve">
+    <value>Saison {0} freigeben?</value>
+  </data>
+  <data name="ReleaseConfirmation" xml:space="preserve">
+    <value>Alle Mitglieder können dann ihren persönlichen Rückblick auf die Saison {0} öffnen, jetzt und später.</value>
+  </data>
+  <data name="ReleaseConfirmationRunning" xml:space="preserve">
+    <value>Die Saison läuft noch, die Zahlen wachsen also bis zu ihrem Ende weiter.</value>
+  </data>
+  <data name="Released" xml:space="preserve">
+    <value>Saison {0} freigegeben 🎉</value>
+  </data>
+  <data name="TakeBackConfirmation" xml:space="preserve">
+    <value>Mitglieder können den Rückblick auf die Saison {0} dann nicht mehr öffnen. Du kannst ihn jederzeit wieder freigeben.</value>
+  </data>
+  <data name="TeaserTitle" xml:space="preserve">
+    <value>Deine Saison {0} im Rückblick!</value>
+  </data>
+  <data name="TeaserText" xml:space="preserve">
+    <value>Deine Matches, Partner und Rekorde der Saison als Story.</value>
+  </data>
+  <data name="TeaserButton" xml:space="preserve">
+    <value>Jetzt ansehen</value>
+  </data>
+  <data name="CourtNumber" xml:space="preserve">
+    <value>Platz {0}</value>
+  </data>
+</root>

@@ -63,6 +63,11 @@ else
 
             @if (!IsGuest)
             {
+                <WrappedTeaser ClubId="@ClubId" />
+            }
+
+            @if (!IsGuest)
+            {
                 @RenderTiles(seasonStatistics)
             }
 

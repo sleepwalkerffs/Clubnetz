@@ -1,0 +1,43 @@
+@using Bookennis.Client.Localization.Pages.Wrapped
+@using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Pages.ClubShell.Wrapped.Components
+@using Bookennis.Client.Services.Store.Wrapped
+
+@implements IDisposable
+
+@* Advertises a freshly released season review; afterwards it stays reachable from the navigation *@
+@if (Latest is { } season)
+{
+    <MudItem xs="12">
+        <a class="wrapped-teaser" href="@($"/clubs/{ClubId}/wrapped/{season.SeasonId}")">
+            <span class="wrapped-teaser__emoji" aria-hidden="true">🎁</span>
+            <span class="wrapped-teaser__text">
+                <span class="wrapped-teaser__title">@string.Format(L["TeaserTitle"], MemberAdminHelpers.SeasonLabel(season.StartDate, season.EndDate))</span>
+                <span class="wrapped-teaser__subtitle">@L["TeaserText"]</span>
+            </span>
+            <span class="wrapped-teaser__button">@L["TeaserButton"]</span>
+        </a>
+    </MudItem>
+}
+
+@code {
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+
+    [Inject] private IWrappedStore WrappedStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<WrappedLocale> L { get; set; } = null!;
+
+    private Bookennis.Shared.Controller.Wrapped.WrappedSeasonDto? Latest => WrappedStore.Seasons?.Seasons
+        .Where(s => s.PublishedAt is { } published && published > DateTimeOffset.UtcNow.AddDays(-WrappedHelpers.TeaserDays))
+        .OrderByDescending(s => s.StartDate)
+        .FirstOrDefault();
+
+    protected override async Task OnInitializedAsync()
+    {
+        WrappedStore.OnSeasonsChanged += OnChanged;
+        await WrappedStore.LoadSeasons();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => WrappedStore.OnSeasonsChanged -= OnChanged;
+}

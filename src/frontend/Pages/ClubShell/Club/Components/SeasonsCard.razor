@@ -5,6 +5,7 @@
 @using Bookennis.Client.Pages.ClubShell.Club.Dialogs
 @using Bookennis.Client.Pages.ClubShell.Members.Components
 @using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Club
 
@@ -12,6 +13,7 @@
 
 <SectionCard Emoji="🗓️" Title="@L["SeasonsTitle"]" Subtitle="@L["SeasonsSubtitle"]">
     <Actions>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.AutoAwesome" Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/wrapped")">@L["WrappedLink"]</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="Add">@L["Add"]</MudButton>
     </Actions>
     <ChildContent>
@@ -38,6 +40,10 @@
                             <div class="season__head">
                                 <span class="season__label">@MemberAdminHelpers.SeasonLabel(season)</span>
                                 <span class="season__state season__state--@state">@L[$"SeasonState_{state}"]</span>
+                                @if (season.WrappedPublishedAt is not null)
+                                {
+                                    <span class="season__wrapped" title="@L["WrappedReleased"]">🎁</span>
+                                }
                                 <span class="season__actions">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@SharedLocale["Edit"]" OnClick="() => Edit(season)" />
                                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@SharedLocale["Delete"]" OnClick="() => Delete(season)" />
@@ -84,6 +90,7 @@
 
 @code {
     [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;
