@@ -82,6 +82,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>View.Emails.ForgotPassword.resx</DependentUpon>
     </Compile>
+    <Compile Update="Resources\Localization\View.Emails.Layout.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>View.Emails.Layout.resx</DependentUpon>
+    </Compile>
     <Compile Update="Resources\Localization\View.Emails.VerifyUser.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -121,6 +126,13 @@
     <EmbeddedResource Update="Resources\Localization\View.Emails.ForgotPassword.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>View.Emails.ForgotPassword.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Localization\View.Emails.Layout.de.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Localization\View.Emails.Layout.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>View.Emails.Layout.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Resources\Localization\View.Emails.VerifyUser.de.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>

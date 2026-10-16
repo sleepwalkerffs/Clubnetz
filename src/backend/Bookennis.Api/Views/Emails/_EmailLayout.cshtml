@@ -1,0 +1,68 @@
+@using System.Globalization
+@using Texts = Bookennis.Api.Resources.Localization.View_Emails_Layout;
+@*
+    Shared layout of all emails. Tables instead of divs, because Outlook ignores widths and paddings of divs.
+    The styles in wwwroot/assets/emails/email.css are inlined when the email is sent (Fusonic CssInliner).
+    ViewData: Title (header), Emoji (tile in the header), ClubName (eyebrow and footer; platform emails have none).
+*@
+@{
+    var clubName = ViewData["ClubName"] as string;
+    var emoji = ViewData["Emoji"] as string ?? "✉️";
+}
+<!DOCTYPE html>
+<html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>@ViewData["Title"]</title>
+    @* Not inlined: clients that support media queries get less padding on phones *@
+    <style>
+        @@media only screen and (max-width: 480px) {
+            .email-outer { padding: 16px 8px !important; }
+            .email-header { padding: 24px 24px 22px 24px !important; }
+            .email-body { padding: 28px 24px 30px 24px !important; }
+            .email-header h1 { font-size: 21px !important; }
+        }
+    </style>
+</head>
+<body>
+    <table class="email-wrapper" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td class="email-outer" align="center">
+                <table class="email-container" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                        <td class="email-header">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td class="email-icon" width="52" height="52" align="center" valign="middle">@emoji</td>
+                                </tr>
+                            </table>
+                            <p class="email-eyebrow">@(clubName ?? "Clubnetz")</p>
+                            <h1>@ViewData["Title"]</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="email-accent" height="4">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td class="email-body">
+                            @RenderBody()
+                        </td>
+                    </tr>
+                </table>
+                <table class="email-container" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                        <td class="email-footer" align="center">
+                            <p class="email-footer-brand">🎾 Clubnetz</p>
+                            <p class="email-footer-tagline">@Texts.Tagline</p>
+                            <p>@(clubName is null ? Texts.SentByPlatform : string.Format(Texts.SentByClub, clubName))</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

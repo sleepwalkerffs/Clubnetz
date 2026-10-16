@@ -1,16 +1,10 @@
 @using Bookennis.Api.Business.ClubEmails.EmailViewModels;
 @model ClubEmailViewModel
-
 @{
-    <div class="email-wrapper">
-        <div class="email-container">
-            <div class="email-header">
-                <h1>@Model.Title</h1>
-            </div>
-            <div class="email-body">
-                @* Sanitized by ClubEmailRenderer *@
-                @Html.Raw(Model.BodyHtml)
-            </div>
-        </div>
-    </div>
+    Layout = "~/Views/Emails/_EmailLayout.cshtml";
+    ViewData["Title"] = Model.Title;
+    ViewData["Emoji"] = Model.Emoji;
+    ViewData["ClubName"] = Model.ClubName;
 }
+@* Sanitized by ClubEmailRenderer *@
+@Html.Raw(Model.BodyHtml)
