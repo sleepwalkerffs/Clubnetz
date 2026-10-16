@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Clubnetz – free, open-source club management and court booking for tennis clubs</title>
-    <meta name="description" content="Clubnetz is a free, open-source web app for tennis clubs. Members book courts from their phone and pay their fee online, the board manages members, seasons, fees, guests, events and news. Self-hostable." />
+    <meta name="description" content="Clubnetz is a free, open-source web app for tennis clubs. Members book courts from their phone and pay their fee online, the board manages members, seasons, fees, court sales, events and news. Self-hostable." />
     <link rel="canonical" href="https://clubnetz.app/" />
     <link rel="alternate" hreflang="en" href="https://clubnetz.app/" />
     <link rel="alternate" hreflang="de" href="https://clubnetz.app/de/" />
@@ -40,12 +40,14 @@
             "Recurring bookings",
             "Member, season and family management",
             "Membership plans and online payment of membership fees",
-            "Guest cards",
+            "Selling court time to non-members with online payment and credits",
             "Club calendar with event registration",
             "Club news and email announcements",
             "Court blockings for tournaments, maintenance and weather",
             "Statistics, leaderboards and badges",
             "Subscription planner for shared winter courts",
+            "Planner to move and batch-book bookings over several days",
+            "Season Wrapped: a story-style season review for every member",
             "Push and email notifications",
             "API with API keys for own scripts and integrations",
             "Multi-tenant: one installation serves many clubs"
@@ -89,6 +91,11 @@
             },
             {
                 "@type": "Question",
+                "name": "Can players without a membership book a court?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes, if the club wants to. The club sets prices per court, weekday and time. Players who are not enrolled in the season tap a free slot and pay online, or use a credit the club gave them. Members of the season keep booking for free." }
+            },
+            {
+                "@type": "Question",
                 "name": "Is there an API?",
                 "acceptedAnswer": { "@type": "Answer", "text": "Yes. Club admins create API keys in the app and use them to read and change the data of their club from their own scripts and tools, for example to show free courts on the club website or to export the member list." }
             }
@@ -123,7 +130,7 @@
             <div class="wrap hero__grid">
                 <div>
                     <h1>Club management and court booking for tennis clubs</h1>
-                    <p class="hero__lead">Clubnetz is a free, open-source web app. Members book a court in a few taps on their phone and pay their membership fee online. The board manages members, seasons, fees, guests, events and news in one place.</p>
+                    <p class="hero__lead">Clubnetz is a free, open-source web app. Members book a court in a few taps on their phone and pay their membership fee online. The board manages members, seasons, fees, court sales, events and news in one place.</p>
                     <div class="hero__actions">
                         <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20for%20our%20club">Get your club on Clubnetz</a>
                         <a class="btn btn--ghost" href="https://github.com/sleepwalkerffs/Clubnetz">View the code on GitHub</a>
@@ -195,6 +202,25 @@
                                  alt="The treasurer's overview of membership fees: amounts received and open, and who has paid" />
                             <img class="shot__phone" src="/screenshots/en/phone-membership.webp" width="780" height="1688" loading="lazy"
                                  alt="A member chooses a membership plan on the phone and pays it online" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <p class="tour__new">New</p>
+                            <h3>Sell free court time to non-members</h3>
+                            <p>Players without a season membership sign up for free, tap a free slot, see the price and pay online. The court is booked for them right away, and the treasurer sees every sale in one list.</p>
+                            <ul class="checks">
+                                <li>Prices per court, weekday and time, for example a cheaper daytime rate</li>
+                                <li>Paid online straight to the club's Stripe account, or with a credit from the club</li>
+                                <li>Members of the season keep booking for free</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/en/court-sales.webp" width="2560" height="1600" loading="lazy"
+                                 alt="The treasurer's court sales: bookings sold, amount paid online, credits used and the list of purchases" />
+                            <img class="shot__phone" src="/screenshots/en/phone-court-buy.webp" width="780" height="1688" loading="lazy"
+                                 alt="A player without membership buys an hour on court 1 on the phone and pays it online" />
                         </figure>
                     </article>
 
@@ -297,6 +323,11 @@
                         <p>Who plays the most and with whom, leaderboards, and badges earned over the season.</p>
                     </li>
                     <li class="card">
+                        <div class="card__icon" aria-hidden="true">✨</div>
+                        <h3>Season Wrapped</h3>
+                        <p>Your season as a story: hours on court, favourite partners, badges and events, once the club releases it.</p>
+                    </li>
+                    <li class="card">
                         <div class="card__icon" aria-hidden="true">🗓️</div>
                         <h3>Subscription planner</h3>
                         <p>Plans a fair schedule for shared winter court subscriptions and exports it to Excel.</p>
@@ -340,8 +371,13 @@
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">🎟️</div>
-                        <h3>Guest cards</h3>
-                        <p>Let guests book with a link or a code and a fixed number of bookings.</p>
+                        <h3>Court sales</h3>
+                        <p>Sell free court time to non-members at your own prices. They pay online or with a credit the club gives them.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🧭</div>
+                        <h3>Planner</h3>
+                        <p>Plan tournaments on a timeline over several days: drag bookings to another court or time and book many slots at once.</p>
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">📣</div>
@@ -462,6 +498,10 @@ curl -H "Authorization: Bearer cnz_..." \
                     <details>
                         <summary>Can members pay their membership fee online?</summary>
                         <p>Yes, if the club wants to. The club enters its price list as membership plans, members choose a plan for themselves or their family and pay by card or SEPA direct debit. The money goes straight to the club's own Stripe account, and a paid fee enrolls the members in the season. Bank transfers and cash are recorded by the treasurer.</p>
+                    </details>
+                    <details>
+                        <summary>Can players without a membership book a court?</summary>
+                        <p>Yes, if the club wants to. The club sets prices per court, weekday and time. Players who are not enrolled in the season tap a free slot and pay online, or use a credit the club gave them. Members of the season keep booking for free.</p>
                     </details>
                     <details>
                         <summary>Is there an API?</summary>

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Clubnetz – kostenlose Open-Source-Vereinsverwaltung und Platzbuchung für Tennisvereine</title>
-    <meta name="description" content="Clubnetz ist eine kostenlose Open-Source-Web-App für Tennisvereine. Mitglieder buchen Plätze am Handy und zahlen den Mitgliedsbeitrag online, der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Gäste, Termine und Neuigkeiten. Auch zum Selbsthosten." />
+    <meta name="description" content="Clubnetz ist eine kostenlose Open-Source-Web-App für Tennisvereine. Mitglieder buchen Plätze am Handy und zahlen den Mitgliedsbeitrag online, der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Platzverkauf, Termine und Neuigkeiten. Auch zum Selbsthosten." />
     <link rel="canonical" href="https://clubnetz.app/de/" />
     <link rel="alternate" hreflang="en" href="https://clubnetz.app/" />
     <link rel="alternate" hreflang="de" href="https://clubnetz.app/de/" />
@@ -40,12 +40,14 @@
             "Serienbuchungen",
             "Verwaltung von Mitgliedern, Saisonen und Familien",
             "Mitgliedstarife und Online-Zahlung des Mitgliedsbeitrags",
-            "Gästekarten",
+            "Verkauf von Platzzeiten an Nichtmitglieder mit Online-Zahlung und Guthaben",
             "Vereinskalender mit Anmeldung zu Terminen",
             "Vereinsneuigkeiten und Aussendungen per E-Mail",
             "Platzsperren für Turniere, Wartung und Wetter",
             "Statistiken, Ranglisten und Abzeichen",
             "Abo-Planer für gemeinsame Winterabos",
+            "Planer zum Verschieben und Sammelbuchen über mehrere Tage",
+            "Saisonrückblick als Story für jedes Mitglied",
             "Benachrichtigungen per Push und E-Mail",
             "API mit API-Schlüsseln für eigene Skripte und Anbindungen",
             "Mandantenfähig: eine Installation für viele Vereine"
@@ -89,6 +91,11 @@
             },
             {
                 "@type": "Question",
+                "name": "Können Spieler ohne Mitgliedschaft einen Platz buchen?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Ja, wenn der Verein das möchte. Der Verein legt Preise pro Platz, Wochentag und Uhrzeit fest. Wer nicht für die Saison angemeldet ist, tippt auf einen freien Platz und zahlt online oder mit einem Guthaben vom Verein. Mitglieder der Saison buchen weiterhin kostenlos." }
+            },
+            {
+                "@type": "Question",
                 "name": "Gibt es eine API?",
                 "acceptedAnswer": { "@type": "Answer", "text": "Ja. Vereins-Admins erstellen in der App API-Schlüssel und können damit die Daten ihres Vereins aus eigenen Skripten und Werkzeugen lesen und ändern, zum Beispiel um freie Plätze auf der Vereinswebsite zu zeigen oder die Mitgliederliste zu exportieren." }
             }
@@ -123,7 +130,7 @@
             <div class="wrap hero__grid">
                 <div>
                     <h1>Vereinsverwaltung und Platzbuchung für Tennisvereine</h1>
-                    <p class="hero__lead">Clubnetz ist eine kostenlose Open-Source-Web-App. Mitglieder buchen einen Platz mit wenigen Klicks am Handy und zahlen ihren Mitgliedsbeitrag online. Der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Gäste, Termine und Neuigkeiten an einem Ort.</p>
+                    <p class="hero__lead">Clubnetz ist eine kostenlose Open-Source-Web-App. Mitglieder buchen einen Platz mit wenigen Klicks am Handy und zahlen ihren Mitgliedsbeitrag online. Der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Platzverkauf, Termine und Neuigkeiten an einem Ort.</p>
                     <div class="hero__actions">
                         <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20f%C3%BCr%20unseren%20Verein">Clubnetz für euren Verein</a>
                         <a class="btn btn--ghost" href="https://github.com/sleepwalkerffs/Clubnetz">Quellcode auf GitHub</a>
@@ -195,6 +202,25 @@
                                  alt="Die Übersicht des Kassiers über die Mitgliedsbeiträge: eingegangene und offene Beträge und wer bezahlt hat" />
                             <img class="shot__phone" src="/screenshots/de/phone-membership.webp" width="780" height="1688" loading="lazy"
                                  alt="Ein Mitglied wählt am Handy seinen Tarif und bezahlt ihn online" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <p class="tour__new">Neu</p>
+                            <h3>Freie Platzzeiten an Nichtmitglieder verkaufen</h3>
+                            <p>Wer keine Saison-Mitgliedschaft hat, registriert sich kostenlos, tippt auf einen freien Platz, sieht den Preis und zahlt online. Der Platz ist sofort gebucht, und der Kassier sieht alle Verkäufe in einer Liste.</p>
+                            <ul class="checks">
+                                <li>Preise pro Platz, Wochentag und Uhrzeit, zum Beispiel ein günstigerer Tagestarif</li>
+                                <li>Online bezahlt direkt auf das Stripe-Konto des Vereins oder mit einem Guthaben vom Verein</li>
+                                <li>Mitglieder der Saison buchen weiterhin kostenlos</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/de/court-sales.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Der Platzverkauf des Kassiers: verkaufte Buchungen, online bezahlter Betrag, eingelöste Guthaben und die Liste der Käufe" />
+                            <img class="shot__phone" src="/screenshots/de/phone-court-buy.webp" width="780" height="1688" loading="lazy"
+                                 alt="Ein Spieler ohne Mitgliedschaft kauft am Handy eine Stunde auf Platz 1 und bezahlt sie online" />
                         </figure>
                     </article>
 
@@ -297,6 +323,11 @@
                         <p>Wer spielt am meisten und mit wem, Ranglisten und Abzeichen, die man sich über die Saison erspielt.</p>
                     </li>
                     <li class="card">
+                        <div class="card__icon" aria-hidden="true">✨</div>
+                        <h3>Saisonrückblick</h3>
+                        <p>Deine Saison als Story: Stunden am Platz, Lieblingspartner, Abzeichen und Termine, sobald der Verein ihn freigibt.</p>
+                    </li>
+                    <li class="card">
                         <div class="card__icon" aria-hidden="true">🗓️</div>
                         <h3>Abo-Planer</h3>
                         <p>Plant einen fairen Spielplan für gemeinsame Winterabos und exportiert ihn nach Excel.</p>
@@ -340,8 +371,13 @@
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">🎟️</div>
-                        <h3>Gästekarten</h3>
-                        <p>Gäste buchen mit einem Link oder Code und einer festen Anzahl an Buchungen.</p>
+                        <h3>Platzverkauf</h3>
+                        <p>Verkauft freie Platzzeiten zu euren eigenen Preisen an Nichtmitglieder. Sie zahlen online oder mit einem Guthaben, das der Verein vergibt.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🧭</div>
+                        <h3>Planer</h3>
+                        <p>Turniere auf einer Zeitleiste über mehrere Tage planen: Buchungen auf andere Plätze oder Zeiten ziehen und viele Termine auf einmal buchen.</p>
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">📣</div>
@@ -462,6 +498,10 @@ curl -H "Authorization: Bearer cnz_..." \
                     <details>
                         <summary>Können Mitglieder den Mitgliedsbeitrag online bezahlen?</summary>
                         <p>Ja, wenn der Verein das möchte. Der Verein trägt seine Tarife ein, Mitglieder wählen einen Tarif für sich oder ihre Familie und zahlen mit Karte oder SEPA-Lastschrift. Das Geld geht direkt auf das eigene Stripe-Konto des Vereins, und ein bezahlter Beitrag schaltet die Mitglieder für die Saison frei. Überweisungen und Barzahlungen trägt der Kassier ein.</p>
+                    </details>
+                    <details>
+                        <summary>Können Spieler ohne Mitgliedschaft einen Platz buchen?</summary>
+                        <p>Ja, wenn der Verein das möchte. Der Verein legt Preise pro Platz, Wochentag und Uhrzeit fest. Wer nicht für die Saison angemeldet ist, tippt auf einen freien Platz und zahlt online oder mit einem Guthaben vom Verein. Mitglieder der Saison buchen weiterhin kostenlos.</p>
                     </details>
                     <details>
                         <summary>Gibt es eine API?</summary>

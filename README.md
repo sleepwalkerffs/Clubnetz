@@ -8,7 +8,7 @@
 
 **Open-source club management and court booking for tennis clubs.**
 
-Members book courts in seconds. The board manages members, seasons, guests, events and news in one place.<br />
+Members book courts in seconds. The board manages members, seasons, fees, court sales, events and news in one place.<br />
 Free, self-hostable, installable on any phone, in English and German.
 
 *Kostenlose Open-Source-Vereinsverwaltung und Platzbuchung für Tennisvereine.*
@@ -31,7 +31,7 @@ Free, self-hostable, installable on any phone, in English and German.
 
 ## 🎾 What is Clubnetz?
 
-Clubnetz is a free and open-source web app for tennis clubs, and for any other sports club with courts to book. It started as a court booking system for a tennis club and grew into a full club management platform: court reservations, membership, guests, a club calendar, news, statistics and a bit of friendly competition.
+Clubnetz is a free and open-source web app for tennis clubs, and for any other sports club with courts to book. It started as a court booking system for a tennis club and grew into a full club management platform: court reservations, membership, court sales to non-members, a club calendar, news, statistics and a bit of friendly competition.
 
 There are two ways to use it:
 
@@ -58,6 +58,7 @@ One installation serves many clubs. Every club is its own tenant with its own co
 | 📊 **Statistics & leaderboards** | Who plays the most, with whom, and when. |
 | 🏆 **Badges & trophy case** | Seasonal tier badges earned by playing, plus one-time badges for special achievements. |
 | 🗓️ **Subscription planner** | Plans a fair schedule for shared winter court subscriptions and exports it to Excel. |
+| ✨ **Season Wrapped** | A story-style review of your season (hours on court, partners, badges, events), released by the club. |
 | 🔔 **Notifications** | Booking added or cancelled, reminders before a match, new events, news and badges. By push, by email, or not at all. |
 | 💳 **Membership** | Choose a plan for yourself or the whole family and pay the fee online. |
 | 📱 **Installable app** | Add it to the home screen on iOS, Android and desktop. Light and dark mode included. |
@@ -68,7 +69,8 @@ One installation serves many clubs. Every club is its own tenant with its own co
 |---|---|
 | 👥 **Members & seasons** | Members, roles (admin, sports director, treasurer, trainer, …) and season enrollment. |
 | 💶 **Membership fees** | Your own price list per season: adult, youth by birth year, couple, family, student, free plans and more. Members choose their plan and pay online with card or SEPA direct debit (Stripe, straight to the club's account), which enrolls them automatically. The treasurer sees who has paid, records bank transfers and cash, and exports the list to Excel. |
-| 🎟️ **Guest cards** | Let guests book with a link or code and a fixed number of bookings. |
+| 🎟️ **Court sales** | Sell free court time to members who are not enrolled in the season, with prices per court, weekday and time. They pay online (Stripe) or with a booking credit the club gives them. Enrolled members keep booking for free. |
+| 🧭 **Planner** | Sports directors plan tournaments on a timeline of several days: move and resize bookings by dragging and book many slots at once. |
 | 🏟️ **Courts & play modes** | Courts, opening hours, prime time, booking rules and who may book what. |
 | 🚧 **Court blockings** | Block courts for tournaments, maintenance, weather or weekly training. Affected players are informed. |
 | ✉️ **Email templates** | Customize every club email per language with Markdown and variables, with live preview and test send. |

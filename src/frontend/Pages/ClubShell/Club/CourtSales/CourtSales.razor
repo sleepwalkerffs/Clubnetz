@@ -245,7 +245,7 @@ else
 
                 <div class="sales-fields">
                     <MudSelect T="int?" @bind-Value="playModeId" Label="@L["Settings_PlayMode"]" HelperText="@L["Settings_PlayModeHint"]" Variant="Variant.Outlined" Margin="Margin.Dense"
-                               Clearable="true">
+                               Clearable="true" ToStringFunc="@(id => playModes.FirstOrDefault(m => m.Id == id)?.Name ?? "")">
                         @foreach (var mode in playModes)
                         {
                             <MudSelectItem T="int?" Value="@mode.Id">@mode.Name</MudSelectItem>
