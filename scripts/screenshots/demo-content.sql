@@ -202,4 +202,100 @@ join "MembershipPlans" p on p."SeasonId" = o."SeasonId" and p."SortOrder" = 1;
 insert into "MembershipOrderMembers"("Id", "MembershipOrderId", "MemberId")
 select nextval('"MembershipOrderMembers_Id_Sequence"'), o.id, o."MemberId" from orders o;
 
+-- Court sales: price rules and bought court time of members who are not enrolled ---
+
+insert into t values
+ ('r1', 'Tagestarif', 'Daytime'),
+ ('r2', 'Abendtarif', 'Evening'),
+ ('r3', 'Wochenende', 'Weekend');
+
+delete from "CourtPurchases" where "ClubId" = 1;
+delete from "BookingCreditGrants" where "ClubId" = 1;
+delete from "CourtPriceRules" where "ClubId" = 1;
+delete from "CourtSaleSettings" where "ClubId" = 1;
+
+insert into "CourtSaleSettings"("Id", "ClubId", "IsEnabled", "PlayModeId", "TimeZoneId", "MaxBookingMinutes", "MaxDaysInAdvance", "MaxUpcomingBookings")
+select nextval('"CourtSaleSettings_Id_Sequence"'), 1, true, p."Id", 'Europe/Vienna', 120, 14, 2
+from "PlayModes" p where p."ClubId" = 1 and not p."CanOverbook" and p."FixedDuration" is null order by p."Id" limit 1;
+
+-- Weekdays as .NET DayOfWeek (Sunday = 0); no courts = all courts.
+insert into "CourtPriceRules"("Id", "ClubId", "CourtIds", "Weekdays", "From", "To", "PricePerHourCents", "Currency", "Name")
+values
+ (nextval('"CourtPriceRules_Id_Sequence"'), 1, '{}', '{1,2,3,4,5}', '08:00', '17:00', 1800, 'eur', pg_temp.tx('r1')),
+ (nextval('"CourtPriceRules_Id_Sequence"'), 1, '{}', '{1,2,3,4,5}', '17:00', '22:00', 2400, 'eur', pg_temp.tx('r2')),
+ (nextval('"CourtPriceRules_Id_Sequence"'), 1, '{}', '{6,0}', '08:00', '20:00', 2000, 'eur', pg_temp.tx('r3'));
+
+-- Members of club 1 who are not enrolled in the running season and no parents: they buy court time.
+create temp table buyers as
+select m."Id", m."UserId", row_number() over (order by (m."Id" * 2654435761::bigint) % 1000003) as rn
+from "Members" m join "AspNetUsers" u on u."Id" = m."UserId"
+where m."ClubId" = 1 and m."MemberType" = 0 and m."Id" not in (3320, 3340)
+  and not exists (select 1 from "MemberSeasons" ms join "Seasons" s on s."Id" = ms."SeasonId"
+                  where ms."MemberId" = m."Id" and s."ClubId" = 1 and current_date between s."Period_From" and s."Period_To")
+  and not exists (select 1 from "FamilyMembers" f where f."MemberId" = m."Id");
+
+-- The first one is logged in for the screenshot of the buy dialog and has nothing bought yet.
+update "AspNetUsers" u set "Email" = 'buyer@example.test', "NormalizedEmail" = 'BUYER@EXAMPLE.TEST'
+from buyers b where b.rn = 1 and u."Id" = b."UserId";
+
+-- Fourteen sales over the coming two weeks and a few of this month, each on a free court.
+do $$
+declare
+    b record;
+    day date;
+    starts timestamptz;
+    minutes int;
+    cents int;
+    court int;
+    booking int;
+    status int;
+    method int;
+    credit boolean;
+begin
+    for b in select * from buyers where rn between 2 and 19 order by rn loop
+        day := current_date + ((b.rn * 5) % 19 - 4)::int;
+        minutes := case when b.rn % 3 = 0 then 90 else 60 end;
+        court := null;
+        for h in 0..7 loop
+            starts := (day + time '09:00' + ((b.rn + h * 3) % 8) * interval '1 hour') at time zone 'Europe/Vienna';
+            select c."Id" into court from "Courts" c
+            where c."ClubId" = 1
+              and not exists (select 1 from "Bookings" x where x."CourtId" = c."Id"
+                              and x."Interval_From" < starts + minutes * interval '1 minute' and starts < x."Interval_To")
+            order by (c."Id" + b.rn) % 7 limit 1;
+            exit when court is not null;
+        end loop;
+        continue when court is null;
+
+        cents := minutes * case when extract(isodow from day) >= 6 then 2000 else 1800 end / 60;
+        credit := b.rn % 5 = 0;
+        status := case when b.rn = 7 then 0 when b.rn = 13 then 6 else 2 end;
+        method := case when credit and minutes = 60 then 1 else 0 end;
+
+        booking := null;
+        if status in (0, 2) then
+            booking := nextval('"Bookings_Id_Sequence"');
+            insert into "Bookings"("Id", "Interval_From", "Interval_To", "CourtId", "PlayModeId", "ClubId", "TimeZoneInfoId", "Metadata_CreationUserId")
+            select booking, starts, starts + minutes * interval '1 minute', court, s."PlayModeId", 1, 'Europe/Vienna', b."UserId"
+            from "CourtSaleSettings" s where s."ClubId" = 1;
+            insert into "BookingPlayers"("BookingEntryId", "Id", "MemberId") values (booking, nextval('"BookingPlayers_Id_Sequence"'), b."Id");
+        end if;
+
+        if credit then
+            insert into "BookingCreditGrants"("Id", "ClubId", "MemberId", "Count", "Reason", "GrantedByMemberId", "Metadata_Created")
+            values (nextval('"BookingCreditGrants_Id_Sequence"'), 1, b."Id", 3, 1, 3320, now() - interval '20 days');
+        end if;
+
+        insert into "CourtPurchases"("Id", "ClubId", "MemberId", "BookingId", "CourtId", "Interval_From", "Interval_To", "PriceCents", "CreditUsed",
+                                     "AmountDueCents", "Currency", "Status", "PaymentMethod", "HoldExpiresAt", "PaidAt", "CancelledAt", "Metadata_Created")
+        values (nextval('"CourtPurchases_Id_Sequence"'), 1, b."Id", booking, court, starts, starts + minutes * interval '1 minute', cents, credit,
+                case when credit then cents - (case when extract(isodow from day) >= 6 then 2000 else 1800 end) else cents end,
+                'eur', status, method,
+                case when status = 0 then now() + interval '25 minutes' end,
+                case when status in (2, 6) then now() - (b.rn % 6) * interval '1 day' end,
+                case when status = 6 then now() - interval '1 day' end,
+                now() - (b.rn % 6) * interval '1 day' - interval '2 hours');
+    end loop;
+end $$;
+
 commit;
