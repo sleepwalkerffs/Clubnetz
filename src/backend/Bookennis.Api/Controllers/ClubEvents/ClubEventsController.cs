@@ -13,7 +13,7 @@ namespace Bookennis.Api.Controllers.ClubEvents;
 /// Club calendar. Club members (not guests) can read events and register;
 /// Maintainers, SportsDirectors, YouthSportsDirectors and Admins plan the events.
 /// </summary>
-public class ClubEventsController(IMediator mediator, IUserAccessor userAccessor) : ClubControllerBase
+public class ClubEventsController(IMediator mediator, IUserAccessor userAccessor, IAuthorizationService authorizationService) : ClubControllerBase
 {
     [HttpGet]
     [Authorize(AuthorizationPolicies.ClubMember)]
@@ -22,8 +22,8 @@ public class ClubEventsController(IMediator mediator, IUserAccessor userAccessor
 
     [HttpGet("{clubEventId:int}")]
     [Authorize(AuthorizationPolicies.ClubMember)]
-    public Task<ClubEventDto> GetClubEvent(int clubId, int clubEventId, CancellationToken cancellationToken)
-        => mediator.Send(new GetClubEvent(clubId, userAccessor.GetUserId(), clubEventId), cancellationToken);
+    public async Task<ClubEventDto> GetClubEvent(int clubId, int clubEventId, CancellationToken cancellationToken)
+        => await ForViewer(await mediator.Send(new GetClubEvent(clubId, userAccessor.GetUserId(), clubEventId), cancellationToken));
 
     [HttpPost]
     [Authorize(AuthorizationPolicies.ClubEventManager)]
@@ -47,19 +47,19 @@ public class ClubEventsController(IMediator mediator, IUserAccessor userAccessor
 
     [HttpPut("{clubEventId:int}/registration")]
     [Authorize(AuthorizationPolicies.ClubMember)]
-    public Task<ClubEventDto> RegisterForClubEvent(int clubId, int clubEventId, [FromBody] RegisterForClubEventModel model, CancellationToken cancellationToken)
-        => mediator.Send(new RegisterForClubEvent(
+    public async Task<ClubEventDto> RegisterForClubEvent(int clubId, int clubEventId, [FromBody] RegisterForClubEventModel model, CancellationToken cancellationToken)
+        => await ForViewer(await mediator.Send(new RegisterForClubEvent(
             clubId,
             userAccessor.GetUserId(),
             clubEventId,
             model.HeadCount,
             model.Comment,
-            model.Answers.Select(a => new ClubEvent.AnswerData(a.OptionId, a.Quantity)).ToList()), cancellationToken);
+            model.Answers.Select(a => new ClubEvent.AnswerData(a.OptionId, a.Quantity)).ToList()), cancellationToken));
 
     [HttpDelete("{clubEventId:int}/registration")]
     [Authorize(AuthorizationPolicies.ClubMember)]
-    public Task<ClubEventDto> UnregisterFromClubEvent(int clubId, int clubEventId, CancellationToken cancellationToken)
-        => mediator.Send(new UnregisterFromClubEvent(clubId, userAccessor.GetUserId(), clubEventId), cancellationToken);
+    public async Task<ClubEventDto> UnregisterFromClubEvent(int clubId, int clubEventId, CancellationToken cancellationToken)
+        => await ForViewer(await mediator.Send(new UnregisterFromClubEvent(clubId, userAccessor.GetUserId(), clubEventId), cancellationToken));
 
     [HttpDelete("{clubEventId:int}/registrations/{registrationId:int}")]
     [Authorize(AuthorizationPolicies.ClubEventManager)]
@@ -73,4 +73,14 @@ public class ClubEventsController(IMediator mediator, IUserAccessor userAccessor
         var result = await mediator.Send(new ExportClubEventParticipants(clubId, userAccessor.GetUserId(), clubEventId), cancellationToken);
         return File(result.Data, ExportClubEventParticipantsResult.ContentType, result.FileName);
     }
+
+    /// <summary>Members who are not active don't see who else registered or who planned the event, only their own registration.</summary>
+    private async Task<ClubEventDto> ForViewer(ClubEventDto clubEvent)
+        => await authorizationService.IsActiveMember(User)
+            ? clubEvent
+            : clubEvent with
+            {
+                CreatedByName = null,
+                Registrations = clubEvent.Registrations.Where(r => r.Id == clubEvent.MyRegistration?.Id).ToList(),
+            };
 }

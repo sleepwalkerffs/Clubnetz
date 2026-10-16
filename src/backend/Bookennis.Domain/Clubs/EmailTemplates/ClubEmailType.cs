@@ -9,7 +9,7 @@ public enum ClubEmailType
     Welcome = 0,
     SeasonActivated = 1,
     BadgeAwarded = 2,
-    GuestCard = 3,
+    // 3 was GuestCard (the removed guest system). The number is not used again.
     BookingDeleted = 4,
     Announcement = 5,
     BookingAdded = 6,
@@ -20,5 +20,8 @@ public enum ClubEmailType
     MembershipPaymentReceived = 11,
     MembershipApproved = 12,
     MembershipPaymentFailed = 13,
-    MembershipNeedsAttention = 14
+    MembershipNeedsAttention = 14,
+    CourtPurchaseConfirmed = 15,
+    CourtPurchaseFailed = 16,
+    CourtPurchaseNeedsAttention = 17,
 }

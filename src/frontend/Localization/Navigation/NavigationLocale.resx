@@ -249,4 +249,7 @@
   <data name="Wrapped" xml:space="preserve">
     <value>Season Wrapped</value>
   </data>
+  <data name="CourtSales" xml:space="preserve">
+    <value>Court sales</value>
+  </data>
 </root>

@@ -13,8 +13,11 @@ namespace Bookennis.Api.Controllers.Badges;
 public class MemberBadgesController(IMediator mediator, IUserAccessor userAccessor, IAuthorizationService authorizationService) : ClubControllerBase
 {
     [HttpGet("Members/{memberId:int}/badges")]
-    public Task<GetMemberBadgesResult> GetMemberBadges(int clubId, int memberId, [FromQuery] int? seasonId, CancellationToken cancellationToken)
-        => mediator.Send(new GetMemberBadges(memberId, clubId, seasonId), cancellationToken);
+    public async Task<GetMemberBadgesResult> GetMemberBadges(int clubId, int memberId, [FromQuery] int? seasonId, CancellationToken cancellationToken)
+    {
+        await authorizationService.EnsureSelfOrActiveMember(User, memberId);
+        return await mediator.Send(new GetMemberBadges(memberId, clubId, seasonId), cancellationToken);
+    }
 
     [HttpGet("Members/{memberId:int}/badge-progress")]
     public async Task<GetMemberBadgeProgressResult> GetMemberBadgeProgress(int clubId, int memberId, CancellationToken cancellationToken)
@@ -24,8 +27,11 @@ public class MemberBadgesController(IMediator mediator, IUserAccessor userAccess
     }
 
     [HttpGet("Members/{memberId:int}/trophy-case")]
-    public Task<GetTrophyCaseResult> GetTrophyCase(int memberId, CancellationToken cancellationToken)
-        => mediator.Send(new GetTrophyCase(userAccessor.GetUserId(), memberId), cancellationToken);
+    public async Task<GetTrophyCaseResult> GetTrophyCase(int memberId, CancellationToken cancellationToken)
+    {
+        await authorizationService.EnsureSelfOrActiveMember(User, memberId);
+        return await mediator.Send(new GetTrophyCase(userAccessor.GetUserId(), memberId), cancellationToken);
+    }
 
     [HttpPut("Members/{memberId:int}/badge-settings")]
     public async Task UpdateMemberBadgeSettings(int memberId, [FromBody] UpdateMemberBadgeSettingsModel model, CancellationToken cancellationToken)

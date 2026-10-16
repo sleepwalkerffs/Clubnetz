@@ -23,7 +23,6 @@ public sealed class ProfileStore(IProfileHttpClient profileHttpClient) : Semapho
     public IReadOnlyList<string> MissingProfileFields => missingProfileFields;
     public bool IsProfileBannerDismissed { get; private set; }
     public string? Email { get; private set; }
-    public bool IsGuestSession { get; private set; }
 
     public IReadOnlyList<int> AvailableClubs => availableClubIds;
     public IReadOnlyList<ProfileClubDto> Clubs => clubs;
@@ -45,7 +44,6 @@ public sealed class ProfileStore(IProfileHttpClient profileHttpClient) : Semapho
                 missingProfileFields = ComputeMissingFields(profileResponse.Dto);
                 IsProfileBannerDismissed = profileResponse.Dto.ProfileCompletionBannerDismissed;
                 Email = profileResponse.Dto.Email;
-                IsGuestSession = profileResponse.Dto.IsGuestSession;
                 IsProfileLoaded = true;
                 Loaded = true;
                 OnProfileChanged?.Invoke();

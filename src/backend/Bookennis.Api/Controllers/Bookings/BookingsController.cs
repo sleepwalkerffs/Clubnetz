@@ -54,14 +54,17 @@ public class BookingsController(IMediator mediator, IAuthorizationService servic
             cancellationToken);
     }
 
+    /// <summary>The bookings of the calendar. Members who are not active only see that a court is booked, except for their own bookings.</summary>
     [HttpGet]
-    public Task<GetBookingsResult> GetBookings(DateOnly dayFrom, DateOnly dayTo, CancellationToken cancellationToken) => mediator.Send(new GetBookings(dayFrom, dayTo), cancellationToken);
+    public async Task<GetBookingsResult> GetBookings(DateOnly dayFrom, DateOnly dayTo, CancellationToken cancellationToken)
+        => await mediator.Send(new GetBookings(dayFrom, dayTo, await AnonymousViewer()), cancellationToken);
 
     [HttpGet("Upcoming")]
     public Task<GetUpcomingBookingsResult> GetUpcomingBookings(int? amount, CancellationToken cancellationToken) => mediator.Send(new GetUpcomingBookings(amount, userAccessor.GetUserId()), cancellationToken);
 
     [HttpGet("{id}")]
-    public Task<BookingResult> GetBooking(int id, CancellationToken cancellationToken) => mediator.Send(new GetBooking(id), cancellationToken);
+    public async Task<BookingResult> GetBooking(int id, CancellationToken cancellationToken)
+        => await mediator.Send(new GetBooking(id, await AnonymousViewer()), cancellationToken);
 
     [HttpDelete("{id}")]
     public async Task DeleteBooking(int id, CancellationToken cancellationToken)
@@ -137,6 +140,11 @@ public class BookingsController(IMediator mediator, IAuthorizationService servic
     }
 
     [HttpGet("RecurringSeries/{seriesId}")]
+    [Authorize(AuthorizationPolicies.ActiveMember)]
     public Task<RecurringBookingSeriesResult> GetRecurringBookingSeries(int seriesId, CancellationToken cancellationToken)
         => mediator.Send(new GetRecurringBookingSeries(seriesId), cancellationToken);
+
+    /// <summary>The user to anonymize the bookings for: <c>null</c> for active members (they see everything).</summary>
+    private async Task<int?> AnonymousViewer()
+        => await service.IsActiveMember(HttpContext.User) ? null : userAccessor.GetUserId();
 }

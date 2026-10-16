@@ -16,11 +16,13 @@ public class WrappedController(IMediator mediator, IUserAccessor userAccessor, I
 {
     [HttpGet]
     [Authorize(AuthorizationPolicies.ClubMember)]
+    [Authorize(AuthorizationPolicies.ActiveMember)]
     public async Task<GetWrappedSeasonsResult> GetWrappedSeasons(int clubId, CancellationToken cancellationToken)
         => await mediator.Send(new GetWrappedSeasons(userAccessor.GetUserId(), clubId, await CanManage()), cancellationToken);
 
     [HttpGet("{seasonId:int}")]
     [Authorize(AuthorizationPolicies.ClubMember)]
+    [Authorize(AuthorizationPolicies.ActiveMember)]
     public async Task<SeasonWrappedResult> GetSeasonWrapped(int clubId, int seasonId, CancellationToken cancellationToken)
         => await mediator.Send(new GetSeasonWrapped(userAccessor.GetUserId(), clubId, seasonId, await CanManage()), cancellationToken);
 

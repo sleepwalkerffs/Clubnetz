@@ -1,0 +1,150 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.CourtSales
+@using Bookennis.Client.Services.Store.CourtSales
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.CourtSales
+
+@* Adds or changes a price rule: courts, weekdays, a time range (local times of the club) and the price per hour. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@CanSubmit" Loading="@Store.IsSaving" Title="@L[Rule is null ? "Rule_AddTitle" : "Rule_EditTitle"]">
+    <div class="rule-form">
+        <div class="rule-preview">
+            <span class="rule-preview__days">@(weekdays.Count == 0 ? L["Rule_NoDays"] : CourtSalesHelpers.WeekdaysText(L, weekdays))</span>
+            <span>@CourtSalesHelpers.Time(from)–@CourtSalesHelpers.Time(to)</span>
+            <span class="rule-preview__price">@CourtSalesHelpers.PerHour(L, PriceCents)</span>
+        </div>
+
+        <MudTextField T="string" @bind-Value="name" Label="@L["Rule_Name"]" HelperText="@L["Rule_NameHint"]" MaxLength="100" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+        <div>
+            <MultiChoiceChips TItem="DayOfWeek" Label="@L["Rule_Weekdays"]" Items="@CourtSalesHelpers.Week" Values="@weekdays" ValuesChanged="@(v => weekdays = v)"
+                              TextFunc="@CourtSalesHelpers.ShortWeekday" Dense="true" />
+            <div class="rule-presets">
+                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => weekdays = CourtSalesHelpers.Week.Take(5).ToList())">@L["Rule_Weekdays_MonFri"]</MudButton>
+                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => weekdays = CourtSalesHelpers.Week.Skip(5).ToList())">@L["Rule_Weekdays_Weekend"]</MudButton>
+                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => weekdays = CourtSalesHelpers.Week.ToList())">@L["EveryDay"]</MudButton>
+            </div>
+        </div>
+
+        <div class="rule-times">
+            <MudSelect T="TimeSpan" Value="@from" ValueChanged="OnFromChanged" Label="@L["Rule_From"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                @foreach (var time in Times.Where(t => t < TimeSpan.FromDays(1)))
+                {
+                    <MudSelectItem T="TimeSpan" Value="@time">@CourtSalesHelpers.Time(time)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="TimeSpan" @bind-Value="to" Label="@L["Rule_To"]" Variant="Variant.Outlined" Margin="Margin.Dense" Error="@(to <= from)">
+                @foreach (var time in Times.Where(t => t > from))
+                {
+                    <MudSelectItem T="TimeSpan" Value="@time">@CourtSalesHelpers.Time(time)</MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+
+        <MudNumericField T="decimal" @bind-Value="price" Label="@L["Rule_Price"]" HelperText="@L["Rule_PriceHint"]" Min="0" Max="10000" Step="1" Format="N2"
+                         Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.Start" AdornmentText="€" />
+
+        <div>
+            <ChoiceChips TItem="bool" Label="@L["Rule_Courts"]" Items="@CourtModes" Value="@allCourts" ValueChanged="@(v => allCourts = v)"
+                         TextFunc="@(all => L[all ? "AllCourts" : "Rule_SomeCourts"])" />
+            @if (!allCourts)
+            {
+                <div class="mt-2">
+                    <MultiChoiceChips TItem="int" Items="@Courts.Select(c => c.CourtId)" Values="@courtIds" ValuesChanged="@(v => courtIds = v)"
+                                      TextFunc="@(id => Courts.FirstOrDefault(c => c.CourtId == id)?.Name ?? id.ToString(CultureInfo.InvariantCulture))" Dense="true" />
+                </div>
+            }
+        </div>
+
+        <div class="rule-hint">@L["Rule_Hint"]</div>
+    </div>
+</BaseDialog>
+
+@code {
+    private static readonly bool[] CourtModes = [true, false];
+
+    /// <summary>Every full and half hour of a day, up to 24:00 (midnight at the end of the day).</summary>
+    private static readonly List<TimeSpan> Times = Enumerable.Range(0, 49).Select(i => TimeSpan.FromMinutes(i * 30)).ToList();
+
+    /// <summary>The rule to change; <c>null</c> adds one.</summary>
+    [Parameter] public CourtPriceRuleDto? Rule { get; set; }
+
+    [Parameter] public List<CourtResult> Courts { get; set; } = [];
+
+    [Inject] private ICourtSalesStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<CourtSalesLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private string? name;
+    private IReadOnlyCollection<DayOfWeek> weekdays = [];
+    private TimeSpan from = TimeSpan.FromHours(8);
+    private TimeSpan to = TimeSpan.FromHours(12);
+    private decimal price = 20;
+    private bool allCourts = true;
+    private IReadOnlyCollection<int> courtIds = [];
+
+    private int PriceCents => (int)Math.Round(price * 100, MidpointRounding.AwayFromZero);
+
+    private bool CanSubmit => weekdays.Count > 0 && from < to && price >= 0 && (allCourts || courtIds.Count > 0);
+
+    protected override void OnInitialized()
+    {
+        if (Rule is null)
+        {
+            weekdays = CourtSalesHelpers.Week.Take(5).ToList();
+            return;
+        }
+
+        name = Rule.Name;
+        weekdays = Rule.Weekdays;
+        from = Rule.From;
+        to = Rule.To;
+        price = Rule.PricePerHourCents / 100m;
+        allCourts = Rule.CourtIds.Count == 0;
+        courtIds = Rule.CourtIds;
+    }
+
+    private void OnFromChanged(TimeSpan value)
+    {
+        from = value;
+        if (to <= from)
+            to = from + TimeSpan.FromHours(1) > TimeSpan.FromDays(1) ? TimeSpan.FromDays(1) : from + TimeSpan.FromHours(1);
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        var result = await Store.SavePriceRule(Rule?.Id, new SaveCourtPriceRuleModel
+        {
+            Name = string.IsNullOrWhiteSpace(name) ? null : name.Trim(),
+            Weekdays = weekdays.ToList(),
+            From = from,
+            To = to,
+            PricePerHourCents = PriceCents,
+            CourtIds = allCourts ? [] : courtIds.ToList(),
+        });
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Rule_Saved"], Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

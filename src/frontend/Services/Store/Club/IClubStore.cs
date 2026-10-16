@@ -9,7 +9,6 @@ namespace Bookennis.Client.Services.Store.Club;
 public interface IClubStore : ISemaphoreStore
 {
     public List<PlayerResult> ClubPlayers { get; }
-    public List<PlayerResult> GuestPlayers { get; }
     public List<CourtResult> Courts { get; }
     public List<PlayModeDto> PlayModes { get; }
     public List<SeasonResult> Seasons { get; }

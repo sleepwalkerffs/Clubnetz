@@ -1,0 +1,534 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Page_Title" xml:space="preserve">
+    <value>Court sales</value>
+  </data>
+  <data name="Page_Subtitle" xml:space="preserve">
+    <value>Members who are not enrolled in the season buy free court time – online, with a credit or for free.</value>
+  </data>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Only treasurers and admins can manage the court sales.</value>
+  </data>
+  <data name="Hero_On" xml:space="preserve">
+    <value>Selling</value>
+  </data>
+  <data name="Hero_Off" xml:space="preserve">
+    <value>Switched off</value>
+  </data>
+  <data name="Hero_Rules" xml:space="preserve">
+    <value>{0} prices</value>
+  </data>
+  <data name="Tab_Prices" xml:space="preserve">
+    <value>Prices</value>
+  </data>
+  <data name="Tab_Sales" xml:space="preserve">
+    <value>Sales</value>
+  </data>
+  <data name="Tab_Credits" xml:space="preserve">
+    <value>Credits</value>
+  </data>
+  <data name="Free" xml:space="preserve">
+    <value>Free</value>
+  </data>
+  <data name="PricePerHour" xml:space="preserve">
+    <value>{0} / h</value>
+  </data>
+  <data name="EveryDay" xml:space="preserve">
+    <value>Every day</value>
+  </data>
+  <data name="AllCourts" xml:space="preserve">
+    <value>All courts</value>
+  </data>
+  <data name="Minutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="Hours" xml:space="preserve">
+    <value>{0} h</value>
+  </data>
+  <data name="Stripe_NotConnected" xml:space="preserve">
+    <value>Online payment is not set up (the club has no connected Stripe account). Until then members can only buy with credits or at free prices.</value>
+  </data>
+  <data name="Stripe_Connect" xml:space="preserve">
+    <value>Set up online payment</value>
+  </data>
+  <data name="Settings_Title" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings_Subtitle" xml:space="preserve">
+    <value>Who can buy what and how far ahead</value>
+  </data>
+  <data name="Settings_Enabled" xml:space="preserve">
+    <value>Sell court time</value>
+  </data>
+  <data name="Settings_EnabledHint" xml:space="preserve">
+    <value>Members who are not enrolled in the active season see the prices on the booking page and buy free slots. Enrolled members keep booking for free.</value>
+  </data>
+  <data name="Settings_PlayMode" xml:space="preserve">
+    <value>Play mode of bought bookings</value>
+  </data>
+  <data name="Settings_PlayModeHint" xml:space="preserve">
+    <value>Required to switch the sale on. Play modes that overbook or have a fixed length can't be used.</value>
+  </data>
+  <data name="Settings_TimeZone" xml:space="preserve">
+    <value>Time zone of the prices</value>
+  </data>
+  <data name="Settings_TimeZoneHint" xml:space="preserve">
+    <value>The times of the prices are local times of this zone</value>
+  </data>
+  <data name="Settings_MaxMinutes" xml:space="preserve">
+    <value>Longest bookable slot</value>
+  </data>
+  <data name="Settings_MaxDays" xml:space="preserve">
+    <value>Days in advance</value>
+  </data>
+  <data name="Settings_MaxDaysHint" xml:space="preserve">
+    <value>0 = only today, at most 90</value>
+  </data>
+  <data name="Settings_MaxUpcoming" xml:space="preserve">
+    <value>Upcoming bought bookings per member</value>
+  </data>
+  <data name="Settings_MaxUpcomingHint" xml:space="preserve">
+    <value>1 to 10</value>
+  </data>
+  <data name="Settings_Saved" xml:space="preserve">
+    <value>Settings saved</value>
+  </data>
+  <data name="Rules_Title" xml:space="preserve">
+    <value>Prices</value>
+  </data>
+  <data name="Rules_Subtitle" xml:space="preserve">
+    <value>Price per hour by court, weekday and time. Times without a price can't be bought.</value>
+  </data>
+  <data name="Rules_Add" xml:space="preserve">
+    <value>Add price</value>
+  </data>
+  <data name="Rules_Empty" xml:space="preserve">
+    <value>No prices yet</value>
+  </data>
+  <data name="Rules_EmptyHint" xml:space="preserve">
+    <value>Add e.g. Mon–Fri 08:00–12:00 for € 20 per hour.</value>
+  </data>
+  <data name="Rules_Note" xml:space="preserve">
+    <value>Prices may not overlap. A slot across two prices is charged per minute; prime time can be closed to bought slots in the club settings.</value>
+  </data>
+  <data name="Rule_AddTitle" xml:space="preserve">
+    <value>Add price</value>
+  </data>
+  <data name="Rule_EditTitle" xml:space="preserve">
+    <value>Change price</value>
+  </data>
+  <data name="Rule_Name" xml:space="preserve">
+    <value>Name (optional)</value>
+  </data>
+  <data name="Rule_NameHint" xml:space="preserve">
+    <value>E.g. "Prime time" – shown to the buyers</value>
+  </data>
+  <data name="Rule_Weekdays" xml:space="preserve">
+    <value>Weekdays</value>
+  </data>
+  <data name="Rule_Weekdays_MonFri" xml:space="preserve">
+    <value>Mon–Fri</value>
+  </data>
+  <data name="Rule_Weekdays_Weekend" xml:space="preserve">
+    <value>Weekend</value>
+  </data>
+  <data name="Rule_NoDays" xml:space="preserve">
+    <value>No day</value>
+  </data>
+  <data name="Rule_From" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="Rule_To" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="Rule_Price" xml:space="preserve">
+    <value>Price per hour</value>
+  </data>
+  <data name="Rule_PriceHint" xml:space="preserve">
+    <value>0 = free</value>
+  </data>
+  <data name="Rule_Courts" xml:space="preserve">
+    <value>Courts</value>
+  </data>
+  <data name="Rule_SomeCourts" xml:space="preserve">
+    <value>Some courts</value>
+  </data>
+  <data name="Rule_Hint" xml:space="preserve">
+    <value>Times are local times of the club, on full or half hours. 24:00 is midnight.</value>
+  </data>
+  <data name="Rule_Saved" xml:space="preserve">
+    <value>Price saved</value>
+  </data>
+  <data name="Rule_DeleteTitle" xml:space="preserve">
+    <value>Delete price</value>
+  </data>
+  <data name="Rule_DeleteConfirm" xml:space="preserve">
+    <value>Delete the price {0}? These times can't be bought any more.</value>
+  </data>
+  <data name="Rule_Deleted" xml:space="preserve">
+    <value>Price deleted</value>
+  </data>
+  <data name="Period_Upcoming" xml:space="preserve">
+    <value>From today</value>
+  </data>
+  <data name="Period_ThisMonth" xml:space="preserve">
+    <value>This month</value>
+  </data>
+  <data name="Period_LastMonth" xml:space="preserve">
+    <value>Last month</value>
+  </data>
+  <data name="Period_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Filter_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Filter_Paid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="Filter_Awaiting" xml:space="preserve">
+    <value>Awaiting payment</value>
+  </data>
+  <data name="Filter_Problems" xml:space="preserve">
+    <value>Problems</value>
+  </data>
+  <data name="Filter_Cancelled" xml:space="preserve">
+    <value>Cancelled / expired</value>
+  </data>
+  <data name="Sales_Sold" xml:space="preserve">
+    <value>Bookings sold</value>
+  </data>
+  <data name="Sales_Online" xml:space="preserve">
+    <value>Paid online</value>
+  </data>
+  <data name="Sales_CreditsUsed" xml:space="preserve">
+    <value>Credits used</value>
+  </data>
+  <data name="Sales_AwaitingHint" xml:space="preserve">
+    <value>{0} waiting for payment</value>
+  </data>
+  <data name="Sales_Attention" xml:space="preserve">
+    <value>Needs attention</value>
+  </data>
+  <data name="Sales_AttentionHint" xml:space="preserve">
+    <value>Refunded or disputed – check the Stripe dashboard</value>
+  </data>
+  <data name="Sales_ListTitle" xml:space="preserve">
+    <value>Purchases</value>
+  </data>
+  <data name="Sales_ListSubtitle" xml:space="preserve">
+    <value>By the day of the slot, newest first</value>
+  </data>
+  <data name="Sales_Empty" xml:space="preserve">
+    <value>No purchases in this period</value>
+  </data>
+  <data name="Sales_FormerMember" xml:space="preserve">
+    <value>Former member</value>
+  </data>
+  <data name="Sales_BoughtOn" xml:space="preserve">
+    <value>bought {0}</value>
+  </data>
+  <data name="Sales_PaidOn" xml:space="preserve">
+    <value>paid {0}</value>
+  </data>
+  <data name="Sales_Cancel" xml:space="preserve">
+    <value>Cancel purchase</value>
+  </data>
+  <data name="Sales_CancelTitle" xml:space="preserve">
+    <value>Cancel purchase</value>
+  </data>
+  <data name="Sales_CancelConfirm" xml:space="preserve">
+    <value>Cancel the purchase of {0} ({1}, {2})? The booking is deleted if it hasn't started.</value>
+  </data>
+  <data name="Sales_CancelRefundHint" xml:space="preserve">
+    <value>The money was paid online: refund it in the Stripe dashboard, Clubnetz doesn't refund it.</value>
+  </data>
+  <data name="Sales_CancelCreditHint" xml:space="preserve">
+    <value>The credit goes back to the member.</value>
+  </data>
+  <data name="Sales_Cancelled" xml:space="preserve">
+    <value>Purchase cancelled</value>
+  </data>
+  <data name="Sales_CancelledRefund" xml:space="preserve">
+    <value>Purchase cancelled. Please refund {0} in the Stripe dashboard.</value>
+  </data>
+  <data name="Status_AwaitingPayment" xml:space="preserve">
+    <value>Awaiting payment</value>
+  </data>
+  <data name="Status_Processing" xml:space="preserve">
+    <value>Payment on its way</value>
+  </data>
+  <data name="Status_Paid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="Status_Expired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="Status_Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="Status_Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Status_Refunded" xml:space="preserve">
+    <value>Refunded</value>
+  </data>
+  <data name="Status_Disputed" xml:space="preserve">
+    <value>Disputed</value>
+  </data>
+  <data name="Paid_Free" xml:space="preserve">
+    <value>free</value>
+  </data>
+  <data name="Paid_Credit" xml:space="preserve">
+    <value>1 credit</value>
+  </data>
+  <data name="Paid_Online" xml:space="preserve">
+    <value>{0} online</value>
+  </data>
+  <data name="Paid_CreditAndOnline" xml:space="preserve">
+    <value>1 credit + {0} online</value>
+  </data>
+  <data name="Credits_Title" xml:space="preserve">
+    <value>Booking credits</value>
+  </data>
+  <data name="Credits_Subtitle" xml:space="preserve">
+    <value>One credit pays for one booking of up to an hour</value>
+  </data>
+  <data name="Credits_Grant" xml:space="preserve">
+    <value>Give credits</value>
+  </data>
+  <data name="Credits_Change" xml:space="preserve">
+    <value>Give or take back</value>
+  </data>
+  <data name="Credits_Empty" xml:space="preserve">
+    <value>Nobody has credits yet</value>
+  </data>
+  <data name="Credits_EmptyHint" xml:space="preserve">
+    <value>Give credits e.g. for a voucher or a tournament win. Bookings left on old guest cards appear here too.</value>
+  </data>
+  <data name="Credits_Search" xml:space="preserve">
+    <value>Search member</value>
+  </data>
+  <data name="Credits_Numbers" xml:space="preserve">
+    <value>{0} given · {1} used</value>
+  </data>
+  <data name="Credits_Member" xml:space="preserve">
+    <value>Member</value>
+  </data>
+  <data name="Credits_SearchMember" xml:space="preserve">
+    <value>First or last name</value>
+  </data>
+  <data name="Credits_NoMemberFound" xml:space="preserve">
+    <value>No member found</value>
+  </data>
+  <data name="Credits_Balance" xml:space="preserve">
+    <value>{0} left</value>
+  </data>
+  <data name="Credits_Give" xml:space="preserve">
+    <value>Give</value>
+  </data>
+  <data name="Credits_TakeBack" xml:space="preserve">
+    <value>Take back</value>
+  </data>
+  <data name="Credits_Count" xml:space="preserve">
+    <value>Credits</value>
+  </data>
+  <data name="Credits_Less" xml:space="preserve">
+    <value>One less</value>
+  </data>
+  <data name="Credits_More" xml:space="preserve">
+    <value>One more</value>
+  </data>
+  <data name="Credits_Note" xml:space="preserve">
+    <value>Note (optional)</value>
+  </data>
+  <data name="Credits_NoteHint" xml:space="preserve">
+    <value>Only treasurers and admins see it</value>
+  </data>
+  <data name="Credits_Explain" xml:space="preserve">
+    <value>The member uses a credit when buying a slot: up to an hour is fully paid, a longer slot pays the rest online.</value>
+  </data>
+  <data name="Credits_GiveButton" xml:space="preserve">
+    <value>Give {0}</value>
+  </data>
+  <data name="Credits_TakeBackButton" xml:space="preserve">
+    <value>Take back {0}</value>
+  </data>
+  <data name="Credits_Saved" xml:space="preserve">
+    <value>{0} now has {1} credit(s)</value>
+  </data>
+  <data name="Reason_GuestCardMigration" xml:space="preserve">
+    <value>Guest card</value>
+  </data>
+  <data name="Reason_GrantedByClub" xml:space="preserve">
+    <value>Given by the club</value>
+  </data>
+  <data name="Reason_NotEnabled" xml:space="preserve">
+    <value>The club does not sell court time.</value>
+  </data>
+  <data name="Reason_AlreadyEnrolled" xml:space="preserve">
+    <value>You are a member of this season and book for free.</value>
+  </data>
+  <data name="Reason_LimitReached" xml:space="preserve">
+    <value>You have {0} upcoming bought booking(s) – the most you can have. Buy the next one after it.</value>
+  </data>
+  <data name="Reason_PaymentUnavailable" xml:space="preserve">
+    <value>Online payment is not available at the moment. Ask the club for a booking credit.</value>
+  </data>
+  <data name="Reason_NoMember" xml:space="preserve">
+    <value>Only members of the club can buy court time.</value>
+  </data>
+  <data name="QuoteReason_NotForSale" xml:space="preserve">
+    <value>This time is not for sale. Look at the prices for the times you can buy.</value>
+  </data>
+  <data name="QuoteReason_InvalidDuration" xml:space="preserve">
+    <value>This length can't be bought.</value>
+  </data>
+  <data name="QuoteReason_TooFarInAdvance" xml:space="preserve">
+    <value>This day is too far ahead.</value>
+  </data>
+  <data name="QuoteReason_InThePast" xml:space="preserve">
+    <value>This time has already started.</value>
+  </data>
+  <data name="QuoteReason_NotEnabled" xml:space="preserve">
+    <value>The club does not sell court time.</value>
+  </data>
+  <data name="Panel_Title" xml:space="preserve">
+    <value>Book a court – no membership needed</value>
+  </data>
+  <data name="Panel_TitleUnavailable" xml:space="preserve">
+    <value>Buying court time</value>
+  </data>
+  <data name="Panel_Hint" xml:space="preserve">
+    <value>Tap a free slot to buy it. You pay online and the court is yours.</value>
+  </data>
+  <data name="Panel_HintCredit" xml:space="preserve">
+    <value>Tap a free slot – your credit pays for up to an hour.</value>
+  </data>
+  <data name="Panel_Credits" xml:space="preserve">
+    <value>{0} credits</value>
+  </data>
+  <data name="Panel_CreditsOne" xml:space="preserve">
+    <value>1 credit</value>
+  </data>
+  <data name="Panel_Upcoming" xml:space="preserve">
+    <value>{0} of {1} bought</value>
+  </data>
+  <data name="Panel_ShowPrices" xml:space="preserve">
+    <value>Prices</value>
+  </data>
+  <data name="Panel_HidePrices" xml:space="preserve">
+    <value>Hide prices</value>
+  </data>
+  <data name="Panel_PricesNote" xml:space="preserve">
+    <value>Slots can be bought up to {0} days ahead.</value>
+  </data>
+  <data name="Panel_BecomeMember" xml:space="preserve">
+    <value>Become a member to book for free</value>
+  </data>
+  <data name="Panel_NotSelling" xml:space="preserve">
+    <value>You are not enrolled in the current season, so you can't book courts.</value>
+  </data>
+  <data name="Buy_Title" xml:space="preserve">
+    <value>Buy court time</value>
+  </data>
+  <data name="Buy_Duration" xml:space="preserve">
+    <value>How long?</value>
+  </data>
+  <data name="Buy_Price" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Buy_CreditUsed" xml:space="preserve">
+    <value>1 credit</value>
+  </data>
+  <data name="Buy_CreditFirstHour" xml:space="preserve">
+    <value>1 credit (first hour)</value>
+  </data>
+  <data name="Buy_Due" xml:space="preserve">
+    <value>To pay</value>
+  </data>
+  <data name="Buy_Pay" xml:space="preserve">
+    <value>Pay {0}</value>
+  </data>
+  <data name="Buy_WithCredit" xml:space="preserve">
+    <value>Book with 1 credit</value>
+  </data>
+  <data name="Buy_Free" xml:space="preserve">
+    <value>Book for free</value>
+  </data>
+  <data name="Buy_Book" xml:space="preserve">
+    <value>Book</value>
+  </data>
+  <data name="Buy_OnlineUnavailable" xml:space="preserve">
+    <value>Online payment is not available at the moment. Choose a shorter time your credit covers, or ask the club.</value>
+  </data>
+  <data name="Buy_StripeHint" xml:space="preserve">
+    <value>You pay securely with Stripe. The court is held for you for 30 minutes.</value>
+  </data>
+  <data name="Buy_NoCancelHint" xml:space="preserve">
+    <value>Bought bookings can't be cancelled by yourself. Ask the treasurer if something comes up.</value>
+  </data>
+  <data name="Buy_Booked" xml:space="preserve">
+    <value>The court is booked for you</value>
+  </data>
+  <data name="Buy_BookedWithCredit" xml:space="preserve">
+    <value>Booked with your credit</value>
+  </data>
+  <data name="Return_Paid" xml:space="preserve">
+    <value>Paid – the court is booked for you</value>
+  </data>
+  <data name="Return_Processing" xml:space="preserve">
+    <value>Your payment is on its way – the court is booked for you</value>
+  </data>
+  <data name="Return_Pending" xml:space="preserve">
+    <value>The payment hasn't arrived yet. The court stays held for you while it does.</value>
+  </data>
+  <data name="Return_Failed" xml:space="preserve">
+    <value>The payment didn't go through, the court was not booked.</value>
+  </data>
+  <data name="Return_Cancelled" xml:space="preserve">
+    <value>Payment cancelled – the court is free again</value>
+  </data>
+  <data name="Return_PaidAfterAll" xml:space="preserve">
+    <value>The payment arrived after all – the court is booked for you</value>
+  </data>
+</root>

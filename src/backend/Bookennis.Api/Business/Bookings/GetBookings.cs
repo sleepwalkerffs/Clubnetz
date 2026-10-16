@@ -8,7 +8,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Bookings;
 
-public record GetBookings(DateOnly DayFrom, DateOnly DayTo) : ICommand<GetBookingsResult>
+/// <summary>
+/// The bookings of the calendar. <see cref="AnonymousViewerUserId"/>: the caller is not an active member; bookings they and their
+/// children don't play in are anonymized (<see cref="BookingAnonymizer"/>).
+/// </summary>
+public record GetBookings(DateOnly DayFrom, DateOnly DayTo, int? AnonymousViewerUserId = null) : ICommand<GetBookingsResult>
 {
     public class Handler(AppDbContext context) : IRequestHandler<GetBookings, GetBookingsResult>
     {
@@ -47,7 +51,11 @@ public record GetBookings(DateOnly DayFrom, DateOnly DayTo) : ICommand<GetBookin
                 select new { settings.MemberId, TierId = bt.Id, bt.ClubId, bt.Level, HasImage = context.BadgeTierImages.Any(i => i.BadgeTierId == bt.Id) }
             ).ToDictionaryAsync(x => x.MemberId, cancellationToken);
 
-            return new GetBookingsResult(
+            var visibleMemberIds = request.AnonymousViewerUserId is { } viewerUserId
+                ? await BookingAnonymizer.VisibleMemberIds(context, currentClub.Id, viewerUserId, cancellationToken)
+                : null;
+
+            var result = new GetBookingsResult(
                 bookings.ConvertAll(
                     booking =>
                         new BookingResult(
@@ -80,6 +88,10 @@ public record GetBookings(DateOnly DayFrom, DateOnly DayTo) : ICommand<GetBookin
                         )
                 )
             );
+
+            return visibleMemberIds is null
+                ? result
+                : new GetBookingsResult(result.Bookings.ConvertAll(b => BookingAnonymizer.Anonymize(b, visibleMemberIds)));
         }
     }
 }

@@ -403,3 +403,18 @@
         grid-template-columns: 48px repeat(var(--court-count), minmax(92px, 1fr));
     }
 }
+
+/* Booked by somebody else, seen by a member who is not active: only that the court is taken */
+.booking-block--anon {
+    --mode-color: var(--mud-palette-text-disabled);
+    cursor: default;
+    color: var(--mud-palette-text-secondary);
+    background: repeating-linear-gradient(-45deg,
+        color-mix(in srgb, var(--mud-palette-text-secondary) 10%, var(--mud-palette-surface)) 0 8px,
+        color-mix(in srgb, var(--mud-palette-text-secondary) 16%, var(--mud-palette-surface)) 8px 16px);
+}
+
+.booking-block--anon:hover {
+    transform: none;
+    box-shadow: none;
+}

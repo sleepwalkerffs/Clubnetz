@@ -113,11 +113,34 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                 select new PersonalDataBadge(club.Name, badge.Name, award.AwardedAt)
             ).ToListAsync(cancellationToken);
 
-            var guestCards = await (
-                from guestCard in context.GuestCards.IgnoreQueryFilters()
-                join club in context.Clubs.IgnoreQueryFilters() on guestCard.ClubId equals club.Id
-                where memberIds.Contains(guestCard.GuestMemberId)
-                select new PersonalDataGuestCard(club.Name, guestCard.PurchasedBookings)
+            // Bought court time and booking credits. The ids of the payment provider are left out.
+            var courtPurchases = await (
+                from purchase in context.CourtPurchases.IgnoreQueryFilters()
+                join club in context.Clubs.IgnoreQueryFilters() on purchase.ClubId equals club.Id
+                join court in context.Courts.IgnoreQueryFilters() on purchase.CourtId equals court.Id
+                where memberIds.Contains(purchase.MemberId ?? 0)
+                orderby purchase.Interval.From
+                select new PersonalDataCourtPurchase(
+                    club.Name,
+                    court.Name,
+                    purchase.Interval.From,
+                    purchase.Interval.To,
+                    purchase.PriceCents / 100m,
+                    purchase.AmountDueCents / 100m,
+                    purchase.Currency,
+                    purchase.CreditUsed,
+                    purchase.Status,
+                    purchase.PaymentMethod,
+                    purchase.Metadata.Created,
+                    purchase.PaidAt)
+            ).ToListAsync(cancellationToken);
+
+            var bookingCredits = await (
+                from grant in context.BookingCreditGrants.IgnoreQueryFilters()
+                join club in context.Clubs.IgnoreQueryFilters() on grant.ClubId equals club.Id
+                where memberIds.Contains(grant.MemberId)
+                orderby grant.Id
+                select new PersonalDataBookingCredit(club.Name, grant.Count, grant.Reason, grant.Note, grant.Metadata.Created)
             ).ToListAsync(cancellationToken);
 
             var subscriptionPlans = await context.SubscriptionPlans
@@ -195,7 +218,6 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                 registrations.ConvertAll(r => new PersonalDataEventRegistration(r.ClubName, r.Title, r.StartDate, r.HeadCount, r.Comment, r.RegisteredAt, r.Answers)),
                 tierBadges,
                 oneTimeBadges,
-                guestCards,
                 subscriptionPlans.ConvertAll(p => new PersonalDataSubscriptionPlan(
                     p.Name,
                     p.StartDate,
@@ -204,7 +226,9 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                 children,
                 pushSubscriptions.ConvertAll(s => new PersonalDataPushDevice(PushEndpoint.Host(s.Endpoint), s.Created)),
                 notificationPreferences,
-                membershipOrders);
+                membershipOrders,
+                courtPurchases,
+                bookingCredits);
         }
 
         private static string? NullIfEmpty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
@@ -219,12 +243,13 @@ public record PersonalDataExport(
     List<PersonalDataEventRegistration> EventRegistrations,
     List<PersonalDataBadge> Badges,
     List<PersonalDataBadge> OneTimeBadges,
-    List<PersonalDataGuestCard> GuestCards,
     List<PersonalDataSubscriptionPlan> SubscriptionPlans,
     List<PersonalDataChild> Children,
     List<PersonalDataPushDevice> PushDevices,
     List<PersonalDataNotificationPreference> NotificationPreferences,
-    List<PersonalDataMembershipOrder> MembershipOrders);
+    List<PersonalDataMembershipOrder> MembershipOrders,
+    List<PersonalDataCourtPurchase> CourtPurchases,
+    List<PersonalDataBookingCredit> BookingCredits);
 
 public record PersonalDataAccount(
     string FirstName,
@@ -260,7 +285,21 @@ public record PersonalDataEventAnswer(string Question, string Option, int Quanti
 
 public record PersonalDataBadge(string Club, string Name, DateTimeOffset AwardedAt);
 
-public record PersonalDataGuestCard(string Club, int PurchasedBookings);
+public record PersonalDataCourtPurchase(
+    string Club,
+    string Court,
+    DateTimeOffset From,
+    DateTimeOffset To,
+    decimal Price,
+    decimal PaidOnline,
+    string Currency,
+    bool CreditUsed,
+    Bookennis.Domain.CourtSales.CourtPurchaseStatus Status,
+    Bookennis.Domain.CourtSales.CourtPurchasePaymentMethod? PaymentMethod,
+    DateTime BoughtAt,
+    DateTimeOffset? PaidAt);
+
+public record PersonalDataBookingCredit(string Club, int Count, Bookennis.Domain.CourtSales.BookingCreditReason Reason, string? Note, DateTime GrantedAt);
 
 public record PersonalDataSubscriptionPlan(string Name, DateOnly From, DateOnly To, List<PersonalDataPlanParticipant> Participants);
 

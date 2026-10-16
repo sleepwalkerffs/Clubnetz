@@ -8,7 +8,7 @@ using Bookennis.Domain.Clubs.ApiKeys;
 using Bookennis.Domain.Clubs.EmailTemplates;
 using Bookennis.Domain.Courts;
 using Bookennis.Domain.Families;
-using Bookennis.Domain.Guests;
+using Bookennis.Domain.CourtSales;
 using Bookennis.Domain.Members;
 using Bookennis.Domain.Memberships;
 using Bookennis.Domain.Notifications;
@@ -53,7 +53,6 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<PlayMode> PlayModes => Set<PlayMode>();
     public DbSet<Season> Seasons => Set<Season>();
     public DbSet<MemberSeason> MemberSeasons => Set<MemberSeason>();
-    public DbSet<GuestCard> GuestCards => Set<GuestCard>();
     public DbSet<UserProfilePicture> UserProfilePictures => Set<UserProfilePicture>();
     public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
@@ -79,6 +78,10 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<MembershipOrderMember> MembershipOrderMembers => Set<MembershipOrderMember>();
     public DbSet<ClubPaymentAccount> ClubPaymentAccounts => Set<ClubPaymentAccount>();
     public DbSet<StripeWebhookEvent> StripeWebhookEvents => Set<StripeWebhookEvent>();
+    public DbSet<CourtSaleSettings> CourtSaleSettings => Set<CourtSaleSettings>();
+    public DbSet<CourtPriceRule> CourtPriceRules => Set<CourtPriceRule>();
+    public DbSet<CourtPurchase> CourtPurchases => Set<CourtPurchase>();
+    public DbSet<BookingCreditGrant> BookingCreditGrants => Set<BookingCreditGrant>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -27,8 +27,21 @@ public abstract class DeleteBookingsNotificationHandler<T>(
 
     public async Task Handle(DomainEvent<T> notification, CancellationToken cancellationToken)
     {
-        var user = await context.Users.FindRequiredAsync(userAccessor.GetUserId(), cancellationToken);
         var intersectingBookings = await QueryBookingsToBeDeleted(notification, cancellationToken);
+        if (intersectingBookings.Count == 0)
+            return;
+
+        // Background jobs (e.g. a bought slot booked again by the Stripe webhook) have no user
+        var deletedBy = userAccessor.TryGetUserId(out var userId)
+            ? (await context.Users.FindRequiredAsync(userId, cancellationToken)).FullName
+            : "";
+
+        // Bought slots lose their booking: the treasurers are told, the money was paid
+        var deletedIds = intersectingBookings.ConvertAll(b => b.Booking.Id);
+        var boughtPurchaseIds = await context.CourtPurchases
+            .Where(p => p.BookingId != null && deletedIds.Contains(p.BookingId.Value) && Domain.CourtSales.CourtPurchase.ActiveStatuses.Contains(p.Status))
+            .Select(p => p.Id)
+            .ToListAsync(cancellationToken);
 
         foreach (var intersectingBooking in intersectingBookings)
         {
@@ -52,7 +65,7 @@ public abstract class DeleteBookingsNotificationHandler<T>(
                     new BookingVariables(
                         intersectingBooking.Booking.Interval.From.AddTimeZoneInfo(intersectingBooking.Booking.TimeZoneInfoId).ToString(culture),
                         intersectingBooking.CourtName,
-                        user.FullName,
+                        deletedBy,
                         reason));
 
                 await mediator.Send(
@@ -65,6 +78,9 @@ public abstract class DeleteBookingsNotificationHandler<T>(
         }
 
         await context.SaveChangesAsync(cancellationToken);
+
+        if (boughtPurchaseIds.Count > 0)
+            await mediator.Send(new CourtSales.NotifyBoughtBookingsRemoved(boughtPurchaseIds), cancellationToken);
     }
 
     protected abstract Task<List<DeletedBookings>> QueryBookingsToBeDeleted(DomainEvent<T> notification, CancellationToken cancellationToken);

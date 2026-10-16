@@ -102,82 +102,79 @@
 
     <NotificationPreferencesCard />
 
-    @if (!isGuestSession)
-    {
-        <SectionCard Emoji="🔐" Title="@Locale["Security_Title"]" Subtitle="@Locale["Security_Subtitle"]">
-            <div class="security-list">
-                <div class="security-row">
-                    <MudIcon Icon="@Icons.Material.Filled.AlternateEmail" Size="Size.Small" Class="security-row__icon" />
-                    <div class="security-row__text">
-                        <div class="security-row__label">@Locale["Email"]</div>
-                        <div class="security-row__value">@model.Email</div>
-                    </div>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="OpenChangeEmail">@Locale["Change"]</MudButton>
+    <SectionCard Emoji="🔐" Title="@Locale["Security_Title"]" Subtitle="@Locale["Security_Subtitle"]">
+        <div class="security-list">
+            <div class="security-row">
+                <MudIcon Icon="@Icons.Material.Filled.AlternateEmail" Size="Size.Small" Class="security-row__icon" />
+                <div class="security-row__text">
+                    <div class="security-row__label">@Locale["Email"]</div>
+                    <div class="security-row__value">@model.Email</div>
                 </div>
-                @if (pendingEmail is not null)
-                {
-                    <MudAlert Severity="Severity.Info" Variant="Variant.Text" Dense="true" Class="security-pending">
-                        @string.Format(Locale["ChangeEmail_Pending"], pendingEmail)
-                    </MudAlert>
-                }
-                <div class="security-row">
-                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" Class="security-row__icon" />
-                    <div class="security-row__text">
-                        <div class="security-row__label">@Locale["Password"]</div>
-                        <div class="security-row__value">••••••••</div>
-                    </div>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="OpenChangePassword">@Locale["Change"]</MudButton>
-                </div>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="OpenChangeEmail">@Locale["Change"]</MudButton>
             </div>
-        </SectionCard>
+            @if (pendingEmail is not null)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Text" Dense="true" Class="security-pending">
+                    @string.Format(Locale["ChangeEmail_Pending"], pendingEmail)
+                </MudAlert>
+            }
+            <div class="security-row">
+                <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" Class="security-row__icon" />
+                <div class="security-row__text">
+                    <div class="security-row__label">@Locale["Password"]</div>
+                    <div class="security-row__value">••••••••</div>
+                </div>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="OpenChangePassword">@Locale["Change"]</MudButton>
+            </div>
+        </div>
+    </SectionCard>
 
-        <SectionCard Emoji="🛡️" Title="@Locale["Data_Title"]" Subtitle="@Locale["Data_Subtitle"]">
-            <div class="security-list">
-                <div class="security-row">
-                    <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Class="security-row__icon" />
-                    <div class="security-row__text">
-                        <div class="security-row__label">@Locale["Data_Export"]</div>
-                        <div class="security-row__value">@Locale["Data_ExportDescription"]</div>
-                    </div>
-                    <LoadButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" FullWidth="false" Loading="@exporting" Disabled="@exporting" OnClick="ExportData">
-                        @Locale["Data_Download"]
-                    </LoadButton>
+    <SectionCard Emoji="🛡️" Title="@Locale["Data_Title"]" Subtitle="@Locale["Data_Subtitle"]">
+        <div class="security-list">
+            <div class="security-row">
+                <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Class="security-row__icon" />
+                <div class="security-row__text">
+                    <div class="security-row__label">@Locale["Data_Export"]</div>
+                    <div class="security-row__value">@Locale["Data_ExportDescription"]</div>
                 </div>
-                <div class="security-row">
-                    <MudIcon Icon="@Icons.Material.Filled.Policy" Size="Size.Small" Class="security-row__icon" />
-                    <div class="security-row__text">
-                        <div class="security-row__label">@Locale["Data_Privacy"]</div>
-                        <div class="security-row__value">@Locale["Data_PrivacyDescription"]</div>
-                    </div>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" Href="legal/privacy">@Locale["Data_Open"]</MudButton>
-                </div>
+                <LoadButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" FullWidth="false" Loading="@exporting" Disabled="@exporting" OnClick="ExportData">
+                    @Locale["Data_Download"]
+                </LoadButton>
             </div>
-        </SectionCard>
+            <div class="security-row">
+                <MudIcon Icon="@Icons.Material.Filled.Policy" Size="Size.Small" Class="security-row__icon" />
+                <div class="security-row__text">
+                    <div class="security-row__label">@Locale["Data_Privacy"]</div>
+                    <div class="security-row__value">@Locale["Data_PrivacyDescription"]</div>
+                </div>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" Href="legal/privacy">@Locale["Data_Open"]</MudButton>
+            </div>
+        </div>
+    </SectionCard>
 
-        <SectionCard Emoji="⚠️" Title="@Locale["Danger_Title"]" Subtitle="@Locale["Danger_Subtitle"]" Class="profile-danger">
-            <div class="security-list">
-                @if (CanLeaveSelectedClub)
-                {
-                    <div class="security-row">
-                        <MudIcon Icon="@Icons.Material.Filled.GroupRemove" Size="Size.Small" Class="security-row__icon security-row__icon--danger" />
-                        <div class="security-row__text">
-                            <div class="security-row__label">@Locale["LeaveClub"]</div>
-                            <div class="security-row__value">@ClubProfileStore.SelectedClub!.ClubName</div>
-                        </div>
-                        <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="LeaveClub">@Locale["LeaveClub_Button"]</MudButton>
-                    </div>
-                }
+    <SectionCard Emoji="⚠️" Title="@Locale["Danger_Title"]" Subtitle="@Locale["Danger_Subtitle"]" Class="profile-danger">
+        <div class="security-list">
+            @if (CanLeaveSelectedClub)
+            {
                 <div class="security-row">
-                    <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" Class="security-row__icon security-row__icon--danger" />
+                    <MudIcon Icon="@Icons.Material.Filled.GroupRemove" Size="Size.Small" Class="security-row__icon security-row__icon--danger" />
                     <div class="security-row__text">
-                        <div class="security-row__label">@Locale["DeleteAccount"]</div>
-                        <div class="security-row__value">@Locale["DeleteAccount_Description"]</div>
+                        <div class="security-row__label">@Locale["LeaveClub"]</div>
+                        <div class="security-row__value">@ClubProfileStore.SelectedClub!.ClubName</div>
                     </div>
-                    <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="OpenDeleteAccount">@Locale["DeleteAccount_Button"]</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="LeaveClub">@Locale["LeaveClub_Button"]</MudButton>
                 </div>
+            }
+            <div class="security-row">
+                <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Size="Size.Small" Class="security-row__icon security-row__icon--danger" />
+                <div class="security-row__text">
+                    <div class="security-row__label">@Locale["DeleteAccount"]</div>
+                    <div class="security-row__value">@Locale["DeleteAccount_Description"]</div>
+                </div>
+                <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="OpenDeleteAccount">@Locale["DeleteAccount_Button"]</MudButton>
             </div>
-        </SectionCard>
-    }
+        </div>
+    </SectionCard>
 </div>
 
 @code {
@@ -207,7 +204,6 @@
     private bool processing = false;
     private bool exporting;
     private string? profilePictureUrl;
-    private bool isGuestSession;
     private string? pendingEmail;
     private ProfileInformationForm model = new();
 
@@ -273,7 +269,6 @@
 
     public void Dispose() => ClubProfileStore.OnClubProfileChanged -= OnClubProfileChanged;
 
-    // Guest cards are handed out by the club, only a real club membership can be ended here
     private bool CanLeaveSelectedClub => ClubProfileStore.SelectedClub is not null && !ClubProfileStore.IsSupportMode && !ClubProfileStore.Roles.Contains(MemberRole.Guest);
 
     private async Task ExportData()
@@ -396,7 +391,6 @@
                 Country = (int)user.Dto.Country
             };
             profilePictureUrl = user.Dto.ProfilePictureUrl;
-            isGuestSession = user.Dto.IsGuestSession;
         }
     }
 

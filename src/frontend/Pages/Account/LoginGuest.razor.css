@@ -1,0 +1,9 @@
+.guest-info {
+    margin: 0 0 16px;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--mud-palette-text-primary);
+    line-height: 1.45;
+}

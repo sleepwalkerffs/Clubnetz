@@ -43,6 +43,12 @@ public record AnnouncementVariables(string Title, MarkdownText Body, string Url)
 /// </summary>
 public record MembershipVariables(string Plan, string Season, string Amount, string Members, string PaymentMethod, string Url);
 
+/// <summary>
+/// Court time a member bought. <c>Date</c>/<c>Time</c> in the time zone of the club's court sales, <c>Price</c> the full price,
+/// <c>Paid</c> how it was paid ("€28.00 online", "1 credit", "1 credit + €8.00 online", "free"). <c>Url</c> leads to the booking page.
+/// </summary>
+public record CourtPurchaseVariables(string Court, string Date, string Time, string Price, string Paid, string Url);
+
 public abstract record ClubEmailVariables(MemberVariables Member)
 {
     /// <summary>Filled in by <see cref="SendClubEmail"/> from the club the email is sent for.</summary>
@@ -54,8 +60,6 @@ public record WelcomeEmailVariables(MemberVariables Member, SeasonVariables Seas
 public record SeasonActivatedEmailVariables(MemberVariables Member, SeasonVariables Season) : ClubEmailVariables(Member);
 
 public record BadgeAwardedEmailVariables(MemberVariables Member, BadgeVariables Badge, string TrophyCaseUrl) : ClubEmailVariables(Member);
-
-public record GuestCardEmailVariables(MemberVariables Member, string GuestCardUrl) : ClubEmailVariables(Member);
 
 public record BookingDeletedEmailVariables(MemberVariables Member, BookingVariables Booking) : ClubEmailVariables(Member);
 
@@ -73,3 +77,9 @@ public record MembershipEmailVariables(MemberVariables Member, MembershipVariabl
 
 /// <summary>To the treasurers: <c>Reason</c> says what happened to the order, <c>Payer</c> who it belongs to.</summary>
 public record MembershipNeedsAttentionEmailVariables(MemberVariables Member, MembershipVariables Membership, string Reason, string Payer) : ClubEmailVariables(Member);
+
+/// <summary>To the buyer: the slot is booked (and paid, or its debit started), or the debit failed and the booking was removed.</summary>
+public record CourtPurchaseEmailVariables(MemberVariables Member, CourtPurchaseVariables Purchase) : ClubEmailVariables(Member);
+
+/// <summary>To the treasurers: <c>Reason</c> says what happened, <c>Buyer</c> who bought the slot.</summary>
+public record CourtPurchaseNeedsAttentionEmailVariables(MemberVariables Member, CourtPurchaseVariables Purchase, string Reason, string Buyer) : ClubEmailVariables(Member);

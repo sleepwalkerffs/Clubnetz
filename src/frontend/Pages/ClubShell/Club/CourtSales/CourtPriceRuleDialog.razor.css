@@ -1,0 +1,45 @@
+.rule-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.rule-preview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border-left: 5px solid var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 10%, var(--mud-palette-surface));
+    font-variant-numeric: tabular-nums;
+}
+
+.rule-preview__days {
+    font-weight: 800;
+}
+
+.rule-preview__price {
+    margin-left: auto;
+    font-weight: 800;
+}
+
+.rule-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.rule-times {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.rule-hint {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}

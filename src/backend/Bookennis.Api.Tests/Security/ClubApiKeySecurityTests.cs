@@ -30,14 +30,14 @@ public class ClubApiKeySecurityTests(ApiSecurityFixture app)
     private static readonly string[] ControllersOpenToKeys =
     [
         "BadgeTiers", "Bookings", "ClubAnnouncements", "ClubEmailTemplates", "ClubEvents", "ClubProfile", "Clubs", "CourtBlockings", "Courts",
-        "Families", "Guests", "Leaderboards", "MemberBadges", "Members", "OneTimeBadges", "PlayModes", "Players", "Seasons", "Statistics",
+        "Families", "Leaderboards", "MemberBadges", "Members", "OneTimeBadges", "PlayModes", "Players", "Seasons", "Statistics",
         "SubscriptionPlans",
 
         // Season review (Wrapped) of the key's creator; releasing it is an admin action like the rest of the club setup.
         "Wrapped",
 
         // Membership fees: plans, the orders of the key's creator, the treasurer's list and the status of the Stripe account.
-        // Connecting and disconnecting the Stripe account (PaymentAccount) is not open to keys.
+        // Connecting and disconnecting the Stripe account (PaymentAccount) is not open to keys, and neither are court sales (CourtSales).
         "MembershipPlans", "Memberships", "MembershipPayments", "Payments",
     ];
 

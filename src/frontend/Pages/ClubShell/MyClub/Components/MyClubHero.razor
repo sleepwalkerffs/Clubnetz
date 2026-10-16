@@ -21,11 +21,7 @@
             <div class="myclub-hero__tagline">@Tagline</div>
 
             <div class="myclub-hero__chips">
-                @if (IsGuest)
-                {
-                    <span class="hero-chip">🎟️ @SharedLocale["Role_Guest"]</span>
-                }
-                else if (ActiveSeasonYear is not null)
+                @if (ActiveSeasonYear is not null)
                 {
                     @if (IsEnrolled)
                     {
@@ -97,7 +93,6 @@
     [Parameter] public string? ProfilePictureUrl { get; set; }
     [Parameter] public string? BadgeImageUrl { get; set; }
     [Parameter] public int? BadgeLevel { get; set; }
-    [Parameter] public bool IsGuest { get; set; }
     [Parameter] public int? ActiveSeasonYear { get; set; }
     [Parameter] public bool IsEnrolled { get; set; }
     [Parameter] public BookingResult? NextBooking { get; set; }

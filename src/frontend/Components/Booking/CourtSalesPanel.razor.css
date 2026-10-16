@@ -1,0 +1,138 @@
+.sale-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--mud-palette-primary) 30%, var(--mud-palette-lines-default));
+    background: color-mix(in srgb, var(--mud-palette-primary) 7%, var(--mud-palette-surface));
+}
+
+.sale-panel__main {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.sale-panel__emoji {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.sale-panel__text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sale-panel__title {
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+.sale-panel__subtitle {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.sale-panel__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.sale-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-primary);
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.sale-chip--credit {
+    color: var(--bk-dark-green, #047857);
+    border-color: color-mix(in srgb, #059669 40%, transparent);
+    background: color-mix(in srgb, #059669 12%, var(--mud-palette-surface));
+}
+
+.sale-chip--button {
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.sale-chip--button:hover,
+.sale-chip--button:focus-visible {
+    border-color: var(--mud-palette-primary);
+    outline: none;
+}
+
+.sale-prices {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.sale-prices__row {
+    display: grid;
+    grid-template-columns: minmax(80px, 1fr) auto auto;
+    grid-template-areas: "days time price" "courts courts courts";
+    gap: 0 12px;
+    padding: 4px 0;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    border-bottom: 1px dashed var(--mud-palette-lines-default);
+}
+
+.sale-prices__row:last-of-type {
+    border-bottom: none;
+}
+
+.sale-prices__days {
+    grid-area: days;
+    font-weight: 700;
+}
+
+.sale-prices__time {
+    grid-area: time;
+}
+
+.sale-prices__price {
+    grid-area: price;
+    font-weight: 700;
+    text-align: right;
+}
+
+.sale-prices__courts {
+    grid-area: courts;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.sale-prices__note {
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.sale-panel__member {
+    align-self: flex-start;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--mud-palette-primary);
+    text-decoration: none;
+}
+
+.sale-panel__member:hover {
+    text-decoration: underline;
+}

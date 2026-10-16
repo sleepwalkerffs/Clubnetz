@@ -321,4 +321,7 @@
   <data name="AllDay" xml:space="preserve">
     <value>All day</value>
   </data>
+  <data name="Booked" xml:space="preserve">
+    <value>Booked</value>
+  </data>
 </root>

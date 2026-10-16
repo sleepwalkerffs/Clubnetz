@@ -11,4 +11,7 @@ public record ClubProfileModel
 
     /// <summary>An application administrator who opened a club they are not a member of: <see cref="MemberId"/> is 0.</summary>
     public bool IsSupportMode { get; init; }
+
+    /// <summary>See <c>GetClubProfileResult.IsActiveMember</c>: enrolled in the active season, parent of an enrolled child, staff or support mode.</summary>
+    public bool IsActiveMember { get; init; }
 }

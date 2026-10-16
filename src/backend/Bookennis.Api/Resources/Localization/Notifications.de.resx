@@ -81,4 +81,43 @@
   <data name="Membership_Method_Other" xml:space="preserve">
     <value>Sonstiges</value>
   </data>
+  <data name="CourtPurchase_Reason_PaymentFailed" xml:space="preserve">
+    <value>Die SEPA-Lastschrift für einen gekauften Platz ist fehlgeschlagen. Die Buchung wurde entfernt, falls sie noch nicht vorbei war.</value>
+  </data>
+  <data name="CourtPurchase_Reason_Refunded" xml:space="preserve">
+    <value>Die Zahlung für einen gekauften Platz wurde in Stripe erstattet. Die Buchung wurde entfernt, falls sie noch nicht vorbei war.</value>
+  </data>
+  <data name="CourtPurchase_Reason_Disputed" xml:space="preserve">
+    <value>Die Zahlung für einen gekauften Platz wurde bei der Bank beanstandet. Bitte beantwortet die Beanstandung in eurem Stripe-Dashboard. Die Buchung bleibt bestehen.</value>
+  </data>
+  <data name="CourtPurchase_Reason_UnexpectedPayment" xml:space="preserve">
+    <value>Für einen Platzkauf, der bereits storniert oder beendet war, ist eine Zahlung eingegangen. Bitte prüft sie in eurem Stripe-Dashboard und erstattet sie bei Bedarf.</value>
+  </data>
+  <data name="CourtPurchase_Reason_PaidWithoutSlot" xml:space="preserve">
+    <value>Eine Zahlung ist eingegangen, nachdem die Reservierung des Platzes abgelaufen war, und der Platz wurde inzwischen von jemand anderem gebucht. Der Kauf ist ohne Buchung als bezahlt markiert: bitte erstattet die Zahlung in eurem Stripe-Dashboard oder vereinbart mit der Person einen anderen Termin.</value>
+  </data>
+  <data name="CourtPurchase_Paid_Online" xml:space="preserve">
+    <value>{0} online</value>
+  </data>
+  <data name="CourtPurchase_Paid_Credit" xml:space="preserve">
+    <value>1 Buchungsguthaben</value>
+  </data>
+  <data name="CourtPurchase_Paid_CreditAndOnline" xml:space="preserve">
+    <value>1 Buchungsguthaben + {0} online</value>
+  </data>
+  <data name="CourtPurchase_Paid_Free" xml:space="preserve">
+    <value>kostenlos</value>
+  </data>
+  <data name="CourtPurchase_Paid_Pending" xml:space="preserve">
+    <value>noch nicht bezahlt</value>
+  </data>
+  <data name="CourtPurchase_Checkout_CreditUsed" xml:space="preserve">
+    <value>1 Buchungsguthaben bezahlt die erste Stunde</value>
+  </data>
+  <data name="CourtPurchase_Reason_BookingRemoved" xml:space="preserve">
+    <value>Die Buchung eines gekauften Platzes wurde entfernt, weil der Platz gesperrt, deaktiviert oder überbucht wurde. Der Kauf bleibt bezahlt: bitte erstattet ihn in eurem Stripe-Dashboard (oder gebt ein Buchungsguthaben) oder vereinbart mit der Person einen anderen Termin.</value>
+  </data>
+  <data name="CourtPurchase_Reason_CreditNoLongerAvailable" xml:space="preserve">
+    <value>Für einen Platzkauf, dessen Reservierung abgelaufen war, ist eine Zahlung eingegangen. Das Buchungsguthaben wurde inzwischen anderweitig verwendet, daher ist nur der online bezahlte Teil gedeckt. Bitte klärt das mit der Person: erstattet die Zahlung in eurem Stripe-Dashboard oder verlangt den Rest.</value>
+  </data>
 </root>

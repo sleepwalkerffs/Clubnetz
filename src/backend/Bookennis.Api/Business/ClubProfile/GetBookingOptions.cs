@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Members;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Members;
 using Bookennis.Shared.Controller.ClubProfile;
@@ -5,62 +6,35 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.ClubProfile;
 
-public record GetBookingOptions(int UserId, bool IsGuestSession) : IQuery<GetBookingOptionsResult>
+/// <summary>
+/// Whether the user books for free like a member of the season: enrolled in the active season, or a parent who books for enrolled children.
+/// Members who are not active buy court time instead (<c>CourtSales/options</c>).
+/// </summary>
+public record GetBookingOptions(int UserId, int ClubId) : IQuery<GetBookingOptionsResult>
 {
     public class Handler(AppDbContext context) : IRequestHandler<GetBookingOptions, GetBookingOptionsResult>
     {
         public async Task<GetBookingOptionsResult> Handle(GetBookingOptions request, CancellationToken cancellationToken)
         {
-            var memberQuery = context.Set<Member>()
-                .Where(m => m.UserId == request.UserId);
-
-            memberQuery = request.IsGuestSession
-                ? memberQuery.Where(m => m.MemberType == MemberType.GuestMember)
-                : memberQuery.Where(m => m.MemberType == MemberType.ClubMember);
-
-            var member = await memberQuery.FirstOrDefaultAsync(cancellationToken);
-
-            // Fallback: if no member found with specific type, try any
-            member ??= await context.Set<Member>()
-                .Where(m => m.UserId == request.UserId)
+            var member = await context.ClubMembers
+                .Where(m => m.UserId == request.UserId && m.ClubId == request.ClubId && m.MemberType == MemberType.ClubMember)
+                .OrderBy(m => m.Id)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (member is null)
                 return new GetBookingOptionsResult { IsAllowedToBook = false };
 
-            if (member.MemberType == MemberType.GuestMember)
-            {
-                var availableBookings = await context.GuestCards
-                    .Where(x => x.GuestMemberId == member.Id)
-                    .SumAsync(x => x.PurchasedBookings, cancellationToken);
-
-                var consumedBookings = await context.BookingPlayers
-                    .Include(x => x.Booking)
-                    .Where(x => x.MemberId == member.Id)
-                    .CountAsync(cancellationToken);
-
-                return new GetBookingOptionsResult
-                {
-                    IsAllowedToBook = member.IsAllowedToBook && availableBookings > consumedBookings
-                };
-            }
-
-            // ClubMember: check season membership
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var activeSeason = await context.Seasons
-                .Where(s => s.Period.From <= today && today <= s.Period.To)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+            var isActiveMember = await ActiveMembership.IsActive(context, request.ClubId, member.Id, cancellationToken);
+            var activeSeason = await context.GetActiveSeason(request.ClubId, cancellationToken);
 
             var isInActiveSeason = activeSeason != null
-                && await context.MemberSeasons
-                    .AnyAsync(ms => ms.MemberId == member.Id && ms.SeasonId == activeSeason.Id, cancellationToken);
+                && await context.MemberSeasons.AnyAsync(ms => ms.MemberId == member.Id && ms.SeasonId == activeSeason.Id, cancellationToken);
 
             if (!isInActiveSeason && activeSeason != null)
             {
                 // Check if any of the member's children are in the active season
                 var childMemberIds = await context.Families
-                    .Where(f => f.Parents.Any(p => p.MemberId == member.Id))
+                    .Where(f => f.ClubId == request.ClubId && f.Parents.Any(p => p.MemberId == member.Id))
                     .SelectMany(f => f.Children.Select(c => c.MemberId))
                     .ToListAsync(cancellationToken);
 
@@ -77,7 +51,8 @@ public record GetBookingOptions(int UserId, bool IsGuestSession) : IQuery<GetBoo
                         {
                             IsAllowedToBook = true,
                             IsBookingOnlyForChildren = true,
-                            EligibleChildMemberIds = eligibleChildIds
+                            EligibleChildMemberIds = eligibleChildIds,
+                            IsActiveMember = isActiveMember,
                         };
                     }
                 }
@@ -85,7 +60,8 @@ public record GetBookingOptions(int UserId, bool IsGuestSession) : IQuery<GetBoo
 
             return new GetBookingOptionsResult
             {
-                IsAllowedToBook = isInActiveSeason
+                IsAllowedToBook = isInActiveSeason,
+                IsActiveMember = isActiveMember,
             };
         }
     }

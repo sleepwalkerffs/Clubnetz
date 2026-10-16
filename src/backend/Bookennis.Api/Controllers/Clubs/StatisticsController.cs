@@ -12,6 +12,7 @@ namespace Bookennis.Api.Controllers.Clubs;
 public class StatisticsController(IMediator mediator, IUserAccessor userAccessor) : ClubControllerBase
 {
     [HttpGet]
+    [Authorize(AuthorizationPolicies.ActiveMember)]
     public Task<GetMemberStatisticsResult> GetMemberStatistics([FromRoute] int clubId, CancellationToken cancellationToken)
         => mediator.Send(new GetMemberStatistics(userAccessor.GetUserId(), clubId), cancellationToken);
 

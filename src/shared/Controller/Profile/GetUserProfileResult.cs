@@ -21,7 +21,5 @@ public record GetUserProfileResult
     public required int FavoriteClubId { get; init; }
     public string? ProfilePictureUrl { get; init; }
     public bool ProfileCompletionBannerDismissed { get; init; }
-    /// <summary>Signed in via a guest link. The email and password cannot be changed in such a session.</summary>
-    public bool IsGuestSession { get; init; }
 }
 

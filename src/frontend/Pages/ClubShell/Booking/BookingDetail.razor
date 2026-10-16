@@ -130,7 +130,7 @@ else
                         <div class="detail-players">
                             @foreach (var player in booking.Players)
                             {
-                                var clickable = !player.IsGuest && !player.IsAtpPlayer;
+                                var clickable = CanOpenProfile(player);
                                 <div class="detail-player @(clickable ? "detail-player--clickable" : null)"
                                      role="@(clickable ? "link" : null)" tabindex="@(clickable ? "0" : null)"
                                      @onclick="() => NavigateToMemberProfile(player)"
@@ -523,9 +523,13 @@ else
             NavigateToMemberProfile(player);
     }
 
+    /// <summary>Members who are not active only see their own profile (the backend answers others with 403).</summary>
+    private bool CanOpenProfile(PlayerResult player)
+        => !player.IsGuest && !player.IsAtpPlayer && (ProfileStore.IsActiveMember || player.MemberId == ProfileStore.MemberId);
+
     private void NavigateToMemberProfile(PlayerResult player)
     {
-        if (!player.IsGuest && !player.IsAtpPlayer)
+        if (CanOpenProfile(player))
             NavManager.NavigateTo($"/clubs/{ClubId}/members/{player.MemberId}/profile");
     }
 

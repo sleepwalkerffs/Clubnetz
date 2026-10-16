@@ -1,0 +1,143 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.CourtSales
+@using Bookennis.Client.Services.Store.CourtSales
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.CourtSales
+
+@* Gives a member booking credits (one credit = one booking of up to an hour), or takes some back. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SubmitCaption" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@(memberId is not null && count > 0)" Loading="@Store.IsSaving" Title="@L["Credits_Grant"]">
+    <div class="grant">
+        @if (Member is not null)
+        {
+            <div class="grant__member">
+                <UserAvatar FirstName="@Member.FirstName" LastName="@Member.LastName" Size="Size.Small" Color="Color.Primary" />
+                <span class="grant__name">@Member.FirstName @Member.LastName</span>
+                <span class="grant__balance">@string.Format(L["Credits_Balance"], Member.Balance)</span>
+            </div>
+        }
+        else
+        {
+            <div>
+                <MudTextField T="string" Value="@search" ValueChanged="OnSearchChanged" Immediate="true" DebounceInterval="300" Variant="Variant.Outlined" Margin="Margin.Dense"
+                              Clearable="true" Label="@L["Credits_Member"]" Placeholder="@L["Credits_SearchMember"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+                <div class="grant__list" role="listbox" aria-label="@L["Credits_Member"]">
+                    @if (candidates is null)
+                    {
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                    }
+                    else if (candidates.Count == 0)
+                    {
+                        <div class="grant__note">@L["Credits_NoMemberFound"]</div>
+                    }
+                    else
+                    {
+                        @foreach (var candidate in candidates)
+                        {
+                            var selected = candidate.MemberId == memberId;
+                            <button type="button" class="grant__row @(selected ? "grant__row--selected" : null)" role="option" aria-selected="@(selected ? "true" : "false")"
+                                    @onclick="() => memberId = candidate.MemberId">
+                                <UserAvatar FirstName="@candidate.FirstName" LastName="@candidate.LastName" ProfilePictureUrl="@candidate.ProfilePictureUrl" Size="Size.Small"
+                                            Color="@(selected ? Color.Primary : Color.Default)" />
+                                <span class="grant__name">@candidate.FirstName @candidate.LastName</span>
+                                <span class="grant__check" aria-hidden="true">@(selected ? "✓" : null)</span>
+                            </button>
+                        }
+                    }
+                </div>
+            </div>
+        }
+
+        <ChoiceChips TItem="bool" Items="@Modes" Value="@takeBack" ValueChanged="@(v => { takeBack = v; count = 1; })" TextFunc="@(back => L[back ? "Credits_TakeBack" : "Credits_Give"])" />
+
+        <NumberStepper @bind-Value="count" Min="1" Max="@MaxCount" Label="@L["Credits_Count"]" DecreaseLabel="@L["Credits_Less"]" IncreaseLabel="@L["Credits_More"]" />
+
+        <MudTextField T="string" @bind-Value="note" Label="@L["Credits_Note"]" HelperText="@L["Credits_NoteHint"]" Lines="2" MaxLength="500" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+        <div class="grant__note">@L["Credits_Explain"]</div>
+    </div>
+</BaseDialog>
+
+@code {
+    private static readonly bool[] Modes = [false, true];
+
+    /// <summary>The member whose credits are changed; <c>null</c> lets the treasurer pick one.</summary>
+    [Parameter] public BookingCreditBalanceDto? Member { get; set; }
+
+    [Inject] private ICourtSalesStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<CourtSalesLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private int? memberId;
+    private string? search;
+    private List<BookingCreditCandidateDto>? candidates;
+    private bool takeBack;
+    private int count = 1;
+    private string? note;
+    private CancellationTokenSource? searchRequest;
+
+    /// <summary>Taking back can't go below 0.</summary>
+    private int MaxCount => takeBack && Member is not null ? Math.Max(1, Member.Balance) : 50;
+
+    private string SubmitCaption => string.Format(L[takeBack ? "Credits_TakeBackButton" : "Credits_GiveButton"], count);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Member is not null)
+            memberId = Member.MemberId;
+        else
+            await LoadCandidates();
+    }
+
+    private async Task OnSearchChanged(string? value)
+    {
+        search = value;
+        await LoadCandidates();
+    }
+
+    private async Task LoadCandidates()
+    {
+        searchRequest?.Cancel();
+        var request = searchRequest = new CancellationTokenSource();
+        try
+        {
+            var result = await Store.GetCreditCandidates(search, request.Token);
+            if (!request.IsCancellationRequested && result is { Success: true, Dto: not null })
+                candidates = result.Dto;
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer search replaced this one
+        }
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (memberId is not { } id)
+            return null;
+
+        var result = await Store.GrantCredits(id, takeBack ? -count : count, string.IsNullOrWhiteSpace(note) ? null : note.Trim());
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(string.Format(L["Credits_Saved"], $"{result.Dto.FirstName} {result.Dto.LastName}", result.Dto.Balance), Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        searchRequest?.Cancel();
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

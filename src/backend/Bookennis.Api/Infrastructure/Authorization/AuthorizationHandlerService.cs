@@ -8,24 +8,16 @@ namespace Bookennis.Api.Infrastructure.Authorization;
 
 public class AuthorizationHandlerService(AppDbContext context)
 {
+    /// <summary>
+    /// The <see cref="ClubMember"/> of the user in the club. A former guest may still have a <see cref="GuestMember"/> (historic bookings),
+    /// which gives no rights since the guest system was removed. <paramref name="principal"/> is no longer used.
+    /// </summary>
     public async Task<(int? MemberId, MemberRole[]? Role)> GetMember(int userId, int clubId, ClaimsPrincipal? principal = null)
     {
-        var isGuestSession = principal?.FindFirst("guest_session")?.Value == "true";
-
-        var query = from member in context.Set<Member>()
-                    where member.UserId == userId && member.ClubId == clubId
-                    select member;
-
-        query = isGuestSession
-            ? query.Where(m => m.MemberType == MemberType.GuestMember)
-            : query.Where(m => m.MemberType == MemberType.ClubMember);
-
-        var result = await query.SingleOrDefaultAsync();
-
-        // Fallback: if no member found with the specific type, try any member
-        result ??= await (from member in context.Set<Member>()
-                          where member.UserId == userId && member.ClubId == clubId
-                          select member).FirstOrDefaultAsync();
+        var result = await (from member in context.Set<Member>()
+                            where member.UserId == userId && member.ClubId == clubId && member.MemberType == MemberType.ClubMember
+                            orderby member.Id
+                            select member).FirstOrDefaultAsync();
 
         return (result?.Id, result?.UserRoles);
     }

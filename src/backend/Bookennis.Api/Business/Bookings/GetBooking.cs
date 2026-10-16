@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Bookings;
 
-public record GetBooking(int Id) : IQuery<BookingResult>
+/// <summary>A booking. <see cref="AnonymousViewerUserId"/>: see <see cref="GetBookings"/>.</summary>
+public record GetBooking(int Id, int? AnonymousViewerUserId = null) : IQuery<BookingResult>
 {
     public class Handler(AppDbContext context) : IRequestHandler<GetBooking, BookingResult>
     {
@@ -42,7 +43,7 @@ public record GetBooking(int Id) : IQuery<BookingResult>
                 select new { settings.MemberId, TierId = bt.Id, bt.ClubId, bt.Level, HasImage = context.BadgeTierImages.Any(i => i.BadgeTierId == bt.Id) }
             ).ToDictionaryAsync(x => x.MemberId, cancellationToken);
 
-            return
+            var result =
                 new BookingResult(
                     booking.Booking.Id,
                     booking.Users.Select(player =>
@@ -71,6 +72,11 @@ public record GetBooking(int Id) : IQuery<BookingResult>
                     booking.Booking.RecurringBookingSeriesId,
                     booking.Booking.IsExcludedFromSeries
                 );
+
+            if (request.AnonymousViewerUserId is not { } viewerUserId)
+                return result;
+
+            return BookingAnonymizer.Anonymize(result, await BookingAnonymizer.VisibleMemberIds(context, currentClub.Id, viewerUserId, cancellationToken));
         }
     }
 }

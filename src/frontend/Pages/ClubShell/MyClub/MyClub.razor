@@ -46,7 +46,6 @@ else
                             ProfilePictureUrl="@ProfileStore.ProfilePictureUrl"
                             BadgeImageUrl="@BadgesStore.MyDisplayBadgeImageUrl"
                             BadgeLevel="@BadgesStore.MyDisplayBadgeLevel"
-                            IsGuest="@IsGuest"
                             ActiveSeasonYear="@ActiveSeason?.StartDate.Year"
                             IsEnrolled="@(ActiveSeason is not null && member.AllowedSeasonIds.Contains(ActiveSeason.Id))"
                             NextBooking="@nextBooking"
@@ -61,13 +60,10 @@ else
                 <MembershipCard ClubId="@ClubId" />
             }
 
-            @if (!IsGuest)
+            @* Members who are not active get a 403 for statistics, leaderboard and Wrapped *@
+            @if (IsActive)
             {
                 <WrappedTeaser ClubId="@ClubId" />
-            }
-
-            @if (!IsGuest)
-            {
                 @RenderTiles(seasonStatistics)
             }
 
@@ -76,11 +72,8 @@ else
                     <UpcomingMatches Bookings="@BookingStore.UpcomingBookings" IsLoading="@(BookingStore.IsLoading && BookingStore.UpcomingBookings.Count == 0)"
                                      ClubId="@ClubId" MemberId="@member.MemberId" GetCourtName="@GetCourtName" />
 
-                    @if (!IsGuest)
-                    {
-                        <LatestNews ClubId="@ClubId" />
-                        <UpcomingEvents ClubId="@ClubId" />
-                    }
+                    <LatestNews ClubId="@ClubId" />
+                    <UpcomingEvents ClubId="@ClubId" />
 
                     @if (IsUser)
                     {
@@ -190,15 +183,15 @@ else
             .FirstOrDefault(o => o.Status is MembershipOrderStatus.Paid or MembershipOrderStatus.Processing && o.Members.Any(m => m.MemberId == memberId))
             ?.PlanName;
 
-    private bool IsGuest => ClubProfileStore.Roles.Contains(MemberRole.Guest);
+    private bool IsActive => ClubProfileStore.IsActiveMember;
 
     private bool IsUser => ClubProfileStore.Roles.Contains(MemberRole.User);
 
-    private bool ShowSnapshot => !IsGuest && StatisticsStore.Statistics is not null;
+    private bool ShowSnapshot => IsActive && StatisticsStore.Statistics is not null;
 
     private SeasonResult? ActiveSeason => ClubStore.Seasons.FirstOrDefault(s => s.IsActive);
 
-    private SeasonStatisticsResult? CurrentSeasonStatistics => ActiveSeason is null
+    private SeasonStatisticsResult? CurrentSeasonStatistics => ActiveSeason is null || !IsActive
         ? null
         : StatisticsStore.Statistics?.SeasonStatistics.FirstOrDefault(s => s.SeasonId == ActiveSeason.Id);
 
@@ -236,9 +229,9 @@ else
         isInitialized = true;
         StateHasChanged();
 
-        // The dashboard data streams in afterwards, guests have no access to statistics and leaderboards
+        // The dashboard data streams in afterwards, members who are not active have no access to statistics and leaderboards
         var loadDashboard = new List<Task> { BookingStore.LoadUpcomingBookings() };
-        if (!IsGuest)
+        if (IsActive)
         {
             loadDashboard.Add(StatisticsStore.LoadStatistics());
             loadDashboard.Add(LeaderboardStore.LoadLeaderboard());

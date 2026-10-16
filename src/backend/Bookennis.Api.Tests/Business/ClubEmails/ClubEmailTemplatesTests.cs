@@ -21,9 +21,10 @@ public class ClubEmailTemplatesTests(TestFixture fixture) : TestBase(fixture)
 
         var result = await SendAsync(new GetClubEmailTemplates(clubId));
 
-        result.Templates.Select(t => t.Type).Should().BeEquivalentTo(Enum.GetValues<SharedClubEmailType>());
+        // Every type the server knows (the removed guest card email is not one of them any more)
+        result.Templates.Select(t => t.Type).Should().BeEquivalentTo(Enum.GetValues<ClubEmailType>().Select(t => (SharedClubEmailType)t));
         result.Templates.Single(t => t.Type == SharedClubEmailType.Welcome).CustomizedLanguages.Should().Equal(SharedLanguage.German);
-        result.Templates.Single(t => t.Type == SharedClubEmailType.GuestCard).CustomizedLanguages.Should().BeEmpty();
+        result.Templates.Single(t => t.Type == SharedClubEmailType.CourtPurchaseConfirmed).CustomizedLanguages.Should().BeEmpty();
         result.Settings.WebsiteUrl.Should().Be("https://tc-test.at");
         result.Settings.ReplyToEmail.Should().Be("office@tc-test.at");
     }
@@ -78,9 +79,9 @@ public class ClubEmailTemplatesTests(TestFixture fixture) : TestBase(fixture)
     {
         var clubId = Query(ctx => ctx.TestData().Club.Id);
 
-        var act = () => SendAsync(new UpdateClubEmailTemplate(clubId, ClubEmailType.GuestCard,
+        var act = () => SendAsync(new UpdateClubEmailTemplate(clubId, ClubEmailType.CourtPurchaseConfirmed,
         [
-            new UpdateClubEmailTemplate.LanguageContent(Language.English, "Guest", "{{ season.period }}")
+            new UpdateClubEmailTemplate.LanguageContent(Language.English, "Court", "{{ season.period }}")
         ]));
 
         (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(ClubEmailTemplateErrorCode.UnknownEmailTemplateVariable));
@@ -92,7 +93,7 @@ public class ClubEmailTemplatesTests(TestFixture fixture) : TestBase(fixture)
     {
         var clubId = Query(ctx => ctx.TestData().Club.Id);
 
-        var act = () => SendAsync(new UpdateClubEmailTemplate(clubId, ClubEmailType.GuestCard,
+        var act = () => SendAsync(new UpdateClubEmailTemplate(clubId, ClubEmailType.CourtPurchaseConfirmed,
         [
             new UpdateClubEmailTemplate.LanguageContent(Language.English, "A", "A"),
             new UpdateClubEmailTemplate.LanguageContent(Language.English, "B", "B")
@@ -105,12 +106,12 @@ public class ClubEmailTemplatesTests(TestFixture fixture) : TestBase(fixture)
     public async Task ResetClubEmailTemplate_RemovesOnlyTemplatesOfType()
     {
         var clubId = await SeedTemplate(ClubEmailType.Welcome, Language.German, "Hallo", "Hallo");
-        await SeedTemplate(ClubEmailType.GuestCard, Language.German, "Gast", "Gast");
+        await SeedTemplate(ClubEmailType.CourtPurchaseConfirmed, Language.German, "Gast", "Gast");
 
         await SendAsync(new ResetClubEmailTemplate(clubId, ClubEmailType.Welcome));
 
         var types = await QueryAsync(ctx => ctx.ClubEmailTemplates.Select(t => t.Type).ToListAsync());
-        types.Should().Equal(ClubEmailType.GuestCard);
+        types.Should().Equal(ClubEmailType.CourtPurchaseConfirmed);
     }
 
     [Fact]

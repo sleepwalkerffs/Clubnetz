@@ -122,15 +122,15 @@ public class SendClubEmailTests(TestFixture fixture) : TestBase(fixture)
 
         var mediator = Substitute.For<IMediator>();
         await ScopedAsync(() => new SendTestClubEmail.Handler(GetInstance<AppDbContext>(), GetInstance<IClubEmailRenderer>(), userAccessor, mediator)
-            .Handle(new SendTestClubEmail(clubId, ClubEmailType.GuestCard, Language.English, "Test", "{{ guest_card_url }}"), CancellationToken.None));
+            .Handle(new SendTestClubEmail(clubId, ClubEmailType.CourtPurchaseConfirmed, Language.English, "Test", "{{ purchase.court }}"), CancellationToken.None));
 
         await mediator.Received(1).Send(
             Arg.Is<SendClubEmail>(e =>
                 e.Recipient == "admin@bookennis.com"
-                && e.Type == ClubEmailType.GuestCard
-                && e.Variables is GuestCardEmailVariables
+                && e.Type == ClubEmailType.CourtPurchaseConfirmed
+                && e.Variables is CourtPurchaseEmailVariables
                 && e.TemplateOverride != null
-                && e.TemplateOverride.Body == "{{ guest_card_url }}"),
+                && e.TemplateOverride.Body == "{{ purchase.court }}"),
             Arg.Any<CancellationToken>());
     }
 

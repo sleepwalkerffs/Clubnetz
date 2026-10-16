@@ -1,5 +1,6 @@
 using Bookennis.Api.Business.Badges;
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.CourtSales;
 using Bookennis.Api.Business.Memberships;
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Business.Payments;
@@ -42,8 +43,11 @@ public static class ServicesConfiguration
         container.Register<IMembershipFulfillment, MembershipFulfillment>();
         container.Register<IMembershipSettlement, MembershipSettlement>();
         container.Register<IMembershipNotifier, MembershipNotifier>();
+        container.Register<ICourtPurchaseSettlement, CourtPurchaseSettlement>();
+        container.Register<ICourtPurchaseNotifier, CourtPurchaseNotifier>();
         container.Register<BookingReminderJob>();
         container.Register<ClubEventReminderJob>();
         container.Register<StripeEventRecoveryJob>();
+        container.Register<CourtPurchaseHoldReleaseJob>();
     }
 }

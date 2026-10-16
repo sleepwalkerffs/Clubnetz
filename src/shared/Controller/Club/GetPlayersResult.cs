@@ -1,4 +1,5 @@
 using Bookennis.Shared.Controller.Booking.Shared;
 
 namespace Bookennis.Shared.Controller.Club;
-public record GetPlayersResult(List<PlayerResult> ClubMembers, List<PlayerResult> GuestMembers);
+/// <summary>The players that can be picked for a booking.</summary>
+public record GetPlayersResult(List<PlayerResult> ClubMembers);

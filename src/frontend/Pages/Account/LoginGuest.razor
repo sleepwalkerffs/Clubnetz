@@ -1,62 +1,34 @@
-@page "/account/guestLogin";
+@page "/account/guestLogin"
 @layout NotAuthorizedLayout
 
-@using Bookennis.Client.Localization
+@using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Localization.Pages.Account
-@using Bookennis.Client.Services
-@using Bookennis.Client.Services.HttpClients.Account
 @using Bookennis.Client.Shared
-@using Bookennis.Client.Utils
-@using Bookennis.Shared.Controller.Account
 
-<PageTitle>@Locale["GuestLogin"]</PageTitle>
+@* Guest links (/account/guestLogin?guestCode=…) were replaced: the old links still lead here and explain what to do instead. *@
+
+<PageTitle>@Locale["GuestLinkReplaced_Title"]</PageTitle>
+
+<AuthShell Emoji="🎾" Title="@Locale["GuestLinkReplaced_Title"]" Subtitle="@Locale["GuestLinkReplaced_Subtitle"]" ShowFeatures="false">
+    <ChildContent>
+        <ol class="guest-info">
+            <li>@Locale["GuestLinkReplaced_Step1"]</li>
+            <li>@Locale["GuestLinkReplaced_Step2"]</li>
+            <li>@Locale["GuestLinkReplaced_Step3"]</li>
+        </ol>
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4">@Locale["GuestLinkReplaced_Credits"]</MudAlert>
+        <div class="d-flex flex-column gap-2">
+            <MudButton Href="account/forgot-password" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large">
+                @Locale["GuestLinkReplaced_SetPassword"]
+            </MudButton>
+            <MudButton Href="account/login" Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true">
+                @Locale["Login"]
+            </MudButton>
+        </div>
+    </ChildContent>
+</AuthShell>
 
 @code {
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public Guid? GuestCode { get; set; }
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public int? ClubId { get; set; }
-
-    [Inject]
-    private IAccountHttpClient AccountHttpClient { get; set; } = null!;
-    [Inject]
-    private NavigationManager Navigation { get; set; } = null!;
-    [Inject]
-    private ISnackbar Snackbar { get; set; } = null!;
     [Inject]
     private IStringLocalizer<AccountLocale> Locale { get; set; } = null!;
-    [Inject]
-    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
-    [Inject]
-    private IAuthStateChanged AuthState { get; set; } = null!;
-
-    private bool ValidParameters => GuestCode != null && ClubId != null;
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (!ValidParameters)
-            return;
-
-        await LoginGuestAction();
-        await base.OnInitializedAsync();
-    }
-
-    private async Task LoginGuestAction()
-    {
-        var response = await AccountHttpClient.LoginGuest(new LoginGuestRequest(GuestCode!.Value, ClubId!.Value));
-        if (!response.Success)
-        {
-            Snackbar.ShowErrorDetails(response, BackendLocale);
-            Navigation.NavigateTo("/");
-        }
-        else
-        {
-            Snackbar.Add(Locale["ConfirmGuestLoginSuccess"], Severity.Success);
-            Navigation.NavigateTo("/");
-            AuthState.AuthStateChanged();
-            StateHasChanged();
-        }
-    }
 }

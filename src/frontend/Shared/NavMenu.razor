@@ -110,7 +110,8 @@
             var club = $"/clubs/{ClubProfileStore.SelectedClubId}";
             var bookingPlan = $"{club}/booking?Start={DateOnly.FromDateTime(DateTime.Today).ToString(CultureInfo.InvariantCulture)}&End={DateOnly.FromDateTime(DateTime.Today.AddDays(6)).ToString(CultureInfo.InvariantCulture)}";
             var isSupport = ClubProfileStore.IsSupportMode;
-            var isGuest = !isSupport && Has(MemberRole.Guest);
+            // Members who are not active (not enrolled, no staff role) don't see the other members: no leaderboard, statistics, Wrapped, planner
+            var isActive = isSupport || ClubProfileStore.IsActiveMember;
             var isAdmin = isSupport || Has(MemberRole.Admin);
             var isMaintainer = Has(MemberRole.Maintainer);
             var isSportsDirector = Has(MemberRole.SportsDirector);
@@ -120,24 +121,22 @@
             var clubItems = isSupport
                 ? new List<NavItem> { new(bookingPlan, Icons.Material.Filled.SportsTennis, Locale["BookingPlan"]) }
                 : [new($"{club}/my-club", Icons.Material.Filled.Home, Locale["MyClub"]), new(bookingPlan, Icons.Material.Filled.SportsTennis, Locale["Book"])];
-            if (!isGuest)
-            {
-                clubItems.Add(new($"{club}/news", Icons.Material.Filled.Campaign, Locale["News"]));
-                clubItems.Add(new($"{club}/calendar", Icons.Material.Filled.CalendarMonth, Locale["Calendar"]));
-            }
-            if (!isGuest && !isSupport)
+            clubItems.Add(new($"{club}/news", Icons.Material.Filled.Campaign, Locale["News"]));
+            clubItems.Add(new($"{club}/calendar", Icons.Material.Filled.CalendarMonth, Locale["Calendar"]));
+            if (isActive && !isSupport)
                 clubItems.Add(new($"{club}/leaderboard", Icons.Material.Filled.EmojiEvents, Locale["Leaderboard"]));
             yield return new(null, clubItems);
 
-            if (!isGuest && !isSupport)
+            if (!isSupport)
             {
-                yield return new(Locale["Section_Personal"],
-                [
-                    new($"{club}/membership", Icons.Material.Filled.CardMembership, Locale["Membership"]),
-                    new($"{club}/statistics", Icons.Material.Filled.BarChart, Locale["MyStatistics"]),
-                    new($"{club}/wrapped", Icons.Material.Filled.AutoAwesome, Locale["Wrapped"]),
-                    new($"{club}/subscription-planner", Icons.Material.Filled.EventRepeat, Locale["SubscriptionPlanner"])
-                ]);
+                var personal = new List<NavItem> { new($"{club}/membership", Icons.Material.Filled.CardMembership, Locale["Membership"]) };
+                if (isActive)
+                {
+                    personal.Add(new($"{club}/statistics", Icons.Material.Filled.BarChart, Locale["MyStatistics"]));
+                    personal.Add(new($"{club}/wrapped", Icons.Material.Filled.AutoAwesome, Locale["Wrapped"]));
+                    personal.Add(new($"{club}/subscription-planner", Icons.Material.Filled.EventRepeat, Locale["SubscriptionPlanner"]));
+                }
+                yield return new(Locale["Section_Personal"], personal);
             }
 
             var membersAndFees = new List<NavItem>();
@@ -145,7 +144,7 @@
                 membersAndFees.Add(new($"{club}/members", Icons.Material.Filled.Groups2, Locale["Members"]));
             if (isTreasurer)
             {
-                membersAndFees.Add(new($"{club}/guests", Icons.Material.Filled.PersonAddAlt1, SharedLocale["Guests"]));
+                membersAndFees.Add(new($"{club}/court-sales", Icons.Material.Filled.PointOfSale, Locale["CourtSales"]));
                 membersAndFees.Add(new($"{club}/membership-plans", Icons.Material.Filled.ReceiptLong, Locale["MembershipPlans"]));
                 membersAndFees.Add(new($"{club}/membership-payments", Icons.Material.Filled.Payments, Locale["MembershipPayments"]));
             }

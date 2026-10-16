@@ -1,4 +1,5 @@
 using Bookennis.Api.Business.CourtBlockings;
+using Bookennis.Api.Business.CourtSales;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.Clubs;
@@ -84,6 +85,9 @@ internal sealed class BookingContextBuilder
             .SingleRequiredAsync(cancellationToken);
 
         var club = clubAndPlayMode.Club;
+
+        // Bookings of the club one after the other: the overlap check of BuildContext sees every booking saved before
+        await context.LockCourts(club.Id, cancellationToken);
 
         var distinctCourtIds = courtIds.Distinct().ToList();
         var courts = await context.Courts

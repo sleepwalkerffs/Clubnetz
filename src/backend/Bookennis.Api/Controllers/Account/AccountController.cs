@@ -44,9 +44,4 @@ public class AccountController(IMediator mediator) : ControllerBase
     [EnableRateLimiting(RateLimitingConfiguration.AuthenticationPolicy)]
     [HttpPost("Password/Reset/Confirm")]
     public Task ResetPassword(ResetPasswordModel model, CancellationToken cancellationToken) => mediator.Send(new ResetPassword(model.Email, model.Token, model.NewPassword), cancellationToken);
-
-    [EnableRateLimiting(RateLimitingConfiguration.AuthenticationPolicy)]
-    [HttpPost("Guest/Login")]
-    public async Task LoginUser(LoginGuestRequest request, CancellationToken cancellationToken)
-        => await mediator.Send(new LoginGuest(request.GuestCode, request.ClubId), cancellationToken);
 }

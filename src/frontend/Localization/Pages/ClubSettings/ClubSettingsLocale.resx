@@ -146,10 +146,10 @@
     <value>years</value>
   </data>
   <data name="RestrictGuests" xml:space="preserve">
-    <value>No guests in prime time</value>
+    <value>No bought slots in prime time</value>
   </data>
   <data name="RestrictGuestsHint" xml:space="preserve">
-    <value>Guest cards cannot be used during prime time</value>
+    <value>Non-members can't buy court time during prime time</value>
   </data>
   <data name="UnsavedChanges" xml:space="preserve">
     <value>Unsaved changes</value>

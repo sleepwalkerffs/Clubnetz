@@ -17,7 +17,6 @@ public interface IProfileStore : ISemaphoreStore
     IReadOnlyList<string> MissingProfileFields { get; }
     bool IsProfileBannerDismissed { get; }
     string? Email { get; }
-    bool IsGuestSession { get; }
     bool IsClubAssigned(int clubId);
     Task BecomeClubMember(int clubId);
     int FavoriteClubId { get; }

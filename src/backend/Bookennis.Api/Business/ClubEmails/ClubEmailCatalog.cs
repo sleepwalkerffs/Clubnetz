@@ -42,8 +42,6 @@ public static class ClubEmailCatalog
                     null,
                     false),
                 "https://www.example.com/trophy-case")),
-        new(ClubEmailType.GuestCard, typeof(GuestCardEmailVariables),
-            _ => new GuestCardEmailVariables(SampleMember, "https://www.example.com/Account/GuestLogin?guestCode=00000000-0000-0000-0000-000000000000")),
         new(ClubEmailType.BookingDeleted, typeof(BookingDeletedEmailVariables),
             language => new BookingDeletedEmailVariables(
                 SampleMember,
@@ -82,6 +80,18 @@ public static class ClubEmailCatalog
                 SampleMember,
                 SampleMembership(language, paid: false),
                 language == Language.German ? "Ein Mitglied möchte einen Tarif, den ihr bestätigen müsst." : "A member asks for a plan that you have to confirm.",
+                "Erika Muster")),
+        new(ClubEmailType.CourtPurchaseConfirmed, typeof(CourtPurchaseEmailVariables),
+            language => new CourtPurchaseEmailVariables(SampleMember, SampleCourtPurchase(language))),
+        new(ClubEmailType.CourtPurchaseFailed, typeof(CourtPurchaseEmailVariables),
+            language => new CourtPurchaseEmailVariables(SampleMember, SampleCourtPurchase(language))),
+        new(ClubEmailType.CourtPurchaseNeedsAttention, typeof(CourtPurchaseNeedsAttentionEmailVariables),
+            language => new CourtPurchaseNeedsAttentionEmailVariables(
+                SampleMember,
+                SampleCourtPurchase(language),
+                language == Language.German
+                    ? "Die Zahlung wurde in Stripe erstattet. Die Buchung wurde entfernt, falls sie noch nicht vorbei war."
+                    : "The payment was refunded in Stripe. The booking was removed if it was not over yet.",
                 "Erika Muster"))
     ];
 
@@ -121,6 +131,19 @@ public static class ClubEmailCatalog
             "Max Muster, Erika Muster, Mia Muster",
             paid ? (language == Language.German ? "Online-Zahlung" : "Online payment") : "",
             "https://www.example.com/clubs/1/membership");
+    }
+
+    private static CourtPurchaseVariables SampleCourtPurchase(Language language)
+    {
+        var culture = language.ToCultureInfo();
+        var price = Memberships.MembershipTexts.Amount(2800, culture);
+        return new CourtPurchaseVariables(
+            language == Language.German ? "Platz 2" : "Court 2",
+            new DateOnly(2025, 6, 14).ToString("D", culture),
+            "17:00 – 18:00",
+            price,
+            language == Language.German ? $"{price} online" : $"{price} online",
+            "https://www.example.com/clubs/1/booking");
     }
 
     private static SeasonVariables SampleSeason(Language language)

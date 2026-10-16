@@ -13,5 +13,12 @@ public record GetClubProfileResult
     /// belongs to a member (own bookings, statistics, registrations) is not available.
     /// </summary>
     public bool IsSupportMode { get; set; }
+
+    /// <summary>
+    /// The member may see the other members: enrolled in the active season, a parent of an enrolled child, a staff role (anything but
+    /// User), or support mode. Members who are not active see the booking calendar anonymized and have no leaderboard,
+    /// statistics, season review, subscription planner or profiles and trophy cases of others; they can buy court time.
+    /// </summary>
+    public bool IsActiveMember { get; set; }
 }
 

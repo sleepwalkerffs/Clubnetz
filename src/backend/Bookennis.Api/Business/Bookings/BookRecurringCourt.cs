@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.CourtSales;
 using System.ComponentModel.DataAnnotations;
 using Bookennis.Api.Business.CourtBlockings;
 using Bookennis.Api.Data;
@@ -103,6 +104,9 @@ public record BookRecurringCourt(
 
             if (!localParticipants.Any(i => i.IsAllowedUser))
                 throw new PreconditionException(ErrorCode.UserNotAllowedToBook, "User is not allowed to make booking for the provided memberIds");
+
+            // Bookings of the club one after the other, so the overlap checks see every booking saved before
+            await context.LockCourts(queryResult.Club.Id, cancellationToken);
 
             var intersectingBookings = await context
                 .Bookings.Where(b => b.CourtId == request.CourtId && b.Interval.Intersects(firstInterval))

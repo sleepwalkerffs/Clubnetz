@@ -1,5 +1,6 @@
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Business.Push;
+using Bookennis.Api.Business.CourtSales;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Exceptions;
 using Fusonic.Extensions.EntityFrameworkCore;
@@ -22,6 +23,8 @@ public record DeleteBooking(int BookingEntryId) : ICommand
             var booking = await context.Bookings.FindRequiredAsync(request.BookingEntryId, cancellationToken);
             if (booking.Interval.From < DateTimeOffset.UtcNow.AddMinutes((-gracePeriod) ?? 0))
                 throw new PreconditionException(ErrorCode.CannotDeleteBookingFromThePast, "Cannot delete booking in the past");
+
+            await context.EnsureNotBought(booking.Id, cancellationToken);
 
             await pushNotifier.BookingDeleted(booking.Id, cancellationToken);
             await emailNotifier.BookingDeleted(booking.Id, cancellationToken);

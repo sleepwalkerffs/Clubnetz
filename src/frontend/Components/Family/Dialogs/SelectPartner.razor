@@ -13,6 +13,11 @@
         @if (loaded)
         {
             <MemberPickList Items="@FamilyStore.AvailableFamilyMembers" @bind-Values="selected" Label="@FamilySharedLocale["SelectPartner"]" />
+            @if (FamilyStore.AvailableFamilyMembers.Count == 0)
+            {
+                @* Members who are not enrolled get no names of others: the treasurer puts the family together *@
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">@FamilySharedLocale["NoMemberTreasurerHint"]</MudAlert>
+            }
         }
     </div>
 </BaseDialog>
