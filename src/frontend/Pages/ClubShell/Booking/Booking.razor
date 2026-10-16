@@ -6,13 +6,20 @@
 @using Bookennis.Client.Services.Store.Bookings
 @using Bookennis.Client.Services.Store.Club
 @using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Components.Booking.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.CourtSales
 @using Bookennis.Client.Services.Store.CourtBlockings
+@using Bookennis.Client.Services.Store.CourtSales
+@using Bookennis.Shared.Controller.CourtSales
 @using Bookennis.Client.Services.Store.Family
 @using Bookennis.Client.Services.Store.Members
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Booking.Shared
 @using Bookennis.Shared.Controller.Club
 @using Bookennis.Shared.Controller.CourtBlockings
+
+@implements IDisposable
 
 <PageTitle>@Locale["Book"]</PageTitle>
 
@@ -82,6 +89,18 @@ else
             </div>
         </MudSwipeArea>
 
+        @if (IsBuyerView && CourtSalesStore.Options is { IsEnabled: true } saleOptions)
+        {
+            <CourtSalesPanel ClubId="@ClubProfileStore.SelectedClubId" Options="@saleOptions" PriceRules="@CourtSalesStore.PriceRules" Courts="@Courts" />
+        }
+        else if (IsBuyerView && !CanBook && CourtSalesStore.Options is { IsEnabled: false })
+        {
+            <MudAlert Severity="Severity.Info" Dense="true">
+                @SalesLocale["Panel_NotSelling"]
+                <MudLink Href="@($"/clubs/{ClubProfileStore.SelectedClubId}/membership")" Color="Color.Primary">@SalesLocale["Panel_BecomeMember"]</MudLink>
+            </MudAlert>
+        }
+
         <div class="day-strip">
             <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft" Size="Size.Small" OnClick="@(() => ShiftRange(-1))"
                            aria-label="@Locale["PreviousWeek"]" Class="day-strip__shift" />
@@ -122,9 +141,13 @@ else
         @if (dayBookings.Count > 0 || dayBlockings.Count > 0 || ClubStore.ClubDetails.PrimeTimeSettings.IsEnabled)
         {
             <div class="booking-legend">
-                @foreach (var playMode in dayBookings.Select(b => b.PlayMode).DistinctBy(p => p.Id).OrderBy(p => p.Name))
+                @foreach (var playMode in dayBookings.Where(b => !b.IsAnonymized).Select(b => b.PlayMode).DistinctBy(p => p.Id).OrderBy(p => p.Name))
                 {
                     <span class="booking-legend__item"><span class="booking-legend__swatch" style="background: @BookingColors.ToHex(playMode.Color)"></span>@playMode.Name</span>
+                }
+                @if (dayBookings.Any(b => b.IsAnonymized))
+                {
+                    <span class="booking-legend__item"><span class="booking-legend__swatch booking-legend__swatch--anon"></span>@Locale["Booked"]</span>
                 }
                 @if (ownBookings.Count > 0)
                 {
@@ -156,6 +179,8 @@ else
                  MemberId="@MemberId"
                  ClubId="@ClubProfileStore.SelectedClubId"
                  CanBook="@CanBook"
+                 CanBuy="@CanBuyOnSelectedDate"
+                 OnBuySlot="@OpenBuyDialog"
                  IsBookingOnlyForChildren="@(ClubProfileStore.BookingOptions?.IsBookingOnlyForChildren ?? false)"
                  EligibleChildMemberIds="@(ClubProfileStore.BookingOptions?.EligibleChildMemberIds ?? [])"
                  MemberChildren="@MemberChildren"
@@ -178,6 +203,14 @@ else
     [SupplyParameterFromQuery(Name = "Day")]
     public DateOnly? SelectedDay { get; set; }
 
+    /// <summary>Back from the payment page of a bought slot: the purchase, its day and "success" or "cancelled" (proves nothing, the server is asked).</summary>
+    [SupplyParameterFromQuery(Name = "purchase")]
+    public int? Purchase { get; set; }
+    [SupplyParameterFromQuery(Name = "checkout")]
+    public string? Checkout { get; set; }
+    [SupplyParameterFromQuery(Name = "date")]
+    public DateOnly? PurchaseDate { get; set; }
+
     [Inject]
     private IBookingStore BookingStore { get; set; } = null!;
     [Inject]
@@ -192,6 +225,16 @@ else
     private IFamilyStore FamilyStore { get; set; } = null!;
     [Inject]
     private IStringLocalizer<BookingSharedLocale> Locale { get; set; } = null!;
+    [Inject]
+    private ICourtSalesStore CourtSalesStore { get; set; } = null!;
+    [Inject]
+    private IDialogService DialogService { get; set; } = null!;
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<CourtSalesLocale> SalesLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = null!;
     [Inject]
@@ -211,7 +254,18 @@ else
 
     private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
 
+    private const int PollAttempts = 15;
+    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
+    private readonly CancellationTokenSource disposed = new();
+
     private bool CanBook => ClubProfileStore.BookingOptions?.IsAllowedToBook ?? false;
+
+    /// <summary>A member who is not active: sees the calendar anonymized and may buy free court time (enrolled members book as always).</summary>
+    private bool IsBuyerView => !ClubProfileStore.IsSupportMode && !ClubProfileStore.IsActiveMember;
+
+    private bool CanBuyOnSelectedDate
+        => IsBuyerView && !CanBook && CourtSalesStore.Options is { CanBuy: true } options
+           && SelectedDate >= Today && SelectedDate.DayNumber - Today.DayNumber <= options.MaxDaysInAdvance;
 
     private bool CanManageBlockings => CourtBlockingHelpers.CanManage(ClubProfileStore.Roles);
 
@@ -234,6 +288,12 @@ else
     protected override async Task OnInitializedAsync()
     {
         // Missing query parameters are supplied as default(DateOnly), not the initial values
+        // The payment page comes back with the day of the bought slot
+        if (PurchaseDate is { } purchaseDate && Start == default)
+        {
+            Start = purchaseDate;
+            SelectedDay = purchaseDate;
+        }
         if (Start == default)
             Start = Today;
         if (End < Start)
@@ -251,6 +311,7 @@ else
             ClubStore.LoadClubDetails(),
             ClubStore.LoadPlayModes(),
             loadMember,
+            IsBuyerView ? Task.WhenAll(CourtSalesStore.LoadOptions(), CourtSalesStore.LoadPriceRules()) : Task.CompletedTask,
             LoadBookings());
 
         var familyId = isSupportMode ? null : MembersStore.MemberDetail?.FamilyId;
@@ -258,12 +319,105 @@ else
             await FamilyStore.LoadFamily(familyId.Value);
 
         Courts = ClubStore.Courts;
-        Players = ClubStore.ClubPlayers.Union(ClubStore.GuestPlayers).ToList();
+        Players = ClubStore.ClubPlayers;
         MemberId = ClubProfileStore.MemberId;
         AllowedPlaymodes = ClubStore.PlayModes.Where(mode => mode.AllowedRoles.Any(ClubProfileStore.Roles.Contains)).ToList();
         MemberChildren = familyId is null ? [] : FamilyStore.Family?.Children.ConvertAll(child => new PlayerResult(child.MemberId, child.FirstName, child.LastName, false)) ?? [];
 
         loaded = true;
+
+        if (Purchase is { } purchaseId && Checkout is not null)
+            await HandleCheckoutReturn(purchaseId, Checkout);
+    }
+
+    /// <summary>
+    /// Back from Stripe. "success": the payment arrives on its own way (webhook), so the purchase is asked a few times. "cancelled": the slot is
+    /// given free at once. The query parameters are removed afterwards (<see cref="UpdateUrl"/>), so a reload does not repeat it.
+    /// </summary>
+    private async Task HandleCheckoutReturn(int purchaseId, string checkout)
+    {
+        Purchase = null;
+        Checkout = null;
+        StateHasChanged();
+
+        if (checkout == "cancelled")
+        {
+            var released = await CourtSalesStore.ReleasePurchase(purchaseId);
+            if (released is { Success: true, Dto.Status: CourtPurchaseStatus.Paid or CourtPurchaseStatus.Processing })
+                Snackbar.Add(SalesLocale["Return_PaidAfterAll"], Severity.Success);
+            else if (released.Success)
+                Snackbar.Add(SalesLocale["Return_Cancelled"], Severity.Info);
+            else
+                Snackbar.ShowErrorDetails(released, BackendLocale);
+        }
+        else if (checkout == "success")
+        {
+            CourtPurchaseDto? purchase = null;
+            try
+            {
+                for (var attempt = 0; attempt < PollAttempts; attempt++)
+                {
+                    var result = await CourtSalesStore.GetPurchase(purchaseId);
+                    purchase = result.Dto;
+                    if (!result.Success || purchase is null || purchase.Status is not CourtPurchaseStatus.AwaitingPayment)
+                        break;
+
+                    await Task.Delay(PollInterval, disposed.Token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            switch (purchase?.Status)
+            {
+                case CourtPurchaseStatus.Paid:
+                    Snackbar.Add(SalesLocale["Return_Paid"], Severity.Success);
+                    break;
+                case CourtPurchaseStatus.Processing:
+                    Snackbar.Add(SalesLocale["Return_Processing"], Severity.Success);
+                    break;
+                case CourtPurchaseStatus.AwaitingPayment:
+                    Snackbar.Add(SalesLocale["Return_Pending"], Severity.Info);
+                    break;
+                default:
+                    Snackbar.Add(SalesLocale["Return_Failed"], Severity.Warning);
+                    break;
+            }
+        }
+
+        await CourtSalesStore.LoadOptions();
+        await ReloadBookings();
+    }
+
+    private async Task OpenBuyDialog(BuySlot slot)
+    {
+        if (CourtSalesStore.Options is not { CanBuy: true } options)
+            return;
+
+        var parameters = new DialogParameters<BuyCourtDialog>
+        {
+            { d => d.Court, slot.Court },
+            { d => d.Date, SelectedDate },
+            { d => d.Start, slot.Start },
+            { d => d.Options, options },
+            { d => d.MaxMinutes, slot.FreeMinutes },
+        };
+        var dialog = await DialogService.ShowAsync<BuyCourtDialog>(SalesLocale["Buy_Title"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            await CourtSalesStore.LoadOptions();
+            await ReloadBookings();
+        }
+    }
+
+    public void Dispose()
+    {
+        disposed.Cancel();
+        disposed.Dispose();
     }
 
     private List<BookingResult> BookingsOn(DateOnly date) => bookingsByDay.GetValueOrDefault(date) ?? [];

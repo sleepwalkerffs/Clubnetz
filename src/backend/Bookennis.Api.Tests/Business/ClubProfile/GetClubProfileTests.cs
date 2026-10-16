@@ -14,7 +14,7 @@ public class GetClubProfileTests(TestFixture fixture) : TestBase(fixture)
     {
         var userId = Query(ctx => ctx.TestData().User.Id);
 
-        var result = await SendAsync(new GetClubProfile(userId, false));
+        var result = await SendAsync(new GetClubProfile(userId));
 
         result.ClubName.Should().Be("TestClub");
         result.MemberId.Should().BeGreaterThan(0);
@@ -27,7 +27,7 @@ public class GetClubProfileTests(TestFixture fixture) : TestBase(fixture)
         var (userId, clubId) = Query(ctx => (ctx.TestData().User.Id, ctx.TestData().Club.Id));
 
         // An application administrator who is a member of the club gets the profile of the member
-        var result = await SendAsync(new GetClubProfile(userId, false, clubId));
+        var result = await SendAsync(new GetClubProfile(userId, clubId));
 
         result.IsSupportMode.Should().BeFalse();
         result.MemberId.Should().BeGreaterThan(0);
@@ -38,7 +38,7 @@ public class GetClubProfileTests(TestFixture fixture) : TestBase(fixture)
     {
         var (userId, clubId) = await AddUserWithoutMember();
 
-        var result = await SendAsync(new GetClubProfile(userId, false, clubId));
+        var result = await SendAsync(new GetClubProfile(userId, clubId));
 
         result.IsSupportMode.Should().BeTrue();
         result.ClubName.Should().Be("TestClub");
@@ -51,7 +51,7 @@ public class GetClubProfileTests(TestFixture fixture) : TestBase(fixture)
     {
         var (userId, _) = await AddUserWithoutMember();
 
-        var act = () => SendAsync(new GetClubProfile(userId, false));
+        var act = () => SendAsync(new GetClubProfile(userId));
 
         await act.Should().ThrowAsync<Fusonic.Extensions.Common.Entities.EntityNotFoundException>();
     }
@@ -61,7 +61,7 @@ public class GetClubProfileTests(TestFixture fixture) : TestBase(fixture)
     {
         var (userId, _) = await AddUserWithoutMember();
 
-        var act = () => SendAsync(new GetClubProfile(userId, false, 999999));
+        var act = () => SendAsync(new GetClubProfile(userId, 999999));
 
         await act.Should().ThrowAsync<Fusonic.Extensions.Common.Entities.EntityNotFoundException>();
     }
@@ -92,31 +92,47 @@ public class GetClubProfileTests(TestFixture fixture) : TestBase(fixture)
             return td.User.Id;
         });
 
-        var result = await SendAsync(new GetClubProfile(userId, false));
+        var result = await SendAsync(new GetClubProfile(userId));
 
         result.ClubName.Should().Be("TestClub");
         result.Role.Should().NotContain(Bookennis.Shared.Controller.Shared.MemberRole.Guest);
     }
 
     [Fact]
-    public async Task GetClubProfile_DualMembership_GuestSession_ReturnsGuestMember()
+    public async Task GetClubProfile_OnlyAGuestMember_IsNoMembership()
     {
         var userId = await QueryAsync(async ctx =>
         {
-            var td = ctx.TestData();
-
-            // Add a GuestMember for the same user+club to create dual membership
-            var guestMember = new GuestMember(td.User.Id, td.Club.Id);
-            guestMember.AllowBooking();
-            ctx.Add(guestMember);
+            var user = new User("former-guest@bookennis.com", "former-guest@bookennis.com", "Former", "Guest", new DateOnly(1990, 1, 1), Gender.Male);
+            ctx.Add(user);
             await ctx.SaveChangesAsync();
-
-            return td.User.Id;
+            ctx.Add(new GuestMember(user.Id, ctx.TestData().Club.Id));
+            await ctx.SaveChangesAsync();
+            return user.Id;
         });
 
-        var result = await SendAsync(new GetClubProfile(userId, true));
+        var act = () => SendAsync(new GetClubProfile(userId));
 
-        result.ClubName.Should().Be("TestClub");
-        result.Role.Should().Contain(Bookennis.Shared.Controller.Shared.MemberRole.Guest);
+        await act.Should().ThrowAsync<Fusonic.Extensions.Common.Entities.EntityNotFoundException>();
+    }
+
+    [Fact]
+    public async Task GetClubProfile_IsActiveMember_ForStaffEnrolledMembersAndSupportMode()
+    {
+        var (userId, adminUserId) = Query(ctx => (ctx.TestData().User.Id, ctx.TestData().Admin.Id));
+        var (supportUserId, clubId) = await AddUserWithoutMember();
+
+        (await SendAsync(new GetClubProfile(userId))).IsActiveMember.Should().BeFalse("member 1 is not enrolled and has no staff role");
+        (await SendAsync(new GetClubProfile(adminUserId))).IsActiveMember.Should().BeTrue("member 2 is an admin of the club");
+        (await SendAsync(new GetClubProfile(supportUserId, clubId))).IsActiveMember.Should().BeTrue("support mode sees everything");
+
+        await QueryAsync(async ctx =>
+        {
+            var seasonId = await Bookennis.Api.Tests.Business.CourtSales.CourtSaleSeed.AddActiveSeason(ctx);
+            await Bookennis.Api.Tests.Business.CourtSales.CourtSaleSeed.Enroll(ctx, TestDataSeed.Member1Id, seasonId);
+            return 0;
+        });
+
+        (await SendAsync(new GetClubProfile(userId))).IsActiveMember.Should().BeTrue("enrolled in the active season");
     }
 }

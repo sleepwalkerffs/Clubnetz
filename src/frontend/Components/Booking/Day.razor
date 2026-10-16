@@ -56,9 +56,10 @@
         }
 
         @* Free slots, hover is pure CSS so moving the mouse does not re-render the grid *@
-        @if (CanBook)
+        @if (CanBook || CanBuy)
         {
             var firstFutureRow = PastEndRow;
+            var buyPrimeRows = !CanBook && ClubInformation.PrimeTimeSettings.RestrictGuests ? PrimeTimeRows : null;
             @for (var i = 0; i < Courts.Count; i++)
             {
                 var court = Courts[i];
@@ -66,6 +67,9 @@
                 {
                     var row = slot + RowOffset;
                     if (row < firstFutureRow)
+                        continue;
+                    // The club sells no slots in prime time
+                    if (buyPrimeRows is { } prime && row >= prime.Start && row < prime.End)
                         continue;
 
                     var time = TimeSpan.FromMinutes(openingHourStart * 60 + slot * 30);
@@ -111,6 +115,22 @@
             var column = i + ColumnOffset;
             foreach (var booking in BookingsOfDay.Where(b => b.CourtId == Courts[i].CourtId))
             {
+                if (booking.IsAnonymized)
+                {
+                    @* Members who are not active only see that the court is taken: no names, no play mode, no details *@
+                    var anonStart = CalculateGridRowStart(booking.Interval.From);
+                    var anonEnd = CalculateGridRowEnd(booking.Interval.To);
+                    <div class="booking-block booking-block--anon @(anonEnd - anonStart <= 1 ? "booking-block--xs" : null) @(booking.Interval.To <= DateTimeOffset.Now ? "booking-block--past" : null)"
+                         style="grid-column: @column; grid-row: @anonStart / @anonEnd"
+                         title="@($"{booking.Interval.From:HH:mm}–{booking.Interval.To:HH:mm} · {Locale["Booked"]}")">
+                        <div class="booking-block__head">
+                            <span class="booking-block__time">@booking.Interval.From.ToString("HH:mm")–@booking.Interval.To.ToString("HH:mm")</span>
+                        </div>
+                        <div class="booking-block__mode">@Locale["Booked"]</div>
+                    </div>
+                    continue;
+                }
+
                 var rowStart = CalculateGridRowStart(booking.Interval.From);
                 var rowEnd = CalculateGridRowEnd(booking.Interval.To);
                 var span = rowEnd - rowStart;
@@ -162,11 +182,15 @@
     </div>
 </div>
 
+@* Buyers tap a free slot instead (the dialog needs a court and a start) *@
+@if (CanBook || !CanBuy)
+{
 <MudHidden Breakpoint="Breakpoint.Xs" Invert="true">
     <div class="add-entry mb-6">
         <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@OpenBookDialog" Disabled="!CanBook" aria-label="@Locale["Book"]" />
     </div>
 </MudHidden>
+}
 
 @code {
     private const int RowOffset = 2;
@@ -208,6 +232,16 @@
 
     [Parameter]
     public List<int> EligibleChildMemberIds { get; set; } = [];
+
+    /// <summary>
+    /// The member is not enrolled and may buy court time: free slots are clickable and raise <see cref="OnBuySlot"/> instead of the booking dialog.
+    /// </summary>
+    [Parameter]
+    public bool CanBuy { get; set; }
+
+    /// <summary>A free slot was clicked to buy it: court, local start time and the longest it can last there.</summary>
+    [Parameter]
+    public EventCallback<BuySlot> OnBuySlot { get; set; }
 
     /// <summary>Raised after a booking was created, so the page can reload its bookings.</summary>
     [Parameter]
@@ -331,6 +365,12 @@
 
     private async Task OpenBookCourtDialog(TimeSpan? time, CourtResult? court)
     {
+        if (!CanBook && CanBuy && time is { } start && court is not null)
+        {
+            await OnBuySlot.InvokeAsync(new BuySlot(court, start, FreeMinutesFrom(court, start)));
+            return;
+        }
+
         if (!CanBook)
             return;
 
@@ -354,6 +394,22 @@
 
         if (result is { Canceled: false })
             await OnBooked.InvokeAsync();
+    }
+
+    /// <summary>Minutes from <paramref name="start"/> until the court is taken (booking, blocking, closed) or the club closes.</summary>
+    private int FreeMinutesFrom(CourtResult court, TimeSpan start)
+    {
+        var from = new DateTimeOffset(Date.ToDateTime(TimeOnly.FromTimeSpan(start)));
+        var until = bookableRange.To;
+        foreach (var interval in BookingsOfDay.Where(b => b.CourtId == court.CourtId).Select(b => b.Interval)
+                     .Concat(BlockingsOfDay.Where(b => b.CourtIds.Contains(court.CourtId)).Select(b => b.Interval))
+                     .Concat(court.Inactive is null ? [] : [court.Inactive]))
+        {
+            if (interval.To > from && interval.From < until)
+                until = interval.From <= from ? from : interval.From;
+        }
+
+        return Math.Max(30, (int)(until - from).TotalMinutes);
     }
 
     private int CalculateGridRowStart(DateTimeOffset from)

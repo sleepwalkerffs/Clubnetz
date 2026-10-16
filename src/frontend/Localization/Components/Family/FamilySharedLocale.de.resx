@@ -204,4 +204,7 @@
   <data name="Gender_Diverse" xml:space="preserve">
     <value>Divers</value>
   </data>
+  <data name="NoMemberTreasurerHint" xml:space="preserve">
+    <value>Du findest deinen Partner nicht? Der Kassier deines Vereins kann eure Familie zusammenstellen, wenn euer Mitgliedsbeitrag erfasst wird.</value>
+  </data>
 </root>

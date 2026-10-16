@@ -48,7 +48,11 @@ public class MembersController(IMediator mediator, IAuthorizationService authori
     [HttpGet("{memberId:int}/profile")]
     [Authorize(AuthorizationPolicies.Member)]
     public async Task<MemberProfileResult> GetMemberProfile(int memberId, CancellationToken cancellationToken)
-        => await mediator.Send(new GetMemberProfile(memberId), cancellationToken);
+    {
+        // Members who are not active (not enrolled, no staff role) only see their own profile
+        await authorizationService.EnsureSelfOrActiveMember(HttpContext.User, memberId);
+        return await mediator.Send(new GetMemberProfile(memberId), cancellationToken);
+    }
 
     [HttpPatch("{memberId:int}/BookingOptions")]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]

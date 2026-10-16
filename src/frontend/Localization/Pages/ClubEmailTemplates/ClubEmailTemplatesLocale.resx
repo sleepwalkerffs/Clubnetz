@@ -130,12 +130,6 @@
   <data name="TypeDescription_BadgeAwarded" xml:space="preserve">
     <value>Sent when a member earns a badge or receives a special award.</value>
   </data>
-  <data name="Type_GuestCard" xml:space="preserve">
-    <value>Guest login</value>
-  </data>
-  <data name="TypeDescription_GuestCard" xml:space="preserve">
-    <value>Sent with the login link when a guest card is created.</value>
-  </data>
   <data name="Type_BookingDeleted" xml:space="preserve">
     <value>Booking deleted</value>
   </data>
@@ -228,9 +222,6 @@
   </data>
   <data name="Variable_trophy_case_url" xml:space="preserve">
     <value>Link to the trophy case</value>
-  </data>
-  <data name="Variable_guest_card_url" xml:space="preserve">
-    <value>Guest login link</value>
   </data>
   <data name="Variable_booking.date" xml:space="preserve">
     <value>Date of the booking</value>
@@ -428,9 +419,57 @@
     <value>Link to the page in the app</value>
   </data>
   <data name="Variable_reason" xml:space="preserve">
-    <value>What happened to the order</value>
+    <value>What happened</value>
   </data>
   <data name="Variable_payer" xml:space="preserve">
     <value>Name of the member who pays</value>
+  </data>
+  <data name="Type_CourtPurchaseConfirmed" xml:space="preserve">
+    <value>Court time bought</value>
+  </data>
+  <data name="TypeDescription_CourtPurchaseConfirmed" xml:space="preserve">
+    <value>Sent to the buyer when a bought slot is booked (paid online, with a credit or for free).</value>
+  </data>
+  <data name="Type_CourtPurchaseFailed" xml:space="preserve">
+    <value>Court payment failed</value>
+  </data>
+  <data name="TypeDescription_CourtPurchaseFailed" xml:space="preserve">
+    <value>Sent to the buyer when the direct debit of a bought slot failed and the booking was removed.</value>
+  </data>
+  <data name="Type_CourtPurchaseNeedsAttention" xml:space="preserve">
+    <value>Court sale needs attention</value>
+  </data>
+  <data name="TypeDescription_CourtPurchaseNeedsAttention" xml:space="preserve">
+    <value>Sent to the treasurers and admins: an unexpected payment, a refund, a dispute or a failed debit of a bought slot.</value>
+  </data>
+  <data name="Variable_purchase.court" xml:space="preserve">
+    <value>Court</value>
+  </data>
+  <data name="Variable_purchase.date" xml:space="preserve">
+    <value>Date of the slot</value>
+  </data>
+  <data name="Variable_purchase.time" xml:space="preserve">
+    <value>Time of the slot</value>
+  </data>
+  <data name="Variable_purchase.price" xml:space="preserve">
+    <value>Full price with currency</value>
+  </data>
+  <data name="Variable_purchase.paid" xml:space="preserve">
+    <value>How it was paid (e.g. "1 credit")</value>
+  </data>
+  <data name="Variable_purchase.url" xml:space="preserve">
+    <value>Link to the booking page</value>
+  </data>
+  <data name="Variable_buyer" xml:space="preserve">
+    <value>Name of the buyer</value>
+  </data>
+  <data name="Type_CourtPurchaseCompensated" xml:space="preserve">
+    <value>Bought court had to make room</value>
+  </data>
+  <data name="TypeDescription_CourtPurchaseCompensated" xml:space="preserve">
+    <value>Sent to the buyer when the club needs a bought court (overbooked, court blocked or set inactive): the booking was removed and the buyer got booking credits.</value>
+  </data>
+  <data name="Variable_credits" xml:space="preserve">
+    <value>Credits the buyer got</value>
   </data>
 </root>

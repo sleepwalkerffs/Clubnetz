@@ -40,16 +40,17 @@ public class WrappedSecurityTests(ApiSecurityFixture app)
     {
         try
         {
-            var before = await Send(HttpMethod.Get, WrappedOf(app.ClubA), app.MemberOfA);
+            // An active member (enrolled); members who are not active get no season review at all (ActiveMemberSecurityTests)
+            var before = await Send(HttpMethod.Get, WrappedOf(app.ClubA), app.EnrolledMemberOfA);
             before.Status.Should().Be(HttpStatusCode.PreconditionFailed);
-            (await Send(HttpMethod.Get, $"/api/Clubs/{app.ClubA.Id}/Wrapped", app.MemberOfA)).Body.Should().NotContain($"\"seasonId\":{app.ClubA.SeasonId}");
+            (await Send(HttpMethod.Get, $"/api/Clubs/{app.ClubA.Id}/Wrapped", app.EnrolledMemberOfA)).Body.Should().NotContain($"\"seasonId\":{app.ClubA.SeasonId}");
 
             // The admin previews it before releasing it
             (await Send(HttpMethod.Get, WrappedOf(app.ClubA), app.ClubA.Admin)).Status.Should().Be(HttpStatusCode.OK);
 
             (await Send(HttpMethod.Put, $"{WrappedOf(app.ClubA)}/publish", app.ClubA.Admin)).Status.Should().Be(HttpStatusCode.OK);
 
-            var after = await Send(HttpMethod.Get, WrappedOf(app.ClubA), app.MemberOfA);
+            var after = await Send(HttpMethod.Get, WrappedOf(app.ClubA), app.EnrolledMemberOfA);
             after.Status.Should().Be(HttpStatusCode.OK);
             after.Body.Should().NotContainAny(["@security.test", "birthday", "email"]);
         }

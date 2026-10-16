@@ -21,46 +21,72 @@
 - Every feature that adds or changes an endpoint, a way to sign in, or data that belongs to a club has to hold up in the security tests (`Bookennis.Api.Tests/Security`, see "Security tests" below): run them, seed the new data in `ApiSecurityFixture` so the sweeps reach it, and add an attack test for every new rule about who may do what. A query that uses `IgnoreQueryFilters()` must filter its root entity by the club itself.
 - Committing and opening pull requests is fine. Work on a branch, not on `master`, and never push to `stage` or `production` without being asked: those branches deploy.
 
-## Guest System & Dual Membership
-
-### Session Types
-
-- **Normal session**: User logs in with email/password. They are treated as a `ClubMember`.
-- **Guest session**: User logs in via a guest link/code. They are treated as a `GuestMember`.
-- The session type is determined by the `guest_session` claim (set to `"true"` during `LoginGuest`). The `guest_member_id` claim stores the specific GuestMember ID.
-
-### Dual Membership
-
-- A single user can have BOTH a `ClubMember` and a `GuestMember` record for the same club (e.g., a club member who also purchased a guest card).
-- **CRITICAL**: Any query on `context.Set<Member>()` filtered by `UserId` (and optionally `ClubId`) may return multiple records. Never use `SingleAsync`, `SingleOrDefaultAsync`, or `SingleRequiredAsync` on such queries. Use `FirstOrDefaultAsync` with an `OrderBy` or filter by `MemberType`.
-- When filtering by session type: use `MemberType.ClubMember` for normal sessions, `MemberType.GuestMember` for guest sessions.
-- The `AuthorizationHandlerService.GetMember()` accepts a `ClaimsPrincipal` parameter to determine which member type to return.
+## Members, Former Guests & Active Members
 
 ### Member Hierarchy
 
-- `Member` (abstract) → `ClubMember` and `GuestMember`
-- `ClubMember.CanParticipate` is always `false` — ClubMembers can only book if enrolled in an active season (`MemberSeasons`).
-- `GuestMember.CanParticipate` returns `IsAllowedToBook` (set via `AllowBooking()` in `CreateGuestCard`).
-- `GuestMember` always has `MemberRole.Guest`; `ClubMember` typically has `MemberRole.User`.
+- `Member` (abstract) → `ClubMember` and `GuestMember` (TPH table `Members`, discriminator `MemberType`).
+- **The guest system was removed** (guest cards, guest links, guest sessions, `GuestsController`, `LoginGuest`). Migration `AddCourtSales` turned the bookings left on guest cards into booking credits on a `ClubMember` (see Court Sales) and set `IsAllowedToBook = false` on every guest member.
+- `GuestMember` and `MemberType.GuestMember`/`MemberRole.Guest` stay only for history: historic bookings reference guest members, leaderboards and histories still show them. A guest member gives **no rights**: `AuthorizationHandlerService.GetMember`, `GetClubProfile`, `GetBookingOptions` and `BecomeClubMember` only look at the `ClubMember` of a user. Never create guest members.
+- A user can still have both a `ClubMember` and an old `GuestMember` for the same club: never use `Single*` on `Set<Member>()` filtered by `UserId`; filter by `MemberType.ClubMember` (or use `ClubMembers`) and `FirstOrDefault` with an `OrderBy`.
+- `ClubMember.CanParticipate` is always `false` — ClubMembers book for free only if enrolled in the active season (`MemberSeasons`); members who are not enrolled buy court time (see Court Sales).
+- Former guests have no password: they sign in after "Forgot password" (`ResetPassword` also confirms the email address).
 
-### Booking Eligibility (`GetBookingOptions`)
+### Active members (`Business/Members/ActiveMembership.cs`)
 
-- **Guest session**: Allowed to book if `GuestMember.IsAllowedToBook == true` AND `sum(GuestCards.PurchasedBookings) > count(BookingPlayers)`.
-- **Normal session (ClubMember)**: Allowed to book if enrolled in the current active season.
-
-### Guest Restrictions
-
-- Guests cannot access Statistics or Leaderboards (denied by `AuthorizationPolicies.ClubMember` policy, hidden in NavMenu).
-- Guests cannot book during prime time if `PrimeTimeSettings.RestrictGuests` is enabled.
-- Guests can only have 1 upcoming booking at a time.
-- Guests cannot be mixed with ClubMembers in the same booking.
+- **The one helper that decides it**: a member is active when enrolled in the active season (the season whose period contains today), a parent of a family with an enrolled child, or has a role other than `User`/`Guest` (Admin, Maintainer, Treasurer, SportsDirector, YouthSportsDirector, Trainer). Application administrators (support mode) count as active. Use `ActiveMembership.IsActive` / `IsEnrolledInActiveSeason` / `OwnAndChildMemberIds`, never write the rule again.
+- Policy `AuthorizationPolicies.ActiveMember` (`ActiveMemberRequirement`, `ActiveMemberAuthorizationHandler`, accepts API keys like the other club policies; a key's creator is an admin and therefore active) guards everything that shows other members: `Leaderboards` (GET), own `Statistics`, `Wrapped` (GETs), `OneTimeBadges` (GET list with awardees), `Bookings/RecurringSeries/{id}`, and - for another member than oneself - `Members/{id}/profile`, `MemberBadges/Members/{id}/badges|trophy-case` (`IAuthorizationService.EnsureSelfOrActiveMember`).
+- Members who are not active keep: their own profile and member record, the booking calendar **anonymized**, courts, club info, play modes, court blockings, news and the club calendar (without names of others: `CreatedByName` and other registrations are stripped in the controllers), the membership page (they must be able to buy a membership), notifications, court sales and the own family. `Families/AvailableFamilyMembers` returns an empty list to them (treasurers put their families together in the payments dialogs).
+- **Anonymized calendar**: `GET Bookings` / `GET Bookings/{id}` pass `AnonymousViewerUserId` for members who are not active (`BookingsController.AnonymousViewer`). `BookingAnonymizer` empties `Players`, `Comment`, `RecurringBookingSeriesId` and replaces the play mode by `BookingAnonymizer.NeutralPlayMode` (id 0, empty name, gray) with `BookingResult.IsAnonymized = true` - except for bookings the caller or a child of their family plays in. `GET Players` returns only the caller and their family's children (`GetPlayers(OnlyMemberIds)`).
+- `GetClubProfileResult.IsActiveMember` and `GetBookingOptionsResult.IsActiveMember` tell the FE what to hide (leaderboard, statistics, wrapped, subscription planner, trophy cases of others).
+- `ActiveMemberSecurityTests` checks it over HTTP, including a sweep of every GET club endpoint for the name of an active member.
 
 ### Query Filter Note
 
 - The tenant query filter IS applied to `Member` (the root type). `ClubMember` and `GuestMember` inherit it automatically (EF Core TPH inheritance). They are listed in the exclusion array of `AddQueryFilterToAllEntitiesAssignableFrom` only because EF Core does not allow applying filters directly to derived types — but the filter still works via the root `Member` entity.
 - When `tenantService.GetTenantId()` is null (e.g., admin routes without `{clubId}`), the filter passes all records through.
 - Existing `IgnoreQueryFilters()` on `Set<Member>()` in handlers like `GetBookings`, `GetLeaderboard`, `GetMemberBookingHistory`, etc. is used to show players from other clubs (ATP cross-club feature).
-- The dual membership issue (both `ClubMember` and `GuestMember` for the same user+club) is NOT a tenant filter problem — both records have the same `ClubId`. It's a cardinality issue requiring `MemberType` filtering or `FirstOrDefault` instead of `Single`.
+
+## Court Sales (bought court time)
+
+### Overview
+
+A member of the club who is **not enrolled in the active season** (joined with "Join another club", staff that is not enrolled, former guests) buys free court time: clicks a free slot, pays with Stripe (or a booking credit, or a free price rule) and the court is booked. Join first, then buy (no anonymous purchases). Enrolled members get `AlreadyEnrolled` and book for free as before. Treasurers and admins set the prices, see the sales, cancel purchases and give credits.
+
+### Domain (`Bookennis.Domain/CourtSales`)
+
+- `CourtSaleSettings` (`TenantDomainEntity`, unique per club, no row = switched off): `IsEnabled`, `PlayModeId?` (play mode of bought bookings, required to switch on, FK set null when the play mode is deleted), `TimeZoneId` (default Europe/Vienna; the prices are local times of it - **never the client's time zone**), `MaxBookingMinutes` (30-240, multiple of 30, default 120), `MaxDaysInAdvance` (0-90, default 14), `MaxUpcomingBookings` (1-10, default 1). The play mode may not overbook (`CourtSalePlayModeCanOverbook`) or have a fixed duration (`CourtSalePlayModeHasFixedDuration`).
+- `CourtPriceRule` (`TenantDomainEntity`): `CourtIds` (empty = all courts), `Weekdays`, `From`/`To` (local `TimeOnly` on full/half hours, `To` 00:00 = midnight), `PricePerHourCents` (≥ 0, 0 = free), `Currency` ("eur"), `Name?`. Rules of a club never overlap (shared weekday + shared court + intersecting times → `CourtPriceRulesOverlap` with name and times of the other rule). The DTOs carry the times as `TimeSpan` (24:00 = midnight) because the client converts `TimeOnly` to UTC.
+- `CourtPricing.Quote(rules, courtId, interval, timeZone)` walks the slot minute by minute in local time (spans two rules, daylight saving days are priced by the time really played); a minute without a rule = not for sale (`null`). The amount is rounded to cents once at the end. `QuoteFirstMinutes(..., 60)` is what a credit covers. `CourtPricingTests` covers it.
+- `CourtPurchase` (`TenantDomainEntity`): `MemberId?` (buyer, set null when the member is removed), `BookingId?` (set null), `CourtId`, `Interval`, `PriceCents`, `CreditUsed`, `AmountDueCents`, `Currency`, `Status`, `PaymentMethod?` (`Online`, `Credit`, `Free`), Stripe session/payment intent, `HoldExpiresAt?`, `PaidAt?`, `CancelledAt?`, `CancelledByMemberId?`. Status `AwaitingPayment` → `Processing` (SEPA) → `Paid`; `Expired` (hold released), `Failed`, `Cancelled`, `Refunded`, `Disputed`, `Compensated` (the club needed the court, `CompensationCredits?`). Transitions are methods (`CourtPurchaseInvalidStatus`), `MarkPaid/MarkProcessing/MarkFailed/MarkRefunded/MarkDisputed/Expire` are no-ops when repeated. `MarkPaid`/`MarkProcessing` also accept an `Expired` purchase (the money arrived late).
+- `BookingCreditGrant` (`TenantDomainEntity`): `MemberId` (cascade), `Count` (≠ 0, negative to take back), `Reason` (`GuestCardMigration`, `GrantedByClub`), `Note?`, `GrantedByMemberId?`. **Balance** = Σ grants − purchases with `CreditUsed` in `CourtPurchase.CreditHoldingStatuses` (AwaitingPayment, Processing, Paid): a credit comes back by itself when its purchase expires, fails or is cancelled. A negative grant can't take the balance below 0 (`BookingCreditBalanceTooLow`).
+
+### Buying (`Business/CourtSales`, `StartCourtPurchase`)
+
+- The booking (buyer = only player, play mode of the settings) is created **when the purchase starts**, so the slot is held. It runs through `BookingDomainService.BookCourt` with `Context.IsPurchase = true`: the buyer needs no enrollment and no active season, `FixedPlayerCount` is not enforced, and prime time with `PrimeTimeSettings.RestrictGuests` ("no bought slots in prime time", the property kept its name) throws `CannotBuyWithinPrimeTime`. Opening hours, inactive/blocked courts, overlaps and the grace period apply as always.
+- The handler also checks: settings switched on, slot starts on a full/half hour and lasts a multiple of 30 minutes up to `MaxBookingMinutes`, at most `MaxDaysInAdvance` days ahead (club time zone), upcoming purchases < `MaxUpcomingBookings`, the slot has a price. Everything after `LockCourts` (advisory lock per club, one-key form so it never collides with `LockMembershipOrders`). **Every handler that books a court takes the same lock before its overlap check** (`BookingContextBuilder.Load`, so `BookCourt`, `BookCourts`, `EditBooking`, `EditRecurringBooking`; `BookRecurringCourt`; purchases; a slot booked again after a late payment), so nothing is sold twice.
+- Paying: a credit is never spent on free time (price 0 or a free first hour); credit and ≤ 60 minutes → `Credit`, paid at once; credit and longer → the credit pays the first hour, the rest online; no credit and price 0 → `Free`; otherwise a Stripe Checkout Session (direct charge, `price_data`, product "Court 2 · Sat, 18 Oct 17:00–18:00", `expires_at` = now + 31 minutes = `HoldExpiresAt`). Success/cancel url: `/clubs/{id}/booking?purchase={id}&date=yyyy-MM-dd&checkout=success|cancelled`. Stripe is checked before anything is held (`PaymentsNotConfigured`, `PaymentAccountNotReady`).
+- **No self-cancel after payment**: `DeleteBooking`/`EditBooking` reject bought bookings (`BookingIsBought`). A treasurer cancels the purchase (`POST CourtSales/purchases/{id}/cancel`): the booking is deleted if it has not started, a credit comes back; money paid online is refunded **in the Stripe dashboard** (`CancelCourtPurchaseResult.RefundInStripeDashboard`).
+- Releasing holds: `checkout.session.expired` (only for the session the purchase waits for), the buyer coming back with `checkout=cancelled` (`POST CourtSales/purchases/{id}/release`, buyer only: closes the session, books it when Stripe says it was completed after all), and the recurring job `CourtPurchaseHoldReleaseJob` (every 5 minutes, holds 2 minutes past `HoldExpiresAt`, asks Stripe first; every hold in its own command `ReleaseExpiredCourtPurchaseHold`, so its own transaction).
+- Bookings of bought slots that the club removes (court blocked or set inactive, overbooked): `DeleteBookingsNotificationHandler` sends `NotifyBoughtBookingsRemoved` with the reason of each removal (`BoughtBookingRemoval`). A hold is released (purchase expired, payment page closed). A **paid** purchase is `Compensated`: the buyer gets **one credit per started hour** (`CourtPurchase.CreditsForCompensation`, none for a free slot; the credit the purchase used comes back by itself and counts toward it, the rest is a `BookingRemovedByClub` grant, `GrantedCompensationCredits`) and the email `CourtPurchaseCompensated` instead of the booking deleted email; the treasurers get no email. A purchase whose SEPA debit has not settled stays `Processing` and the treasurers get `NeedsAttention(BookingRemoved)`. When the money of a compensated purchase is refunded or disputed later, the granted credits are taken back as far as the buyer still has them, otherwise the treasurers get `CompensationNotTakenBack`.
+- `BookingResult.IsBought` marks bought bookings (false when anonymized): `BookingDetail` shows no edit/delete for them but who can cancel, the planner can't move them.
+
+### Stripe kind discrimination
+
+- `StripeCheckoutData.Kind` (`StripeCheckoutKind.MembershipOrder` default, `CourtPurchase`) and `ExpiresAt`. Membership sessions keep the plain order id as `client_reference_id`; court purchases use `court_purchase:{id}` and metadata `court_purchase_id` (`StripeCheckoutReference.For/TryParse`, `StripeCheckoutSession.Kind/ReferenceId/IsForCourtPurchase`).
+- `ProcessStripeEvent.HandleCheckout` branches on the kind; refunds and disputes look up `CourtPurchases` by payment intent before `MembershipOrders`. The club is always the one of the Stripe account; a purchase of another club changes nothing.
+- `ICourtPurchaseSettlement` is the one place that books a court payment (webhook, `SyncCourtPurchaseCheckout` on `GET CourtSales/purchases/{id}`, release, hold job). A payment for an `Expired` purchase (or a hold whose booking was removed) books the slot again when it is still free (under `LockCourts`), otherwise the purchase is paid without booking and the treasurers are told (`PaidWithoutSlot`); when the credit of an expired purchase was spent in the meantime it is settled without credit and reported (`CreditNoLongerAvailable`); a payment for a cancelled/failed/refunded purchase is reported (`UnexpectedPayment`). A failed debit marks `Failed`, deletes the upcoming booking and mails buyer and treasurers. A full refund marks `Refunded` and deletes the upcoming booking; a dispute (also of a cancelled purchase) marks `Disputed`.
+
+### Emails
+
+`CourtPurchaseConfirmed`, `CourtPurchaseFailed` (to the buyer) and `CourtPurchaseNeedsAttention` (to Treasurers and Admins, reason text `CourtPurchase_Reason_…` in `Notifications(.de).resx`) are club emails without a notification preference. Send them with `ICourtPurchaseNotifier` (a substitute in `TestFixture`) after saving. The "paid" line comes from `CourtPurchaseTexts.Paid`.
+
+### API (`CourtSalesController`, `api/Clubs/{clubId}/CourtSales`)
+
+- **Cookie only, never an API key** (policies `CourtSalesMember` = any member, `CourtSalesManager` = Treasurer/Admin, `OwnsCourtPurchase` = buyer or Treasurer/Admin, the buyer only for `release`). Not in `ControllersOpenToKeys`.
+- `GET|PUT settings`, `POST|PUT|DELETE price-rules[/{ruleId}]`, `GET purchases?from&to&status`, `POST purchases/{id}/cancel`, `GET|POST credits`, `GET credits/members?search` (names only): `CourtSalesManager`. `GET price-rules`, `GET options`, `GET quote?courtId&from&to`, `POST purchases`: `CourtSalesMember`. `GET purchases/{id}` (runs the sync), `POST purchases/{id}/release`: `OwnsCourtPurchase`.
+- The treasurers' lists carry names only, never email, birthday or Stripe ids. `ExportPersonalData` lists `CourtPurchases` and `BookingCredits`.
+- `CourtSalesSecurityTests` attack it over HTTP (other buyer, other club, members editing prices or credits, enrolled member buying, releasing a hold of somebody else, webhook of a foreign account).
 
 ## Member Data & Privacy
 
@@ -100,7 +126,7 @@ Recurring bookings allow members to reserve a court on a repeating weekly schedu
 - Only the **first occurrence** is fully validated via `BookingDomainService.BookCourt` (participants, opening hours, prime time, conflicts, season enrollment, etc.).
 - Subsequent occurrences only check for court conflicts (unless `PlayMode.CanOverbook` is true). Conflicting occurrences are **skipped**, not rejected.
 - All players must be enrolled in the current active season (`MemberSeasons`).
-- Guests cannot create recurring bookings (only `ClubMember` with `MemberRole.User`).
+- Only enrolled `ClubMember`s create recurring bookings.
 
 ### Editing a Recurring Booking (`EditRecurringBooking`)
 
@@ -123,7 +149,7 @@ Recurring bookings allow members to reserve a court on a repeating weekly schedu
 - **Conflict handling**: Non-first occurrences that conflict with existing bookings are silently skipped (not an error).
 - **Excluded bookings**: When doing series-wide edits, bookings with `IsExcludedFromSeries == true` are never deleted or regenerated — they represent user-customized single occurrences.
 - **Authorization**: Same as regular bookings — resource-based authorization. The user must own the booking or be a family member of a participant.
-- **No guest access**: Recurring bookings are restricted to `ClubMember` participants enrolled in the active season.
+- Recurring bookings are restricted to `ClubMember` participants enrolled in the active season.
 
 ## Architecture & Project Structure
 
@@ -311,7 +337,7 @@ Maintainers, sports directors and admins block one or more courts for a time win
 
 ### API / Authorization
 
-- `CourtBlockingsController` (`api/Clubs/{clubId}/CourtBlockings`): `GET ?dayFrom=&dayTo=` (occurrences for the booking grid, `AuthorizationPolicies.Member` - guests see them too), `GET manage?includePast=` (blockings as entered, upcoming first), `POST conflicts`, `POST`, `PUT {id}`, `DELETE {id}`.
+- `CourtBlockingsController` (`api/Clubs/{clubId}/CourtBlockings`): `GET ?dayFrom=&dayTo=` (occurrences for the booking grid, `AuthorizationPolicies.Member`, also for members who are not active), `GET manage?includePast=` (blockings as entered, upcoming first), `POST conflicts`, `POST`, `PUT {id}`, `DELETE {id}`.
 - Managing requires `AuthorizationPolicies.CourtBlockingManager` (`Maintainer`, `SportsDirector`, `Admin` - not `YouthSportsDirector`). The FE mirrors this in `CourtBlockingHelpers.CanManage`.
 - **The times in `SaveCourtBlockingModel`/`CourtBlockingDto` are `TimeSpan`s, not `TimeOnly`**: the client's `TimeOnlyJsonConverter` converts `TimeOnly` to UTC time of day, which is wrong for local times that the server combines with a date and a time zone.
 
@@ -325,7 +351,7 @@ Maintainers, sports directors and admins block one or more courts for a time win
 
 ### Overview
 
-At the end of a season every club member (not guests) gets a story-style review of their season ("Wrapped"): matches, hours, place among the enrolled members, favourite partners, play style, home court, records, regular slot, badges, events and the numbers of the whole club. A season is the club's existing `Season` (`Period`), nothing new to define.
+At the end of a season every active club member gets a story-style review of their season ("Wrapped"): matches, hours, place among the enrolled members, favourite partners, play style, home court, records, regular slot, badges, events and the numbers of the whole club. A season is the club's existing `Season` (`Period`), nothing new to define.
 
 - **The club admins release it** (`Season.WrappedPublishedAt`, `PublishWrapped`/`UnpublishWrapped`): any season that has started, also past ones and the running one (`ErrorCode.WrappedSeasonNotStarted` for upcoming seasons). Repeating keeps the first date. Before that only `ClubAdministrator`s can open it, as a preview.
 - **Nothing is stored**: `GetSeasonWrapped` calculates it from the bookings whenever it is opened, so every past season can be generated and the numbers always match the statistics. Same counting rule as statistics and badges (`WrappedBookings.Load`: play modes with `IsChargingBookingSubscription`, local date of the booking within the season). Reuses `GetMemberStatistics.Handler.GetPlayerType`/`GetLongestWeekStreak`.
@@ -363,7 +389,7 @@ Some play modes have a `MaxBookingsPerSeason` (int?) limit. Members can track th
 
 ### Overview
 
-Club members (not guests) plan shared winter court subscriptions: a date range, free-text participants (no club membership needed) with a percentage share, weeks nobody plays, per-participant unavailable weeks and a fixed number of players per week. The planner computes a fair weekly schedule that can be edited manually and exported to Excel.
+Club members plan shared winter court subscriptions: a date range, free-text participants (no club membership needed) with a percentage share, weeks nobody plays, per-participant unavailable weeks and a fixed number of players per week. The planner computes a fair weekly schedule that can be edited manually and exported to Excel.
 
 ### Domain Model (`Bookennis.Domain/SubscriptionPlans`)
 
@@ -393,7 +419,7 @@ Club members (not guests) plan shared winter court subscriptions: a date range, 
 
 Emails triggered by something happening in a club are club-agnostic and can be customized per club by club admins (EN + DE). Platform emails (`VerifyUser`, `ForgotPassword`, `ConfirmEmailChange`, `EmailChanged`) are not club emails and stay fixed Razor views.
 
-- `ClubEmailType` (Domain + a copy in Shared): `Welcome`, `SeasonActivated`, `BadgeAwarded`, `GuestCard`, `BookingDeleted`, `Announcement` (see Club Announcements), `BookingAdded`, `BookingReminder`, `ClubEventCreated`, `ClubEventReminder`, `ClubEventRegistrationDeadline` (see Notifications), `MembershipPaymentReceived`, `MembershipApproved`, `MembershipPaymentFailed`, `MembershipNeedsAttention` (see Memberships & Payments).
+- `ClubEmailType` (Domain + a copy in Shared): `Welcome`, `SeasonActivated`, `BadgeAwarded`, (3 was `GuestCard`, removed - the number is not used again), `BookingDeleted`, `Announcement` (see Club Announcements), `BookingAdded`, `BookingReminder`, `ClubEventCreated`, `ClubEventReminder`, `ClubEventRegistrationDeadline` (see Notifications), `MembershipPaymentReceived`, `MembershipApproved`, `MembershipPaymentFailed`, `MembershipNeedsAttention` (see Memberships & Payments), `CourtPurchaseConfirmed`, `CourtPurchaseFailed`, `CourtPurchaseNeedsAttention` (see Court Sales).
 - `ClubEmailTemplate` (`TenantDomainEntity`): `Type`, `Language`, `Subject`, `Body`. Unique on `(ClubId, Type, Language)`. No row = built-in default.
 - `Club.WebsiteUrl` (`{{ club.website_url }}`) and `Club.ReplyToEmail` (used as `ReplyTo` of every club email), set via `UpdateClubEmailSettings`.
 - Built-in defaults: embedded resources `Resources/EmailTemplates/{Type}.{German|English}.md` (first line = subject, rest = body), loaded by `ClubEmailDefaultTemplates`. They must stay club neutral (no club names or URLs).
@@ -428,7 +454,7 @@ Emails triggered by something happening in a club are club-agnostic and can be c
 
 ### Overview
 
-Clubs plan events (work efforts, parties, tournaments, meetings) in a club calendar. Club members see upcoming events, open the details and optionally register with a head count (including themselves) and answers to the organizer's questions. Guests (guest sessions / `GuestMember`) have no access.
+Clubs plan events (work efforts, parties, tournaments, meetings) in a club calendar. Club members see upcoming events, open the details and optionally register with a head count (including themselves) and answers to the organizer's questions. Members who are not active see the events without the names of other members.
 
 ### Domain Model (`Bookennis.Domain/ClubEvents`)
 
@@ -448,7 +474,7 @@ Clubs plan events (work efforts, parties, tournaments, meetings) in a club calen
 
 ### FE
 
-- `Pages/ClubShell/Calendar`: `Calendar.razor` (`/clubs/{id}/calendar`, hero with the next event, "Upcoming" list grouped by month with a past-events toggle, and a CSS-grid `MonthCalendar` that shows dots on phones), `ClubEventDetail.razor` (`/clubs/{id}/calendar/{eventId}`, share target), `ClubEventEditor.razor` (`/new` and `/{eventId}/edit`, Markdown description with an Edit/Preview switch and formatting help, question builder with templates). `UpcomingEvents.razor` shows the next 3 events on My Club (not for guests).
+- `Pages/ClubShell/Calendar`: `Calendar.razor` (`/clubs/{id}/calendar`, hero with the next event, "Upcoming" list grouped by month with a past-events toggle, and a CSS-grid `MonthCalendar` that shows dots on phones), `ClubEventDetail.razor` (`/clubs/{id}/calendar/{eventId}`, share target), `ClubEventEditor.razor` (`/new` and `/{eventId}/edit`, Markdown description with an Edit/Preview switch and formatting help, question builder with templates). `UpcomingEvents.razor` shows the next 3 events on My Club.
 - `ClubEventsStore.UpcomingEvents` is isolated from `Events` (calendar range) so the calendar can't overwrite the My Club card.
 - Sharing: `App.shareOrCopy` (native share sheet, clipboard fallback) and `App.copyToClipboard` in `js-helpers.js`, plus a `https://wa.me/?text=` link with title, date, location and the absolute event url (`ClubEventHelpers.ShareText`).
 
@@ -461,7 +487,7 @@ Clubs plan events (work efforts, parties, tournaments, meetings) in a club calen
 
 ### Overview
 
-The club posts news for its members: a title and a Markdown text, optionally pinned, with an expiry date and attached files. Members see the news on My Club (latest 3) and in the news list. An announcement can additionally be sent as email (with its attachments) to a group of members. Guests (guest sessions / `GuestMember`) have no access.
+The club posts news for its members: a title and a Markdown text, optionally pinned, with an expiry date and attached files. Members see the news on My Club (latest 3) and in the news list. An announcement can additionally be sent as email (with its attachments) to a group of members. Members who are not active see them without the author.
 
 ### Domain Model (`Bookennis.Domain/ClubAnnouncements`)
 
@@ -498,14 +524,14 @@ The club posts news for its members: a title and a Markdown text, optionally pin
 - `PasswordRequirements.razor` shows the rules of `PasswordValidation.Rules` as a live checklist (use `PasswordField` with `Immediate="true"`).
 - The address (`Street`, `City`, `ZipCode`) is optional everywhere (registration, profile, DTOs send `null`/empty). The profile completion banner only asks for first/last name, birthday and profile picture, and can be dismissed for good (`User.ProfileCompletionBannerDismissedAt`, `DismissProfileCompletionBanner`).
 - Users change their own email via `RequestEmailChange` (current password required, lockout on failure) → `SendEmailChangeLink` mails a link to the new address → `ConfirmEmailChange` changes it and notifies the old address (`EmailChanged`). Admins use `ChangeUserEmail`, which shares `SendEmailChangeLink`. Password changes go through `ChangePassword`.
-- **Guest sessions sign in the underlying user**, so credential changes require the `AuthorizationPolicies.AccountOwner` policy (rejects the `guest_session` claim, see `GuestSessionClaims`). `GetUserProfileResult.IsGuestSession` hides the Login & security card.
+- Credential changes require the `AuthorizationPolicies.AccountOwner` policy (a signed-in user with a cookie, never an API key). Guest links were removed; the old guest link (`/account/guestLogin`) shows an info page (`LoginGuest.razor`) that explains how to sign in instead.
 - The router re-creates the current page when the auth state is (re)notified, e.g. on app start. Pages that consume single-use tokens (`ConfirmEmail`, `ConfirmEmailChange`) share one request per token and the handlers are idempotent; never call `IAuthStateChanged.AuthStateChanged()` from `OnInitializedAsync` of such a page (it loops), reload with `forceLoad` instead. `ConfirmEmailChange` uses `NoNavigationLayout` because `NotAuthorizedLayout` redirects signed-in users.
 
 ## Login Protection, Rate Limiting & Health
 
 - Failed password checks lock the account (`IdentityAndAuthenticationConfiguration`: 5 attempts, 15 minutes). Always call `CheckPasswordSignInAsync(..., lockoutOnFailure: true)` when checking a password (login, re-authentication for email change / account deletion). A successful `ResetPassword` lifts the lockout.
 - Don't reveal whether an email is registered: `LoginUser` answers unknown email and wrong password with `InvalidCredentials` (and only reports `NotAllowed`/unconfirmed email when the password was right), `ConfirmEmail`/`ResetPassword` treat an unknown email like an invalid token, `ForgotPassword` always succeeds.
-- `RateLimitingConfiguration` adds per-IP fixed-window policies: `AuthenticationPolicy` (10/min: login, guest login, confirm email, reset password, change password, delete account) and `EmailPolicy` (5/15 min: register, forgot password, change email). Apply them with `[EnableRateLimiting(...)]` on anonymous or credential-checking endpoints. Rejections are 429 with an `ErrorCodeResponse` (`TooManyRequests`), which `SnackbarExtensions.ShowErrorDetails` localizes. The client IP comes from `X-Forwarded-For` (`UseForwardedHeaders`, rightmost entry only).
+- `RateLimitingConfiguration` adds per-IP fixed-window policies: `AuthenticationPolicy` (10/min: login, confirm email, reset password, change password, delete account) and `EmailPolicy` (5/15 min: register, forgot password, change email). Apply them with `[EnableRateLimiting(...)]` on anonymous or credential-checking endpoints. Rejections are 429 with an `ErrorCodeResponse` (`TooManyRequests`), which `SnackbarExtensions.ShowErrorDetails` localizes. The client IP comes from `X-Forwarded-For` (`UseForwardedHeaders`, rightmost entry only).
 - The Swagger UI and the OpenAPI document with all endpoints are only exposed in Development; the document of the club API is public (see Club API Keys & OpenAPI). `/health` is an anonymous health check (includes the database).
 
 ## Club API Keys & OpenAPI
@@ -542,7 +568,7 @@ Club admins connect their own scripts and tools to their club with an API key (`
 - `ApiSecurityFixture` starts **the real app** (`Program.cs`, Production environment, `WebApplicationFactory`) against its own copy of the test database and seeds two clubs. `ClubApiKeySecurityTests` attack it over HTTP. They run with `dotnet test`, so also in CI.
 - **The sweeps read every endpoint from the running app** (`ApiEndpoint.All`), nothing is listed by hand: a new endpoint is attacked automatically. They check that a key is only accepted on the routes of its club, that every kind of rejected key (unknown, expired, revoked, other club, creator no longer admin) gets 401 everywhere, that a read-only key gets 403 on every write, and that a key of club A never reads or changes anything of club B.
 - Leaks are detected with a canary: every text of club B contains `ApiSecurityFixture.Canary`, which must never appear in an answer to club A. Changes are detected with `Fingerprint` (a hash over all rows with the club's `ClubId`). A probe middleware reports who a request really ran as (`ApiResponse.RanAsKey`), so the tests don't have to guess from status codes.
-- `ControllersOpenToKeys` in the test is the reviewed list of controllers a key can reach. **A new club controller fails the test until it is added there on purpose**; `ClubApiKeys` must never be in it.
+- `ControllersOpenToKeys` in the test is the reviewed list of controllers a key can reach. **A new club controller fails the test until it is added there on purpose**; `ClubApiKeys`, `PaymentAccount` and `CourtSales` must never be in it.
 - When you add a tenant entity that a club endpoint returns or changes by id, seed one in `ApiSecurityFixture.AddClub` (with the canary text) and add its route parameter to `ApiEndpoint.Value`, otherwise the sweeps call that endpoint with an id that does not exist.
 - **`IgnoreQueryFilters()` switches the tenant filter off for the whole query, not only for the set it is called on.** A query that uses it for players of other clubs must filter its root entity by the club explicitly (`booking.ClubId == currentClub.Id`). The sweeps found exactly this in `GetBookings`, `GetBooking`, `GetUpcomingBookings`, `GetMemberBookingHistory` and `GetMember`.
 - Handler tests (`TestBase`) can't test tenant isolation: the tenant set with `SetTenantId` does not reach the handler's `AppDbContext`, so the tenant filter is off there. Test isolation between clubs in the security tests.
@@ -560,7 +586,8 @@ Club admins connect their own scripts and tools to their club with an API key (`
 ## Navigation & Club Switcher
 
 - `Shared/NavMenu.razor` builds its links in `Sections` (one place for all role rules): the club section without a title (My Club, Book, News, Calendar, Leaderboard), "Personal" (membership, own statistics, subscription planner), then the management sections "Members & fees", "Courts & play" and "Club setup", and "Account" at the bottom. A link is only listed in the section of its topic, whatever role sees it; empty sections are hidden. Support mode shows the management sections as for an admin. Section texts are `Section_*` in `NavigationLocale(.de).resx`.
-- Who sees what must match the backend policies: Members (Admin, Maintainer), Guests / Membership plans / Membership fees (Admin, Treasurer), Court blockings (Admin, Maintainer, SportsDirector), Badges (Admin, SportsDirector, YouthSportsDirector), Club statistics (Admin, Maintainer), Club setup (Admin).
+- Who sees what must match the backend policies: Members (Admin, Maintainer), Court sales / Membership plans / Membership fees (Admin, Treasurer), Court blockings (Admin, Maintainer, SportsDirector), Badges (Admin, SportsDirector, YouthSportsDirector), Club statistics (Admin, Maintainer), Club setup (Admin).
+- Members who are not active (`IClubProfileStore.IsActiveMember`, see Members, Former Guests & Active Members) don't get Leaderboard, own statistics, Season Wrapped and the subscription planner.
 - Pages have no title heading in the content (no `PageHeader`): the nav shows where the user is, the browser tab gets the `<PageTitle>`.
 - `Components/Shared/ClubSwitcher.razor` (top of the drawer) shows the open club with the own roles and lists the clubs of the user (`IProfileStore.Clubs`, from `GetUserProfileResult.Clubs` with name and roles). Switching is `NavigationManager.SwitchToClub` (full page load, the stores still hold the data of the other club). "Join another club" opens `SelectClubDialog` (searchable cards, without the clubs the user is already a member of), which `App.razor` also shows to a user without a club. `ClubAvatar` draws the club initials on a color derived from the club id.
 
@@ -615,6 +642,7 @@ A club enters its price list as membership plans per season. Members choose a pl
 
 ### Stripe (`Business/Payments`)
 
+- Two kinds of Checkout Sessions exist: membership orders and court purchases (see Court Sales > Stripe kind discrimination). Membership behaviour is unchanged.
 - **Nothing but `StripeGateway` (`IStripeGateway`) talks to Stripe.** It is a substitute in `TestFixture`; wrap calls made for a user in `StripeCalls.Run`, which turns a failure into the localized `PaymentProviderUnavailable`.
 - Settings: `AppSettings.Stripe` (`SecretKey`, `WebhookSecret`, `ApplicationFeePercent` = 0). Without keys `IStripeGateway.IsConfigured` is `false`: the FE hides the online part and the endpoints answer `PaymentsNotConfigured`. Never commit keys.
 - **Connect**: the installation is the platform, the club is the merchant. `ConnectPaymentAccount` creates a connected account with the full Stripe dashboard (the club pays the Stripe fees and answers its disputes, Stripe collects the requirements) and returns the link to Stripe's onboarding. The account and the onboarding link are created with the **Accounts v2 API** (`Client.V2.Core.Accounts` / `AccountLinks`, `merchant` configuration, `dashboard: full`, fees and losses collected by Stripe): Stripe refuses Accounts v1 for new Connect platforms. The account is still read with the v1 endpoint (`charges_enabled`, `payouts_enabled`, `details_submitted`), which answers for v2 accounts too. `account.updated` and `RefreshPaymentAccount` keep the status current.
@@ -655,7 +683,7 @@ Add-ons (e.g. a locker fee), booking rules per plan (a "light" membership is a p
 
 - `Pages/Legal`: `/legal/imprint` and `/legal/privacy` (public, `NoNavigationLayout`), texts in `LegalLocale(.de).resx` (`LegalSection` renders lines starting with "- " as a list). The operator details differ per installation and are never committed: they come from the `Legal` section of the server settings (`AppSettings.Legal`, e.g. the environment variable `Legal__OperatorName`), are served by the anonymous `GET api/Legal` (`GetLegalSettings`) and loaded once by `ILegalStore`; the pages show a warning while the operator is not configured. Update `LegalDocument.LastUpdated` when the texts change. `LegalLinks` is shown in `AuthShell` and at the bottom of the `NavMenu`.
 - Registration requires `AcceptPrivacyPolicy` (`User.PrivacyPolicyAcceptedAt`, `ErrorCode.PrivacyPolicyNotAccepted`).
-- Self-service in the profile (`AccountOwner` policy, not for guest sessions): `GET api/Profile/export` (`ExportPersonalData`, JSON download of all personal data - extend `PersonalDataExport` when adding new personal data), `POST api/Profile/LeaveClub` (`LeaveClub`, removes the `ClubMember` only, never a `GuestMember`) and `POST api/Profile/DeleteAccount` (`DeleteOwnAccount`, requires the password, signs out).
+- Self-service in the profile (`AccountOwner` policy): `GET api/Profile/export` (`ExportPersonalData`, JSON download of all personal data - extend `PersonalDataExport` when adding new personal data), `POST api/Profile/LeaveClub` (`LeaveClub`, removes the `ClubMember` only, never a `GuestMember`) and `POST api/Profile/DeleteAccount` (`DeleteOwnAccount`, requires the password, signs out).
 - Removing members/users always goes through `MemberRemoval` (`Business/Members`) and `UserDeletion` (`Business/Users`, also used by the admin `DeleteAdminUser`): `FamilyMember.MemberId` has no FK, so family links are removed explicitly and families without a parent are deleted; upcoming bookings/recurring series without remaining players are deleted; children (`BelongsToUserId`) are handed over to another parent of their family or deleted. The last admin of a club can't leave it or delete the account (`LastClubAdmin`).
 - A member can only be in one family (unique index on `FamilyMembers.MemberId`).
 
@@ -731,7 +759,7 @@ Members are notified about what happens to them by push notification and by emai
 | `ClubAnnouncement` | `NotifyClubAnnouncementCreatedHandler` | `Announcement` (only when a manager sends it) | club members / the chosen audience |
 | `BadgeAwarded` | `NotifyBadgeAwardedHandler` | `BadgeAwarded` | the member |
 
-`Welcome`, `SeasonActivated`, `GuestCard` (contains the login link) and the four membership emails (they are about money) are not notifications: they are always sent and have no preference.
+`Welcome`, `SeasonActivated`, the four membership emails and the three court purchase emails (they are about money) are not notifications: they are always sent and have no preference.
 
 ### Preferences
 

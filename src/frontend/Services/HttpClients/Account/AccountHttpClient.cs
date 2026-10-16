@@ -43,6 +43,4 @@ public class AccountHttpClient(HttpClient httpClient, JsonSerializerOptions json
 
     public async Task<HttpResult> RegisterUser(RegisterUserModel userModel, CancellationToken cancellationToken)
         => await (await httpClient.PostAsJsonAsync("Register", userModel, jsonOptions, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
-    public async Task<HttpResult> LoginGuest(LoginGuestRequest request, CancellationToken cancellationToken = default)
-        => await (await httpClient.PostAsJsonAsync("Guest/Login?", request, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
 }

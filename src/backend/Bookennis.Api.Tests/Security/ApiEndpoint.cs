@@ -85,6 +85,8 @@ public sealed record ApiEndpoint(string Method, RoutePattern Pattern, string Con
             "courtblockingid" => ids.CourtBlockingId,
             "planid" => ids.PlanId,
             "orderid" => ids.OrderId,
+            "purchaseid" => ids.CourtPurchaseId,
+            "ruleid" => ids.PriceRuleId,
             "id" => ids.BookingId,
             _ => (int?)null,
         };

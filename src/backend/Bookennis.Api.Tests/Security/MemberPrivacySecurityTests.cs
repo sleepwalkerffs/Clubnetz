@@ -44,7 +44,8 @@ public class MemberPrivacySecurityTests(ApiSecurityFixture app)
     [Fact]
     public async Task Member_GetsOnlyNameAndPictureOfAnotherMemberOfTheClub()
     {
-        var cookie = await app.Login(app.MemberOfA);
+        // An active member (enrolled in the season); members who are not active don't see other members at all (ActiveMemberSecurityTests)
+        var cookie = await app.Login(app.EnrolledMemberOfA);
         var other = app.ClubA.Member.MemberId;
 
         var full = await Get($"/api/Clubs/{app.ClubA.Id}/Members/{other}", cookie);

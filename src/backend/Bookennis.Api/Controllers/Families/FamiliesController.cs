@@ -34,7 +34,13 @@ public class FamiliesController(IMediator mediator, IAuthorizationService author
     /// <summary>The members of the club without a family (names only), to pick a partner or children from.</summary>
     [HttpGet("AvailableFamilyMembers/{memberId:int}")]
     public async Task<GetAvailableFamilyMembersResult> GetAvailableFamilyMembers(int memberId, CancellationToken cancellationToken)
-        => await mediator.Send(new GetAvailableFamilyMembers(memberId), cancellationToken);
+    {
+        // Members who are not active don't get names of other members; treasurers put their families together
+        if (!await authorizationService.IsActiveMember(User))
+            return new GetAvailableFamilyMembersResult { AvailableMembers = [] };
+
+        return await mediator.Send(new GetAvailableFamilyMembers(memberId), cancellationToken);
+    }
 
     [HttpPost]
     public async Task<int> CreateFamily(CreateFamilyRequest request, CancellationToken cancellationToken)

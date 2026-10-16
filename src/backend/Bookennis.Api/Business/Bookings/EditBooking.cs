@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Bookennis.Api.Business.CourtSales;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Bookings;
 using Bookennis.Global.Intervals;
@@ -36,6 +37,7 @@ public record EditBooking(
                 .SingleRequiredAsync(b => b.Id == request.BookingEntryId, cancellationToken);
 
             var hasElevatedRole = await BookingEditRules.EnsureMayEdit(context, existingBooking, request.UserId, cancellationToken);
+            await context.EnsureNotBought(existingBooking.Id, cancellationToken);
 
             var builder = await BookingContextBuilder.Load(
                 context,

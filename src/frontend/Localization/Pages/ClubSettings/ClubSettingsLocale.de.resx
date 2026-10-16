@@ -146,10 +146,10 @@
     <value>Jahre</value>
   </data>
   <data name="RestrictGuests" xml:space="preserve">
-    <value>Keine Gäste in der Primetime</value>
+    <value>Keine gekauften Zeiten in der Primetime</value>
   </data>
   <data name="RestrictGuestsHint" xml:space="preserve">
-    <value>Gästekarten können in der Primetime nicht verwendet werden</value>
+    <value>Nicht-Mitglieder können in der Primetime keine Platzzeit kaufen</value>
   </data>
   <data name="UnsavedChanges" xml:space="preserve">
     <value>Ungespeicherte Änderungen</value>

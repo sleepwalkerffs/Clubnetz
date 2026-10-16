@@ -1,0 +1,70 @@
+@using Bookennis.Client.Localization.Pages.CourtSales
+@using Bookennis.Client.Pages.ClubShell.Club.CourtSales
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.CourtSales
+
+@* The booking page of a member who is not enrolled: what buying a slot costs, the own credits and the way to a membership. *@
+
+<div class="sale-panel">
+    <div class="sale-panel__main">
+        <div class="sale-panel__emoji" aria-hidden="true">🎾</div>
+        <div class="sale-panel__text">
+            <div class="sale-panel__title">@Title</div>
+            <div class="sale-panel__subtitle">@Subtitle</div>
+            <div class="sale-panel__chips">
+                @if (Options.Credits > 0)
+                {
+                    <span class="sale-chip sale-chip--credit">🎟️ @string.Format(L[Options.Credits == 1 ? "Panel_CreditsOne" : "Panel_Credits"], Options.Credits)</span>
+                }
+                @if (Options.UpcomingPurchases > 0)
+                {
+                    <span class="sale-chip">🗓️ @string.Format(L["Panel_Upcoming"], Options.UpcomingPurchases, Options.MaxUpcomingBookings)</span>
+                }
+                @if (PriceRules.Count > 0)
+                {
+                    <button type="button" class="sale-chip sale-chip--button" aria-expanded="@(showPrices ? "true" : "false")" @onclick="() => showPrices = !showPrices">
+                        💶 @L[showPrices ? "Panel_HidePrices" : "Panel_ShowPrices"]
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (showPrices)
+    {
+        <div class="sale-prices">
+            @foreach (var rule in CourtSalesHelpers.Sorted(PriceRules))
+            {
+                <div class="sale-prices__row">
+                    <span class="sale-prices__days">@CourtSalesHelpers.WeekdaysText(L, rule.Weekdays)</span>
+                    <span class="sale-prices__time">@CourtSalesHelpers.Time(rule.From)–@CourtSalesHelpers.Time(rule.To)</span>
+                    <span class="sale-prices__price">@CourtSalesHelpers.PerHour(L, rule.PricePerHourCents)</span>
+                    <span class="sale-prices__courts">@CourtSalesHelpers.CourtsText(L, rule.CourtIds, Courts)@(rule.Name is { Length: > 0 } name ? $" · {name}" : null)</span>
+                </div>
+            }
+            <div class="sale-prices__note">@string.Format(L["Panel_PricesNote"], Options.MaxDaysInAdvance)</div>
+        </div>
+    }
+
+    <a class="sale-panel__member" href="@($"/clubs/{ClubId}/membership")">⭐ @L["Panel_BecomeMember"] ›</a>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+    [Parameter, EditorRequired] public CourtSaleOptionsResult Options { get; set; } = null!;
+    [Parameter] public List<CourtPriceRuleDto> PriceRules { get; set; } = [];
+    [Parameter] public List<CourtResult> Courts { get; set; } = [];
+
+    [Inject] private IStringLocalizer<CourtSalesLocale> L { get; set; } = null!;
+
+    private bool showPrices;
+
+    private string Title => Options.CanBuy ? L["Panel_Title"] : L["Panel_TitleUnavailable"];
+
+    private string Subtitle => Options.Reason switch
+    {
+        null => L[Options.Credits > 0 ? "Panel_HintCredit" : "Panel_Hint"],
+        CourtSaleUnavailableReason.LimitReached => string.Format(L["Reason_LimitReached"], Options.MaxUpcomingBookings),
+        { } reason => L[$"Reason_{reason}"],
+    };
+}

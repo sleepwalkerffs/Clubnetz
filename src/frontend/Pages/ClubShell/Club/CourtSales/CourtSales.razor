@@ -1,0 +1,595 @@
+@page "/clubs/{ClubId:int}/court-sales"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.CourtSales
+@using Bookennis.Client.Pages.ClubShell.Club.Memberships
+@using Bookennis.Client.Services.HttpClients
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.CourtSales
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.CourtSales
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+<PageTitle>@L["Page_Title"]</PageTitle>
+
+@if (!CanManage)
+{
+    <MudAlert Severity="Severity.Info">@L["NoAccess"]</MudAlert>
+}
+else
+{
+    var settings = Store.Settings;
+
+    <div class="sales-page">
+        <AdminHero Emoji="🎾" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Page_Title"]" Subtitle="@L["Page_Subtitle"]">
+            <Chips>
+                @if (settings is not null)
+                {
+                    <span class="hero-chip @(settings.IsEnabled ? null : "hero-chip--warn")">@(settings.IsEnabled ? "🟢" : "⏸️") @L[settings.IsEnabled ? "Hero_On" : "Hero_Off"]</span>
+                    <span class="hero-chip">💶 @string.Format(L["Hero_Rules"], Store.PriceRules.Count)</span>
+                }
+            </Chips>
+        </AdminHero>
+
+        <ChoiceChips TItem="SalesTab" Items="@Tabs" Value="@tab" ValueChanged="OnTabChanged" TextFunc="@(t => L[$"Tab_{t}"])" />
+
+        @if (settings is null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (tab == SalesTab.Prices)
+        {
+            @RenderPrices(settings)
+        }
+        else if (tab == SalesTab.Sales)
+        {
+            @RenderSales()
+        }
+        else
+        {
+            @RenderCredits()
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [Inject] private ICourtSalesStore Store { get; set; } = null!;
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<CourtSalesLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private enum SalesTab
+    {
+        Prices,
+        Sales,
+        Credits,
+    }
+
+    private enum SalesPeriod
+    {
+        Upcoming,
+        ThisMonth,
+        LastMonth,
+        All,
+    }
+
+    private enum SalesFilter
+    {
+        All,
+        Paid,
+        Awaiting,
+        Problems,
+        Cancelled,
+    }
+
+    private static readonly SalesTab[] Tabs = Enum.GetValues<SalesTab>();
+    private static readonly SalesPeriod[] Periods = Enum.GetValues<SalesPeriod>();
+    private static readonly int[] BookingMinuteOptions = [30, 60, 90, 120, 150, 180, 210, 240];
+
+    /// <summary>The time zones offered; the one saved is always added.</summary>
+    private static readonly string[] TimeZones = ["Europe/Vienna", "Europe/Berlin", "Europe/Zurich", "Europe/Rome", "Europe/Paris", "Europe/Amsterdam", "Europe/London", "UTC"];
+
+    private SalesTab tab = SalesTab.Prices;
+    private SalesPeriod period = SalesPeriod.Upcoming;
+    private SalesFilter filter = SalesFilter.All;
+    private bool salesLoaded;
+    private bool creditsLoaded;
+    private string? creditSearch;
+    private int? expandedCreditMemberId;
+
+    // The settings form
+    private bool isEnabled;
+    private int? playModeId;
+    private string timeZoneId = "Europe/Vienna";
+    private int maxBookingMinutes = 120;
+    private int maxDaysInAdvance = 14;
+    private int maxUpcomingBookings = 1;
+
+    private bool CanManage => CourtSalesHelpers.CanManage(ClubProfileStore.Roles);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnCourtSalesChanged += OnChanged;
+        ClubProfileStore.OnClubProfileChanged += OnChanged;
+
+        if (!CanManage)
+            return;
+
+        await Task.WhenAll(
+            Store.LoadSettings(),
+            Store.LoadPriceRules(),
+            ClubStore.Courts.Count == 0 ? ClubStore.LoadCourts() : Task.CompletedTask,
+            ClubStore.LoadPlayModes());
+        ResetForm();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task OnTabChanged(SalesTab value)
+    {
+        tab = value;
+        if (tab == SalesTab.Sales && !salesLoaded)
+            await LoadSales();
+        if (tab == SalesTab.Credits && !creditsLoaded)
+        {
+            await Store.LoadCredits();
+            creditsLoaded = true;
+        }
+    }
+
+    // ---------- prices ----------
+
+    private void ResetForm()
+    {
+        if (Store.Settings is not { } settings)
+            return;
+
+        isEnabled = settings.IsEnabled;
+        playModeId = settings.PlayModeId;
+        timeZoneId = settings.TimeZoneId;
+        maxBookingMinutes = settings.MaxBookingMinutes;
+        maxDaysInAdvance = settings.MaxDaysInAdvance;
+        maxUpcomingBookings = settings.MaxUpcomingBookings;
+    }
+
+    private bool IsDirty => Store.Settings is { } s
+                            && (s.IsEnabled != isEnabled || s.PlayModeId != playModeId || s.TimeZoneId != timeZoneId || s.MaxBookingMinutes != maxBookingMinutes
+                                || s.MaxDaysInAdvance != maxDaysInAdvance || s.MaxUpcomingBookings != maxUpcomingBookings);
+
+    private IEnumerable<string> TimeZoneOptions => TimeZones.Contains(timeZoneId) ? TimeZones : TimeZones.Prepend(timeZoneId);
+
+    private async Task SaveSettings()
+    {
+        var result = await Store.UpdateSettings(new UpdateCourtSaleSettingsModel
+        {
+            IsEnabled = isEnabled,
+            PlayModeId = playModeId,
+            TimeZoneId = timeZoneId,
+            MaxBookingMinutes = maxBookingMinutes,
+            MaxDaysInAdvance = maxDaysInAdvance,
+            MaxUpcomingBookings = maxUpcomingBookings,
+        });
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        ResetForm();
+        Snackbar.Add(L["Settings_Saved"], Severity.Success);
+    }
+
+    private async Task OpenRuleDialog(CourtPriceRuleDto? rule)
+    {
+        var parameters = new DialogParameters<CourtPriceRuleDialog>
+        {
+            { d => d.Rule, rule },
+            { d => d.Courts, ClubStore.Courts },
+        };
+        await DialogService.ShowAsync<CourtPriceRuleDialog>(L[rule is null ? "Rule_AddTitle" : "Rule_EditTitle"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+    }
+
+    private async Task DeleteRule(CourtPriceRuleDto rule)
+    {
+        var text = string.Format(L["Rule_DeleteConfirm"], RuleSummary(rule));
+        if (await DialogService.ShowMessageBox(L["Rule_DeleteTitle"], text, yesText: SharedLocale["Delete"], cancelText: SharedLocale["Cancel"]) != true)
+            return;
+
+        var result = await Store.DeletePriceRule(rule.Id);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+        else
+            Snackbar.Add(L["Rule_Deleted"], Severity.Success);
+    }
+
+    private string RuleSummary(CourtPriceRuleDto rule)
+        => $"{CourtSalesHelpers.WeekdaysText(L, rule.Weekdays)} {CourtSalesHelpers.Time(rule.From)}–{CourtSalesHelpers.Time(rule.To)}";
+
+    private RenderFragment RenderPrices(CourtSaleSettingsDto settings) => __builder =>
+    {
+        // Bought slots must not push other bookings away and need a free length: no overbooking, no fixed duration (the saved one stays visible)
+        var playModes = ClubStore.PlayModes.Where(m => (!m.CanOverbook && m.FixedDuration is null) || m.Id == playModeId).ToList();
+
+        @if (!settings.IsOnlinePaymentAvailable)
+        {
+            <MudAlert Severity="Severity.Warning">
+                @L["Stripe_NotConnected"]
+                <MudLink Href="@MembershipHelpers.PlansUrl(ClubId)" Color="Color.Primary">@L["Stripe_Connect"]</MudLink>
+            </MudAlert>
+        }
+
+        <SectionCard Emoji="⚙️" Title="@L["Settings_Title"]" Subtitle="@L["Settings_Subtitle"]">
+            <div class="sales-settings">
+                <div class="sales-switch">
+                    <MudSwitch T="bool" @bind-Value="isEnabled" Color="Color.Success" />
+                    <div>
+                        <div class="sales-switch__title">@L["Settings_Enabled"]</div>
+                        <div class="sales-switch__text">@L["Settings_EnabledHint"]</div>
+                    </div>
+                </div>
+
+                <div class="sales-fields">
+                    <MudSelect T="int?" @bind-Value="playModeId" Label="@L["Settings_PlayMode"]" HelperText="@L["Settings_PlayModeHint"]" Variant="Variant.Outlined" Margin="Margin.Dense"
+                               Clearable="true">
+                        @foreach (var mode in playModes)
+                        {
+                            <MudSelectItem T="int?" Value="@mode.Id">@mode.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect T="string" @bind-Value="timeZoneId" Label="@L["Settings_TimeZone"]" HelperText="@L["Settings_TimeZoneHint"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        @foreach (var zone in TimeZoneOptions)
+                        {
+                            <MudSelectItem T="string" Value="@zone">@zone</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect T="int" @bind-Value="maxBookingMinutes" Label="@L["Settings_MaxMinutes"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        @foreach (var minutes in BookingMinuteOptions)
+                        {
+                            <MudSelectItem T="int" Value="@minutes">@DurationText(minutes)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudNumericField T="int" @bind-Value="maxDaysInAdvance" Label="@L["Settings_MaxDays"]" HelperText="@L["Settings_MaxDaysHint"]" Min="0" Max="90"
+                                     Variant="Variant.Outlined" Margin="Margin.Dense" />
+                    <MudNumericField T="int" @bind-Value="maxUpcomingBookings" Label="@L["Settings_MaxUpcoming"]" HelperText="@L["Settings_MaxUpcomingHint"]" Min="1" Max="10"
+                                     Variant="Variant.Outlined" Margin="Margin.Dense" />
+                </div>
+
+                <div class="sales-settings__actions">
+                    @if (IsDirty)
+                    {
+                        <MudButton Variant="Variant.Text" OnClick="ResetForm" Disabled="@Store.IsSaving">@SharedLocale["Cancel"]</MudButton>
+                    }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveSettings" Disabled="@(!IsDirty || Store.IsSaving)">@SharedLocale["Save"]</MudButton>
+                </div>
+            </div>
+        </SectionCard>
+
+        <SectionCard Emoji="💶" Title="@L["Rules_Title"]" Subtitle="@L["Rules_Subtitle"]">
+            <Actions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenRuleDialog(null)">
+                    @L["Rules_Add"]
+                </MudButton>
+            </Actions>
+            <ChildContent>
+                @if (Store.PriceRules.Count == 0)
+                {
+                    <div class="sales-empty">
+                        <div class="sales-empty__emoji" aria-hidden="true">🏷️</div>
+                        <div class="sales-empty__title">@L["Rules_Empty"]</div>
+                        <div class="sales-empty__text">@L["Rules_EmptyHint"]</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="rule-list">
+                        @foreach (var rule in CourtSalesHelpers.Sorted(Store.PriceRules))
+                        {
+                            <div class="rule-card">
+                                <div class="rule-card__main">
+                                    <div class="rule-card__days">@CourtSalesHelpers.WeekdaysText(L, rule.Weekdays)</div>
+                                    <div class="rule-card__time">@CourtSalesHelpers.Time(rule.From)–@CourtSalesHelpers.Time(rule.To)</div>
+                                    <div class="rule-card__meta">
+                                        @if (rule.Name is { Length: > 0 } name)
+                                        {
+                                            <span class="rule-card__name">@name</span>
+                                        }
+                                        <span>📍 @CourtSalesHelpers.CourtsText(L, rule.CourtIds, ClubStore.Courts)</span>
+                                    </div>
+                                </div>
+                                <div class="rule-card__price">@CourtSalesHelpers.PerHour(L, rule.PricePerHourCents)</div>
+                                <div class="rule-card__actions">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@SharedLocale["Edit"]" OnClick="() => OpenRuleDialog(rule)" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@SharedLocale["Delete"]"
+                                                   Disabled="@Store.IsSaving" OnClick="() => DeleteRule(rule)" />
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="sales-note">@L["Rules_Note"]</div>
+                }
+            </ChildContent>
+        </SectionCard>
+    };
+
+    private string DurationText(int minutes) => minutes < 60
+        ? string.Format(L["Minutes"], minutes)
+        : string.Format(L["Hours"], (minutes / 60m).ToString("0.#", CultureInfo.CurrentCulture));
+
+    // ---------- sales ----------
+
+    private (DateOnly? From, DateOnly? To) PeriodRange()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var monthStart = new DateOnly(today.Year, today.Month, 1);
+        return period switch
+        {
+            SalesPeriod.Upcoming => (today, null),
+            SalesPeriod.ThisMonth => (monthStart, monthStart.AddMonths(1).AddDays(-1)),
+            SalesPeriod.LastMonth => (monthStart.AddMonths(-1), monthStart.AddDays(-1)),
+            _ => (null, null),
+        };
+    }
+
+    private async Task LoadSales()
+    {
+        var (from, to) = PeriodRange();
+        await Store.LoadPurchases(from, to, null);
+        salesLoaded = true;
+    }
+
+    private async Task OnPeriodChanged(SalesPeriod value)
+    {
+        period = value;
+        filter = SalesFilter.All;
+        await LoadSales();
+    }
+
+    private static bool Matches(CourtPurchaseListItemDto purchase, SalesFilter filter) => filter switch
+    {
+        SalesFilter.All => purchase.Status is not (CourtPurchaseStatus.Expired or CourtPurchaseStatus.Cancelled),
+        SalesFilter.Paid => purchase.Status is CourtPurchaseStatus.Paid or CourtPurchaseStatus.Processing,
+        SalesFilter.Awaiting => purchase.Status == CourtPurchaseStatus.AwaitingPayment,
+        SalesFilter.Problems => purchase.Status is CourtPurchaseStatus.Failed or CourtPurchaseStatus.Refunded or CourtPurchaseStatus.Disputed,
+        SalesFilter.Cancelled => purchase.Status is CourtPurchaseStatus.Cancelled or CourtPurchaseStatus.Expired or CourtPurchaseStatus.Compensated,
+        _ => false,
+    };
+
+    private static string? FilterColor(SalesFilter filter) => filter switch
+    {
+        SalesFilter.Paid => "#059669",
+        SalesFilter.Awaiting => "#D97706",
+        SalesFilter.Problems => "#DC2626",
+        _ => null,
+    };
+
+    private List<SalesFilter> VisibleFilters(List<CourtPurchaseListItemDto> purchases)
+        => Enum.GetValues<SalesFilter>().Where(f => f == SalesFilter.All || f == filter || purchases.Any(p => Matches(p, f))).ToList();
+
+    private async Task CancelPurchase(CourtPurchaseListItemDto purchase)
+    {
+        var text = string.Format(L["Sales_CancelConfirm"], BuyerName(purchase), purchase.CourtName, $"{CourtSalesHelpers.Day(purchase.Interval.From)} {CourtSalesHelpers.Time(purchase.Interval.From)}");
+        if (purchase.HasOnlinePayment)
+            text += " " + L["Sales_CancelRefundHint"];
+        else if (purchase.CreditUsed)
+            text += " " + L["Sales_CancelCreditHint"];
+
+        if (await DialogService.ShowMessageBox(L["Sales_CancelTitle"], text, yesText: L["Sales_Cancel"], cancelText: SharedLocale["Cancel"]) != true)
+            return;
+
+        var result = await Store.CancelPurchase(purchase.Id);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        if (result.Dto.RefundInStripeDashboard)
+            Snackbar.Add(string.Format(L["Sales_CancelledRefund"], CourtSalesHelpers.Amount(purchase.AmountDueCents)), Severity.Warning,
+                options => { options.RequireInteraction = true; });
+        else
+            Snackbar.Add(L["Sales_Cancelled"], Severity.Success);
+
+        await LoadSales();
+    }
+
+    private string BuyerName(CourtPurchaseListItemDto purchase)
+        => string.IsNullOrWhiteSpace(purchase.FirstName) && string.IsNullOrWhiteSpace(purchase.LastName) ? L["Sales_FormerMember"] : $"{purchase.FirstName} {purchase.LastName}";
+
+    private RenderFragment RenderSales() => __builder =>
+    {
+        <ChoiceChips TItem="SalesPeriod" Items="@Periods" Value="@period" ValueChanged="OnPeriodChanged" TextFunc="@(p => L[$"Period_{p}"])" />
+
+        @if (Store.Purchases is not { } result || !salesLoaded)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else
+        {
+            var summary = result.Summary;
+            var shown = result.Purchases.Where(p => Matches(p, filter)).ToList();
+
+            <div class="sales-tiles">
+                <StatTile Icon="@Icons.Material.Filled.SportsTennis" Value="@summary.SoldCount.ToString(CultureInfo.CurrentCulture)" Label="@L["Sales_Sold"]" Color="#059669" />
+                <StatTile Icon="@Icons.Material.Filled.Savings" Value="@CourtSalesHelpers.Amount(summary.OnlineAmountCents)" Label="@L["Sales_Online"]" Color="#2563EB" />
+                <StatTile Icon="@Icons.Material.Filled.ConfirmationNumber" Value="@summary.CreditsUsed.ToString(CultureInfo.CurrentCulture)" Label="@L["Sales_CreditsUsed"]" Color="#7C3AED"
+                          Hint="@(summary.AwaitingPaymentCount > 0 ? string.Format(L["Sales_AwaitingHint"], summary.AwaitingPaymentCount) : null)" />
+                @if (summary.NeedsAttentionCount > 0)
+                {
+                    <StatTile Icon="@Icons.Material.Filled.ReportProblem" Value="@summary.NeedsAttentionCount.ToString(CultureInfo.CurrentCulture)" Label="@L["Sales_Attention"]" Color="#DC2626"
+                              Hint="@L["Sales_AttentionHint"]" />
+                }
+            </div>
+
+            <SectionCard Emoji="📋" Title="@L["Sales_ListTitle"]" Subtitle="@L["Sales_ListSubtitle"]">
+                <div class="sales-filters">
+                    <ChoiceChips TItem="SalesFilter" Items="@VisibleFilters(result.Purchases)" Value="@filter" ValueChanged="@(f => filter = f)"
+                                 TextFunc="@(f => $"{L[$"Filter_{f}"]} · {result.Purchases.Count(p => Matches(p, f))}")" ColorFunc="@FilterColor" />
+                </div>
+
+                @if (shown.Count == 0)
+                {
+                    <div class="sales-empty">
+                        <div class="sales-empty__emoji" aria-hidden="true">🔍</div>
+                        <div class="sales-empty__title">@L["Sales_Empty"]</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="sale-list">
+                        @foreach (var purchase in shown)
+                        {
+                            <div class="sale-row" style="--row-color: @CourtSalesHelpers.StatusColor(purchase.Status)">
+                                <div class="sale-row__who">
+                                    <span class="sale-row__name @(purchase.MemberId is null ? "sale-row__name--gone" : null)">@BuyerName(purchase)</span>
+                                    <span class="sale-row__muted">@string.Format(L["Sales_BoughtOn"], purchase.CreatedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))</span>
+                                </div>
+                                <div class="sale-row__slot">
+                                    <span class="sale-row__court">@purchase.CourtName</span>
+                                    <span class="sale-row__muted">@CourtSalesHelpers.Day(purchase.Interval.From) · @CourtSalesHelpers.Time(purchase.Interval.From)–@CourtSalesHelpers.Time(purchase.Interval.To)</span>
+                                </div>
+                                <div class="sale-row__money">
+                                    <span class="sale-row__amount">@CourtSalesHelpers.Amount(purchase.PriceCents)</span>
+                                    <span class="sale-row__muted">@CourtSalesHelpers.PaidText(L, purchase.CreditUsed, purchase.AmountDueCents, purchase.PaymentMethod)</span>
+                                </div>
+                                <div class="sale-row__status">
+                                    <span class="status-pill">@CourtSalesHelpers.StatusEmoji(purchase.Status) @CourtSalesHelpers.StatusText(L, purchase.Status)</span>
+                                    @if (purchase.CompensationCredits is > 0 and var credits)
+                                    {
+                                        <span class="sale-row__muted">@(credits == 1 ? L["Sales_CompensatedWithOne"] : string.Format(L["Sales_CompensatedWith"], credits))</span>
+                                    }
+                                    @if (purchase.CancelledAt is { } cancelledAt)
+                                    {
+                                        <span class="sale-row__muted">@cancelledAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture)</span>
+                                    }
+                                    else if (purchase.PaidAt is { } paidAt)
+                                    {
+                                        <span class="sale-row__muted">@string.Format(L["Sales_PaidOn"], paidAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))</span>
+                                    }
+                                </div>
+                                <div class="sale-row__actions">
+                                    @if (purchase.CanCancel)
+                                    {
+                                        <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" Disabled="@Store.IsSaving" OnClick="() => CancelPurchase(purchase)">
+                                            @L["Sales_Cancel"]
+                                        </MudButton>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </SectionCard>
+        }
+    };
+
+    // ---------- credits ----------
+
+    private async Task OpenGrantDialog(BookingCreditBalanceDto? member)
+    {
+        var parameters = new DialogParameters<GrantCreditsDialog> { { d => d.Member, member } };
+        await DialogService.ShowAsync<GrantCreditsDialog>(L["Credits_Grant"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+    }
+
+    private RenderFragment RenderCredits() => __builder =>
+    {
+        <SectionCard Emoji="🎟️" Title="@L["Credits_Title"]" Subtitle="@L["Credits_Subtitle"]">
+            <Actions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenGrantDialog(null)">
+                    @L["Credits_Grant"]
+                </MudButton>
+            </Actions>
+            <ChildContent>
+                @if (Store.Credits is not { } credits || !creditsLoaded)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                }
+                else if (credits.Members.Count == 0)
+                {
+                    <div class="sales-empty">
+                        <div class="sales-empty__emoji" aria-hidden="true">🎟️</div>
+                        <div class="sales-empty__title">@L["Credits_Empty"]</div>
+                        <div class="sales-empty__text">@L["Credits_EmptyHint"]</div>
+                    </div>
+                }
+                else
+                {
+                    var terms = (creditSearch ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var members = credits.Members
+                        .Where(m => terms.All(t => m.FirstName.Contains(t, StringComparison.CurrentCultureIgnoreCase) || m.LastName.Contains(t, StringComparison.CurrentCultureIgnoreCase)))
+                        .OrderByDescending(m => m.Balance).ThenBy(m => m.LastName).ThenBy(m => m.FirstName)
+                        .ToList();
+
+                    @if (credits.Members.Count > 6)
+                    {
+                        <MudTextField T="string" @bind-Value="creditSearch" Immediate="true" DebounceInterval="200" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"
+                                      Placeholder="@L["Credits_Search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mb-3" />
+                    }
+
+                    <div class="credit-list">
+                        @foreach (var member in members)
+                        {
+                            var expanded = expandedCreditMemberId == member.MemberId;
+                            <div class="credit-row">
+                                <button type="button" class="credit-row__head" aria-expanded="@(expanded ? "true" : "false")"
+                                        @onclick="() => expandedCreditMemberId = expanded ? null : member.MemberId">
+                                    <span class="credit-row__name">@member.FirstName @member.LastName</span>
+                                    <span class="credit-row__numbers">@string.Format(L["Credits_Numbers"], member.Granted, member.Used)</span>
+                                    <span class="credit-row__balance @(member.Balance > 0 ? "credit-row__balance--positive" : null)">@member.Balance</span>
+                                </button>
+                                @if (expanded)
+                                {
+                                    <div class="credit-row__grants">
+                                        @foreach (var grant in member.Grants.OrderByDescending(g => g.CreatedAt))
+                                        {
+                                            <div class="credit-grant">
+                                                <span class="credit-grant__count @(grant.Count < 0 ? "credit-grant__count--negative" : null)">@(grant.Count > 0 ? "+" : null)@grant.Count</span>
+                                                <span class="credit-grant__text">
+                                                    @L[$"Reason_{grant.Reason}"] · @grant.CreatedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture)
+                                                    @if (grant.GrantedByName is { } by)
+                                                    {
+                                                        <text> · @by</text>
+                                                    }
+                                                    @if (grant.Note is { Length: > 0 } note)
+                                                    {
+                                                        <span class="credit-grant__note">📝 @note</span>
+                                                    }
+                                                </span>
+                                            </div>
+                                        }
+                                        <div>
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => OpenGrantDialog(member)">
+                                                @L["Credits_Change"]
+                                            </MudButton>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </ChildContent>
+        </SectionCard>
+    };
+
+    public void Dispose()
+    {
+        Store.OnCourtSalesChanged -= OnChanged;
+        ClubProfileStore.OnClubProfileChanged -= OnChanged;
+    }
+}

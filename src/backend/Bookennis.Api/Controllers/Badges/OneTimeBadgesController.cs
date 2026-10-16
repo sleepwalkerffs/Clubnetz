@@ -11,7 +11,9 @@ namespace Bookennis.Api.Controllers.Badges;
 [Authorize(AuthorizationPolicies.Member)]
 public class OneTimeBadgesController(IMediator mediator) : ClubControllerBase
 {
+    /// <summary>The badges of a season with the members who got them: only for active members.</summary>
     [HttpGet]
+    [Authorize(AuthorizationPolicies.ActiveMember)]
     public Task<GetOneTimeBadgesResult> GetOneTimeBadges(int clubId, int seasonId, CancellationToken cancellationToken)
         => mediator.Send(new GetOneTimeBadges(clubId, seasonId), cancellationToken);
 

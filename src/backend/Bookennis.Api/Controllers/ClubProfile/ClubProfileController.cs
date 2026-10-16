@@ -14,16 +14,12 @@ public class ClubProfileController(IMediator mediator, IUserAccessor userAccesso
     [HttpGet]
     public Task<GetClubProfileResult> GetClubProfile([FromRoute] int clubId, CancellationToken cancellationToken)
     {
-        var isGuestSession = HttpContext.User.FindFirst("guest_session")?.Value == "true";
         var supportClubId = HttpContext.User.IsAdministrator() ? clubId : (int?)null;
-        return mediator.Send(new GetClubProfile(userAccessor.GetUserId(), isGuestSession, supportClubId), cancellationToken);
+        return mediator.Send(new GetClubProfile(userAccessor.GetUserId(), supportClubId), cancellationToken);
     }
 
     [HttpGet("BookingOptions")]
-    public Task<GetBookingOptionsResult> GetBookingOptions(CancellationToken cancellationToken)
-    {
-        var isGuestSession = HttpContext.User.FindFirst("guest_session")?.Value == "true";
-        return mediator.Send(new GetBookingOptions(userAccessor.GetUserId(), isGuestSession), cancellationToken);
-    }
+    public Task<GetBookingOptionsResult> GetBookingOptions([FromRoute] int clubId, CancellationToken cancellationToken)
+        => mediator.Send(new GetBookingOptions(userAccessor.GetUserId(), clubId), cancellationToken);
 
 }

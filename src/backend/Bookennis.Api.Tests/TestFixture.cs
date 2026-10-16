@@ -1,5 +1,6 @@
 using Bookennis.Api.Business.Badges;
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.CourtSales;
 using Bookennis.Api.Business.Memberships;
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Business.Payments;
@@ -107,6 +108,10 @@ public class TestFixture : SimpleInjectorTestFixture
                 container.Register<IMembershipCheckout, MembershipCheckout>();
                 container.Register<IMembershipFulfillment, MembershipFulfillment>();
                 container.Register<IMembershipSettlement, MembershipSettlement>();
+
+                // Court sales: no email is sent in tests
+                container.RegisterSingleton(() => Substitute.For<ICourtPurchaseNotifier>());
+                container.Register<ICourtPurchaseSettlement, CourtPurchaseSettlement>();
             }
         );
 

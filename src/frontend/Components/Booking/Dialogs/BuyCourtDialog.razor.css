@@ -1,0 +1,104 @@
+.buy {
+    --buy-color: var(--mud-palette-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+}
+
+.buy-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    border-radius: 16px;
+    border-left: 5px solid var(--buy-color);
+    background: color-mix(in srgb, var(--buy-color) 12%, var(--mud-palette-surface));
+}
+
+.buy-summary__date {
+    flex: 0 0 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 0;
+    border-radius: 12px;
+    color: #FFFFFF;
+    background: var(--buy-color);
+}
+
+.buy-summary__weekday,
+.buy-summary__month {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.buy-summary__day {
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.buy-summary__text {
+    min-width: 0;
+}
+
+.buy-summary__time {
+    font-size: 1.3rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.buy-summary__meta {
+    margin-top: 2px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.buy-quote {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-background-gray);
+    min-height: 56px;
+}
+
+.buy-quote__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.buy-quote__muted {
+    color: var(--mud-palette-text-secondary);
+    white-space: nowrap;
+}
+
+.buy-quote__row--sum {
+    padding-top: 6px;
+    border-top: 1px dashed var(--mud-palette-lines-inputs);
+    font-weight: 600;
+}
+
+.buy-quote__row--credit {
+    color: var(--bk-dark-green, #047857);
+    font-weight: 600;
+}
+
+.buy-quote__row--due {
+    padding-top: 6px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.buy-quote__hint {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}

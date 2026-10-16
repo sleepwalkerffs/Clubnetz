@@ -204,4 +204,7 @@
   <data name="Gender_Diverse" xml:space="preserve">
     <value>Diverse</value>
   </data>
+  <data name="NoMemberTreasurerHint" xml:space="preserve">
+    <value>Can't find your partner? The treasurer of your club can put your family together when your membership fee is recorded.</value>
+  </data>
 </root>

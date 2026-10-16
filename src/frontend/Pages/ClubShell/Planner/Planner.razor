@@ -384,6 +384,9 @@
     /// </summary>
     private bool CanEdit(BookingResult booking)
     {
+        // Bought court time is only cancelled on the Court sales page, the API refuses to move it
+        if (booking.IsBought)
+            return false;
         if (!PlannerHelpers.MayUsePlayMode(booking.PlayMode, ClubProfileStore.Roles, ClubProfileStore.IsSupportMode))
             return false;
         if (HasElevatedRole)

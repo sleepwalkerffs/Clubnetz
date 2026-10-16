@@ -12,6 +12,7 @@ public class StripeGateway(AppSettings appSettings) : IStripeGateway
 {
     public const string ClubIdMetadataKey = "club_id";
     public const string OrderIdMetadataKey = "membership_order_id";
+    public const string CourtPurchaseIdMetadataKey = "court_purchase_id";
 
     private readonly StripeSettings settings = appSettings.Stripe;
     private StripeClient? client;
@@ -84,7 +85,7 @@ public class StripeGateway(AppSettings appSettings) : IStripeGateway
         var metadata = new Dictionary<string, string>
         {
             [ClubIdMetadataKey] = data.ClubId.ToString(CultureInfo.InvariantCulture),
-            [OrderIdMetadataKey] = data.OrderId.ToString(CultureInfo.InvariantCulture),
+            [data.Kind == StripeCheckoutKind.CourtPurchase ? CourtPurchaseIdMetadataKey : OrderIdMetadataKey] = data.OrderId.ToString(CultureInfo.InvariantCulture),
         };
 
         var options = new SessionCreateOptions
@@ -106,7 +107,9 @@ public class StripeGateway(AppSettings appSettings) : IStripeGateway
                 },
             ],
             CustomerEmail = data.CustomerEmail,
-            ClientReferenceId = data.OrderId.ToString(CultureInfo.InvariantCulture),
+            // Membership orders keep the plain id they always had; other kinds carry a prefix (StripeCheckoutReference)
+            ClientReferenceId = StripeCheckoutReference.For(data.Kind, data.OrderId),
+            ExpiresAt = data.ExpiresAt?.UtcDateTime,
             Metadata = metadata,
             Locale = data.Locale,
             SuccessUrl = data.SuccessUrl,
@@ -206,7 +209,8 @@ public class StripeGateway(AppSettings appSettings) : IStripeGateway
         session.PaymentStatus,
         session.ClientReferenceId,
         session.Metadata is not null && session.Metadata.TryGetValue(ClubIdMetadataKey, out var clubId) ? clubId : null,
-        session.PaymentIntentId);
+        session.PaymentIntentId,
+        session.Metadata is null ? null : new Dictionary<string, string>(session.Metadata));
 
     /// <summary>Stripe only takes public https/http addresses as the website of a business.</summary>
     private static string? PublicUrl(string? url)

@@ -30,13 +30,16 @@ public class BookingDomainService : IBookingDomainService
         ChildMembersAreNotAllowedToPlayWithinPrimeTime = 8,
         PlayerHasActiveBookingAtBookedInterval = 9,
         CannotBookInAdvanceTwice = 10,
-        CannotBookWithGuestMembers = 11,
-        CannotBookInAdvanceAsGuest = 12,
-        CannotBookWithinPrimeTimeAsGuest = 13,
+
+        // 11-13 were the rules of the removed guest system (CannotBookWithGuestMembers, CannotBookInAdvanceAsGuest,
+        // CannotBookWithinPrimeTimeAsGuest). The numbers are not used again.
         NoActiveSeasonForClub = 14,
         MemberNotAllowedInSeason = 15,
         MaxBookingsPerSeasonReached = 16,
         CourtBlocked = 17,
+
+        /// <summary>The club does not sell slots in prime time (<see cref="PrimeTimeSettings.RestrictGuests"/>).</summary>
+        CannotBuyWithinPrimeTime = 18,
     }
 
     public Booking BookCourt(Context context, DateTimeOffsetInterval offsetInterval, string timeZoneInfoId, string? comment)
@@ -80,23 +83,17 @@ public class BookingDomainService : IBookingDomainService
             throw new PreconditionException(ErrorCode.ChildMembersAreNotAllowedToPlayWithinPrimeTime, "If only children play they cannot play during prime time");
         }
 
-        if (context.Participants.Select(x => x.Member.MemberType).Distinct().Count() > 1)
-        {
-            throw new PreconditionException(ErrorCode.CannotBookWithGuestMembers, "Club members cannot book with guests");
-        }
+        // Bought slots: prime time can be closed for them (the setting of the former guests)
+        if (context.IsPurchase && isWithinPrimeTime && context.PrimeTimeSettings.RestrictGuests)
+            throw new PreconditionException(ErrorCode.CannotBuyWithinPrimeTime, "Slots can't be bought during prime time hours");
 
-        if (context.Participants.Any(p => p.Member.MemberType == MemberType.ClubMember) && context.ActiveSeasonId is null)
+        // A buyer is not enrolled in the active season and needs none: the purchase is the right to play
+        if (!context.IsPurchase && context.Participants.Any(p => p.Member.MemberType == MemberType.ClubMember) && context.ActiveSeasonId is null)
             throw new PreconditionException(ErrorCode.NoActiveSeasonForClub, "No active season for the club");
 
         foreach (var participant in context.Participants)
         {
-            if (participant.Member.MemberType == MemberType.GuestMember && participant.UpcomingBookingsCount > 0)
-                throw new PreconditionException(ErrorCode.CannotBookInAdvanceAsGuest, "Guests cannot book in advance twice");
-
-            if (participant.Member.MemberType == MemberType.GuestMember && isWithinPrimeTime && context.PrimeTimeSettings.RestrictGuests)
-                throw new PreconditionException(ErrorCode.CannotBookWithinPrimeTimeAsGuest, "Guests cannot book during prime time hours");
-
-            if (!participant.Member.CanParticipate && !participant.IsAtpParticipant && !participant.IsAllowedInCurrentSeason)
+            if (!context.IsPurchase && !participant.Member.CanParticipate && !participant.IsAtpParticipant && !participant.IsAllowedInCurrentSeason)
                 throw new PreconditionException(ErrorCode.PlayerIsNotAllwedToPlay, [participant.FullName], $"User {participant.FullName} is not allowed to play");
 
             if (participant.ActiveBookingsAtTimeOfReservation > 0 && context.PlayMode.IsChargingBookingSubscription)
@@ -118,7 +115,7 @@ public class BookingDomainService : IBookingDomainService
         if (context.CourtBlockingTitles.Count > 0)
             throw new PreconditionException(ErrorCode.CourtBlocked, [string.Join(", ", context.CourtBlockingTitles)], "Court is blocked during booked time");
 
-        if (context.PlayMode.FixedPlayerCount is not null && context.PlayMode.FixedPlayerCount != context.Participants.Count)
+        if (!context.IsPurchase && context.PlayMode.FixedPlayerCount is not null && context.PlayMode.FixedPlayerCount != context.Participants.Count)
         {
             throw new PreconditionException(ErrorCode.InvalidAmountOfPlayers, [context.PlayMode.Name, context.PlayMode.FixedPlayerCount.Value.ToString()],
                 $"{context.PlayMode.Name} requires {context.PlayMode.FixedPlayerCount} players");
@@ -149,6 +146,13 @@ public class BookingDomainService : IBookingDomainService
         public required int? BookingGracePeriodInMinutes { get; init; }
         public required int? ActiveSeasonId { get; init; }
         public bool SkipPastBookingValidation { get; init; }
+
+        /// <summary>
+        /// The booking of a bought slot (court sales): the buyer plays without being enrolled in the active season, the play mode's
+        /// number of players is not enforced (the buyer is the only player) and prime time may be closed for bought slots.
+        /// Opening hours, inactive or blocked courts, overlaps and the grace period apply as for every booking.
+        /// </summary>
+        public bool IsPurchase { get; init; }
 
         /// <summary>Titles of the court blockings that intersect the booked time.</summary>
         public IReadOnlyList<string> CourtBlockingTitles { get; init; } = [];

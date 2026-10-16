@@ -19,7 +19,8 @@ public record BecomeClubMember([Required] int ClubId) : ICommand
                 throw new AuthorizationFailedException();
 
             var user = await context.Users.SingleRequiredAsync(x => x.Id == id, cancellationToken);
-            if (await context.Set<Member>().AnyAsync(member => member.UserId == user.Id && member.ClubId == request.ClubId, cancellationToken))
+            // A former guest may have a GuestMember of historic bookings: that is no membership, they join like everybody else
+            if (await context.Set<Member>().AnyAsync(member => member.UserId == user.Id && member.ClubId == request.ClubId && member.MemberType == MemberType.ClubMember, cancellationToken))
                 return default;
 
             var member = new ClubMember(user.Id, request.ClubId, [MemberRole.User]);

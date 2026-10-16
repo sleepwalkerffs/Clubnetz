@@ -30,12 +30,11 @@ public static class AuthorizationConfiguration
                      policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
                            .RequireAuthenticatedUser()
                            .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)]))
-                // Account Owner Policy: guest links sign in the underlying user, but must not allow changing its credentials
+                // Account Owner Policy: the signed-in user changes the own credentials
                 .AddPolicy(AuthorizationPolicies.AccountOwner, policy =>
                      policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
                            .RequireAuthenticatedUser()
-                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
-                           .RequireAssertion(context => context.User.FindFirst(GuestSessionClaims.GuestSession)?.Value != "true"))
+                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)]))
                 // Club Administrator Policy
                 .AddPolicy(AuthorizationPolicies.ClubAdministrator, policy =>
                      policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
@@ -107,6 +106,33 @@ public static class AuthorizationConfiguration
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
                           .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Maintainer, MemberRole.Admin] }))
+
+                // Active Member Policy: everything that shows other members
+                .AddPolicy(AuthorizationPolicies.ActiveMember, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .AddRequirements(new ActiveMemberRequirement()))
+
+                // Court Sales Policies: cookie only, so court sales (money, holds) can't be reached with an API key
+                .AddPolicy(AuthorizationPolicies.CourtSalesMember, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [] }))
+                .AddPolicy(AuthorizationPolicies.CourtSalesManager, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Treasurer, MemberRole.Admin] }))
+                .AddPolicy(AuthorizationPolicies.OwnsCourtPurchase, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new OwnsCourtPurchaseRequirement()))
 
                 // Club User Policy
                 .AddPolicy(AuthorizationPolicies.Member, policy =>

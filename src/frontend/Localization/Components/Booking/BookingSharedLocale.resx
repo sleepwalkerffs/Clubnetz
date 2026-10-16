@@ -321,4 +321,22 @@
   <data name="AllDay" xml:space="preserve">
     <value>All day</value>
   </data>
+  <data name="Booked" xml:space="preserve">
+    <value>Booked</value>
+  </data>
+  <data name="BoughtIndicator" xml:space="preserve">
+    <value>Bought</value>
+  </data>
+  <data name="BoughtHintBuyer" xml:space="preserve">
+    <value>You bought this court time. Bought bookings can't be changed or cancelled here. If something comes up, ask the treasurer of your club.</value>
+  </data>
+  <data name="BoughtHintManager" xml:space="preserve">
+    <value>This court time was bought. It can't be changed here; cancel it on the Court sales page if needed.</value>
+  </data>
+  <data name="BoughtHintOther" xml:space="preserve">
+    <value>This court time was bought. Only a treasurer or admin can cancel it.</value>
+  </data>
+  <data name="OpenCourtSales" xml:space="preserve">
+    <value>Open Court sales</value>
+  </data>
 </root>

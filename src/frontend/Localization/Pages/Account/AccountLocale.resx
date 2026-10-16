@@ -123,9 +123,6 @@
   <data name="ConfirmEmail" xml:space="preserve">
     <value>Confirm email</value>
   </data>
-  <data name="ConfirmGuestLoginSuccess" xml:space="preserve">
-    <value>Successfully logged in as guest</value>
-  </data>
   <data name="Email" xml:space="preserve">
     <value>Email</value>
   </data>
@@ -140,9 +137,6 @@
   </data>
   <data name="GeneralInfo" xml:space="preserve">
     <value>General information</value>
-  </data>
-  <data name="GuestLogin" xml:space="preserve">
-    <value>Guest login</value>
   </data>
   <data name="LastnameValidation" xml:space="preserve">
     <value>Last name is required</value>
@@ -230,12 +224,6 @@
   </data>
   <data name="Pitch_Feature_Members_Description" xml:space="preserve">
     <value>Manage members, families, roles and seasons.</value>
-  </data>
-  <data name="Pitch_Feature_Guests" xml:space="preserve">
-    <value>Guest cards</value>
-  </data>
-  <data name="Pitch_Feature_Guests_Description" xml:space="preserve">
-    <value>Let guests book with a simple link or code.</value>
   </data>
   <data name="Pitch_Feature_Statistics" xml:space="preserve">
     <value>Statistics &amp; leaderboards</value>
@@ -683,5 +671,32 @@
   </data>
   <data name="Notif_Hint_BadgeAwarded" xml:space="preserve">
     <value>You or your child earned a badge.</value>
+  </data>
+  <data name="GuestLinkReplaced_Title" xml:space="preserve">
+    <value>Guest links were replaced</value>
+  </data>
+  <data name="GuestLinkReplaced_Subtitle" xml:space="preserve">
+    <value>Guest links and guest cards no longer exist. You now book with your own Clubnetz account.</value>
+  </data>
+  <data name="GuestLinkReplaced_Step1" xml:space="preserve">
+    <value>Sign in with the email address your guest link was sent to.</value>
+  </data>
+  <data name="GuestLinkReplaced_Step2" xml:space="preserve">
+    <value>No password yet? Choose "Set a password" – we'll send you a link to set one.</value>
+  </data>
+  <data name="GuestLinkReplaced_Step3" xml:space="preserve">
+    <value>Open the booking page of your club and book a free slot.</value>
+  </data>
+  <data name="GuestLinkReplaced_Credits" xml:space="preserve">
+    <value>Bookings left on your guest card were kept: they are now booking credits for your club.</value>
+  </data>
+  <data name="GuestLinkReplaced_SetPassword" xml:space="preserve">
+    <value>Set a password</value>
+  </data>
+  <data name="Pitch_Feature_CourtSales" xml:space="preserve">
+    <value>Court sales</value>
+  </data>
+  <data name="Pitch_Feature_CourtSales_Description" xml:space="preserve">
+    <value>Non-members buy free court time online – with prices per court and time.</value>
   </data>
 </root>

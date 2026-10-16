@@ -5,7 +5,7 @@ public static class AuthorizationPolicies
     // Application Policies
     public const string ApplicationAdministrator = nameof(ApplicationAdministrator);
     public const string ApplicationUser = nameof(ApplicationUser);
-    /// <summary>A user signed in with their own credentials, not via a guest link. Required to change the email or password.</summary>
+    /// <summary>A signed-in user (cookie, never an API key). Required to change the email or password.</summary>
     public const string AccountOwner = nameof(AccountOwner);
 
     // Club Policies
@@ -30,6 +30,19 @@ public static class AuthorizationPolicies
     public const string ClubMemberViewer = nameof(ClubMemberViewer);
     /// <summary>Reads the statistics of the whole club: Maintainer or Admin.</summary>
     public const string ClubStatisticsViewer = nameof(ClubStatisticsViewer);
+    /// <summary>
+    /// An active member of the club (<see cref="Business.Members.ActiveMembership"/>: enrolled in the active season, parent of an enrolled
+    /// child, or a staff role) or an application administrator. Required for everything that shows other members.
+    /// </summary>
+    public const string ActiveMember = nameof(ActiveMember);
+
+    // Court sales: signed in with a cookie, never with an API key
+    /// <summary>Any member of the club, signed in (not with an API key): sees the prices and buys court time.</summary>
+    public const string CourtSalesMember = nameof(CourtSalesMember);
+    /// <summary>Treasurer or Admin, signed in (not with an API key): prices, sales and credits.</summary>
+    public const string CourtSalesManager = nameof(CourtSalesManager);
+    /// <summary>Resource: CourtPurchaseAuthorizationModel. The buyer, or a Treasurer or Admin of the club (not for releasing a hold).</summary>
+    public const string OwnsCourtPurchase = nameof(OwnsCourtPurchase);
 
     //Booking Policies
     public const string OwnsBooking = nameof(OwnsBooking);

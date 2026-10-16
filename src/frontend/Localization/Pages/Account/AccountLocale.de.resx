@@ -123,9 +123,6 @@
   <data name="ConfirmEmail" xml:space="preserve">
     <value>Email bestätigen</value>
   </data>
-  <data name="ConfirmGuestLoginSuccess" xml:space="preserve">
-    <value>Erfolgreich als Gast eingelogged</value>
-  </data>
   <data name="Email" xml:space="preserve">
     <value>Email</value>
   </data>
@@ -140,9 +137,6 @@
   </data>
   <data name="GeneralInfo" xml:space="preserve">
     <value>Generelle Informationen</value>
-  </data>
-  <data name="GuestLogin" xml:space="preserve">
-    <value>Gäste login</value>
   </data>
   <data name="LastnameValidation" xml:space="preserve">
     <value>Nachname ist verpflichtend</value>
@@ -230,12 +224,6 @@
   </data>
   <data name="Pitch_Feature_Members_Description" xml:space="preserve">
     <value>Mitglieder, Familien, Rollen und Saisonen verwalten.</value>
-  </data>
-  <data name="Pitch_Feature_Guests" xml:space="preserve">
-    <value>Gästekarten</value>
-  </data>
-  <data name="Pitch_Feature_Guests_Description" xml:space="preserve">
-    <value>Gäste buchen ganz einfach per Link oder Code.</value>
   </data>
   <data name="Pitch_Feature_Statistics" xml:space="preserve">
     <value>Statistiken &amp; Ranglisten</value>
@@ -683,5 +671,32 @@
   </data>
   <data name="Notif_Hint_BadgeAwarded" xml:space="preserve">
     <value>Du oder dein Kind habt ein Abzeichen erhalten.</value>
+  </data>
+  <data name="GuestLinkReplaced_Title" xml:space="preserve">
+    <value>Gästelinks wurden ersetzt</value>
+  </data>
+  <data name="GuestLinkReplaced_Subtitle" xml:space="preserve">
+    <value>Gästelinks und Gästekarten gibt es nicht mehr. Du buchst jetzt mit deinem eigenen Clubnetz-Konto.</value>
+  </data>
+  <data name="GuestLinkReplaced_Step1" xml:space="preserve">
+    <value>Melde dich mit der E-Mail-Adresse an, an die dein Gästelink geschickt wurde.</value>
+  </data>
+  <data name="GuestLinkReplaced_Step2" xml:space="preserve">
+    <value>Noch kein Passwort? Wähle "Passwort festlegen" – wir schicken dir einen Link, mit dem du eines festlegst.</value>
+  </data>
+  <data name="GuestLinkReplaced_Step3" xml:space="preserve">
+    <value>Öffne die Buchungsseite deines Vereins und buche eine freie Zeit.</value>
+  </data>
+  <data name="GuestLinkReplaced_Credits" xml:space="preserve">
+    <value>Buchungen, die noch auf deiner Gästekarte waren, bleiben erhalten: Sie sind jetzt Buchungsguthaben bei deinem Verein.</value>
+  </data>
+  <data name="GuestLinkReplaced_SetPassword" xml:space="preserve">
+    <value>Passwort festlegen</value>
+  </data>
+  <data name="Pitch_Feature_CourtSales" xml:space="preserve">
+    <value>Platzverkauf</value>
+  </data>
+  <data name="Pitch_Feature_CourtSales_Description" xml:space="preserve">
+    <value>Nicht-Mitglieder kaufen freie Platzzeiten online – mit Preisen pro Platz und Uhrzeit.</value>
   </data>
 </root>

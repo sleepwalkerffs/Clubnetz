@@ -24,10 +24,7 @@ public class ProfileController(IMediator mediator, IUserAccessor userAccessor) :
 
     [HttpGet]
     public async Task<GetUserProfileResult> GetUserProfile(CancellationToken cancellationToken)
-        => await mediator.Send(new GetUserProfile(userAccessor.GetUserId()), cancellationToken) with
-        {
-            IsGuestSession = HttpContext.User.FindFirst(GuestSessionClaims.GuestSession)?.Value == "true"
-        };
+        => await mediator.Send(new GetUserProfile(userAccessor.GetUserId()), cancellationToken);
 
     [HttpPost("Update")]
     public async Task UpdateUserProfile(UpdateUserProfileModel model, CancellationToken cancellationToken) =>

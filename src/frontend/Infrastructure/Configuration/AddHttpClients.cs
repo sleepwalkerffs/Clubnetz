@@ -14,10 +14,10 @@ using Bookennis.Client.Services.HttpClients.Statistics;
 using Bookennis.Client.Services.HttpClients.Leaderboards;
 using Bookennis.Client.Services.HttpClients.Wrapped;
 using Microsoft.AspNetCore.Components;
-using Bookennis.Client.Services.HttpClients.Guests;
 using Bookennis.Client.Services.HttpClients.ClubAnnouncements;
 using Bookennis.Client.Services.HttpClients.ClubEvents;
 using Bookennis.Client.Services.HttpClients.CourtBlockings;
+using Bookennis.Client.Services.HttpClients.CourtSales;
 using Bookennis.Client.Services.HttpClients.Memberships;
 using Bookennis.Client.Services.HttpClients.SubscriptionPlans;
 using Bookennis.Client.Services.HttpClients.ClubApiKeys;
@@ -163,18 +163,6 @@ public static class AddHttpClients
            .AddHttpMessageHandler<RedirectToLoginOnUnauthorizedHandler>();
 
         services
-           .AddHttpClient<IGuestHttpClient, GuestHttpClient>(
-                (serviceProvider, client) =>
-                {
-                    var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
-                    client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/Guests/");
-                }
-            )
-           .AddHttpMessageHandler<TenantDelegatingHandler>()
-           .AddHttpMessageHandler<RedirectToLoginOnUnauthorizedHandler>();
-
-        services
            .AddHttpClient<IAdminHttpClient, AdminHttpClient>(
                 (serviceProvider, client) =>
                 {
@@ -236,6 +224,7 @@ public static class AddHttpClients
         services.AddClubHttpClient<IMembershipPlansHttpClient, MembershipPlansHttpClient>("MembershipPlans");
         services.AddClubHttpClient<IMembershipsHttpClient, MembershipsHttpClient>("Memberships");
         services.AddClubHttpClient<IMembershipPaymentsHttpClient, MembershipPaymentsHttpClient>("MembershipPayments");
+        services.AddClubHttpClient<ICourtSalesHttpClient, CourtSalesHttpClient>("CourtSales");
         services.AddClubHttpClient<IPaymentAccountHttpClient, PaymentAccountHttpClient>("Payments");
 
         services

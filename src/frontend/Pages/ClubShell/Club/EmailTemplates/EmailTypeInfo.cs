@@ -9,7 +9,6 @@ public static class EmailTypeInfo
         ClubEmailType.Welcome => "👋",
         ClubEmailType.SeasonActivated => "🎾",
         ClubEmailType.BadgeAwarded => "🏅",
-        ClubEmailType.GuestCard => "🎟️",
         ClubEmailType.BookingDeleted => "🗓️",
         ClubEmailType.Announcement => "📣",
         ClubEmailType.BookingAdded => "🎾",
@@ -21,6 +20,10 @@ public static class EmailTypeInfo
         ClubEmailType.MembershipApproved => "✅",
         ClubEmailType.MembershipPaymentFailed => "⚠️",
         ClubEmailType.MembershipNeedsAttention => "🧾",
+        ClubEmailType.CourtPurchaseConfirmed => "🎾",
+        ClubEmailType.CourtPurchaseFailed => "⚠️",
+        ClubEmailType.CourtPurchaseNeedsAttention => "🧾",
+        ClubEmailType.CourtPurchaseCompensated => "🎟️",
         _ => "✉️"
     };
 

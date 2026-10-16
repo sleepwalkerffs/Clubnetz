@@ -130,12 +130,6 @@
   <data name="TypeDescription_BadgeAwarded" xml:space="preserve">
     <value>Wird verschickt, wenn ein Mitglied ein Abzeichen erreicht oder eine Sonderauszeichnung erhält.</value>
   </data>
-  <data name="Type_GuestCard" xml:space="preserve">
-    <value>Gäste-Login</value>
-  </data>
-  <data name="TypeDescription_GuestCard" xml:space="preserve">
-    <value>Wird mit dem Login-Link verschickt, wenn eine Gästekarte erstellt wird.</value>
-  </data>
   <data name="Type_BookingDeleted" xml:space="preserve">
     <value>Buchung gelöscht</value>
   </data>
@@ -228,9 +222,6 @@
   </data>
   <data name="Variable_trophy_case_url" xml:space="preserve">
     <value>Link zur Trophäensammlung</value>
-  </data>
-  <data name="Variable_guest_card_url" xml:space="preserve">
-    <value>Gäste-Login-Link</value>
   </data>
   <data name="Variable_booking.date" xml:space="preserve">
     <value>Datum der Buchung</value>
@@ -428,9 +419,57 @@
     <value>Link zur Seite in der App</value>
   </data>
   <data name="Variable_reason" xml:space="preserve">
-    <value>Was mit der Bestellung passiert ist</value>
+    <value>Was passiert ist</value>
   </data>
   <data name="Variable_payer" xml:space="preserve">
     <value>Name des Mitglieds, das bezahlt</value>
+  </data>
+  <data name="Type_CourtPurchaseConfirmed" xml:space="preserve">
+    <value>Platzzeit gekauft</value>
+  </data>
+  <data name="TypeDescription_CourtPurchaseConfirmed" xml:space="preserve">
+    <value>Geht an die Person, die gekauft hat, sobald die gekaufte Zeit gebucht ist (online bezahlt, mit Guthaben oder kostenlos).</value>
+  </data>
+  <data name="Type_CourtPurchaseFailed" xml:space="preserve">
+    <value>Zahlung der Platzzeit fehlgeschlagen</value>
+  </data>
+  <data name="TypeDescription_CourtPurchaseFailed" xml:space="preserve">
+    <value>Geht an die Person, die gekauft hat, wenn die Lastschrift fehlgeschlagen ist und die Buchung entfernt wurde.</value>
+  </data>
+  <data name="Type_CourtPurchaseNeedsAttention" xml:space="preserve">
+    <value>Platzverkauf: bitte ansehen</value>
+  </data>
+  <data name="TypeDescription_CourtPurchaseNeedsAttention" xml:space="preserve">
+    <value>Geht an Kassiere und Admins: eine unerwartete Zahlung, eine Rückerstattung, ein Einspruch oder eine fehlgeschlagene Lastschrift einer gekauften Zeit.</value>
+  </data>
+  <data name="Variable_purchase.court" xml:space="preserve">
+    <value>Platz</value>
+  </data>
+  <data name="Variable_purchase.date" xml:space="preserve">
+    <value>Datum der Zeit</value>
+  </data>
+  <data name="Variable_purchase.time" xml:space="preserve">
+    <value>Uhrzeit</value>
+  </data>
+  <data name="Variable_purchase.price" xml:space="preserve">
+    <value>Voller Preis mit Währung</value>
+  </data>
+  <data name="Variable_purchase.paid" xml:space="preserve">
+    <value>Wie bezahlt wurde (z. B. "1 Guthaben")</value>
+  </data>
+  <data name="Variable_purchase.url" xml:space="preserve">
+    <value>Link zur Buchungsseite</value>
+  </data>
+  <data name="Variable_buyer" xml:space="preserve">
+    <value>Name der Person, die gekauft hat</value>
+  </data>
+  <data name="Type_CourtPurchaseCompensated" xml:space="preserve">
+    <value>Gekaufter Platz musste weichen</value>
+  </data>
+  <data name="TypeDescription_CourtPurchaseCompensated" xml:space="preserve">
+    <value>Geht an die Käuferin oder den Käufer, wenn der Verein einen gekauften Platz braucht (überbucht, gesperrt oder deaktiviert): Die Buchung wurde entfernt und es gab Buchungsguthaben.</value>
+  </data>
+  <data name="Variable_credits" xml:space="preserve">
+    <value>Erhaltenes Guthaben</value>
   </data>
 </root>

@@ -644,5 +644,49 @@ namespace Bookennis.Client.Localization.Components.Booking {
                 return ResourceManager.GetString("YourMatchAt", resourceCulture);
             }
         }
+            /// <summary>
+        ///   Looks up a localized string similar to Bought.
+        /// </summary>
+        public static string BoughtIndicator {
+            get {
+                return ResourceManager.GetString("BoughtIndicator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You bought this court time. Bought bookings can't be changed or cancelled here. If something comes up, ask the treasurer of your club..
+        /// </summary>
+        public static string BoughtHintBuyer {
+            get {
+                return ResourceManager.GetString("BoughtHintBuyer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This court time was bought. It can't be changed here; cancel it on the Court sales page if needed..
+        /// </summary>
+        public static string BoughtHintManager {
+            get {
+                return ResourceManager.GetString("BoughtHintManager", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This court time was bought. Only a treasurer or admin can cancel it..
+        /// </summary>
+        public static string BoughtHintOther {
+            get {
+                return ResourceManager.GetString("BoughtHintOther", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open Court sales.
+        /// </summary>
+        public static string OpenCourtSales {
+            get {
+                return ResourceManager.GetString("OpenCourtSales", resourceCulture);
+            }
+        }
     }
 }

@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.CourtSales;
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Business.Payments;
 using Bookennis.Api.Business.Push;
@@ -162,6 +163,9 @@ recurringJobs.AddOrUpdate<ClubEventReminderJob>(ClubEventReminderJob.JobId, job 
 
 // Stripe events the webhook missed, e.g. while the app was down
 recurringJobs.AddOrUpdate<StripeEventRecoveryJob>(StripeEventRecoveryJob.JobId, job => job.Run(), StripeEventRecoveryJob.Schedule);
+
+// Court time that was held for a buyer who did not pay in time
+recurringJobs.AddOrUpdate<CourtPurchaseHoldReleaseJob>(CourtPurchaseHoldReleaseJob.JobId, job => job.Run(), CourtPurchaseHoldReleaseJob.Schedule);
 
 container.Verify();
 

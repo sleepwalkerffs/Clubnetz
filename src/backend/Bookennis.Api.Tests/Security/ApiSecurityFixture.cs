@@ -10,6 +10,7 @@ using Bookennis.Domain.ClubEvents;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Clubs.ApiKeys;
 using Bookennis.Domain.Courts;
+using Bookennis.Domain.CourtSales;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Families;
 using Bookennis.Domain.Members;
@@ -48,6 +49,9 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
 {
     public const string Canary = "ZZCANARYOFCLUBB";
     public const string Marker = "AAMARKEROFCLUBA";
+
+    /// <summary>The name of <see cref="EnrolledMemberOfA"/>: it must never reach a member who is not active (ActiveMemberSecurityTests).</summary>
+    public const string ActiveMemberName = "ZZACTIVEMEMBERNAME";
     public const string Password = "Sec-Test-1234!";
 
     /// <summary>The signing secret of the Stripe webhook in the app under test. The tests sign their own events with it.</summary>
@@ -67,8 +71,17 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
     public SeededClub ClubA { get; private set; } = null!;
     public SeededClub ClubB { get; private set; } = null!;
 
-    /// <summary>A member of club A without any special role.</summary>
+    /// <summary>
+    /// A member of club A without any special role. Not enrolled in the active season, so not an active member: sees the calendar
+    /// anonymized and can buy court time.
+    /// </summary>
     public SeededUser MemberOfA { get; private set; } = null!;
+
+    /// <summary>A member of club A without any special role who is enrolled in the active season: an active member.</summary>
+    public SeededUser EnrolledMemberOfA { get; private set; } = null!;
+
+    /// <summary>A club event of club A planned by <see cref="EnrolledMemberOfA"/>, who is also registered for it.</summary>
+    public int EventOfEnrolledMemberOfA { get; private set; }
 
     /// <summary>Another member of club A without any special role, who has nothing to do with <see cref="MemberOfA"/>.</summary>
     public SeededUser OtherMemberOfA { get; private set; } = null!;
@@ -112,7 +125,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await Seed();
 
         // Signing in is limited per client address and the sweeps also hit the sign-in endpoints, so the tests sign in once up front
-        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, MemberOfA, OtherMemberOfA, TreasurerOfA })
+        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, ClubA.Member, MemberOfA, OtherMemberOfA, TreasurerOfA, EnrolledMemberOfA })
             cookies[user.UserId] = await SignIn(user);
     }
 
@@ -268,6 +281,23 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         ClubB = await AddClub(context, Canary, administrator: false);
         MemberOfA = await AddUser(context, ClubA, "member-a", Marker, [MemberRole.User]);
         OtherMemberOfA = await AddUser(context, ClubA, "other-member-a", Marker, [MemberRole.User]);
+        EnrolledMemberOfA = await AddUser(context, ClubA, "enrolled-member-a", ActiveMemberName, [MemberRole.User]);
+        context.Add(new MemberSeason(EnrolledMemberOfA.MemberId, ClubA.SeasonId));
+
+        // A booking of the active member with a comment: shown in full to active members only
+        var activeStart = new DateTimeOffset(DateOnly.FromDateTime(DateTime.UtcNow).AddDays(3).ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero);
+        context.Add(new Booking(ClubA.Id, ClubA.CourtId, ClubA.PlayModeId, new DateTimeOffsetInterval(activeStart, activeStart.AddHours(1)), TimeZoneInfo.Utc.Id,
+            [EnrolledMemberOfA.MemberId, ClubA.Admin.MemberId], $"Comment {ActiveMemberName}"));
+        await context.SaveChangesAsync();
+
+        // An event the active member planned and registered for: their name is in CreatedByName and in the registrations
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var activeEvent = new ClubEvent(ClubA.Id, EnrolledMemberOfA.MemberId, new ClubEvent.EventData(
+            "Event of the active member", null, null, ClubEventCategory.Social, today.AddDays(8), null, null, null, true, null, null, [], NotifyMembers: false));
+        activeEvent.Register(EnrolledMemberOfA.MemberId, 1, [], "Comment of the active member", DateTimeOffset.UtcNow);
+        context.Add(activeEvent);
+        await context.SaveChangesAsync();
+        EventOfEnrolledMemberOfA = activeEvent.Id;
         TreasurerOfA = await AddUser(context, ClubA, "treasurer-a", Marker, [MemberRole.User, MemberRole.Treasurer]);
         FamilyOfMemberOfA = await AddFamily(context, ClubA, MemberOfA, "Ownchild");
         FamilyOfOtherMemberOfA = await AddFamily(context, ClubA, OtherMemberOfA, "Otherchild");
@@ -335,6 +365,32 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
 
         seeded.PlanId = plan.Id;
         seeded.OrderId = order.Id;
+
+        // Court sales: settings with a play mode for bought slots, a price rule, a paid purchase of the plain member and a credit
+        club = await context.Clubs.Include(c => c.PlayModes).SingleAsync(c => c.Id == club.Id);
+        club.AddPlayMode(new Club.PlayModeDto([MemberRole.User], System.Drawing.Color.Gray, null, false, $"Bought {text}", null, false, false));
+        await context.SaveChangesAsync();
+        var boughtPlayModeId = club.PlayModes.Single(p => p.Name == $"Bought {text}").Id;
+
+        var settings = new CourtSaleSettings(club.Id);
+        settings.Update(new CourtSaleSettings.SettingsData(true, boughtPlayModeId, "Europe/Vienna", 120, 14, 3));
+        var rule = new CourtPriceRule(club.Id, new CourtPriceRule.RuleData([], Enum.GetValues<DayOfWeek>(), TimeOnly.MinValue, TimeOnly.MinValue, 2000, $"Rule {text}"));
+        var boughtStart = new DateTimeOffset(today.AddDays(4).ToDateTime(new TimeOnly(15, 0)), TimeSpan.Zero);
+        var boughtSlot = new DateTimeOffsetInterval(boughtStart, boughtStart.AddHours(1));
+        var boughtBooking = new Booking(club.Id, court.Id, boughtPlayModeId, boughtSlot, "Europe/Vienna", [seeded.Member.MemberId]);
+        context.AddRange(settings, rule, boughtBooking);
+        await context.SaveChangesAsync();
+
+        var purchase = new CourtPurchase(club.Id, seeded.Member.MemberId, court.Id, boughtBooking.Id, boughtSlot, new CourtQuote(2000, "eur", []), false, 2000);
+        purchase.StartCheckout($"cs_{text}", DateTimeOffset.UtcNow.AddMinutes(30));
+        purchase.MarkPaid(DateTimeOffset.UtcNow, $"pi_{text}");
+        var grant = new BookingCreditGrant(club.Id, seeded.Member.MemberId, 2, BookingCreditReason.GrantedByClub, $"Note {text}", seeded.Admin.MemberId);
+        context.AddRange(purchase, grant);
+        await context.SaveChangesAsync();
+
+        seeded.CourtPurchaseId = purchase.Id;
+        seeded.PriceRuleId = rule.Id;
+        seeded.BoughtBookingId = boughtBooking.Id;
         return seeded;
     }
 
@@ -454,6 +510,9 @@ public sealed class SeededClub
     public int CourtBlockingId { get; set; }
     public int PlanId { get; set; }
     public int OrderId { get; set; }
+    public int CourtPurchaseId { get; set; }
+    public int PriceRuleId { get; set; }
+    public int BoughtBookingId { get; set; }
     public List<int> UserIds { get; } = [];
 }
 

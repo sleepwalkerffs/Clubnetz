@@ -56,6 +56,10 @@ else
                     {
                         <span class="detail-chip"><MudIcon Icon="@Icons.Material.Filled.Repeat" Size="Size.Small" /> @Locale["RecurringBookingIndicator"]</span>
                     }
+                    @if (booking.IsBought)
+                    {
+                        <span class="detail-chip"><MudIcon Icon="@Icons.Material.Filled.PointOfSale" Size="Size.Small" /> @Locale["BoughtIndicator"]</span>
+                    }
                 </div>
             </div>
 
@@ -79,6 +83,22 @@ else
                 </div>
             }
         </div>
+
+        @if (booking.IsBought)
+        {
+            @* Bought court time is only cancelled by a treasurer or admin on the Court sales page (the API refuses edits for everybody) *@
+            <MudAlert Severity="Severity.Info" Class="mb-4">
+                @if (CanManageCourtSales)
+                {
+                    @Locale["BoughtHintManager"]
+                    <MudLink Href="@($"clubs/{ClubId}/court-sales")" Class="ml-1">@Locale["OpenCourtSales"]</MudLink>
+                }
+                else
+                {
+                    @Locale[IsParticipantInBooking || ChildIsParticipantInBooking ? "BoughtHintBuyer" : "BoughtHintOther"]
+                }
+            </MudAlert>
+        }
 
         @if (isEditing)
         {
@@ -130,7 +150,7 @@ else
                         <div class="detail-players">
                             @foreach (var player in booking.Players)
                             {
-                                var clickable = !player.IsGuest && !player.IsAtpPlayer;
+                                var clickable = CanOpenProfile(player);
                                 <div class="detail-player @(clickable ? "detail-player--clickable" : null)"
                                      role="@(clickable ? "link" : null)" tabindex="@(clickable ? "0" : null)"
                                      @onclick="() => NavigateToMemberProfile(player)"
@@ -267,14 +287,19 @@ else
             ? AllowedPlayModes.Where(pm => pm.AllowRecurring).ToList()
             : AllowedPlayModes;
 
+    private bool CanManageCourtSales
+        => ProfileStore.IsSupportMode || ProfileStore.Roles.Any(r => r is MemberRole.Admin or MemberRole.Treasurer);
+
     private bool userIsAllowedToEdit
         => booking is not null
+        && !booking.IsBought
         && (IsParticipantInBooking
             || ChildIsParticipantInBooking
             || HasElevatedRole);
 
     private bool userIsAllowedToDelete
         => booking is not null
+        && !booking.IsBought
         && (IsParticipantInBooking
             || ChildIsParticipantInBooking
             || ProfileStore.Roles.Contains(MemberRole.Admin));
@@ -523,9 +548,13 @@ else
             NavigateToMemberProfile(player);
     }
 
+    /// <summary>Members who are not active only see their own profile (the backend answers others with 403).</summary>
+    private bool CanOpenProfile(PlayerResult player)
+        => !player.IsGuest && !player.IsAtpPlayer && (ProfileStore.IsActiveMember || player.MemberId == ProfileStore.MemberId);
+
     private void NavigateToMemberProfile(PlayerResult player)
     {
-        if (!player.IsGuest && !player.IsAtpPlayer)
+        if (CanOpenProfile(player))
             NavManager.NavigateTo($"/clubs/{ClubId}/members/{player.MemberId}/profile");
     }
 

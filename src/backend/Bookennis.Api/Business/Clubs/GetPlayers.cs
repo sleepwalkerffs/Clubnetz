@@ -6,7 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Clubs;
 
-public record GetPlayers : ICommand<GetPlayersResult>
+/// <summary>
+/// The players that can be picked for a booking: the members enrolled in the active season (and the players of clubs that share theirs).
+/// <see cref="OnlyMemberIds"/>: a member who is not active only gets themself and the children of their family, never the others.
+/// </summary>
+public record GetPlayers(IReadOnlySet<int>? OnlyMemberIds = null) : ICommand<GetPlayersResult>
 {
     public class Handler(AppDbContext context) : IRequestHandler<GetPlayers, GetPlayersResult>
     {
@@ -23,6 +27,17 @@ public record GetPlayers : ICommand<GetPlayersResult>
                                      select new PlayerResult(member.Id, user.FirstName, user.LastName, false, false, user.Id, context.UserProfilePictures.Any(p => p.UserId == user.Id) ? "/api/Profile/picture/" + user.Id : null))
                                      .ToListAsync(cancellationToken);
 
+            if (request.OnlyMemberIds is { } onlyMemberIds)
+            {
+                var own = await (from user in context.Users
+                                 join member in context.ClubMembers on user.Id equals member.UserId
+                                 where onlyMemberIds.Contains(member.Id) && member.ClubId == currentClub.Id
+                                 select new PlayerResult(member.Id, user.FirstName, user.LastName, false, false, user.Id, context.UserProfilePictures.Any(p => p.UserId == user.Id) ? "/api/Profile/picture/" + user.Id : null))
+                                 .ToListAsync(cancellationToken);
+
+                return new GetPlayersResult(own);
+            }
+
             if (currentClub.IsAtpClub)
             {
                 var atpPlayers = await (from user in context.Users
@@ -36,13 +51,8 @@ public record GetPlayers : ICommand<GetPlayersResult>
                 clubPlayers = clubPlayers.DistinctBy(p => p.MemberId).ToList();
             }
 
-            var guestPlayers = await (from user in context.Users
-                                      join member in context.GuestMembers on user.Id equals member.UserId
-                                      where member.IsAllowedToBook
-                                      select new PlayerResult(member.Id, user.FirstName, user.LastName, true, false, user.Id, context.UserProfilePictures.Any(p => p.UserId == user.Id) ? "/api/Profile/picture/" + user.Id : null))
-                                      .ToListAsync(cancellationToken);
-
-            return new GetPlayersResult(clubPlayers, guestPlayers);
+            // Guests were removed: former guest members are no players any more
+            return new GetPlayersResult(clubPlayers);
         }
     }
 }

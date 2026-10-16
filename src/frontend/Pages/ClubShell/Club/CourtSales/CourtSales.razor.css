@@ -1,0 +1,367 @@
+.sales-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sales-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sales-switch {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-background-gray);
+}
+
+.sales-switch__title {
+    font-weight: 700;
+}
+
+.sales-switch__text {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.sales-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px 16px;
+}
+
+.sales-settings__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.sales-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 28px 12px;
+    border-radius: 16px;
+    border: 2px dashed var(--mud-palette-lines-inputs);
+    text-align: center;
+}
+
+.sales-empty__emoji {
+    font-size: 2.2rem;
+    line-height: 1;
+}
+
+.sales-empty__title {
+    margin-top: 6px;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.sales-empty__text,
+.sales-note {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.sales-note {
+    margin-top: 10px;
+}
+
+/* ---------- price rules ---------- */
+
+.rule-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+}
+
+.rule-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "main price" "main actions";
+    gap: 4px 12px;
+    padding: 12px 10px 10px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-left: 4px solid var(--mud-palette-primary);
+    background: var(--mud-palette-surface);
+}
+
+.rule-card__main {
+    grid-area: main;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.rule-card__days {
+    font-weight: 800;
+}
+
+.rule-card__time {
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.rule-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.rule-card__name {
+    font-weight: 700;
+    color: var(--mud-palette-text-primary);
+}
+
+.rule-card__price {
+    grid-area: price;
+    justify-self: end;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.rule-card__actions {
+    grid-area: actions;
+    justify-self: end;
+    align-self: end;
+    display: flex;
+}
+
+/* ---------- sales ---------- */
+
+.sales-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.sales-filters {
+    margin-bottom: 14px;
+}
+
+.sale-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Desktop: a table row. Phone: a card (see below). */
+.sale-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.6fr) minmax(0, 1.3fr) minmax(0, 1.3fr) auto;
+    align-items: center;
+    gap: 6px 16px;
+    padding: 10px 10px 10px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-left: 4px solid var(--row-color);
+    background: var(--mud-palette-surface);
+}
+
+.sale-row__who,
+.sale-row__slot,
+.sale-row__money,
+.sale-row__status {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sale-row__name {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.sale-row__name--gone {
+    font-weight: 500;
+    font-style: italic;
+    color: var(--mud-palette-text-secondary);
+}
+
+.sale-row__court {
+    font-weight: 600;
+}
+
+.sale-row__amount {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.sale-row__muted {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.status-pill {
+    align-self: flex-start;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--row-color);
+    background: color-mix(in srgb, var(--row-color) 14%, transparent);
+}
+
+.sale-row__actions {
+    display: flex;
+    justify-content: flex-end;
+    min-width: 88px;
+}
+
+@media (max-width: 899.98px) {
+    .sale-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        padding: 12px 12px 10px 14px;
+    }
+
+    .sale-row__money {
+        grid-column: 2;
+        grid-row: 1;
+        align-items: flex-end;
+        text-align: right;
+    }
+
+    .sale-row__slot {
+        grid-column: 1 / -1;
+    }
+
+    .sale-row__status {
+        grid-column: 1;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 10px;
+    }
+
+    .sale-row__actions {
+        grid-column: 2;
+        min-width: 0;
+    }
+}
+
+/* ---------- credits ---------- */
+
+.credit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.credit-row {
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    overflow: hidden;
+}
+
+.credit-row__head {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.credit-row__head:hover,
+.credit-row__head:focus-visible {
+    background: var(--mud-palette-action-default-hover);
+    outline: none;
+}
+
+.credit-row__name {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.credit-row__numbers {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+    white-space: nowrap;
+}
+
+.credit-row__balance {
+    min-width: 36px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    text-align: center;
+    font-weight: 800;
+    color: var(--mud-palette-text-secondary);
+    background: var(--mud-palette-background-gray);
+}
+
+.credit-row__balance--positive {
+    color: var(--bk-dark-green, #047857);
+    background: color-mix(in srgb, #059669 14%, transparent);
+}
+
+.credit-row__grants {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 14px 12px;
+    border-top: 1px dashed var(--mud-palette-lines-default);
+}
+
+.credit-grant {
+    display: flex;
+    gap: 10px;
+    font-size: 0.85rem;
+}
+
+.credit-grant__count {
+    min-width: 32px;
+    font-weight: 800;
+    color: var(--bk-dark-green, #047857);
+}
+
+.credit-grant__count--negative {
+    color: var(--bk-dark-red, #B91C1C);
+}
+
+.credit-grant__text {
+    display: flex;
+    flex-direction: column;
+    color: var(--mud-palette-text-secondary);
+}
+
+.credit-grant__note {
+    color: var(--mud-palette-text-primary);
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 599.98px) {
+    .credit-row__head {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .credit-row__numbers {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .credit-row__balance {
+        grid-row: 1 / span 2;
+        grid-column: 2;
+    }
+}

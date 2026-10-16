@@ -272,3 +272,9 @@
         flex-basis: 52px;
     }
 }
+
+.booking-legend__swatch--anon {
+    background: repeating-linear-gradient(-45deg,
+        color-mix(in srgb, var(--mud-palette-text-secondary) 18%, transparent) 0 3px,
+        color-mix(in srgb, var(--mud-palette-text-secondary) 32%, transparent) 3px 6px);
+}

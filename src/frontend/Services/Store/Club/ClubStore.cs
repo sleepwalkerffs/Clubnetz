@@ -18,7 +18,6 @@ public class ClubStore(IClubsHttpClient clubsHttpClient, IClubProfileStore clubP
 
     public ClubInformationResult ClubDetails { get; private set; } = null!;
     public List<PlayerResult> ClubPlayers { get; private set; } = [];
-    public List<PlayerResult> GuestPlayers { get; private set; } = [];
     public List<CourtResult> Courts { get; private set; } = [];
 
     public List<PlayModeDto> PlayModes { get; private set; } = [];
@@ -130,7 +129,6 @@ public class ClubStore(IClubsHttpClient clubsHttpClient, IClubProfileStore clubP
         if (players is { Success: true, Dto: not null })
         {
             ClubPlayers = players.Dto.ClubMembers;
-            GuestPlayers = players.Dto.GuestMembers;
             OnPlayersDataChanged?.Invoke();
         }
     }, nameof(LoadPlayers));

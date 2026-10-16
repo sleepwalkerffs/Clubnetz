@@ -1,7 +1,8 @@
-using System.Globalization;
+using Bookennis.Api.Business.CourtSales;
 using Bookennis.Api.Business.Memberships;
 using Bookennis.Api.Business.Payments.Stripe;
 using Bookennis.Api.Data;
+using Bookennis.Domain.CourtSales;
 using Bookennis.Domain.Memberships;
 using Fusonic.Extensions.Hangfire;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,8 @@ public record ProcessStripeEvent(int StripeWebhookEventId) : ICommand
         IMembershipFulfillment fulfillment,
         IMembershipSettlement settlement,
         IMembershipNotifier notifier,
+        ICourtPurchaseSettlement courtSettlement,
+        ICourtPurchaseNotifier courtNotifier,
         ILogger<ProcessStripeEvent> logger) : IRequestHandler<ProcessStripeEvent>
     {
         public async Task<Unit> Handle(ProcessStripeEvent request, CancellationToken cancellationToken)
@@ -81,7 +84,11 @@ public record ProcessStripeEvent(int StripeWebhookEventId) : ICommand
                 case ChargeRefunded:
                 {
                     var charge = await gateway.GetCharge(account.StripeAccountId, stripeEvent.ObjectId, cancellationToken);
-                    if (charge is { IsFullyRefunded: true }
+                    if (charge is { IsFullyRefunded: true } && await FindPurchaseByPayment(account, charge.PaymentIntentId, cancellationToken) is { } refundedPurchase)
+                    {
+                        await HandleCourtPurchaseRefund(refundedPurchase, emails, cancellationToken);
+                    }
+                    else if (charge is { IsFullyRefunded: true }
                      && await FindOrderByPayment(account, charge.PaymentIntentId, cancellationToken) is { } order
                      && order.Status is MembershipOrderStatus.Paid or MembershipOrderStatus.Processing or MembershipOrderStatus.Disputed or MembershipOrderStatus.Cancelled)
                     {
@@ -99,7 +106,18 @@ public record ProcessStripeEvent(int StripeWebhookEventId) : ICommand
                 case DisputeCreated:
                 {
                     var dispute = await gateway.GetDispute(account.StripeAccountId, stripeEvent.ObjectId, cancellationToken);
-                    if (dispute is not null
+                    if (dispute is not null && await FindPurchaseByPayment(account, dispute.PaymentIntentId, cancellationToken) is { } disputedPurchase)
+                    {
+                        if (disputedPurchase.Status is CourtPurchaseStatus.Paid or CourtPurchaseStatus.Processing or CourtPurchaseStatus.Cancelled or CourtPurchaseStatus.Compensated)
+                        {
+                            var wasCompensated = disputedPurchase.Status == CourtPurchaseStatus.Compensated;
+                            disputedPurchase.MarkDisputed();
+                            if (wasCompensated)
+                                await TakeBackCompensation(disputedPurchase, emails, cancellationToken);
+                            emails.Add(() => courtNotifier.NeedsAttention(disputedPurchase, CourtPurchaseAttentionReason.Disputed, cancellationToken));
+                        }
+                    }
+                    else if (dispute is not null
                      && await FindOrderByPayment(account, dispute.PaymentIntentId, cancellationToken) is { } order
                      && order.Status is MembershipOrderStatus.Paid or MembershipOrderStatus.Processing)
                     {
@@ -131,8 +149,14 @@ public record ProcessStripeEvent(int StripeWebhookEventId) : ICommand
         private async Task HandleCheckout(StripeWebhookEvent stripeEvent, ClubPaymentAccount account, List<Func<Task>> emails, CancellationToken cancellationToken)
         {
             var session = await gateway.GetCheckoutSession(account.StripeAccountId, stripeEvent.ObjectId, cancellationToken);
-            if (session is null || !int.TryParse(session.ClientReferenceId, NumberStyles.None, CultureInfo.InvariantCulture, out var orderId))
+            if (session is null || !StripeCheckoutReference.TryParse(session.ClientReferenceId, out var kind, out var orderId))
                 return;
+
+            if (kind == StripeCheckoutKind.CourtPurchase)
+            {
+                await HandleCourtPurchaseCheckout(stripeEvent, account, session, orderId, emails, cancellationToken);
+                return;
+            }
 
             // The order has to belong to the club of the Stripe account. An order id of another club in the session changes nothing.
             var order = await context.MembershipOrders
@@ -173,6 +197,96 @@ public record ProcessStripeEvent(int StripeWebhookEventId) : ICommand
                     order.CheckoutExpired(session.Id);
                     break;
             }
+        }
+
+        private async Task HandleCourtPurchaseCheckout(StripeWebhookEvent stripeEvent, ClubPaymentAccount account, StripeCheckoutSession session, int purchaseId, List<Func<Task>> emails, CancellationToken cancellationToken)
+        {
+            // The purchase has to belong to the club of the Stripe account. A purchase id of another club in the session changes nothing.
+            var purchase = await context.CourtPurchases
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.Id == purchaseId && p.ClubId == account.ClubId, cancellationToken);
+
+            if (purchase is null)
+            {
+                logger.LogWarning("Stripe event {EventId}: the court purchase {PurchaseId} does not exist in club {ClubId}.", stripeEvent.EventId, purchaseId, account.ClubId);
+                return;
+            }
+
+            switch (stripeEvent.Type)
+            {
+                case CheckoutCompleted:
+                    await courtSettlement.SettleCompletedSession(purchase, session, emails, cancellationToken);
+                    break;
+
+                case CheckoutAsyncPaymentSucceeded:
+                    await courtSettlement.Settle(purchase, paid: true, session.PaymentIntentId, emails, cancellationToken);
+                    break;
+
+                // The money is not coming: the slot is given free again (when it has not been played yet)
+                case CheckoutAsyncPaymentFailed:
+                    if (purchase.Status is CourtPurchaseStatus.AwaitingPayment or CourtPurchaseStatus.Processing)
+                    {
+                        purchase.MarkFailed();
+                        await courtSettlement.RemoveBooking(purchase, onlyUpcoming: true, cancellationToken);
+                        emails.Add(() => courtNotifier.PaymentFailed(purchase, cancellationToken));
+                        emails.Add(() => courtNotifier.NeedsAttention(purchase, CourtPurchaseAttentionReason.PaymentFailed, cancellationToken));
+                    }
+
+                    break;
+
+                // Only the payment page the purchase waits for releases the hold
+                case CheckoutExpired:
+                    if (purchase.Status == CourtPurchaseStatus.AwaitingPayment && purchase.StripeCheckoutSessionId == session.Id)
+                        await courtSettlement.ReleaseHold(purchase, cancellationToken);
+
+                    break;
+            }
+        }
+
+        private async Task HandleCourtPurchaseRefund(CourtPurchase purchase, List<Func<Task>> emails, CancellationToken cancellationToken)
+        {
+            if (purchase.Status is not (CourtPurchaseStatus.Paid or CourtPurchaseStatus.Processing or CourtPurchaseStatus.Disputed or CourtPurchaseStatus.Cancelled or CourtPurchaseStatus.Compensated))
+                return;
+
+            // A cancelled or compensated purchase was refunded by the treasurer on purpose, there is nothing to look at
+            var wasCompensated = purchase.Status == CourtPurchaseStatus.Compensated;
+            var onPurpose = wasCompensated || purchase.Status == CourtPurchaseStatus.Cancelled;
+            purchase.MarkRefunded();
+            await courtSettlement.RemoveBooking(purchase, onlyUpcoming: true, cancellationToken);
+
+            if (wasCompensated)
+                await TakeBackCompensation(purchase, emails, cancellationToken);
+            if (!onPurpose)
+                emails.Add(() => courtNotifier.NeedsAttention(purchase, CourtPurchaseAttentionReason.Refunded, cancellationToken));
+        }
+
+        /// <summary>
+        /// The money of a compensated purchase goes back to the buyer: the credits granted for the removed booking are taken back,
+        /// as far as the buyer still has them. The treasurers are told about the rest.
+        /// </summary>
+        private async Task TakeBackCompensation(CourtPurchase purchase, List<Func<Task>> emails, CancellationToken cancellationToken)
+        {
+            if (purchase is not { GrantedCompensationCredits: > 0, MemberId: { } buyerId })
+                return;
+
+            await context.LockCourts(purchase.ClubId, cancellationToken);
+            var balance = await context.GetCreditBalance(purchase.ClubId, buyerId, cancellationToken);
+            var takeBack = Math.Min(purchase.GrantedCompensationCredits, Math.Max(0, balance));
+            if (takeBack > 0)
+                context.Add(new BookingCreditGrant(purchase.ClubId, buyerId, -takeBack, BookingCreditReason.BookingRemovedByClub, null, null));
+
+            if (takeBack < purchase.GrantedCompensationCredits)
+                emails.Add(() => courtNotifier.NeedsAttention(purchase, CourtPurchaseAttentionReason.CompensationNotTakenBack, cancellationToken));
+        }
+
+        private async Task<CourtPurchase?> FindPurchaseByPayment(ClubPaymentAccount account, string? paymentIntentId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(paymentIntentId))
+                return null;
+
+            return await context.CourtPurchases
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.StripePaymentIntentId == paymentIntentId && p.ClubId == account.ClubId, cancellationToken);
         }
 
         private async Task<MembershipOrder?> FindOrderByPayment(ClubPaymentAccount account, string? paymentIntentId, CancellationToken cancellationToken)

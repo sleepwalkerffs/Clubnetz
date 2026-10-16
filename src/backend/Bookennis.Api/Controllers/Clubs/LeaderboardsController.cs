@@ -12,6 +12,7 @@ namespace Bookennis.Api.Controllers.Clubs;
 public class LeaderboardsController(IMediator mediator, IUserAccessor userAccessor) : ClubControllerBase
 {
     [HttpGet]
+    [Authorize(AuthorizationPolicies.ActiveMember)]
     public Task<GetLeaderboardResult> GetLeaderboard(CancellationToken cancellationToken)
         => mediator.Send(new GetLeaderboard(userAccessor.GetUserId()), cancellationToken);
 

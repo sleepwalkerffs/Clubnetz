@@ -27,11 +27,37 @@ public abstract class DeleteBookingsNotificationHandler<T>(
 
     public async Task Handle(DomainEvent<T> notification, CancellationToken cancellationToken)
     {
-        var user = await context.Users.FindRequiredAsync(userAccessor.GetUserId(), cancellationToken);
         var intersectingBookings = await QueryBookingsToBeDeleted(notification, cancellationToken);
+        if (intersectingBookings.Count == 0)
+            return;
+
+        // Background jobs (e.g. a bought slot booked again by the Stripe webhook) have no user
+        var deletedBy = userAccessor.TryGetUserId(out var userId)
+            ? (await context.Users.FindRequiredAsync(userId, cancellationToken)).FullName
+            : "";
+
+        // Bought slots lose their booking: a paid one is compensated with credits (NotifyBoughtBookingsRemoved), its buyer gets that
+        // email instead of the one about the deleted booking
+        var deletedIds = intersectingBookings.ConvertAll(b => b.Booking.Id);
+        var boughtPurchases = await context.CourtPurchases
+            .Where(p => p.BookingId != null && deletedIds.Contains(p.BookingId.Value) && Domain.CourtSales.CourtPurchase.ActiveStatuses.Contains(p.Status))
+            .Select(p => new { p.Id, BookingId = p.BookingId!.Value, p.Status })
+            .ToListAsync(cancellationToken);
+        var removals = boughtPurchases.ConvertAll(p =>
+        {
+            var deleted = intersectingBookings.First(b => b.Booking.Id == p.BookingId);
+            return new CourtSales.BoughtBookingRemoval(p.Id, CourtSales.BoughtBookingRemoval.ReasonKeyFor(deleted.ReasonKey), deleted.ReasonFormatArg);
+        });
 
         foreach (var intersectingBooking in intersectingBookings)
         {
+            if (boughtPurchases.Any(p => p.BookingId == intersectingBooking.Booking.Id && p.Status == Domain.CourtSales.CourtPurchaseStatus.Paid))
+            {
+                await pushNotifier.BookingDeleted(intersectingBooking.Booking.Id, cancellationToken);
+                context.Bookings.Remove(intersectingBooking.Booking);
+                continue;
+            }
+
             var playerIds = await context.BookingPlayers
                 .Where(p => p.Booking.Id == intersectingBooking.Booking.Id)
                 .Select(p => p.MemberId)
@@ -52,7 +78,7 @@ public abstract class DeleteBookingsNotificationHandler<T>(
                     new BookingVariables(
                         intersectingBooking.Booking.Interval.From.AddTimeZoneInfo(intersectingBooking.Booking.TimeZoneInfoId).ToString(culture),
                         intersectingBooking.CourtName,
-                        user.FullName,
+                        deletedBy,
                         reason));
 
                 await mediator.Send(
@@ -65,6 +91,9 @@ public abstract class DeleteBookingsNotificationHandler<T>(
         }
 
         await context.SaveChangesAsync(cancellationToken);
+
+        if (removals.Count > 0)
+            await mediator.Send(new CourtSales.NotifyBoughtBookingsRemoved(removals), cancellationToken);
     }
 
     protected abstract Task<List<DeletedBookings>> QueryBookingsToBeDeleted(DomainEvent<T> notification, CancellationToken cancellationToken);

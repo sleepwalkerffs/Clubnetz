@@ -120,17 +120,8 @@
   <data name="BookingInThePast" xml:space="preserve">
     <value>Es kann nicht in der Vergangenheit gebucht werden</value>
   </data>
-  <data name="CannotBookInAdvanceAsGuest" xml:space="preserve">
-    <value>Gäste können nicht zweimal im vorhinein buchen</value>
-  </data>
   <data name="CannotBookInAdvanceTwice" xml:space="preserve">
     <value>Benutzer {0} kann nicht zweimal im vorhinein reservieren</value>
-  </data>
-  <data name="CannotBookWithGuestMembers" xml:space="preserve">
-    <value>Klubmitglieder können nicht mit Gästen buchen</value>
-  </data>
-  <data name="CannotBookWithinPrimeTimeAsGuest" xml:space="preserve">
-    <value>Gäste können nicht während der prime time buchen</value>
   </data>
   <data name="CannotDeleteBookingFromThePast" xml:space="preserve">
     <value>Buchungen in der vergangenheit können nicht gelöscht werden</value>
@@ -158,12 +149,6 @@
   </data>
   <data name="ExternalLoginExists" xml:space="preserve">
     <value>Benutzer mit dem externen login besteht bereits</value>
-  </data>
-  <data name="GuestCardConsumed" xml:space="preserve">
-    <value>Es gibt keine freien buchungen mehr.</value>
-  </data>
-  <data name="GuestCardSetupIncorrectly" xml:space="preserve">
-    <value>Der Code {0} passt nicht mit dem Club {1} zusammen.</value>
   </data>
   <data name="InvalidAmountOfPlayers" xml:space="preserve">
     <value>Ungültige Anzahl an Spielern</value>
@@ -644,5 +629,80 @@
   </data>
   <data name="BookingsToRemoveChanged" xml:space="preserve">
     <value>Die Buchungen auf den gewählten Plätzen haben sich inzwischen geändert. Bitte prüfe die Auswahl erneut.</value>
+  </data>
+  <data name="CourtSalePlayModeRequired" xml:space="preserve">
+    <value>Wähle die Spielart der gekauften Buchungen, bevor du den Platzverkauf einschaltest.</value>
+  </data>
+  <data name="CourtSaleInvalidTimeZone" xml:space="preserve">
+    <value>Die Zeitzone ist unbekannt.</value>
+  </data>
+  <data name="CourtSaleInvalidMaxBookingMinutes" xml:space="preserve">
+    <value>Die längste buchbare Zeit muss zwischen {0} und {1} Minuten liegen, in Schritten von 30 Minuten.</value>
+  </data>
+  <data name="CourtSaleInvalidMaxDaysInAdvance" xml:space="preserve">
+    <value>Plätze können zwischen {0} und {1} Tagen im Voraus gekauft werden.</value>
+  </data>
+  <data name="CourtSaleInvalidMaxUpcomingBookings" xml:space="preserve">
+    <value>Die Anzahl der offenen gekauften Buchungen pro Mitglied muss zwischen {0} und {1} liegen.</value>
+  </data>
+  <data name="CourtPriceRuleWeekdayRequired" xml:space="preserve">
+    <value>Wähle mindestens einen Wochentag.</value>
+  </data>
+  <data name="CourtPriceRuleInvalidTime" xml:space="preserve">
+    <value>Der Beginn muss vor dem Ende liegen, beide zur vollen oder halben Stunde.</value>
+  </data>
+  <data name="CourtPriceRuleInvalidPrice" xml:space="preserve">
+    <value>Der Preis darf nicht negativ sein.</value>
+  </data>
+  <data name="CourtPriceRuleNameTooLong" xml:space="preserve">
+    <value>Der Name darf höchstens {0} Zeichen lang sein.</value>
+  </data>
+  <data name="CourtPriceRulesOverlap" xml:space="preserve">
+    <value>Diese Zeiten überschneiden sich mit einem anderen Preis: {1}–{2} {0}</value>
+  </data>
+  <data name="CourtPurchaseInvalidStatus" xml:space="preserve">
+    <value>Dieser Kauf kann nicht mehr geändert werden (Status: {0}).</value>
+  </data>
+  <data name="BookingCreditCountInvalid" xml:space="preserve">
+    <value>Gib eine Anzahl an Guthaben ungleich 0 ein.</value>
+  </data>
+  <data name="BookingCreditNoteTooLong" xml:space="preserve">
+    <value>Die Notiz darf höchstens {0} Zeichen lang sein.</value>
+  </data>
+  <data name="CourtSalesNotEnabled" xml:space="preserve">
+    <value>Der Verein verkauft keine Platzzeiten.</value>
+  </data>
+  <data name="AlreadyEnrolled" xml:space="preserve">
+    <value>Du bist Mitglied dieser Saison und buchst kostenlos.</value>
+  </data>
+  <data name="CourtNotForSale" xml:space="preserve">
+    <value>Diese Zeit ist nicht zu kaufen.</value>
+  </data>
+  <data name="CourtPurchaseDurationInvalid" xml:space="preserve">
+    <value>Eine gekaufte Zeit beginnt zur vollen oder halben Stunde und dauert ein Vielfaches von 30 Minuten, höchstens {0} Minuten.</value>
+  </data>
+  <data name="CourtPurchaseTooFarInAdvance" xml:space="preserve">
+    <value>Plätze können höchstens {0} Tage im Voraus gekauft werden.</value>
+  </data>
+  <data name="CourtPurchaseLimitReached" xml:space="preserve">
+    <value>Du hast schon {0} offene gekaufte Buchung(en). Die nächste kannst du danach kaufen.</value>
+  </data>
+  <data name="BookingIsBought" xml:space="preserve">
+    <value>Diese Buchung wurde gekauft und kann hier nicht geändert oder gelöscht werden. Der Kassier des Vereins kann den Kauf stornieren.</value>
+  </data>
+  <data name="BookingCreditBalanceTooLow" xml:space="preserve">
+    <value>Das Mitglied hat nur noch {0} Guthaben.</value>
+  </data>
+  <data name="CourtPurchaseRequiresMember" xml:space="preserve">
+    <value>Nur Mitglieder des Vereins können Platzzeiten kaufen.</value>
+  </data>
+  <data name="CannotBuyWithinPrimeTime" xml:space="preserve">
+    <value>Der Verein verkauft keine Zeiten in der Primetime.</value>
+  </data>
+  <data name="CourtSalePlayModeCanOverbook" xml:space="preserve">
+    <value>Diese Spielart kann überbuchen und ist für gekaufte Zeiten nicht möglich.</value>
+  </data>
+  <data name="CourtSalePlayModeHasFixedDuration" xml:space="preserve">
+    <value>Diese Spielart hat eine feste Dauer und ist für gekaufte Zeiten nicht möglich.</value>
   </data>
 </root>

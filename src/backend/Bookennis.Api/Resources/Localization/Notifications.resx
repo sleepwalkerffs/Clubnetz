@@ -81,4 +81,67 @@
   <data name="Membership_Method_Other" xml:space="preserve">
     <value>Other</value>
   </data>
+  <data name="CourtPurchase_Reason_PaymentFailed" xml:space="preserve">
+    <value>The SEPA direct debit for a bought court did not go through. The booking was removed if it was not over yet.</value>
+  </data>
+  <data name="CourtPurchase_Reason_Refunded" xml:space="preserve">
+    <value>The payment for a bought court was refunded in Stripe. The booking was removed if it was not over yet.</value>
+  </data>
+  <data name="CourtPurchase_Reason_Disputed" xml:space="preserve">
+    <value>The payment for a bought court was disputed at the bank. Please answer the dispute in your Stripe dashboard. The booking stays.</value>
+  </data>
+  <data name="CourtPurchase_Reason_UnexpectedPayment" xml:space="preserve">
+    <value>A payment arrived for a court purchase that was already cancelled or ended. Please check it in your Stripe dashboard and refund it if needed.</value>
+  </data>
+  <data name="CourtPurchase_Reason_PaidWithoutSlot" xml:space="preserve">
+    <value>A payment arrived after the hold of the court had expired, and the court has been booked by somebody else in the meantime. The purchase is marked as paid without a booking: please refund it in your Stripe dashboard or arrange another time with the buyer.</value>
+  </data>
+  <data name="CourtPurchase_Paid_Online" xml:space="preserve">
+    <value>{0} online</value>
+  </data>
+  <data name="CourtPurchase_Paid_Credit" xml:space="preserve">
+    <value>1 booking credit</value>
+  </data>
+  <data name="CourtPurchase_Paid_CreditAndOnline" xml:space="preserve">
+    <value>1 booking credit + {0} online</value>
+  </data>
+  <data name="CourtPurchase_Paid_Free" xml:space="preserve">
+    <value>free</value>
+  </data>
+  <data name="CourtPurchase_Paid_Pending" xml:space="preserve">
+    <value>not paid yet</value>
+  </data>
+  <data name="CourtPurchase_Checkout_CreditUsed" xml:space="preserve">
+    <value>1 booking credit pays for the first hour</value>
+  </data>
+  <data name="CourtPurchase_Reason_BookingRemoved" xml:space="preserve">
+    <value>The booking of a bought court was removed because the court was blocked, set inactive or overbooked. Its SEPA direct debit has not settled yet, so the buyer got no booking credits: please arrange another time with the buyer, give credits on the Court sales page or refund the payment in your Stripe dashboard once it arrived.</value>
+  </data>
+  <data name="CourtPurchase_Reason_CreditNoLongerAvailable" xml:space="preserve">
+    <value>A payment arrived for a court purchase whose hold had expired. Its booking credit was used for something else in the meantime, so only the part paid online is covered. Please decide with the buyer: refund the payment in your Stripe dashboard or ask for the rest.</value>
+  </data>
+  <data name="CourtPurchase_Compensated_Overbooked" xml:space="preserve">
+    <value>The club needs the court for {0}.</value>
+  </data>
+  <data name="CourtPurchase_Compensated_CourtBlocked" xml:space="preserve">
+    <value>The court is closed at that time ({0}).</value>
+  </data>
+  <data name="CourtPurchase_Compensated_CourtInactive" xml:space="preserve">
+    <value>The court is closed at that time.</value>
+  </data>
+  <data name="CourtPurchase_Credits_None" xml:space="preserve">
+    <value>no booking credits (the court was free)</value>
+  </data>
+  <data name="CourtPurchase_Credits_One" xml:space="preserve">
+    <value>1 booking credit</value>
+  </data>
+  <data name="CourtPurchase_Credits_Many" xml:space="preserve">
+    <value>{0} booking credits</value>
+  </data>
+  <data name="CourtPurchase_Reason_CompensationNotTakenBack" xml:space="preserve">
+    <value>A court purchase was compensated with booking credits because the club needed the court, and its payment was refunded or disputed afterwards. The buyer already used some of these credits, so they could not all be taken back. Please check the buyer's credits on the Court sales page.</value>
+  </data>
+  <data name="CourtPurchase_CompensationTakenBack" xml:space="preserve">
+    <value>Payment of the removed booking was refunded</value>
+  </data>
 </root>

@@ -70,38 +70,11 @@ namespace Bookennis.Client.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Guests cannot book in advance twice.
-        /// </summary>
-        public static string CannotBookInAdvanceAsGuest {
-            get {
-                return ResourceManager.GetString("CannotBookInAdvanceAsGuest", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to User {0} cannot book twice in advance on a day.
         /// </summary>
         public static string CannotBookInAdvanceTwice {
             get {
                 return ResourceManager.GetString("CannotBookInAdvanceTwice", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Club members cannot book with guests..
-        /// </summary>
-        public static string CannotBookWithGuestMembers {
-            get {
-                return ResourceManager.GetString("CannotBookWithGuestMembers", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Guests cannot book during prime time hours.
-        /// </summary>
-        public static string CannotBookWithinPrimeTimeAsGuest {
-            get {
-                return ResourceManager.GetString("CannotBookWithinPrimeTimeAsGuest", resourceCulture);
             }
         }
         
@@ -174,24 +147,6 @@ namespace Bookennis.Client.Localization {
         public static string ExternalLoginExists {
             get {
                 return ResourceManager.GetString("ExternalLoginExists", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There are no more available bookings.
-        /// </summary>
-        public static string GuestCardConsumed {
-            get {
-                return ResourceManager.GetString("GuestCardConsumed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The code {0} does not match the club {1}.
-        /// </summary>
-        public static string GuestCardSetupIncorrectly {
-            get {
-                return ResourceManager.GetString("GuestCardSetupIncorrectly", resourceCulture);
             }
         }
         

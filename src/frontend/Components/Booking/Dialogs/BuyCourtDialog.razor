@@ -1,0 +1,210 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.CourtSales
+@using Bookennis.Client.Pages.ClubShell.Club.CourtSales
+@using Bookennis.Client.Services.Store.CourtSales
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.CourtSales
+
+@* A member who is not enrolled buys a free slot: duration, live price, credit, then pay (Stripe), use a credit or book for free. *@
+
+<BaseDialog SubmitFunc="Submit" Title="@L["Buy_Title"]" SubmitCaption="@SubmitCaption" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@CanSubmit" Loading="@submitting">
+    <div class="buy">
+        <div class="buy-summary">
+            <div class="buy-summary__date">
+                <span class="buy-summary__weekday">@Date.ToString("ddd", CultureInfo.CurrentCulture)</span>
+                <span class="buy-summary__day">@Date.Day</span>
+                <span class="buy-summary__month">@Date.ToString("MMM", CultureInfo.CurrentCulture)</span>
+            </div>
+            <div class="buy-summary__text">
+                <div class="buy-summary__time">@From.ToString("HH:mm")–@To.ToString("HH:mm")</div>
+                <div class="buy-summary__meta">📍 @Court.Name</div>
+            </div>
+        </div>
+
+        <ChoiceChips TItem="int" Label="@L["Buy_Duration"]" Items="@Durations" Value="@minutes" ValueChanged="OnDurationChanged" TextFunc="@DurationText"
+                     Disabled="@submitting" />
+
+        <div class="buy-quote" aria-live="polite">
+            @if (quote is null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else if (!quote.IsForSale)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true">@L[$"QuoteReason_{quote.Reason ?? CourtSaleQuoteUnavailableReason.NotForSale}"]</MudAlert>
+            }
+            else
+            {
+                @foreach (var line in quote.Lines)
+                {
+                    <div class="buy-quote__row">
+                        <span>@CourtSalesHelpers.Time(line.From)–@CourtSalesHelpers.Time(line.To)@(line.RuleName is { Length: > 0 } name ? $" · {name}" : null)</span>
+                        <span class="buy-quote__muted">@CourtSalesHelpers.PerHour(L, line.PricePerHourCents)</span>
+                    </div>
+                }
+                <div class="buy-quote__row buy-quote__row--sum">
+                    <span>@L["Buy_Price"]</span>
+                    <span>@(quote.PriceCents == 0 ? L["Free"] : CourtSalesHelpers.Amount(quote.PriceCents))</span>
+                </div>
+                @if (quote.CreditUsed)
+                {
+                    <div class="buy-quote__row buy-quote__row--credit">
+                        <span>🎟️ @L[minutes > Options.MinutesCoveredByCredit ? "Buy_CreditFirstHour" : "Buy_CreditUsed"]</span>
+                        <span>− @CourtSalesHelpers.Amount(quote.PriceCents - quote.AmountDueCents)</span>
+                    </div>
+                }
+                <div class="buy-quote__row buy-quote__row--due">
+                    <span>@L["Buy_Due"]</span>
+                    <span>@CourtSalesHelpers.Amount(quote.AmountDueCents)</span>
+                </div>
+
+                @if (NeedsOnlinePayment && !Options.IsOnlinePaymentAvailable)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true">@L["Buy_OnlineUnavailable"]</MudAlert>
+                }
+                else if (NeedsOnlinePayment)
+                {
+                    <div class="buy-quote__hint">🔒 @L["Buy_StripeHint"]</div>
+                }
+            }
+        </div>
+
+        <div class="buy-quote__hint">@L["Buy_NoCancelHint"]</div>
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter, EditorRequired] public CourtResult Court { get; set; } = null!;
+    [Parameter, EditorRequired] public DateOnly Date { get; set; }
+
+    /// <summary>Local start time of the slot that was clicked.</summary>
+    [Parameter, EditorRequired] public TimeSpan Start { get; set; }
+
+    [Parameter, EditorRequired] public CourtSaleOptionsResult Options { get; set; } = null!;
+
+    /// <summary>The longest the slot can last on this court: up to closing time or the next booking or blocking.</summary>
+    [Parameter] public int MaxMinutes { get; set; } = 240;
+
+    [Inject] private ICourtSalesStore Store { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<CourtSalesLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private int minutes;
+    private CourtPurchaseQuoteResult? quote;
+    private bool submitting;
+    private CancellationTokenSource? quoteRequest;
+
+    private DateTimeOffset From => new(Date.ToDateTime(TimeOnly.FromTimeSpan(Start)));
+    private DateTimeOffset To => From.AddMinutes(minutes);
+
+    private List<int> Durations
+    {
+        get
+        {
+            var max = Math.Min(Options.MaxBookingMinutes, MaxMinutes);
+            var list = new List<int>();
+            for (var m = 30; m <= max; m += 30)
+                list.Add(m);
+            return list.Count == 0 ? [30] : list;
+        }
+    }
+
+    private bool NeedsOnlinePayment => quote is { IsForSale: true, AmountDueCents: > 0 };
+
+    private bool CanSubmit => !submitting && quote is { IsForSale: true } && (!NeedsOnlinePayment || Options.IsOnlinePaymentAvailable);
+
+    private string SubmitCaption => quote switch
+    {
+        { IsForSale: true, AmountDueCents: > 0 } => string.Format(L["Buy_Pay"], CourtSalesHelpers.Amount(quote.AmountDueCents)),
+        { IsForSale: true, CreditUsed: true } => L["Buy_WithCredit"],
+        { IsForSale: true } => L["Buy_Free"],
+        _ => L["Buy_Book"],
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var durations = Durations;
+        minutes = durations.Contains(60) ? 60 : durations.Last();
+        await LoadQuote();
+    }
+
+    private string DurationText(int value) => value < 60
+        ? string.Format(L["Minutes"], value)
+        : string.Format(L["Hours"], (value / 60m).ToString("0.#", CultureInfo.CurrentCulture));
+
+    private async Task OnDurationChanged(int value)
+    {
+        minutes = value;
+        await LoadQuote();
+    }
+
+    private async Task LoadQuote()
+    {
+        // Only the answer of the last request counts when the duration is changed quickly
+        quoteRequest?.Cancel();
+        var request = quoteRequest = new CancellationTokenSource();
+        quote = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Store.GetQuote(Court.CourtId, From, To, request.Token);
+            if (request.IsCancellationRequested)
+                return;
+
+            if (result is { Success: true, Dto: not null })
+                quote = result.Dto;
+            else
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer request replaced this one
+        }
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        submitting = true;
+        try
+        {
+            var result = await Store.StartPurchase(Court.CourtId, From, To);
+            if (result is not { Success: true, Dto: not null })
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return null;
+            }
+
+            if (result.Dto.CheckoutUrl is { } url)
+            {
+                // The payment page of Stripe; it comes back to the booking page with checkout=success|cancelled
+                NavigationManager.NavigateTo(url, forceLoad: true);
+                return null;
+            }
+
+            Snackbar.Add(L[quote?.CreditUsed == true ? "Buy_BookedWithCredit" : "Buy_Booked"], Severity.Success);
+            return DialogResult.Ok(result.Dto.PurchaseId);
+        }
+        finally
+        {
+            submitting = false;
+        }
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        quoteRequest?.Cancel();
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

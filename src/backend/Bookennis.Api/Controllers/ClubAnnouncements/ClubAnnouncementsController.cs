@@ -19,12 +19,22 @@ public class ClubAnnouncementsController(IMediator mediator, IUserAccessor userA
     [HttpGet]
     [Authorize(AuthorizationPolicies.ClubMember)]
     public async Task<GetClubAnnouncementsResult> GetClubAnnouncements(int clubId, [FromQuery] bool includeExpired, [FromQuery] int? take, CancellationToken cancellationToken)
-        => await mediator.Send(new GetClubAnnouncements(clubId, await CanManage(), includeExpired, take), cancellationToken);
+    {
+        var result = await mediator.Send(new GetClubAnnouncements(clubId, await CanManage(), includeExpired, take), cancellationToken);
+
+        // Members who are not active don't see the names of other members, also not of the author
+        return await authorizationService.IsActiveMember(User)
+            ? result
+            : result with { Announcements = result.Announcements.Select(a => a with { CreatedByName = null }).ToList() };
+    }
 
     [HttpGet("{clubAnnouncementId:int}")]
     [Authorize(AuthorizationPolicies.ClubMember)]
     public async Task<ClubAnnouncementDto> GetClubAnnouncement(int clubId, int clubAnnouncementId, CancellationToken cancellationToken)
-        => await mediator.Send(new GetClubAnnouncement(clubId, clubAnnouncementId, await CanManage()), cancellationToken);
+    {
+        var result = await mediator.Send(new GetClubAnnouncement(clubId, clubAnnouncementId, await CanManage()), cancellationToken);
+        return await authorizationService.IsActiveMember(User) ? result : result with { CreatedByName = null };
+    }
 
     [HttpPost]
     [Authorize(AuthorizationPolicies.ClubAnnouncementManager)]
