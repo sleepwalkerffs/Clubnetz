@@ -139,7 +139,11 @@
                                     <span class="email-preview__subject-text">@preview.Subject</span>
                                 </div>
                                 <div class="email-preview__mail">
-                                    <div class="email-preview__header">@preview.Subject</div>
+                                    <div class="email-preview__header">
+                                        <span class="email-preview__icon" aria-hidden="true">@(emailType is { } previewType ? EmailTypeInfo.Emoji(previewType) : "✉️")</span>
+                                        <span class="email-preview__title">@preview.Subject</span>
+                                    </div>
+                                    <div class="email-preview__accent"></div>
                                     @* Sanitized by the backend (ClubEmailRenderer) *@
                                     <div class="email-preview__body">@((MarkupString)preview.Html)</div>
                                 </div>

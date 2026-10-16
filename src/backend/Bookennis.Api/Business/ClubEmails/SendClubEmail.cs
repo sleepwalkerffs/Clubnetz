@@ -5,8 +5,11 @@ using Bookennis.Api.Infrastructure;
 using Bookennis.Domain.Clubs.EmailTemplates;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.User;
+using Bookennis.Shared.Controller.ClubEmailTemplates;
 using Fusonic.Extensions.Email;
 using Microsoft.EntityFrameworkCore;
+using ClubEmailType = Bookennis.Domain.Clubs.EmailTemplates.ClubEmailType;
+using SharedClubEmailType = Bookennis.Shared.Controller.ClubEmailTemplates.ClubEmailType;
 
 namespace Bookennis.Api.Business.ClubEmails;
 
@@ -65,7 +68,7 @@ public record SendClubEmail(
                     request.Recipient.ToLowerInvariant(),
                     request.RecipientDisplayName,
                     request.Language.ToCultureInfo(),
-                    new ClubEmailViewModel(rendered.Subject, rendered.BodyHtml),
+                    new ClubEmailViewModel(rendered.Subject, rendered.BodyHtml, club.Name, ClubEmailTypeEmoji.For((SharedClubEmailType)request.Type)),
                     // Fusonic uses the subject key as subject if there is no resource for it, and runs it through string.Format.
                     SubjectKey: rendered.Subject.Replace("{", "{{").Replace("}", "}}"),
                     BccRecipient: appSettings.BccRecipient,

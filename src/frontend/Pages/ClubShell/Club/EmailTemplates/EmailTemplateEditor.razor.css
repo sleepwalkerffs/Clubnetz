@@ -192,83 +192,129 @@
 
 .email-preview__mail {
     overflow: hidden;
-    border-radius: 12px;
-    border: 1px solid #E2E8F0;
+    border-radius: 18px;
     background: #FFFFFF;
-    color: #0F172A;
-    font-family: Inter, Roboto, Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    line-height: 1.6;
+    box-shadow: 0 12px 32px rgba(6, 78, 59, 0.10);
+    color: #1E293B;
+    font-family: Inter, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
 }
 
 .email-preview__header {
-    padding: 20px 24px;
-    background: #064E3B;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px 28px;
+    background: linear-gradient(135deg, #064E3B 0%, #065F46 55%, #047857 100%);
+}
+
+.email-preview__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: #ECFDF5;
+    font-size: 24px;
+}
+
+.email-preview__title {
     color: #FFFFFF;
-    font-size: 18px;
+    font-size: 21px;
     font-weight: 800;
-    text-align: center;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+}
+
+.email-preview__accent {
+    height: 4px;
+    background: #BEF264;
 }
 
 .email-preview__body {
-    padding: 24px;
+    padding: 28px;
     overflow-wrap: anywhere;
 }
 
 .email-preview__body ::deep p {
-    margin: 0 0 16px 0;
+    margin: 0 0 18px 0;
+}
+
+.email-preview__body ::deep strong {
+    color: #0F172A;
 }
 
 .email-preview__body ::deep h1,
 .email-preview__body ::deep h2,
 .email-preview__body ::deep h3,
 .email-preview__body ::deep h4 {
-    margin: 24px 0 12px 0;
-    font-weight: 700;
+    margin: 28px 0 10px 0;
+    font-weight: 800;
     line-height: 1.3;
-    color: #0F172A;
+    letter-spacing: -0.01em;
+    color: #064E3B;
 }
 
-.email-preview__body ::deep h1 { font-size: 20px; }
-.email-preview__body ::deep h2 { font-size: 18px; }
-.email-preview__body ::deep h3 { font-size: 16px; }
-.email-preview__body ::deep h4 { font-size: 14px; }
+.email-preview__body ::deep h1 { font-size: 22px; }
+.email-preview__body ::deep h2 { font-size: 19px; }
+.email-preview__body ::deep h3 { font-size: 17px; }
+.email-preview__body ::deep h4 { font-size: 15px; }
 
 .email-preview__body ::deep ul,
 .email-preview__body ::deep ol {
-    margin: 0 0 16px 0;
-    padding-left: 20px;
+    margin: 0 0 22px 0;
+    padding: 14px 20px 14px 38px;
+    border: 1px solid #DCEBE2;
+    border-radius: 14px;
+    background: #F3F8F5;
 }
 
 .email-preview__body ::deep ul { list-style: disc; }
 .email-preview__body ::deep ol { list-style: decimal; }
 
+.email-preview__body ::deep li {
+    margin: 4px 0;
+    line-height: 1.55;
+}
+
 .email-preview__body ::deep a {
     color: #047857;
+    font-weight: 600;
 }
 
 .email-preview__body ::deep a.btn {
     display: inline-block;
-    margin: 8px 0 16px 0;
-    padding: 12px 24px;
+    margin: 6px 0;
+    padding: 14px 28px;
     border-radius: 12px;
     background: #059669;
+    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.28);
     color: #FFFFFF;
-    font-weight: 600;
+    font-weight: 700;
+    line-height: 1.2;
     text-decoration: none;
 }
 
 .email-preview__body ::deep blockquote {
-    margin: 0 0 16px 0;
-    padding: 8px 16px;
-    border-left: 3px solid #059669;
-    color: #475569;
+    margin: 0 0 22px 0;
+    padding: 12px 18px;
+    border-left: 4px solid #84CC16;
+    border-radius: 0 12px 12px 0;
+    background: #F7FEE7;
+    color: #334155;
+}
+
+.email-preview__body ::deep blockquote p {
+    margin: 0;
 }
 
 .email-preview__body ::deep hr {
     border: none;
     border-top: 1px solid #E2E8F0;
-    margin: 24px 0;
+    margin: 28px 0;
 }
 
 .email-preview__body ::deep img {
@@ -277,8 +323,10 @@
 
 .email-preview__body ::deep img.badge-image {
     display: block;
-    margin: 0 auto 16px auto;
+    margin: 8px auto 18px auto;
     width: 96px;
     height: 96px;
+    border: 4px solid #BEF264;
     border-radius: 50%;
+    box-shadow: 0 8px 20px rgba(6, 78, 59, 0.18);
 }
