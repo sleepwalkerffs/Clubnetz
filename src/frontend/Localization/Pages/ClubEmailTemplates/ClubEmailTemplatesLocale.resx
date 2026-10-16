@@ -463,4 +463,13 @@
   <data name="Variable_buyer" xml:space="preserve">
     <value>Name of the buyer</value>
   </data>
+  <data name="Type_CourtPurchaseCompensated" xml:space="preserve">
+    <value>Bought court had to make room</value>
+  </data>
+  <data name="TypeDescription_CourtPurchaseCompensated" xml:space="preserve">
+    <value>Sent to the buyer when the club needs a bought court (overbooked, court blocked or set inactive): the booking was removed and the buyer got booking credits.</value>
+  </data>
+  <data name="Variable_credits" xml:space="preserve">
+    <value>Credits the buyer got</value>
+  </data>
 </root>

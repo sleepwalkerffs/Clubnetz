@@ -115,9 +115,33 @@
     <value>1 Buchungsguthaben bezahlt die erste Stunde</value>
   </data>
   <data name="CourtPurchase_Reason_BookingRemoved" xml:space="preserve">
-    <value>Die Buchung eines gekauften Platzes wurde entfernt, weil der Platz gesperrt, deaktiviert oder überbucht wurde. Der Kauf bleibt bezahlt: bitte erstattet ihn in eurem Stripe-Dashboard (oder gebt ein Buchungsguthaben) oder vereinbart mit der Person einen anderen Termin.</value>
+    <value>Die Buchung eines gekauften Platzes wurde entfernt, weil der Platz gesperrt, deaktiviert oder überbucht wurde. Die SEPA-Lastschrift ist noch nicht abgeschlossen, daher hat die Käuferin oder der Käufer kein Buchungsguthaben bekommen: Bitte vereinbart eine andere Zeit, gebt auf der Seite Platzverkauf Guthaben oder erstattet die Zahlung in eurem Stripe-Dashboard, sobald sie eingegangen ist.</value>
   </data>
   <data name="CourtPurchase_Reason_CreditNoLongerAvailable" xml:space="preserve">
     <value>Für einen Platzkauf, dessen Reservierung abgelaufen war, ist eine Zahlung eingegangen. Das Buchungsguthaben wurde inzwischen anderweitig verwendet, daher ist nur der online bezahlte Teil gedeckt. Bitte klärt das mit der Person: erstattet die Zahlung in eurem Stripe-Dashboard oder verlangt den Rest.</value>
+  </data>
+  <data name="CourtPurchase_Compensated_Overbooked" xml:space="preserve">
+    <value>Der Verein braucht den Platz für {0}.</value>
+  </data>
+  <data name="CourtPurchase_Compensated_CourtBlocked" xml:space="preserve">
+    <value>Der Platz ist zu dieser Zeit gesperrt ({0}).</value>
+  </data>
+  <data name="CourtPurchase_Compensated_CourtInactive" xml:space="preserve">
+    <value>Der Platz ist zu dieser Zeit gesperrt.</value>
+  </data>
+  <data name="CourtPurchase_Credits_None" xml:space="preserve">
+    <value>kein Buchungsguthaben (der Platz war kostenlos)</value>
+  </data>
+  <data name="CourtPurchase_Credits_One" xml:space="preserve">
+    <value>1 Buchungsguthaben</value>
+  </data>
+  <data name="CourtPurchase_Credits_Many" xml:space="preserve">
+    <value>{0} Buchungsguthaben</value>
+  </data>
+  <data name="CourtPurchase_Reason_CompensationNotTakenBack" xml:space="preserve">
+    <value>Ein gekaufter Platz wurde mit Buchungsguthaben ersetzt, weil der Verein den Platz gebraucht hat, und die Zahlung wurde danach erstattet oder angefochten. Die Käuferin oder der Käufer hat einen Teil des Guthabens schon verwendet, daher konnte es nicht ganz zurückgenommen werden. Bitte prüft das Guthaben auf der Seite Platzverkauf.</value>
+  </data>
+  <data name="CourtPurchase_CompensationTakenBack" xml:space="preserve">
+    <value>Zahlung der entfernten Buchung wurde erstattet</value>
   </data>
 </root>

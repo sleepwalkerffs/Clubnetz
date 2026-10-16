@@ -1,6 +1,7 @@
 using Bookennis.Api.Business.CourtSales;
 using Bookennis.Api.Business.Payments;
 using Bookennis.Api.Business.Payments.Stripe;
+using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.CourtSales;
 using Bookennis.Domain.Memberships;
 using FluentAssertions;
@@ -179,6 +180,48 @@ public class CourtPurchaseStripeEventTests(TestFixture fixture) : CourtSaleTestB
         (await Purchase(purchase.Id)).Status.Should().Be(CourtPurchaseStatus.Disputed);
         (await BookingExists(purchase.BookingId)).Should().BeTrue("a dispute does not take the slot");
         await Notifier.Received(1).NeedsAttention(Arg.Any<CourtPurchase>(), CourtPurchaseAttentionReason.Disputed, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RefundOfACompensatedPurchase_TakesTheCreditsBackWithoutMail()
+    {
+        await SeedAccount();
+        var (_, memberId) = await SeedBuyer();
+        var purchase = await Compensated(memberId, "pi_comp_refund", minutes: 120);
+        Gateway.GetCharge(AccountId, "ch_comp", Arg.Any<CancellationToken>()).Returns(new StripeChargeInfo("ch_comp", "pi_comp_refund", IsFullyRefunded: true));
+
+        await Process(ProcessStripeEvent.ChargeRefunded, "ch_comp");
+
+        (await Purchase(purchase.Id)).Status.Should().Be(CourtPurchaseStatus.Refunded);
+        (await QueryAsync(ctx => ctx.GetCreditBalance(TestDataSeed.ClubId, memberId, default))).Should().Be(0, "the money went back, so the 2 credits go too");
+        await Notifier.DidNotReceiveWithAnyArgs().NeedsAttention(default!, default, default);
+    }
+
+    [Fact]
+    public async Task DisputeOfACompensatedPurchase_WhoseCreditsWereUsed_TellsTheTreasurers()
+    {
+        await SeedAccount();
+        var (_, memberId) = await SeedBuyer();
+        var purchase = await Compensated(memberId, "pi_comp_dispute", minutes: 120);
+        // One of the two credits was spent on another slot
+        await QueryAsync(ctx => CourtSaleSeed.AddPurchase(ctx, memberId, CourtSaleSeed.Tomorrow(localHour: 15), creditUsed: true));
+        Gateway.GetDispute(AccountId, "dp_comp", Arg.Any<CancellationToken>()).Returns(new StripeDisputeInfo("dp_comp", "pi_comp_dispute"));
+
+        await Process(ProcessStripeEvent.DisputeCreated, "dp_comp");
+
+        (await Purchase(purchase.Id)).Status.Should().Be(CourtPurchaseStatus.Disputed);
+        (await QueryAsync(ctx => ctx.GetCreditBalance(TestDataSeed.ClubId, memberId, default))).Should().Be(0, "the one credit left was taken back");
+        await Notifier.Received(1).NeedsAttention(Arg.Any<CourtPurchase>(), CourtPurchaseAttentionReason.CompensationNotTakenBack, Arg.Any<CancellationToken>());
+        await Notifier.Received(1).NeedsAttention(Arg.Any<CourtPurchase>(), CourtPurchaseAttentionReason.Disputed, Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>A purchase paid online whose booking the club removed: the buyer got one credit per started hour.</summary>
+    private async Task<CourtPurchase> Compensated(int memberId, string paymentIntentId, int minutes)
+    {
+        var purchase = await QueryAsync(ctx => CourtSaleSeed.AddPurchase(ctx, memberId, CourtSaleSeed.Tomorrow(minutes), paymentIntentId: paymentIntentId));
+        await SendAsync(new NotifyBoughtBookingsRemoved([new BoughtBookingRemoval(purchase.Id, "CourtPurchase_Compensated_CourtInactive", null)]));
+        Notifier.ClearReceivedCalls();
+        return await Purchase(purchase.Id);
     }
 
     [Fact]

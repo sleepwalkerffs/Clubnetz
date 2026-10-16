@@ -23,6 +23,7 @@ public static class EmailTypeInfo
         ClubEmailType.CourtPurchaseConfirmed => "🎾",
         ClubEmailType.CourtPurchaseFailed => "⚠️",
         ClubEmailType.CourtPurchaseNeedsAttention => "🧾",
+        ClubEmailType.CourtPurchaseCompensated => "🎟️",
         _ => "✉️"
     };
 

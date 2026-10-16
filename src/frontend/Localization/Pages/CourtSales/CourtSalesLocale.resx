@@ -232,7 +232,7 @@
     <value>Problems</value>
   </data>
   <data name="Filter_Cancelled" xml:space="preserve">
-    <value>Cancelled / expired</value>
+    <value>Cancelled, expired or replaced</value>
   </data>
   <data name="Sales_Sold" xml:space="preserve">
     <value>Bookings sold</value>
@@ -530,5 +530,17 @@
   </data>
   <data name="Return_PaidAfterAll" xml:space="preserve">
     <value>The payment arrived after all – the court is booked for you</value>
+  </data>
+  <data name="Status_Compensated" xml:space="preserve">
+    <value>Credits given</value>
+  </data>
+  <data name="Reason_BookingRemovedByClub" xml:space="preserve">
+    <value>Bought booking removed by the club</value>
+  </data>
+  <data name="Sales_CompensatedWith" xml:space="preserve">
+    <value>{0} credits given</value>
+  </data>
+  <data name="Sales_CompensatedWithOne" xml:space="preserve">
+    <value>1 credit given</value>
   </data>
 </root>

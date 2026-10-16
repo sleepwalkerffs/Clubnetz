@@ -56,6 +56,10 @@ else
                     {
                         <span class="detail-chip"><MudIcon Icon="@Icons.Material.Filled.Repeat" Size="Size.Small" /> @Locale["RecurringBookingIndicator"]</span>
                     }
+                    @if (booking.IsBought)
+                    {
+                        <span class="detail-chip"><MudIcon Icon="@Icons.Material.Filled.PointOfSale" Size="Size.Small" /> @Locale["BoughtIndicator"]</span>
+                    }
                 </div>
             </div>
 
@@ -79,6 +83,22 @@ else
                 </div>
             }
         </div>
+
+        @if (booking.IsBought)
+        {
+            @* Bought court time is only cancelled by a treasurer or admin on the Court sales page (the API refuses edits for everybody) *@
+            <MudAlert Severity="Severity.Info" Class="mb-4">
+                @if (CanManageCourtSales)
+                {
+                    @Locale["BoughtHintManager"]
+                    <MudLink Href="@($"clubs/{ClubId}/court-sales")" Class="ml-1">@Locale["OpenCourtSales"]</MudLink>
+                }
+                else
+                {
+                    @Locale[IsParticipantInBooking || ChildIsParticipantInBooking ? "BoughtHintBuyer" : "BoughtHintOther"]
+                }
+            </MudAlert>
+        }
 
         @if (isEditing)
         {
@@ -267,14 +287,19 @@ else
             ? AllowedPlayModes.Where(pm => pm.AllowRecurring).ToList()
             : AllowedPlayModes;
 
+    private bool CanManageCourtSales
+        => ProfileStore.IsSupportMode || ProfileStore.Roles.Any(r => r is MemberRole.Admin or MemberRole.Treasurer);
+
     private bool userIsAllowedToEdit
         => booking is not null
+        && !booking.IsBought
         && (IsParticipantInBooking
             || ChildIsParticipantInBooking
             || HasElevatedRole);
 
     private bool userIsAllowedToDelete
         => booking is not null
+        && !booking.IsBought
         && (IsParticipantInBooking
             || ChildIsParticipantInBooking
             || ProfileStore.Roles.Contains(MemberRole.Admin));

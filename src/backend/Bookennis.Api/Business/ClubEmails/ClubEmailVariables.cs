@@ -83,3 +83,6 @@ public record CourtPurchaseEmailVariables(MemberVariables Member, CourtPurchaseV
 
 /// <summary>To the treasurers: <c>Reason</c> says what happened, <c>Buyer</c> who bought the slot.</summary>
 public record CourtPurchaseNeedsAttentionEmailVariables(MemberVariables Member, CourtPurchaseVariables Purchase, string Reason, string Buyer) : ClubEmailVariables(Member);
+
+/// <summary>To the buyer: the club needed the court. <c>Reason</c> says why, <c>Credits</c> what they got back (e.g. "2 booking credits").</summary>
+public record CourtPurchaseCompensatedEmailVariables(MemberVariables Member, CourtPurchaseVariables Purchase, string Reason, string Credits) : ClubEmailVariables(Member);

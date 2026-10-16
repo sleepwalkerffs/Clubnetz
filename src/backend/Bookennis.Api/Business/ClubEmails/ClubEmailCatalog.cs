@@ -92,7 +92,13 @@ public static class ClubEmailCatalog
                 language == Language.German
                     ? "Die Zahlung wurde in Stripe erstattet. Die Buchung wurde entfernt, falls sie noch nicht vorbei war."
                     : "The payment was refunded in Stripe. The booking was removed if it was not over yet.",
-                "Erika Muster"))
+                "Erika Muster")),
+        new(ClubEmailType.CourtPurchaseCompensated, typeof(CourtPurchaseCompensatedEmailVariables),
+            language => new CourtPurchaseCompensatedEmailVariables(
+                SampleMember,
+                SampleCourtPurchase(language),
+                language == Language.German ? "Der Platz wird für ein Training gebraucht." : "The court is needed for a training.",
+                language == Language.German ? "1 Buchungsguthaben" : "1 booking credit"))
     ];
 
     public static ClubEmailDefinition Get(ClubEmailType type)

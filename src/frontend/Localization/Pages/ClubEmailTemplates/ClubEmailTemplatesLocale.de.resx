@@ -463,4 +463,13 @@
   <data name="Variable_buyer" xml:space="preserve">
     <value>Name der Person, die gekauft hat</value>
   </data>
+  <data name="Type_CourtPurchaseCompensated" xml:space="preserve">
+    <value>Gekaufter Platz musste weichen</value>
+  </data>
+  <data name="TypeDescription_CourtPurchaseCompensated" xml:space="preserve">
+    <value>Geht an die Käuferin oder den Käufer, wenn der Verein einen gekauften Platz braucht (überbucht, gesperrt oder deaktiviert): Die Buchung wurde entfernt und es gab Buchungsguthaben.</value>
+  </data>
+  <data name="Variable_credits" xml:space="preserve">
+    <value>Erhaltenes Guthaben</value>
+  </data>
 </root>

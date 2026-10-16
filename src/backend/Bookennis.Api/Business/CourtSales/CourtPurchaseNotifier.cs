@@ -32,6 +32,9 @@ public enum CourtPurchaseAttentionReason
 
     /// <summary>The money of an expired purchase with a credit arrived after the credit was spent elsewhere.</summary>
     CreditNoLongerAvailable,
+
+    /// <summary>A compensated purchase was refunded or disputed, but the buyer had already used some of the compensation credits.</summary>
+    CompensationNotTakenBack,
 }
 
 /// <summary>
@@ -48,6 +51,27 @@ public interface ICourtPurchaseNotifier
 
     /// <summary>To the treasurers and admins of the club.</summary>
     Task NeedsAttention(CourtPurchase purchase, CourtPurchaseAttentionReason reason, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// To the buyer: the club needed the court and the buyer got <see cref="CourtPurchase.CompensationCredits"/> credits.
+    /// <paramref name="removal"/> says why (see <see cref="BoughtBookingRemoval"/>).
+    /// </summary>
+    Task Compensated(CourtPurchase purchase, BoughtBookingRemoval removal, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Why the club removed a bought booking, with the key of the text in Notifications(.de).resx (<c>CourtPurchase_Compensated_...</c>)
+/// and its argument (the play mode that overbooked, the title of the blocking).
+/// </summary>
+public record BoughtBookingRemoval(int CourtPurchaseId, string ReasonKey, string? ReasonFormatArg)
+{
+    /// <summary>Maps the reason of the booking deleted email (View.Emails.BookingDeleted) to the text for the buyer.</summary>
+    public static string ReasonKeyFor(string bookingDeletedReasonKey) => bookingDeletedReasonKey switch
+    {
+        "ResonOverbooked" => "CourtPurchase_Compensated_Overbooked",
+        "ReasonCourtBlocked" => "CourtPurchase_Compensated_CourtBlocked",
+        _ => "CourtPurchase_Compensated_CourtInactive",
+    };
 }
 
 public class CourtPurchaseNotifier(AppDbContext context, IMediator mediator, AppSettings appSettings) : ICourtPurchaseNotifier
@@ -91,7 +115,20 @@ public class CourtPurchaseNotifier(AppDbContext context, IMediator mediator, App
         }
     }
 
-    private async Task SendToBuyer(CourtPurchase purchase, ClubEmailType type, CancellationToken cancellationToken)
+    public Task Compensated(CourtPurchase purchase, BoughtBookingRemoval removal, CancellationToken cancellationToken)
+        => SendToBuyer(purchase, ClubEmailType.CourtPurchaseCompensated, cancellationToken, (member, variables, culture) =>
+        {
+            var reason = removal.ReasonFormatArg is null
+                ? NotificationTexts.Get(culture, removal.ReasonKey)
+                : NotificationTexts.Get(culture, removal.ReasonKey, removal.ReasonFormatArg);
+            return new CourtPurchaseCompensatedEmailVariables(member, variables, reason, CourtPurchaseTexts.Credits(purchase.CompensationCredits ?? 0, culture));
+        });
+
+    private async Task SendToBuyer(
+        CourtPurchase purchase,
+        ClubEmailType type,
+        CancellationToken cancellationToken,
+        Func<MemberVariables, CourtPurchaseVariables, CultureInfo, ClubEmailVariables>? createVariables = null)
     {
         if (purchase.MemberId is not { } memberId)
             return;
@@ -105,10 +142,10 @@ public class CourtPurchaseNotifier(AppDbContext context, IMediator mediator, App
         var member = new MemberVariables(recipient.FirstName, recipient.LastName);
         var date = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(purchase.Interval.From, details.TimeZone).DateTime);
         var url = $"{AppUrl}/clubs/{purchase.ClubId}/booking?date={date:yyyy-MM-dd}";
+        var purchaseVariables = details.ToVariables(purchase, culture, url);
+        var variables = createVariables?.Invoke(member, purchaseVariables, culture) ?? new CourtPurchaseEmailVariables(member, purchaseVariables);
 
-        await mediator.Send(
-            new SendClubEmail(purchase.ClubId, type, recipient.Email, member.FullName, recipient.Language, new CourtPurchaseEmailVariables(member, details.ToVariables(purchase, culture, url))),
-            cancellationToken);
+        await mediator.Send(new SendClubEmail(purchase.ClubId, type, recipient.Email, member.FullName, recipient.Language, variables), cancellationToken);
     }
 
     private string AppUrl => appSettings.AppUri.AbsoluteUri.TrimEnd('/');
@@ -156,6 +193,14 @@ public class CourtPurchaseNotifier(AppDbContext context, IMediator mediator, App
 
 public static class CourtPurchaseTexts
 {
+    /// <summary>"1 booking credit", "2 booking credits", or that there were none because the court was free.</summary>
+    public static string Credits(int count, CultureInfo culture) => count switch
+    {
+        0 => NotificationTexts.Get(culture, "CourtPurchase_Credits_None"),
+        1 => NotificationTexts.Get(culture, "CourtPurchase_Credits_One"),
+        _ => NotificationTexts.Get(culture, "CourtPurchase_Credits_Many", count),
+    };
+
     /// <summary>How the slot was paid, e.g. "€28.00 online", "1 booking credit", "1 booking credit + €8.00 online", "free".</summary>
     public static string Paid(CourtPurchase purchase, CultureInfo culture)
     {

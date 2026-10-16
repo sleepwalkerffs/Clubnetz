@@ -72,6 +72,7 @@ public static class CourtSalesHelpers
         CourtPurchaseStatus.Paid => "#059669",
         CourtPurchaseStatus.Processing => "#2563EB",
         CourtPurchaseStatus.AwaitingPayment => "#D97706",
+        CourtPurchaseStatus.Compensated => "#7C3AED",
         CourtPurchaseStatus.Failed or CourtPurchaseStatus.Disputed or CourtPurchaseStatus.Refunded => "#DC2626",
         _ => "var(--mud-palette-text-secondary)",
     };
@@ -86,6 +87,7 @@ public static class CourtSalesHelpers
         CourtPurchaseStatus.Cancelled => "🚫",
         CourtPurchaseStatus.Refunded => "↩️",
         CourtPurchaseStatus.Disputed => "⚖️",
+        CourtPurchaseStatus.Compensated => "🎟️",
         _ => "•",
     };
 

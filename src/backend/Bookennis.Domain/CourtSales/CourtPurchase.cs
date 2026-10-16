@@ -25,6 +25,12 @@ public enum CourtPurchaseStatus
     Cancelled = 5,
     Refunded = 6,
     Disputed = 7,
+
+    /// <summary>
+    /// The club needed the court (overbooked, court blocked or set inactive): the booking was removed and the buyer got booking
+    /// credits instead (<see cref="CourtPurchase.CompensationCredits"/>).
+    /// </summary>
+    Compensated = 8,
 }
 
 /// <summary>Keep in sync with <c>Bookennis.Shared.Controller.CourtSales.CourtPurchasePaymentMethod</c>.</summary>
@@ -113,10 +119,38 @@ public class CourtPurchase : TenantDomainEntity, IAggregateRoot
     public DateTimeOffset? CancelledAt { get; private set; }
     public int? CancelledByMemberId { get; private set; }
 
+    /// <summary>
+    /// How many credits the buyer got back when the club removed the booking (<see cref="CourtPurchaseStatus.Compensated"/>),
+    /// including the credit the purchase used, which comes back by itself.
+    /// </summary>
+    public int? CompensationCredits { get; private set; }
+
+    /// <summary>The credits granted on top of the one that comes back by itself; taken back when the money is refunded later.</summary>
+    public int GrantedCompensationCredits => Math.Max(0, (CompensationCredits ?? 0) - (CreditUsed ? 1 : 0));
+
     public bool IsActive => ActiveStatuses.Contains(Status);
 
     /// <summary>Money was or is being paid online for the purchase: the treasurer gives it back in the Stripe dashboard.</summary>
-    public bool HasOnlinePayment => PaymentMethod == CourtPurchasePaymentMethod.Online && Status is CourtPurchaseStatus.Processing or CourtPurchaseStatus.Paid or CourtPurchaseStatus.Disputed or CourtPurchaseStatus.Cancelled or CourtPurchaseStatus.Refunded;
+    public bool HasOnlinePayment => PaymentMethod == CourtPurchasePaymentMethod.Online && Status is CourtPurchaseStatus.Processing or CourtPurchaseStatus.Paid or CourtPurchaseStatus.Disputed or CourtPurchaseStatus.Cancelled or CourtPurchaseStatus.Refunded or CourtPurchaseStatus.Compensated;
+
+    /// <summary>
+    /// What the buyer gets back when the club needs the court: one credit per started hour, nothing for a free slot.
+    /// </summary>
+    public int CreditsForCompensation
+        => PriceCents == 0 ? 0 : (int)Math.Ceiling((Interval.To - Interval.From).TotalMinutes / 60);
+
+    /// <summary>
+    /// The club removed the booking of a paid purchase. The credit the purchase used comes back by itself (the purchase no longer
+    /// holds it); the caller grants the rest of <see cref="CreditsForCompensation"/> (<see cref="GrantedCompensationCredits"/>).
+    /// </summary>
+    public void Compensate(DateTimeOffset at)
+    {
+        Require(Status == CourtPurchaseStatus.Paid);
+        Status = CourtPurchaseStatus.Compensated;
+        CompensationCredits = CreditsForCompensation;
+        CancelledAt = at;
+        BookingId = null;
+    }
 
     /// <summary>Nothing is paid online: a credit or a free rule paid for the slot. The purchase is paid right away.</summary>
     public void CompleteWithoutPayment(DateTimeOffset paidAt)
@@ -209,7 +243,7 @@ public class CourtPurchase : TenantDomainEntity, IAggregateRoot
         if (Status == CourtPurchaseStatus.Refunded)
             return;
 
-        Require(Status is CourtPurchaseStatus.Paid or CourtPurchaseStatus.Processing or CourtPurchaseStatus.Disputed or CourtPurchaseStatus.Cancelled);
+        Require(Status is CourtPurchaseStatus.Paid or CourtPurchaseStatus.Processing or CourtPurchaseStatus.Disputed or CourtPurchaseStatus.Cancelled or CourtPurchaseStatus.Compensated);
         Status = CourtPurchaseStatus.Refunded;
     }
 
@@ -220,7 +254,7 @@ public class CourtPurchase : TenantDomainEntity, IAggregateRoot
             return;
 
         // Also a cancelled purchase: the money was not refunded yet and the bank takes it back
-        Require(Status is CourtPurchaseStatus.Paid or CourtPurchaseStatus.Processing or CourtPurchaseStatus.Cancelled);
+        Require(Status is CourtPurchaseStatus.Paid or CourtPurchaseStatus.Processing or CourtPurchaseStatus.Cancelled or CourtPurchaseStatus.Compensated);
         Status = CourtPurchaseStatus.Disputed;
     }
 

@@ -8,4 +8,4 @@ namespace Bookennis.Shared.Controller.Booking.Shared;
 /// empty, <see cref="Comment"/> and <see cref="RecurringBookingSeriesId"/> are <c>null</c> and <see cref="PlayMode"/> is a neutral
 /// placeholder (id 0, empty name, gray).
 /// </summary>
-public record BookingResult(int BookingEntryId, List<PlayerResult> Players, int CourtId, DateTimeOffsetInterval Interval, PlayModeDto PlayMode, string? Comment, int? RecurringBookingSeriesId = null, bool IsExcludedFromSeries = false, bool IsAnonymized = false);
+public record BookingResult(int BookingEntryId, List<PlayerResult> Players, int CourtId, DateTimeOffsetInterval Interval, PlayModeDto PlayMode, string? Comment, int? RecurringBookingSeriesId = null, bool IsExcludedFromSeries = false, bool IsAnonymized = false, bool IsBought = false);

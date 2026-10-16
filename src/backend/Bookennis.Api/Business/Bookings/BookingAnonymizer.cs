@@ -42,5 +42,6 @@ public static class BookingAnonymizer
                 RecurringBookingSeriesId = null,
                 IsExcludedFromSeries = false,
                 IsAnonymized = true,
+                IsBought = false,
             };
 }

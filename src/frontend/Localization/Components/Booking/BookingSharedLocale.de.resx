@@ -324,4 +324,19 @@
   <data name="Booked" xml:space="preserve">
     <value>Belegt</value>
   </data>
+  <data name="BoughtIndicator" xml:space="preserve">
+    <value>Gekauft</value>
+  </data>
+  <data name="BoughtHintBuyer" xml:space="preserve">
+    <value>Du hast diese Platzzeit gekauft. Gekaufte Buchungen kannst du hier nicht ändern oder stornieren. Wenn etwas dazwischenkommt, wende dich an den Kassier deines Vereins.</value>
+  </data>
+  <data name="BoughtHintManager" xml:space="preserve">
+    <value>Diese Platzzeit wurde gekauft. Sie kann hier nicht geändert werden; storniere sie bei Bedarf auf der Seite Platzverkauf.</value>
+  </data>
+  <data name="BoughtHintOther" xml:space="preserve">
+    <value>Diese Platzzeit wurde gekauft. Nur Kassier oder Admin können sie stornieren.</value>
+  </data>
+  <data name="OpenCourtSales" xml:space="preserve">
+    <value>Platzverkauf öffnen</value>
+  </data>
 </root>

@@ -255,6 +255,81 @@ public class CourtPurchaseTests
         grant.GrantedByMemberId.Should().Be(3);
     }
 
-    private static CourtPurchase Purchase(int price = 2800, bool creditUsed = false, int? amountDue = null)
-        => new(1, 7, 1, 100, Slot, new CourtQuote(price, "eur", []), creditUsed, amountDue ?? price);
+    [Theory]
+    [InlineData(30, false, 1, 1)]
+    [InlineData(60, false, 1, 1)]
+    [InlineData(61, false, 2, 2)]
+    [InlineData(90, true, 2, 1)]
+    [InlineData(60, true, 1, 0)]
+    [InlineData(180, false, 3, 3)]
+    public void Compensate_OneCreditPerStartedHour_TheUsedCreditCountsTowardIt(int minutes, bool creditUsed, int credits, int granted)
+    {
+        var purchase = Purchase(minutes: minutes, creditUsed: creditUsed, amountDue: creditUsed && minutes <= 60 ? 0 : 1000);
+        Pay(purchase);
+
+        purchase.Compensate(Now);
+
+        purchase.Status.Should().Be(CourtPurchaseStatus.Compensated);
+        purchase.CompensationCredits.Should().Be(credits);
+        purchase.GrantedCompensationCredits.Should().Be(granted);
+        purchase.BookingId.Should().BeNull();
+        purchase.CancelledAt.Should().Be(Now);
+    }
+
+    [Fact]
+    public void Compensate_FreeSlot_GivesNoCredits()
+    {
+        var purchase = Purchase(price: 0, amountDue: 0);
+        purchase.CompleteWithoutPayment(Now);
+
+        purchase.Compensate(Now);
+
+        purchase.CompensationCredits.Should().Be(0);
+        purchase.GrantedCompensationCredits.Should().Be(0);
+    }
+
+    [Fact]
+    public void Compensate_OnlyAPaidPurchase()
+    {
+        var processing = Purchase();
+        processing.StartCheckout("cs_1", Now.AddMinutes(31));
+        processing.MarkProcessing("pi_1");
+
+        var act = () => processing.Compensate(Now);
+
+        act.Should().Throw<PreconditionException>().Which.ErrorCode.Should().Be(nameof(CourtSaleErrorCode.CourtPurchaseInvalidStatus));
+    }
+
+    [Fact]
+    public void CompensatedPurchase_CanStillBeRefundedOrDisputed()
+    {
+        var refunded = Purchase();
+        Pay(refunded);
+        refunded.Compensate(Now);
+        var disputed = Purchase();
+        Pay(disputed);
+        disputed.Compensate(Now);
+
+        refunded.MarkRefunded();
+        disputed.MarkDisputed();
+
+        refunded.Status.Should().Be(CourtPurchaseStatus.Refunded);
+        disputed.Status.Should().Be(CourtPurchaseStatus.Disputed);
+        refunded.HasOnlinePayment.Should().BeTrue();
+    }
+
+    private static void Pay(CourtPurchase purchase)
+    {
+        if (purchase.AmountDueCents == 0)
+        {
+            purchase.CompleteWithoutPayment(Now);
+            return;
+        }
+
+        purchase.StartCheckout("cs_1", Now.AddMinutes(31));
+        purchase.MarkPaid(Now, "pi_1");
+    }
+
+    private static CourtPurchase Purchase(int price = 2800, bool creditUsed = false, int? amountDue = null, int minutes = 60)
+        => new(1, 7, 1, 100, new DateTimeOffsetInterval(Slot.From, Slot.From.AddMinutes(minutes)), new CourtQuote(price, "eur", []), creditUsed, amountDue ?? price);
 }

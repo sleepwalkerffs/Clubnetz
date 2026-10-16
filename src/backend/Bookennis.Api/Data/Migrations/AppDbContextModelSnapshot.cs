@@ -1042,6 +1042,9 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("ClubId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("CompensationCredits")
+                        .HasColumnType("integer");
+
                     b.Property<int>("CourtId")
                         .HasColumnType("integer");
 

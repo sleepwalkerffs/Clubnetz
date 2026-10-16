@@ -85,6 +85,32 @@ public class ActiveMembershipAndPrivacyTests(TestFixture fixture) : TestBase(fix
     }
 
     [Fact]
+    public async Task GetBookings_MarksBoughtBookings_OnlyForWhoMaySeeThem()
+    {
+        var (buyerUserId, boughtBookingId, normalBookingId, viewerUserId) = await QueryAsync(async ctx =>
+        {
+            await CourtSaleSeed.EnableSales(ctx);
+            var (buyerUser, buyer) = await CourtSaleSeed.AddBuyer(ctx);
+            var (viewerUser, _) = await MemberSeed.AddUserWithMember(ctx, "other-buyer@test.com");
+            var purchase = await CourtSaleSeed.AddPurchase(ctx, buyer, CourtSaleSeed.Tomorrow());
+            var normal = await MemberSeed.AddBooking(ctx, CourtSaleSeed.Tomorrow(localHour: 14).From, TestDataSeed.Member1Id);
+            return (buyerUser, purchase.BookingId!.Value, normal, viewerUser);
+        });
+
+        var day = DateOnly.FromDateTime(CourtSaleSeed.Tomorrow().From.UtcDateTime);
+        var full = await SendAsync(new GetBookings(day, day));
+        var ofBuyer = await SendAsync(new GetBookings(day, day, buyerUserId));
+        var ofOther = await SendAsync(new GetBookings(day, day, viewerUserId));
+
+        full.Bookings.Single(b => b.BookingEntryId == boughtBookingId).IsBought.Should().BeTrue();
+        full.Bookings.Single(b => b.BookingEntryId == normalBookingId).IsBought.Should().BeFalse();
+        ofBuyer.Bookings.Single(b => b.BookingEntryId == boughtBookingId).IsBought.Should().BeTrue();
+        ofOther.Bookings.Single(b => b.BookingEntryId == boughtBookingId).IsBought.Should().BeFalse("an anonymized booking tells nothing about who or how");
+        (await SendAsync(new GetBooking(boughtBookingId, buyerUserId))).IsBought.Should().BeTrue();
+        (await SendAsync(new GetBooking(normalBookingId))).IsBought.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task GetBookings_ParentWhoIsNotActive_SeesTheBookingsOfTheOwnChildren()
     {
         var (parentUserId, bookingId) = await QueryAsync(async ctx =>
@@ -185,28 +211,106 @@ public class ActiveMembershipAndPrivacyTests(TestFixture fixture) : TestBase(fix
             return purchase.Id;
         });
 
-        await SendAsync(new NotifyBoughtBookingsRemoved([purchaseId]));
+        await SendAsync(new NotifyBoughtBookingsRemoved([Removal(purchaseId)]));
 
         var released = await QueryAsync(ctx => ctx.CourtPurchases.SingleAsync(p => p.Id == purchaseId));
         released.Status.Should().Be(Domain.CourtSales.CourtPurchaseStatus.Expired);
         released.BookingId.Should().BeNull();
         await notifier.DidNotReceiveWithAnyArgs().NeedsAttention(default!, default, default);
+        await notifier.DidNotReceiveWithAnyArgs().Compensated(default!, default!, default);
     }
 
     [Fact]
-    public async Task NotifyBoughtBookingsRemoved_TellsTheTreasurers()
+    public async Task NotifyBoughtBookingsRemoved_PendingDebit_TellsTheTreasurers()
     {
         var notifier = GetInstance<ICourtPurchaseNotifier>();
         notifier.ClearReceivedCalls();
-        var purchaseId = await QueryAsync(async ctx =>
+        var (purchaseId, buyerId) = await QueryAsync(async ctx =>
         {
             await CourtSaleSeed.EnableSales(ctx);
             var (_, buyer) = await CourtSaleSeed.AddBuyer(ctx);
-            return (await CourtSaleSeed.AddPurchase(ctx, buyer, CourtSaleSeed.Tomorrow())).Id;
+            return ((await CourtSaleSeed.AddPurchase(ctx, buyer, CourtSaleSeed.Tomorrow(), Domain.CourtSales.CourtPurchaseStatus.Processing)).Id, buyer);
         });
 
-        await SendAsync(new NotifyBoughtBookingsRemoved([purchaseId]));
+        await SendAsync(new NotifyBoughtBookingsRemoved([Removal(purchaseId)]));
 
+        (await QueryAsync(ctx => ctx.CourtPurchases.SingleAsync(p => p.Id == purchaseId))).Status.Should().Be(Domain.CourtSales.CourtPurchaseStatus.Processing);
+        (await QueryAsync(ctx => ctx.GetCreditBalance(TestDataSeed.ClubId, buyerId, default))).Should().Be(0, "the money is not there yet");
         await notifier.Received(1).NeedsAttention(Arg.Is<Domain.CourtSales.CourtPurchase>(p => p.Id == purchaseId), CourtPurchaseAttentionReason.BookingRemoved, Arg.Any<CancellationToken>());
+        await notifier.DidNotReceiveWithAnyArgs().Compensated(default!, default!, default);
     }
+
+    [Theory]
+    [InlineData(60, 1)]
+    [InlineData(90, 2)]
+    [InlineData(120, 2)]
+    [InlineData(30, 1)]
+    public async Task NotifyBoughtBookingsRemoved_PaidOnline_GivesOneCreditPerStartedHourAndMailsTheBuyer(int minutes, int credits)
+    {
+        var notifier = GetInstance<ICourtPurchaseNotifier>();
+        notifier.ClearReceivedCalls();
+        var (purchaseId, buyerId) = await QueryAsync(async ctx =>
+        {
+            await CourtSaleSeed.EnableSales(ctx);
+            var (_, buyer) = await CourtSaleSeed.AddBuyer(ctx);
+            return ((await CourtSaleSeed.AddPurchase(ctx, buyer, CourtSaleSeed.Tomorrow(minutes))).Id, buyer);
+        });
+        var removal = new BoughtBookingRemoval(purchaseId, "CourtPurchase_Compensated_Overbooked", "Training");
+
+        await SendAsync(new NotifyBoughtBookingsRemoved([removal]));
+
+        var purchase = await QueryAsync(ctx => ctx.CourtPurchases.SingleAsync(p => p.Id == purchaseId));
+        purchase.Status.Should().Be(Domain.CourtSales.CourtPurchaseStatus.Compensated);
+        purchase.CompensationCredits.Should().Be(credits);
+        purchase.BookingId.Should().BeNull();
+        (await QueryAsync(ctx => ctx.GetCreditBalance(TestDataSeed.ClubId, buyerId, default))).Should().Be(credits);
+        (await QueryAsync(ctx => ctx.BookingCreditGrants.SingleAsync(g => g.MemberId == buyerId))).Reason.Should().Be(Domain.CourtSales.BookingCreditReason.BookingRemovedByClub);
+        await notifier.Received(1).Compensated(Arg.Is<Domain.CourtSales.CourtPurchase>(p => p.Id == purchaseId), removal, Arg.Any<CancellationToken>());
+        await notifier.DidNotReceiveWithAnyArgs().NeedsAttention(default!, default, default);
+    }
+
+    [Fact]
+    public async Task NotifyBoughtBookingsRemoved_PaidWithACredit_TheCreditComesBackAndCountsTowardTheCredits()
+    {
+        var (purchaseId, buyerId) = await QueryAsync(async ctx =>
+        {
+            await CourtSaleSeed.EnableSales(ctx);
+            var (_, buyer) = await CourtSaleSeed.AddBuyer(ctx);
+            await CourtSaleSeed.AddCredits(ctx, buyer, 1);
+            // 90 minutes: the credit paid for the first hour, the rest online
+            var purchase = await CourtSaleSeed.AddPurchase(ctx, buyer, CourtSaleSeed.Tomorrow(90), priceCents: 3000, creditUsed: true);
+            return (purchase.Id, buyer);
+        });
+        (await QueryAsync(ctx => ctx.GetCreditBalance(TestDataSeed.ClubId, buyerId, default))).Should().Be(0);
+
+        await SendAsync(new NotifyBoughtBookingsRemoved([Removal(purchaseId)]));
+
+        var purchase = await QueryAsync(ctx => ctx.CourtPurchases.SingleAsync(p => p.Id == purchaseId));
+        purchase.CompensationCredits.Should().Be(2);
+        (await QueryAsync(ctx => ctx.GetCreditBalance(TestDataSeed.ClubId, buyerId, default))).Should().Be(2, "the used credit comes back and one more is granted");
+        (await QueryAsync(ctx => ctx.BookingCreditGrants.Where(g => g.Reason == Domain.CourtSales.BookingCreditReason.BookingRemovedByClub).SumAsync(g => g.Count))).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task NotifyBoughtBookingsRemoved_FreeSlot_NoCreditsButAMail()
+    {
+        var notifier = GetInstance<ICourtPurchaseNotifier>();
+        notifier.ClearReceivedCalls();
+        var (purchaseId, buyerId) = await QueryAsync(async ctx =>
+        {
+            await CourtSaleSeed.EnableSales(ctx);
+            var (_, buyer) = await CourtSaleSeed.AddBuyer(ctx);
+            return ((await CourtSaleSeed.AddPurchase(ctx, buyer, CourtSaleSeed.Tomorrow(), priceCents: 0)).Id, buyer);
+        });
+
+        await SendAsync(new NotifyBoughtBookingsRemoved([Removal(purchaseId)]));
+
+        var purchase = await QueryAsync(ctx => ctx.CourtPurchases.SingleAsync(p => p.Id == purchaseId));
+        purchase.Status.Should().Be(Domain.CourtSales.CourtPurchaseStatus.Compensated);
+        purchase.CompensationCredits.Should().Be(0);
+        (await QueryAsync(ctx => ctx.BookingCreditGrants.AnyAsync(g => g.MemberId == buyerId))).Should().BeFalse();
+        await notifier.Received(1).Compensated(Arg.Is<Domain.CourtSales.CourtPurchase>(p => p.Id == purchaseId), Arg.Any<BoughtBookingRemoval>(), Arg.Any<CancellationToken>());
+    }
+
+    private static BoughtBookingRemoval Removal(int purchaseId) => new(purchaseId, "CourtPurchase_Compensated_CourtInactive", null);
 }

@@ -157,6 +157,7 @@ public static class CourtSaleQueries
                 PaidAt = p.PaidAt,
                 CancelledAt = p.CancelledAt,
                 CreatedAt = new DateTimeOffset(DateTime.SpecifyKind(p.Metadata.Created, DateTimeKind.Utc)),
+                CompensationCredits = p.CompensationCredits,
                 CanCancel = p.Status is CourtPurchaseStatus.AwaitingPayment or CourtPurchaseStatus.Processing or CourtPurchaseStatus.Paid,
                 HasOnlinePayment = p.HasOnlinePayment,
             };

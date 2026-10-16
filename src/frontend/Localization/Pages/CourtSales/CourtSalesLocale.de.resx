@@ -232,7 +232,7 @@
     <value>Probleme</value>
   </data>
   <data name="Filter_Cancelled" xml:space="preserve">
-    <value>Storniert / abgelaufen</value>
+    <value>Storniert, abgelaufen oder ersetzt</value>
   </data>
   <data name="Sales_Sold" xml:space="preserve">
     <value>Verkaufte Buchungen</value>
@@ -530,5 +530,17 @@
   </data>
   <data name="Return_PaidAfterAll" xml:space="preserve">
     <value>Die Zahlung ist doch angekommen – der Platz ist für dich gebucht</value>
+  </data>
+  <data name="Status_Compensated" xml:space="preserve">
+    <value>Guthaben vergeben</value>
+  </data>
+  <data name="Reason_BookingRemovedByClub" xml:space="preserve">
+    <value>Gekaufte Buchung vom Verein entfernt</value>
+  </data>
+  <data name="Sales_CompensatedWith" xml:space="preserve">
+    <value>{0} Guthaben vergeben</value>
+  </data>
+  <data name="Sales_CompensatedWithOne" xml:space="preserve">
+    <value>1 Guthaben vergeben</value>
   </data>
 </root>

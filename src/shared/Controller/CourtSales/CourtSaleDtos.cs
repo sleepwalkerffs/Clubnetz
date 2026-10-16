@@ -20,6 +20,9 @@ public enum CourtPurchaseStatus
     Cancelled = 5,
     Refunded = 6,
     Disputed = 7,
+
+    /// <summary>The club needed the court: the booking was removed and the buyer got credits instead.</summary>
+    Compensated = 8,
 }
 
 /// <summary>Keep in sync with <c>Bookennis.Domain.CourtSales.CourtPurchasePaymentMethod</c>.</summary>
@@ -41,6 +44,9 @@ public enum BookingCreditReason
     /// <summary>The bookings left on a guest card of the former guest system.</summary>
     GuestCardMigration = 0,
     GrantedByClub = 1,
+
+    /// <summary>The club removed a bought booking; negative when the payment was refunded later.</summary>
+    BookingRemovedByClub = 2,
 }
 
 /// <summary>Why the caller can't buy a slot right now (<see cref="CourtSaleOptionsResult.Reason"/>).</summary>
@@ -308,6 +314,9 @@ public record CourtPurchaseListItemDto
     public DateTimeOffset? PaidAt { get; init; }
     public DateTimeOffset? CancelledAt { get; init; }
     public required DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>Credits the buyer got back when the club removed the booking (<see cref="CourtPurchaseStatus.Compensated"/>).</summary>
+    public int? CompensationCredits { get; init; }
 
     /// <summary>A treasurer can cancel it (awaiting payment, processing or paid).</summary>
     public required bool CanCancel { get; init; }

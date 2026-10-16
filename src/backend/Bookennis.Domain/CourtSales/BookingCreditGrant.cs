@@ -12,6 +12,9 @@ public enum BookingCreditReason
 
     /// <summary>A treasurer or admin gave (or took back) credits.</summary>
     GrantedByClub = 1,
+
+    /// <summary>The club removed a bought booking (overbooked, court blocked or set inactive); negative when it was refunded later.</summary>
+    BookingRemovedByClub = 2,
 }
 
 /// <summary>

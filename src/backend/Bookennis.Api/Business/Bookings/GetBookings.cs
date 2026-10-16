@@ -38,7 +38,7 @@ public record GetBookings(DateOnly DayFrom, DateOnly DayTo, int? AnonymousViewer
                 // IgnoreQueryFilters (needed for players of other clubs) switches the tenant filter off for the whole query, so the club is checked here
                 where booking.ClubId == currentClub.Id
                    && fromUtc <= booking.Interval.From && booking.Interval.From <= toUtc
-                select new { Booking = booking, Users = users, PlayMode = playMode }
+                select new { Booking = booking, Users = users, PlayMode = playMode, IsBought = context.CourtPurchases.Any(p => p.BookingId == booking.Id) }
             ).ToListAsync(cancellationToken);
 
             var allMemberIds = bookings.SelectMany(b => b.Users.Select(u => u.Id)).Distinct().ToList();
@@ -84,7 +84,8 @@ public record GetBookings(DateOnly DayFrom, DateOnly DayTo, int? AnonymousViewer
                             },
                             booking.Booking.Comment,
                             booking.Booking.RecurringBookingSeriesId,
-                            booking.Booking.IsExcludedFromSeries
+                            booking.Booking.IsExcludedFromSeries,
+                            IsBought: booking.IsBought
                         )
                 )
             );

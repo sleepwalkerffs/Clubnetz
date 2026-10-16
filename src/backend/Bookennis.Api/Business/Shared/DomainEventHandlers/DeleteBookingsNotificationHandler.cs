@@ -36,15 +36,28 @@ public abstract class DeleteBookingsNotificationHandler<T>(
             ? (await context.Users.FindRequiredAsync(userId, cancellationToken)).FullName
             : "";
 
-        // Bought slots lose their booking: the treasurers are told, the money was paid
+        // Bought slots lose their booking: a paid one is compensated with credits (NotifyBoughtBookingsRemoved), its buyer gets that
+        // email instead of the one about the deleted booking
         var deletedIds = intersectingBookings.ConvertAll(b => b.Booking.Id);
-        var boughtPurchaseIds = await context.CourtPurchases
+        var boughtPurchases = await context.CourtPurchases
             .Where(p => p.BookingId != null && deletedIds.Contains(p.BookingId.Value) && Domain.CourtSales.CourtPurchase.ActiveStatuses.Contains(p.Status))
-            .Select(p => p.Id)
+            .Select(p => new { p.Id, BookingId = p.BookingId!.Value, p.Status })
             .ToListAsync(cancellationToken);
+        var removals = boughtPurchases.ConvertAll(p =>
+        {
+            var deleted = intersectingBookings.First(b => b.Booking.Id == p.BookingId);
+            return new CourtSales.BoughtBookingRemoval(p.Id, CourtSales.BoughtBookingRemoval.ReasonKeyFor(deleted.ReasonKey), deleted.ReasonFormatArg);
+        });
 
         foreach (var intersectingBooking in intersectingBookings)
         {
+            if (boughtPurchases.Any(p => p.BookingId == intersectingBooking.Booking.Id && p.Status == Domain.CourtSales.CourtPurchaseStatus.Paid))
+            {
+                await pushNotifier.BookingDeleted(intersectingBooking.Booking.Id, cancellationToken);
+                context.Bookings.Remove(intersectingBooking.Booking);
+                continue;
+            }
+
             var playerIds = await context.BookingPlayers
                 .Where(p => p.Booking.Id == intersectingBooking.Booking.Id)
                 .Select(p => p.MemberId)
@@ -79,8 +92,8 @@ public abstract class DeleteBookingsNotificationHandler<T>(
 
         await context.SaveChangesAsync(cancellationToken);
 
-        if (boughtPurchaseIds.Count > 0)
-            await mediator.Send(new CourtSales.NotifyBoughtBookingsRemoved(boughtPurchaseIds), cancellationToken);
+        if (removals.Count > 0)
+            await mediator.Send(new CourtSales.NotifyBoughtBookingsRemoved(removals), cancellationToken);
     }
 
     protected abstract Task<List<DeletedBookings>> QueryBookingsToBeDeleted(DomainEvent<T> notification, CancellationToken cancellationToken);

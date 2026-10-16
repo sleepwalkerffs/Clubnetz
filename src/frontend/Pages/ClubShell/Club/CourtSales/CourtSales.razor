@@ -365,7 +365,7 @@ else
         SalesFilter.Paid => purchase.Status is CourtPurchaseStatus.Paid or CourtPurchaseStatus.Processing,
         SalesFilter.Awaiting => purchase.Status == CourtPurchaseStatus.AwaitingPayment,
         SalesFilter.Problems => purchase.Status is CourtPurchaseStatus.Failed or CourtPurchaseStatus.Refunded or CourtPurchaseStatus.Disputed,
-        SalesFilter.Cancelled => purchase.Status is CourtPurchaseStatus.Cancelled or CourtPurchaseStatus.Expired,
+        SalesFilter.Cancelled => purchase.Status is CourtPurchaseStatus.Cancelled or CourtPurchaseStatus.Expired or CourtPurchaseStatus.Compensated,
         _ => false,
     };
 
@@ -468,6 +468,10 @@ else
                                 </div>
                                 <div class="sale-row__status">
                                     <span class="status-pill">@CourtSalesHelpers.StatusEmoji(purchase.Status) @CourtSalesHelpers.StatusText(L, purchase.Status)</span>
+                                    @if (purchase.CompensationCredits is > 0 and var credits)
+                                    {
+                                        <span class="sale-row__muted">@(credits == 1 ? L["Sales_CompensatedWithOne"] : string.Format(L["Sales_CompensatedWith"], credits))</span>
+                                    }
                                     @if (purchase.CancelledAt is { } cancelledAt)
                                     {
                                         <span class="sale-row__muted">@cancelledAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture)</span>
