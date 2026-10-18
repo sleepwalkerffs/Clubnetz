@@ -22,4 +22,6 @@ public enum ClubEmailType
     CourtPurchaseFailed = 16,
     CourtPurchaseNeedsAttention = 17,
     CourtPurchaseCompensated = 18,
+    ClubhouseTabPaid = 19,
+    ClubhouseTabNeedsAttention = 20,
 }

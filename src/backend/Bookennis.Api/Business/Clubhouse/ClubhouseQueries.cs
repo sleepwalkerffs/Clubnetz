@@ -1,4 +1,6 @@
+using Bookennis.Api.Business.Clubhouse.SumUp;
 using Bookennis.Api.Business.Notifications;
+using Bookennis.Api.Config;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubhouse;
 using Bookennis.Shared.Controller.Clubhouse;
@@ -20,6 +22,37 @@ public static class ClubhouseQueries
 
     public static Task<ClubhouseTab> GetClubhouseTab(this AppDbContext context, int clubId, int tabId, CancellationToken cancellationToken)
         => context.ClubhouseTabs.Include(t => t.Lines).SingleRequiredAsync(t => t.Id == tabId && t.ClubId == clubId, cancellationToken);
+
+    /// <summary>
+    /// The tab under the lock that every change of a tab takes first (until the transaction ends), so the host booking a round and the
+    /// member starting to pay online never cross: the amount of a payment is always the amount of the tab.
+    /// </summary>
+    public static async Task<ClubhouseTab> GetLockedClubhouseTab(this AppDbContext context, int clubId, int tabId, CancellationToken cancellationToken)
+    {
+        await context.LockClubhouseTab(tabId, cancellationToken);
+        return await context.GetClubhouseTab(clubId, tabId, cancellationToken);
+    }
+
+    /// <summary>An advisory lock on one tab until the transaction ends (every command runs in one). Taking it twice is fine.</summary>
+    public static Task LockClubhouseTab(this AppDbContext context, int tabId, CancellationToken cancellationToken)
+    {
+        var key = TabLockNamespace + tabId;
+        return context.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock({key})", cancellationToken);
+    }
+
+    private const long TabLockNamespace = 0x5441424CL << 32; // "TABL"
+
+    /// <summary>Members can pay their tabs in the app: SumUp is configured and the host connected an account that works.</summary>
+    public static Task<bool> CanPayClubhouseTabsOnline(this AppDbContext context, ISumUpGateway gateway, int clubId, CancellationToken cancellationToken)
+        => gateway.IsConfigured
+            ? context.ClubhouseSumUpAccounts.AnyAsync(a => a.ClubId == clubId && !a.NeedsReconnect, cancellationToken)
+            : Task.FromResult(false);
+
+    /// <summary>The address SumUp sends the host back to after connecting; registered at SumUp as the redirect URL of the OAuth app.</summary>
+    public static string SumUpRedirectUri(this AppSettings appSettings) => $"{appSettings.AppUri.AbsoluteUri.TrimEnd('/')}/api/SumUp/Callback";
+
+    /// <summary>The webhook SumUp posts to when the status of a checkout changes.</summary>
+    public static string SumUpWebhookUrl(this AppSettings appSettings) => $"{appSettings.AppUri.AbsoluteUri.TrimEnd('/')}/api/SumUp/Webhook";
 
     /// <summary>Midnight (UTC) at the start of a local day of <see cref="TimeZone"/>.</summary>
     public static DateTimeOffset LocalMidnight(DateOnly date)

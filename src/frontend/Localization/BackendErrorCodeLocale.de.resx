@@ -732,4 +732,22 @@
   <data name="ClubhouseItemNotAvailable" xml:space="preserve">
     <value>Dieser Artikel ist nicht mehr auf der Karte.</value>
   </data>
+  <data name="ClubhouseTabPaymentRunning" xml:space="preserve">
+    <value>Diese Rechnung wird gerade in der App bezahlt. Bitte warte, bis die Zahlung erledigt oder abgelaufen ist (höchstens 30 Minuten).</value>
+  </data>
+  <data name="ClubhouseOnlinePaymentNotAvailable" xml:space="preserve">
+    <value>Bezahlen in der App ist nicht möglich: Der Wirt hat kein SumUp-Konto verbunden (oder muss es neu verbinden).</value>
+  </data>
+  <data name="ClubhouseTabNotPayableOnline" xml:space="preserve">
+    <value>Die Rechnung eines Gasts von außerhalb kann nicht in der App bezahlt werden.</value>
+  </data>
+  <data name="ClubhouseSumUpUnavailable" xml:space="preserve">
+    <value>SumUp war nicht erreichbar oder hat die Anfrage abgelehnt. Bitte versuche es gleich noch einmal.</value>
+  </data>
+  <data name="ClubhouseSumUpConnectFailed" xml:space="preserve">
+    <value>Das SumUp-Konto konnte nicht verbunden werden. Bitte versuche es noch einmal.</value>
+  </data>
+  <data name="ClubhouseSumUpPaymentsRunning" xml:space="preserve">
+    <value>Ein Mitglied bezahlt gerade eine Rechnung mit SumUp. Bitte trenne das Konto, wenn die Zahlung erledigt ist.</value>
+  </data>
 </root>

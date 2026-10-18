@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubhouse;
 using Bookennis.Api.Business.CourtSales;
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Business.Payments;
@@ -166,6 +167,9 @@ recurringJobs.AddOrUpdate<StripeEventRecoveryJob>(StripeEventRecoveryJob.JobId, 
 
 // Court time that was held for a buyer who did not pay in time
 recurringJobs.AddOrUpdate<CourtPurchaseHoldReleaseJob>(CourtPurchaseHoldReleaseJob.JobId, job => job.Run(), CourtPurchaseHoldReleaseJob.Schedule);
+
+// Closes the payment pages of clubhouse tabs that ran out (asks SumUp first) and catches payments whose webhook did not arrive
+recurringJobs.AddOrUpdate<ClubhouseTabPaymentJob>(ClubhouseTabPaymentJob.JobId, job => job.Run(), ClubhouseTabPaymentJob.Schedule);
 
 container.Verify();
 

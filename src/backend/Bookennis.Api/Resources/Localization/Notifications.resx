@@ -144,4 +144,13 @@
   <data name="CourtPurchase_CompensationTakenBack" xml:space="preserve">
     <value>Payment of the removed booking was refunded</value>
   </data>
+  <data name="ClubhouseTab_Reason_PaidTwice" xml:space="preserve">
+    <value>A member paid their clubhouse tab in the app, but the tab had already been paid (cash, card or another online payment). The money is in your SumUp account: please refund one of the two payments in the SumUp dashboard.</value>
+  </data>
+  <data name="ClubhouseTab_Reason_TabChanged" xml:space="preserve">
+    <value>A member paid their clubhouse tab in the app after the payment page had run out, and the tab had been changed (or discarded) in the meantime. The money is in your SumUp account, but the tab is still open: please settle it with the member and mark it as paid, or refund the payment in the SumUp dashboard.</value>
+  </data>
+  <data name="ClubhouseTab_Reason_CouldNotVerify" xml:space="preserve">
+    <value>A member started to pay their clubhouse tab in the app, but Clubnetz could not check the payment with SumUp (the SumUp account was disconnected or has to be connected again). The tab is open again. Please check in the SumUp dashboard whether the money arrived before you take the payment again.</value>
+  </data>
 </root>

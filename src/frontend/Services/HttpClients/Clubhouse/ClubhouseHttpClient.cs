@@ -57,4 +57,19 @@ public class ClubhouseHttpClient(HttpClient httpClient, JsonSerializerOptions js
 
     public async Task<HttpResult<MyClubhouseTabsResult>> GetMyTabs(CancellationToken cancellationToken = default)
         => await (await httpClient.GetAsync("my-tabs", cancellationToken)).AsHttpResult<MyClubhouseTabsResult>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<ClubhouseRedirectResult>> StartTabPayment(int tabId, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsync($"tabs/{tabId}/online-payment", null, cancellationToken)).AsHttpResult<ClubhouseRedirectResult>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<ClubhouseTabPaymentDto>> GetTabPayment(int tabId, int paymentId, CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync($"tabs/{tabId}/online-payment/{paymentId}", cancellationToken)).AsHttpResult<ClubhouseTabPaymentDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<ClubhouseSumUpAccountDto>> GetSumUpAccount(CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync("sumup", cancellationToken)).AsHttpResult<ClubhouseSumUpAccountDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<ClubhouseRedirectResult>> ConnectSumUp(CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsync("sumup/connect", null, cancellationToken)).AsHttpResult<ClubhouseRedirectResult>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult> DisconnectSumUp(CancellationToken cancellationToken = default)
+        => await (await httpClient.DeleteAsync("sumup", cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
 }

@@ -38,6 +38,7 @@ else
 {
     var name = ClubhouseHelpers.TabName(L, tab.Name);
     var isOpen = tab.Status == ClubhouseTabStatus.Open;
+    var isLocked = tab.Status == ClubhouseTabStatus.AwaitingPayment;
 
     <div class="clubhouse-page @(round.Count > 0 ? "clubhouse-page--with-bar" : null)">
         <div class="clubhouse-head">
@@ -62,6 +63,16 @@ else
                 <span class="clubhouse-head__total-value">@ClubhouseHelpers.Amount(tab.TotalCents)</span>
             </div>
         </div>
+
+        @if (isLocked)
+        {
+            <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.PhoneIphone" Class="clubhouse-locked">
+                <div>@L["Locked_Text"]</div>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadTab" Disabled="@Store.IsLoading">
+                    @L["Locked_Reload"]
+                </MudButton>
+            </MudAlert>
+        }
 
         @* Paying is what the host does when the guest leaves: right at the top, not below the menu *@
         @if (isOpen && tab.Lines.Count > 0 && round.Count == 0)

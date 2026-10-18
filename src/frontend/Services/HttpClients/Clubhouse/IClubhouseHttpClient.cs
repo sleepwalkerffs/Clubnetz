@@ -21,4 +21,10 @@ public interface IClubhouseHttpClient
     public Task<HttpResult<GetClubhouseTabsResult>> GetPaidTabs(DateOnly? from, DateOnly? to, CancellationToken cancellationToken = default);
 
     public Task<HttpResult<MyClubhouseTabsResult>> GetMyTabs(CancellationToken cancellationToken = default);
+    public Task<HttpResult<ClubhouseRedirectResult>> StartTabPayment(int tabId, CancellationToken cancellationToken = default);
+    public Task<HttpResult<ClubhouseTabPaymentDto>> GetTabPayment(int tabId, int paymentId, CancellationToken cancellationToken = default);
+
+    public Task<HttpResult<ClubhouseSumUpAccountDto>> GetSumUpAccount(CancellationToken cancellationToken = default);
+    public Task<HttpResult<ClubhouseRedirectResult>> ConnectSumUp(CancellationToken cancellationToken = default);
+    public Task<HttpResult> DisconnectSumUp(CancellationToken cancellationToken = default);
 }

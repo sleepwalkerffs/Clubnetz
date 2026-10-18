@@ -472,4 +472,34 @@
   <data name="Variable_credits" xml:space="preserve">
     <value>Credits the buyer got</value>
   </data>
+  <data name="Type_ClubhouseTabPaid" xml:space="preserve">
+    <value>Clubhouse tab paid</value>
+  </data>
+  <data name="TypeDescription_ClubhouseTabPaid" xml:space="preserve">
+    <value>Sent to a member who paid their clubhouse tab in the app.</value>
+  </data>
+  <data name="Type_ClubhouseTabNeedsAttention" xml:space="preserve">
+    <value>Clubhouse payment: please take a look</value>
+  </data>
+  <data name="TypeDescription_ClubhouseTabNeedsAttention" xml:space="preserve">
+    <value>Sent to the clubhouse host (or the admins when there is none): an online payment that could not be booked on its tab.</value>
+  </data>
+  <data name="Variable_tab.amount" xml:space="preserve">
+    <value>Amount paid with currency</value>
+  </data>
+  <data name="Variable_tab.date" xml:space="preserve">
+    <value>Day of the payment</value>
+  </data>
+  <data name="Variable_tab.items" xml:space="preserve">
+    <value>What was on the tab (e.g. "2× Beer")</value>
+  </data>
+  <data name="Variable_tab.transaction_code" xml:space="preserve">
+    <value>Transaction code at SumUp</value>
+  </data>
+  <data name="Variable_tab.url" xml:space="preserve">
+    <value>Link to My Club (to the clubhouse for the host)</value>
+  </data>
+  <data name="Variable_guest" xml:space="preserve">
+    <value>Name of the guest of the tab</value>
+  </data>
 </root>

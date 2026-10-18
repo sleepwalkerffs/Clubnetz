@@ -309,4 +309,130 @@
   <data name="Card_Hide" xml:space="preserve">
     <value>Hide</value>
   </data>
+  <data name="Tab_SumUp" xml:space="preserve">
+    <value>Online payment</value>
+  </data>
+  <data name="Method_Online" xml:space="preserve">
+    <value>In the app</value>
+  </data>
+  <data name="Paying_Chip" xml:space="preserve">
+    <value>Paying in the app</value>
+  </data>
+  <data name="Locked_Text" xml:space="preserve">
+    <value>The guest is paying this tab in the app right now. It is locked until the payment is done, fails or runs out (at most 30 minutes).</value>
+  </data>
+  <data name="Locked_Reload" xml:space="preserve">
+    <value>Check again</value>
+  </data>
+  <data name="Card_Pay" xml:space="preserve">
+    <value>Pay {0} now</value>
+  </data>
+  <data name="Card_PayFor" xml:space="preserve">
+    <value>Pay {0} for {1}</value>
+  </data>
+  <data name="Card_PayContinue" xml:space="preserve">
+    <value>Continue paying</value>
+  </data>
+  <data name="Card_PayHint" xml:space="preserve">
+    <value>With card, Apple Pay or Google Pay via SumUp. The money goes to the clubhouse host.</value>
+  </data>
+  <data name="Card_PayRunning" xml:space="preserve">
+    <value>A payment is running. The host can add nothing until it is done.</value>
+  </data>
+  <data name="Card_PayChecking" xml:space="preserve">
+    <value>Checking your payment with SumUp…</value>
+  </data>
+  <data name="Card_PayDone" xml:space="preserve">
+    <value>Thank you! Your tab is paid.</value>
+  </data>
+  <data name="Card_PayNotCompleted" xml:space="preserve">
+    <value>The payment was not completed. Your tab is still open.</value>
+  </data>
+  <data name="Card_PayStillRunning" xml:space="preserve">
+    <value>SumUp has not confirmed the payment yet. Your tab will show as paid as soon as it has.</value>
+  </data>
+  <data name="SumUp_Title" xml:space="preserve">
+    <value>Payment in the app</value>
+  </data>
+  <data name="SumUp_Subtitle" xml:space="preserve">
+    <value>Members pay their tab on their phone, straight to your SumUp account</value>
+  </data>
+  <data name="SumUp_UnavailableTitle" xml:space="preserve">
+    <value>Not available on this installation</value>
+  </data>
+  <data name="SumUp_UnavailableText" xml:space="preserve">
+    <value>Paying in the app with SumUp has not been set up by the operator of Clubnetz. Tabs are paid in cash or on your card terminal as before.</value>
+  </data>
+  <data name="SumUp_NotConnectedTitle" xml:space="preserve">
+    <value>Connect your SumUp account</value>
+  </data>
+  <data name="SumUp_NotConnectedText" xml:space="preserve">
+    <value>Once it is connected, members can pay their open tab in the app on My Club.</value>
+  </data>
+  <data name="SumUp_ReconnectTitle" xml:space="preserve">
+    <value>Connect your SumUp account again</value>
+  </data>
+  <data name="SumUp_ReconnectText" xml:space="preserve">
+    <value>SumUp no longer accepts the connection (it was removed or ran out). Members can't pay in the app until you connect it again.</value>
+  </data>
+  <data name="SumUp_Fact_Direct" xml:space="preserve">
+    <value>The money goes straight to your SumUp account, not to the club and not to Clubnetz.</value>
+  </data>
+  <data name="SumUp_Fact_Account" xml:space="preserve">
+    <value>You sign in at SumUp and allow Clubnetz to create payments. Clubnetz never sees your password.</value>
+  </data>
+  <data name="SumUp_Fact_Reader" xml:space="preserve">
+    <value>Card payments on your SumUp reader stay as they are: mark those tabs as paid by card.</value>
+  </data>
+  <data name="SumUp_Connect" xml:space="preserve">
+    <value>Connect SumUp</value>
+  </data>
+  <data name="SumUp_Reconnect" xml:space="preserve">
+    <value>Connect again</value>
+  </data>
+  <data name="SumUp_Disconnect" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="SumUp_MemberOnly" xml:space="preserve">
+    <value>Only the clubhouse host or an admin of the club can connect the account (not in support mode).</value>
+  </data>
+  <data name="SumUp_ActiveTitle" xml:space="preserve">
+    <value>Members can pay in the app</value>
+  </data>
+  <data name="SumUp_ActiveText" xml:space="preserve">
+    <value>Open tabs show a "Pay" button on My Club. Paid tabs are marked as paid automatically.</value>
+  </data>
+  <data name="SumUp_MerchantCode" xml:space="preserve">
+    <value>Merchant code {0}</value>
+  </data>
+  <data name="SumUp_ConnectedSince" xml:space="preserve">
+    <value>Connected on {0}</value>
+  </data>
+  <data name="SumUp_PendingPayments" xml:space="preserve">
+    <value>{0} payment(s) running</value>
+  </data>
+  <data name="SumUp_RefundHint" xml:space="preserve">
+    <value>Refunds are made in your SumUp dashboard. The email for each payment has the SumUp transaction code.</value>
+  </data>
+  <data name="SumUp_OpenDashboard" xml:space="preserve">
+    <value>Open SumUp</value>
+  </data>
+  <data name="SumUp_Connected" xml:space="preserve">
+    <value>Your SumUp account is connected.</value>
+  </data>
+  <data name="SumUp_ConnectFailed" xml:space="preserve">
+    <value>The SumUp account was not connected. Please try again.</value>
+  </data>
+  <data name="SumUp_DisconnectTitle" xml:space="preserve">
+    <value>Disconnect SumUp?</value>
+  </data>
+  <data name="SumUp_DisconnectConfirm" xml:space="preserve">
+    <value>Members can no longer pay in the app. Payments made so far stay in your SumUp account. You can also remove the access for Clubnetz in your SumUp account.</value>
+  </data>
+  <data name="SumUp_Disconnected" xml:space="preserve">
+    <value>SumUp was disconnected.</value>
+  </data>
+  <data name="Card_OpenOnline" xml:space="preserve">
+    <value>{0} open – pay here in the app or at the clubhouse.</value>
+  </data>
 </root>
