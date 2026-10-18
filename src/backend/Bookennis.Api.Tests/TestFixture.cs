@@ -32,6 +32,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using Bookennis.Api.Business.Clubhouse;
+using Bookennis.Api.Business.Clubhouse.SumUp;
+using Bookennis.Api.Tests.Business.Clubhouse;
+using Microsoft.AspNetCore.DataProtection;
 using SimpleInjector;
 
 namespace Bookennis.Api.Tests;
@@ -112,6 +116,16 @@ public class TestFixture : SimpleInjectorTestFixture
                 // Court sales: no email is sent in tests
                 container.RegisterSingleton(() => Substitute.For<ICourtPurchaseNotifier>());
                 container.Register<ICourtPurchaseSettlement, CourtPurchaseSettlement>();
+
+                // Clubhouse payments: SumUp is never called and no email is sent in tests; the tokens are encrypted with a throwaway key
+                container.RegisterSingleton(() => Substitute.For<ISumUpGateway>());
+                container.RegisterSingleton(() => Substitute.For<IClubhouseTabPaymentNotifier>());
+                container.RegisterInstance<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
+                container.RegisterSingleton<SumUpTokenProtector>();
+                container.RegisterSingleton<SumUpOAuthState>();
+                container.Register<ISumUpTokenRefresher, InlineSumUpTokenRefresher>();
+                container.Register<ISumUpAccessTokens, SumUpAccessTokens>();
+                container.Register<IClubhouseTabPaymentSettlement, ClubhouseTabPaymentSettlement>();
             }
         );
 

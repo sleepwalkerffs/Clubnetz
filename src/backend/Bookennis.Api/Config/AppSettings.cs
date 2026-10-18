@@ -23,6 +23,8 @@ public class AppSettings
 
     public StripeSettings Stripe { get; set; } = new();
 
+    public SumUpSettings SumUp { get; set; } = new();
+
     public static IReadOnlyList<CultureInfo> SupportedCultures
         => new[] { "de-AT", "en-AT" }
           .Select(c => new CultureInfo(c))

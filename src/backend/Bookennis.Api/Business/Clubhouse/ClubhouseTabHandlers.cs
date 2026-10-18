@@ -1,4 +1,5 @@
 using Bookennis.Api.Business.ClubEvents;
+using Bookennis.Api.Business.Clubhouse.SumUp;
 using Bookennis.Api.Business.Members;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubhouse;
@@ -33,7 +34,7 @@ public record GetClubhouseBoard(int ClubId, DateTimeOffset Now) : IQuery<Clubhou
 
             var openTabs = await context.ClubhouseTabs.AsNoTracking()
                 .Include(t => t.Lines)
-                .Where(t => t.ClubId == request.ClubId && t.Status == ClubhouseTabStatus.Open)
+                .Where(t => t.ClubId == request.ClubId && (t.Status == ClubhouseTabStatus.Open || t.Status == ClubhouseTabStatus.AwaitingPayment))
                 .ToListAsync(cancellationToken);
 
             // Players of other clubs (ATP) play here too, LoadGuests leaves them out
@@ -99,6 +100,7 @@ public record GetClubhouseBoard(int ClubId, DateTimeOffset Now) : IQuery<Clubhou
                             ProfilePictureUrl = guest?.ProfilePictureUrl,
                             TotalCents = t.TotalCents,
                             ItemCount = t.Lines.Sum(l => l.Quantity),
+                            IsAwaitingPayment = t.Status == ClubhouseTabStatus.AwaitingPayment,
                             OpenedAt = t.OpenedAt,
                             LastActivityAt = t.Lines.Count == 0 ? t.OpenedAt : t.Lines.Max(l => l.AddedAt),
                         };
@@ -113,6 +115,7 @@ public record GetClubhouseBoard(int ClubId, DateTimeOffset Now) : IQuery<Clubhou
                     CashCents = paidToday.Where(t => t.PaymentMethod == ClubhousePaymentMethod.Cash).Sum(t => t.Total),
                     CardCents = paidToday.Where(t => t.PaymentMethod == ClubhousePaymentMethod.Card).Sum(t => t.Total),
                     OtherCents = paidToday.Where(t => t.PaymentMethod == ClubhousePaymentMethod.Other).Sum(t => t.Total),
+                    OnlineCents = paidToday.Where(t => t.PaymentMethod == ClubhousePaymentMethod.Online).Sum(t => t.Total),
                     OpenCents = openTabs.Sum(t => t.TotalCents),
                 },
             };
@@ -136,8 +139,8 @@ public record GetClubhouseGuests(int ClubId) : IQuery<List<ClubhouseGuestDto>>
 }
 
 /// <summary>
-/// Opens a tab for a member of the club, or returns the one that is still open (a member has one open tab), or opens a tab for a guest
-/// from outside with a name.
+/// Opens a tab for a member of the club, or returns the one that is still open (a member has one unpaid tab; while the member pays
+/// online it is locked), or opens a tab for a guest from outside with a name.
 /// </summary>
 public record OpenClubhouseTab(int ClubId, int UserId, int? MemberId, string? GuestName) : ICommand<ClubhouseTabDto>
 {
@@ -176,7 +179,7 @@ public record OpenClubhouseTab(int ClubId, int UserId, int? MemberId, string? Gu
 
         private Task<ClubhouseTab?> FindOpenTab(int clubId, int memberId, CancellationToken cancellationToken)
             => context.ClubhouseTabs.Include(t => t.Lines)
-                .FirstOrDefaultAsync(t => t.ClubId == clubId && t.MemberId == memberId && t.Status == ClubhouseTabStatus.Open, cancellationToken);
+                .FirstOrDefaultAsync(t => t.ClubId == clubId && t.MemberId == memberId && (t.Status == ClubhouseTabStatus.Open || t.Status == ClubhouseTabStatus.AwaitingPayment), cancellationToken);
     }
 }
 
@@ -204,7 +207,7 @@ public record AddClubhouseTabItems(int ClubId, int UserId, int TabId, IReadOnlyL
             if (request.Items.Count is 0 or > MaxItemsPerRound)
                 throw new PreconditionException(ClubhouseErrorCode.ClubhouseQuantityInvalid, [ClubhouseTab.MaxQuantity.ToString()], "Nothing to book.");
 
-            var tab = await context.GetClubhouseTab(request.ClubId, request.TabId, cancellationToken);
+            var tab = await context.GetLockedClubhouseTab(request.ClubId, request.TabId, cancellationToken);
 
             var itemIds = request.Items.Select(i => i.ItemId).Distinct().ToList();
             var items = await context.ClubhouseItems
@@ -233,7 +236,7 @@ public record RemoveClubhouseTabLine(int ClubId, int TabId, int LineId) : IComma
     {
         public async Task<ClubhouseTabDto> Handle(RemoveClubhouseTabLine request, CancellationToken cancellationToken)
         {
-            var tab = await context.GetClubhouseTab(request.ClubId, request.TabId, cancellationToken);
+            var tab = await context.GetLockedClubhouseTab(request.ClubId, request.TabId, cancellationToken);
             if (!tab.Remove(request.LineId))
                 throw new EntityNotFoundException(typeof(ClubhouseTabLine));
 
@@ -250,10 +253,11 @@ public record PayClubhouseTab(int ClubId, int UserId, int TabId, ClubhousePaymen
     {
         public async Task<ClubhouseTabDto> Handle(PayClubhouseTab request, CancellationToken cancellationToken)
         {
-            if (!Enum.IsDefined(request.PaymentMethod))
+            // Online payments are booked by SumUp's answer only, never by the host
+            if (!Enum.IsDefined(request.PaymentMethod) || request.PaymentMethod == ClubhousePaymentMethod.Online)
                 throw new ArgumentOutOfRangeException(nameof(request), request.PaymentMethod, "Unknown payment method.");
 
-            var tab = await context.GetClubhouseTab(request.ClubId, request.TabId, cancellationToken);
+            var tab = await context.GetLockedClubhouseTab(request.ClubId, request.TabId, cancellationToken);
             var hostId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken);
             tab.MarkPaid(request.PaymentMethod, hostId, DateTimeOffset.UtcNow);
 
@@ -270,7 +274,7 @@ public record DiscardClubhouseTab(int ClubId, int TabId) : ICommand
     {
         public async Task<Unit> Handle(DiscardClubhouseTab request, CancellationToken cancellationToken)
         {
-            var tab = await context.GetClubhouseTab(request.ClubId, request.TabId, cancellationToken);
+            var tab = await context.GetLockedClubhouseTab(request.ClubId, request.TabId, cancellationToken);
             tab.EnsureCanBeDiscarded();
 
             context.ClubhouseTabs.Remove(tab);
@@ -316,6 +320,7 @@ public record GetClubhouseTabs(int ClubId, DateOnly? From, DateOnly? To, DateTim
                 CashCents = tabs.Where(t => t.PaymentMethod == ClubhousePaymentMethod.Cash).Sum(t => t.TotalCents),
                 CardCents = tabs.Where(t => t.PaymentMethod == ClubhousePaymentMethod.Card).Sum(t => t.TotalCents),
                 OtherCents = tabs.Where(t => t.PaymentMethod == ClubhousePaymentMethod.Other).Sum(t => t.TotalCents),
+                OnlineCents = tabs.Where(t => t.PaymentMethod == ClubhousePaymentMethod.Online).Sum(t => t.TotalCents),
             };
         }
     }
@@ -323,25 +328,25 @@ public record GetClubhouseTabs(int ClubId, DateOnly? From, DateOnly? To, DateTim
 
 /// <summary>
 /// The tabs of the signed-in member and of the children of the families they are a parent of (a parent pays for the children):
-/// the open ones and the last paid ones.
+/// the open ones and the last paid ones, and whether they can be paid in the app (the host connected a SumUp account).
 /// </summary>
 public record GetMyClubhouseTabs(int ClubId, int UserId) : IQuery<MyClubhouseTabsResult>
 {
     public const int MaxRecentlyPaid = 10;
 
-    public class Handler(AppDbContext context) : IRequestHandler<GetMyClubhouseTabs, MyClubhouseTabsResult>
+    public class Handler(AppDbContext context, ISumUpGateway gateway) : IRequestHandler<GetMyClubhouseTabs, MyClubhouseTabsResult>
     {
         public async Task<MyClubhouseTabsResult> Handle(GetMyClubhouseTabs request, CancellationToken cancellationToken)
         {
             var memberIds = (await ActiveMembership.OwnAndChildMemberIds(context, request.ClubId, request.UserId, cancellationToken)).ToList();
             if (memberIds.Count == 0)
-                return new MyClubhouseTabsResult { Open = [], RecentlyPaid = [] };
+                return new MyClubhouseTabsResult { Open = [], RecentlyPaid = [], CanPayOnline = false };
 
             var mine = context.ClubhouseTabs.AsNoTracking()
                 .Include(t => t.Lines)
                 .Where(t => t.ClubId == request.ClubId && t.MemberId != null && memberIds.Contains(t.MemberId.Value));
 
-            var open = await mine.Where(t => t.Status == ClubhouseTabStatus.Open)
+            var open = await mine.Where(t => t.Status == ClubhouseTabStatus.Open || t.Status == ClubhouseTabStatus.AwaitingPayment)
                 .OrderByDescending(t => t.OpenedAt)
                 .AsSplitQuery()
                 .ToListAsync(cancellationToken);
@@ -351,8 +356,11 @@ public record GetMyClubhouseTabs(int ClubId, int UserId) : IQuery<MyClubhouseTab
                 .AsSplitQuery()
                 .ToListAsync(cancellationToken);
 
+            var canPayOnline = open.Count > 0 && await context.CanPayClubhouseTabsOnline(gateway, request.ClubId, cancellationToken);
+
             return new MyClubhouseTabsResult
             {
+                CanPayOnline = canPayOnline,
                 Open = await open.ToDtos(context, request.ClubId, cancellationToken),
                 RecentlyPaid = await paid.ToDtos(context, request.ClubId, cancellationToken),
             };

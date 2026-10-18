@@ -10,6 +10,9 @@ public enum ClubhouseTabStatus
     /// <summary>The host still books onto it; the guest has not paid.</summary>
     Open = 0,
     Paid = 1,
+
+    /// <summary>The member is paying online: the tab is locked (nothing can be added, removed or paid otherwise) until the payment ends.</summary>
+    AwaitingPayment = 2,
 }
 
 /// <summary>Keep in sync with <c>Bookennis.Shared.Controller.Clubhouse.ClubhousePaymentMethod</c>.</summary>
@@ -20,6 +23,9 @@ public enum ClubhousePaymentMethod
     /// <summary>On the host's own card terminal. Clubnetz only records it.</summary>
     Card = 1,
     Other = 2,
+
+    /// <summary>The member paid in the app, to the host's own SumUp account.</summary>
+    Online = 3,
 }
 
 /// <summary>
@@ -76,6 +82,9 @@ public class ClubhouseTab : TenantDomainEntity, IAggregateRoot
     public IReadOnlyList<ClubhouseTabLine> Lines => lines.AsReadOnly();
 
     public bool IsOpen => Status == ClubhouseTabStatus.Open;
+
+    /// <summary>The tab is not paid yet: open, or locked while the member pays online. A member has one such tab per club.</summary>
+    public bool IsUnpaid => Status is ClubhouseTabStatus.Open or ClubhouseTabStatus.AwaitingPayment;
     public int TotalCents => lines.Sum(l => l.TotalCents);
 
     /// <summary>Books <paramref name="quantity"/> of an item onto the tab at its current name and price.</summary>
@@ -110,15 +119,55 @@ public class ClubhouseTab : TenantDomainEntity, IAggregateRoot
     /// <summary>The guest paid the host: the tab is closed and a new one is opened next time.</summary>
     public void MarkPaid(ClubhousePaymentMethod method, int? paidToMemberId, DateTimeOffset now)
     {
-        EnsureOpen();
+        if (method == ClubhousePaymentMethod.Online)
+            throw new InvalidOperationException("Online payments are booked by MarkPaidOnline.");
 
-        if (lines.Count == 0)
-            throw new PreconditionException(ClubhouseErrorCode.ClubhouseTabEmpty, "An empty tab can't be paid.");
+        EnsureOpen();
+        EnsureNotEmpty();
 
         Status = ClubhouseTabStatus.Paid;
         PaymentMethod = method;
         PaidToMemberId = paidToMemberId;
         PaidAt = now;
+    }
+
+    /// <summary>
+    /// The member starts paying online: the tab is locked, so the amount of the payment stays the amount of the tab.
+    /// Only a tab of a member can be paid in the app (a guest from outside has no account).
+    /// </summary>
+    public void StartOnlinePayment()
+    {
+        EnsureOpen();
+        EnsureNotEmpty();
+
+        if (MemberId is null)
+            throw new InvalidOperationException("Only the tab of a member can be paid online.");
+
+        Status = ClubhouseTabStatus.AwaitingPayment;
+    }
+
+    /// <summary>The online payment ended without money (failed, expired, given up): the host can book onto the tab again.</summary>
+    public void EndOnlinePayment()
+    {
+        if (Status == ClubhouseTabStatus.AwaitingPayment)
+            Status = ClubhouseTabStatus.Open;
+    }
+
+    /// <summary>
+    /// The money of an online payment arrived: the tab is paid. It is normally locked for that payment; a payment that SumUp confirms
+    /// after the lock ended is only booked here when its amount is still the amount of the tab (the settlement checks that).
+    /// Returns <c>false</c> when the tab was already paid: the member paid twice and the host has to refund one of them.
+    /// </summary>
+    public bool MarkPaidOnline(DateTimeOffset now)
+    {
+        if (Status == ClubhouseTabStatus.Paid)
+            return false;
+
+        Status = ClubhouseTabStatus.Paid;
+        PaymentMethod = ClubhousePaymentMethod.Online;
+        PaidToMemberId = null;
+        PaidAt = now;
+        return true;
     }
 
     /// <summary>Throws unless the tab can be discarded: it is open and nothing is on it.</summary>
@@ -132,8 +181,17 @@ public class ClubhouseTab : TenantDomainEntity, IAggregateRoot
 
     private void EnsureOpen()
     {
+        if (Status == ClubhouseTabStatus.AwaitingPayment)
+            throw new PreconditionException(ClubhouseErrorCode.ClubhouseTabPaymentRunning, "The member is paying the tab online.");
+
         if (!IsOpen)
             throw new PreconditionException(ClubhouseErrorCode.ClubhouseTabNotOpen, "The tab was already paid.");
+    }
+
+    private void EnsureNotEmpty()
+    {
+        if (lines.Count == 0)
+            throw new PreconditionException(ClubhouseErrorCode.ClubhouseTabEmpty, "An empty tab can't be paid.");
     }
 }
 

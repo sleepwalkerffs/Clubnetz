@@ -732,4 +732,22 @@
   <data name="ClubhouseItemNotAvailable" xml:space="preserve">
     <value>This item is not on the menu any more.</value>
   </data>
+  <data name="ClubhouseTabPaymentRunning" xml:space="preserve">
+    <value>This tab is being paid in the app right now. Please wait until the payment is done or has run out (at most 30 minutes).</value>
+  </data>
+  <data name="ClubhouseOnlinePaymentNotAvailable" xml:space="preserve">
+    <value>Paying in the app is not available: the clubhouse host has not connected a SumUp account (or has to connect it again).</value>
+  </data>
+  <data name="ClubhouseTabNotPayableOnline" xml:space="preserve">
+    <value>The tab of a guest from outside can't be paid in the app.</value>
+  </data>
+  <data name="ClubhouseSumUpUnavailable" xml:space="preserve">
+    <value>SumUp could not be reached or declined the request. Please try again in a moment.</value>
+  </data>
+  <data name="ClubhouseSumUpConnectFailed" xml:space="preserve">
+    <value>The SumUp account could not be connected. Please try again.</value>
+  </data>
+  <data name="ClubhouseSumUpPaymentsRunning" xml:space="preserve">
+    <value>A member is paying a tab with SumUp right now. Please disconnect after the payment is done.</value>
+  </data>
 </root>

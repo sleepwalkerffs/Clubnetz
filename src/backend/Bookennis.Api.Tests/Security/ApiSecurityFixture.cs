@@ -129,7 +129,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await Seed();
 
         // Signing in is limited per client address and the sweeps also hit the sign-in endpoints, so the tests sign in once up front
-        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, ClubA.Member, MemberOfA, OtherMemberOfA, TreasurerOfA, EnrolledMemberOfA, HostOfA })
+        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, ClubA.Member, ClubB.Member, MemberOfA, OtherMemberOfA, TreasurerOfA, EnrolledMemberOfA, HostOfA })
             cookies[user.UserId] = await SignIn(user);
     }
 
@@ -402,6 +402,24 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         context.Add(item);
         await context.SaveChangesAsync();
 
+        // The host's SumUp account (the "tokens" are only text, SumUp is not configured here) and a tab the member paid in the app.
+        // It comes first: while it is locked for its payment it must be the only unpaid tab of the member.
+        var now = DateTimeOffset.UtcNow;
+        context.Add(new ClubhouseSumUpAccount(club.Id, $"M{club.Id}", $"Bar {text}", seeded.Admin.MemberId,
+            new ClubhouseSumUpAccount.EncryptedTokens($"access {text}", now.AddHours(1), $"refresh {text}"), now));
+        var paidTab = new ClubhouseTab(club.Id, seeded.Member.MemberId, null, seeded.Admin.MemberId, now.AddDays(-1));
+        paidTab.Add(item, 1, seeded.Admin.MemberId, now.AddDays(-1));
+        paidTab.StartOnlinePayment();
+        context.Add(paidTab);
+        await context.SaveChangesAsync();
+
+        var payment = new ClubhouseTabPayment(paidTab, seeded.Member.MemberId, $"M{club.Id}", now.AddDays(-1));
+        payment.AttachCheckout($"chk_{club.Id}", $"https://checkout.sumup.test/{club.Id}");
+        payment.MarkPaid($"TX{club.Id}", now.AddDays(-1));
+        paidTab.MarkPaidOnline(now.AddDays(-1));
+        context.Add(payment);
+        await context.SaveChangesAsync();
+
         var tab = new ClubhouseTab(club.Id, seeded.Member.MemberId, null, seeded.Admin.MemberId, DateTimeOffset.UtcNow);
         var line = tab.Add(item, 2, seeded.Admin.MemberId, DateTimeOffset.UtcNow);
         var walkIn = new ClubhouseTab(club.Id, null, $"Guest {text}", seeded.Admin.MemberId, DateTimeOffset.UtcNow);
@@ -412,6 +430,9 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         seeded.ClubhouseItemId = item.Id;
         seeded.ClubhouseTabId = tab.Id;
         seeded.ClubhouseTabLineId = line.Id;
+
+        seeded.ClubhouseTabPaymentId = payment.Id;
+        seeded.ClubhousePaidTabId = paidTab.Id;
         return seeded;
     }
 
@@ -537,6 +558,10 @@ public sealed class SeededClub
     public int ClubhouseItemId { get; set; }
     public int ClubhouseTabId { get; set; }
     public int ClubhouseTabLineId { get; set; }
+    public int ClubhouseTabPaymentId { get; set; }
+
+    /// <summary>A tab of <see cref="Member"/> paid in the app with <see cref="ClubhouseTabPaymentId"/> (checkout <c>chk_{Id}</c>).</summary>
+    public int ClubhousePaidTabId { get; set; }
     public List<int> UserIds { get; } = [];
 }
 

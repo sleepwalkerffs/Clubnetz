@@ -10,7 +10,8 @@ namespace Bookennis.Client.Pages.ClubShell.Clubhouse;
 public static class ClubhouseHelpers
 {
     public static readonly ClubhouseItemCategory[] Categories = Enum.GetValues<ClubhouseItemCategory>();
-    public static readonly ClubhousePaymentMethod[] PaymentMethods = Enum.GetValues<ClubhousePaymentMethod>();
+    /// <summary>What the host records by hand. <see cref="ClubhousePaymentMethod.Online"/> is only ever booked by SumUp's answer.</summary>
+    public static readonly ClubhousePaymentMethod[] PaymentMethods = [ClubhousePaymentMethod.Cash, ClubhousePaymentMethod.Card, ClubhousePaymentMethod.Other];
 
     /// <summary>The clubhouse host and the admins, same as the backend policy <c>ClubhouseHost</c>.</summary>
     public static bool CanManage(IEnumerable<MemberRole> roles) => roles.Any(r => r is MemberRole.ClubhouseHost or MemberRole.Admin);
@@ -20,6 +21,8 @@ public static class ClubhouseHelpers
     public static string TabUrl(int clubId, int tabId) => $"/clubs/{clubId}/clubhouse/tabs/{tabId}";
 
     public static string MenuUrl(int clubId) => $"/clubs/{clubId}/clubhouse?view=menu";
+
+    public static string SumUpUrl(int clubId) => $"/clubs/{clubId}/clubhouse?view=sumup";
 
     /// <summary>Amount in euros, e.g. "€ 4,50" (only eur is sold).</summary>
     public static string Amount(long cents) => "€ " + (cents / 100m).ToString("N2", CultureInfo.CurrentCulture);
@@ -39,6 +42,7 @@ public static class ClubhouseHelpers
     {
         ClubhousePaymentMethod.Cash => "💶",
         ClubhousePaymentMethod.Card => "💳",
+        ClubhousePaymentMethod.Online => "📱",
         _ => "🧾",
     };
 
