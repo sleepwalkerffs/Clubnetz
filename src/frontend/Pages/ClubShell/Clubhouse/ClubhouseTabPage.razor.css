@@ -1,0 +1,281 @@
+/* One tab: a grid of big item buttons, the entries of the tab and a bar at the bottom for the round that is not booked yet. */
+
+.clubhouse-page {
+    --clubhouse-accent: var(--bk-dark-amber, #B45309);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Room for the bar, so it never covers the last entries */
+.clubhouse-page--with-bar {
+    padding-bottom: 88px;
+}
+
+.clubhouse-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px 10px 6px;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--clubhouse-accent) 35%, var(--mud-palette-lines-default));
+    background: color-mix(in srgb, var(--clubhouse-accent) 7%, var(--mud-palette-surface));
+}
+
+.clubhouse-head__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.clubhouse-head__name {
+    margin: 0;
+    overflow: hidden;
+    font-size: 1.2rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.clubhouse-head__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.82rem;
+}
+
+.clubhouse-head__total {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.clubhouse-head__total-label {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.clubhouse-head__total-value {
+    font-size: 1.45rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.clubhouse-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--mud-palette-background-gray);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.6;
+}
+
+.clubhouse-page ::deep .clubhouse-empty {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px dashed var(--mud-palette-lines-default);
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.9rem;
+}
+
+::deep .clubhouse-pay {
+    align-self: flex-end;
+    min-height: 48px;
+    padding: 0 22px;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: none;
+}
+
+/* Items: tap = one more */
+.clubhouse-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.clubhouse-item {
+    position: relative;
+}
+
+.clubhouse-item__tap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 4px;
+    width: 100%;
+    height: 100%;
+    min-height: 92px;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.06s ease, border-color 0.15s ease;
+}
+
+.clubhouse-item__tap:active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+.clubhouse-item--picked .clubhouse-item__tap {
+    border: 2px solid var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 10%, var(--mud-palette-surface));
+}
+
+.clubhouse-item__emoji {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+.clubhouse-item__name {
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.clubhouse-item__price {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.88rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.clubhouse-item__count {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+    font-weight: 800;
+    line-height: 30px;
+    text-align: center;
+    pointer-events: none;
+}
+
+.clubhouse-item__less {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* Entries on the tab */
+.clubhouse-lines {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.clubhouse-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.clubhouse-line:last-child {
+    border-bottom: none;
+}
+
+.clubhouse-line__qty {
+    min-width: 34px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.clubhouse-line__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.clubhouse-line__name {
+    font-weight: 600;
+}
+
+.clubhouse-line__meta {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.78rem;
+}
+
+.clubhouse-line__total {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* The round that is not booked yet, always in reach of the thumb */
+.clubhouse-bar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.12);
+}
+
+::deep .clubhouse-bar__clear {
+    flex: 0 0 auto;
+    min-height: 52px;
+    text-transform: none;
+}
+
+::deep .clubhouse-bar__book {
+    flex: 0 1 420px;
+    min-height: 52px;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: none;
+}
+
+@media (max-width: 599.98px) {
+    ::deep .clubhouse-pay {
+        align-self: stretch;
+    }
+
+    .clubhouse-items {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    ::deep .clubhouse-bar__book {
+        flex: 1 1 auto;
+    }
+}

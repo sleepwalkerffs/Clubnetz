@@ -1,0 +1,49 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Clubhouse
+@using Bookennis.Client.Services.Store.Clubhouse
+@using Bookennis.Client.Utils
+
+@* Opens a tab for a guest from outside the club, who is only known by a name the host chooses. Closes with the id of the tab. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@L["WalkIn_Open"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@(!string.IsNullOrWhiteSpace(Name))" Loading="@Store.IsSaving" Title="@L["WalkIn_Title"]" AllowFullScreen="false">
+    <MudTextField T="string" @bind-Value="Name" Immediate="true" Label="@L["WalkIn_Name"]" HelperText="@L["WalkIn_Hint"]" MaxLength="80" AutoFocus="true"
+                  Variant="Variant.Outlined" OnKeyUp="OnKeyUp" />
+</BaseDialog>
+
+@code {
+    [Parameter] public string? Name { get; set; }
+
+    [Inject] private IClubhouseStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubhouseLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private async Task OnKeyUp(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && !string.IsNullOrWhiteSpace(Name) && !Store.IsSaving && await Submit() is { } result)
+            MudDialog.Close(result);
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        var result = await Store.OpenTab(null, Name?.Trim());
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        return DialogResult.Ok(result.Dto.Id);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

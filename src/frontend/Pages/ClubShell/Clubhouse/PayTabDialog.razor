@@ -1,0 +1,54 @@
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Clubhouse
+@using Bookennis.Client.Services.Store.Clubhouse
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Clubhouse
+
+@* The guest pays: one tap on how they paid closes the tab. Card means the host's own terminal; Clubnetz only notes it. *@
+
+<MudDialog>
+    <DialogContent>
+        <div class="pay">
+            <div class="pay__total">@ClubhouseHelpers.Amount(Tab.TotalCents)</div>
+            <div class="pay__question">@L["Pay_How"]</div>
+            <div class="pay__methods">
+                @foreach (var method in ClubhouseHelpers.PaymentMethods)
+                {
+                    <button type="button" class="pay__method pay__method--@method.ToString().ToLowerInvariant()" disabled="@Store.IsSaving" @onclick="() => Pay(method)">
+                        <span class="pay__emoji" aria-hidden="true">@ClubhouseHelpers.MethodEmoji(method)</span>
+                        <span>@ClubhouseHelpers.MethodText(L, method)</span>
+                    </button>
+                }
+            </div>
+            <div class="pay__hint">@L["Pay_CardHint"]</div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="() => MudDialog.Cancel()" Disabled="@Store.IsSaving">@SharedLocale["Cancel"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter, EditorRequired] public ClubhouseTabDto Tab { get; set; } = null!;
+
+    [Inject] private IClubhouseStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubhouseLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private async Task Pay(ClubhousePaymentMethod method)
+    {
+        var result = await Store.PayTab(Tab.Id, method);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(string.Format(L["Pay_Done"], ClubhouseHelpers.TabName(L, result.Dto.Name), ClubhouseHelpers.Amount(result.Dto.TotalCents)), Severity.Success);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+}

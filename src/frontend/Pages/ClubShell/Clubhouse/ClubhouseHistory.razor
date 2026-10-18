@@ -1,0 +1,117 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Clubhouse
+@using Bookennis.Client.Services.Store.Clubhouse
+@using Bookennis.Shared.Controller.Clubhouse
+
+@implements IDisposable
+
+@* The paid tabs of a period with the sums per payment method, for the host's accounts. A tab opens to show what was on it. *@
+
+<div class="clubhouse-history">
+    <ChoiceChips TItem="Period" Items="@Periods" Value="@period" ValueChanged="OnPeriodChanged" TextFunc="@(p => L[$"History_{p}"])" />
+
+    @if (Store.PaidTabs is not { } paid || Store.IsLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <MudGrid Spacing="2">
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.Receipt" Value="@ClubhouseHelpers.Amount(paid.CashCents + paid.CardCents + paid.OtherCents)" Label="@L["History_Total"]"
+                          Hint="@string.Format(L["History_Tabs"], paid.Tabs.Count)" Color="#B45309" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.Payments" Value="@ClubhouseHelpers.Amount(paid.CashCents)" Label="@L["Method_Cash"]" Color="#059669" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.CreditCard" Value="@ClubhouseHelpers.Amount(paid.CardCents)" Label="@L["Method_Card"]" Color="#2563EB" />
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <StatTile Icon="@Icons.Material.Filled.MoreHoriz" Value="@ClubhouseHelpers.Amount(paid.OtherCents)" Label="@L["Method_Other"]" Color="#6B7280" />
+            </MudItem>
+        </MudGrid>
+
+        @if (paid.Tabs.Count == 0)
+        {
+            <div class="clubhouse-empty">@L["History_Empty"]</div>
+        }
+        else
+        {
+            <div class="clubhouse-paid">
+                @foreach (var tab in paid.Tabs)
+                {
+                    var expanded = expandedTabId == tab.Id;
+                    <button type="button" class="clubhouse-paid__row" aria-expanded="@(expanded ? "true" : "false")" @onclick="() => expandedTabId = expanded ? null : tab.Id">
+                        <span class="clubhouse-paid__method" aria-hidden="true">@ClubhouseHelpers.MethodEmoji(tab.PaymentMethod ?? ClubhousePaymentMethod.Other)</span>
+                        <span class="clubhouse-paid__body">
+                            <span class="clubhouse-paid__name">@ClubhouseHelpers.TabName(L, tab.Name)</span>
+                            <span class="clubhouse-paid__meta">
+                                @(tab.PaidAt is { } paidAt ? $"{ClubhouseHelpers.Day(paidAt)} {ClubhouseHelpers.Time(paidAt)}" : null) · @ClubhouseHelpers.MethodText(L, tab.PaymentMethod ?? ClubhousePaymentMethod.Other)
+                            </span>
+                        </span>
+                        <span class="clubhouse-paid__total">@ClubhouseHelpers.Amount(tab.TotalCents)</span>
+                    </button>
+                    @if (expanded)
+                    {
+                        <ul class="clubhouse-paid__lines">
+                            @foreach (var line in tab.Lines)
+                            {
+                                <li><span>@line.Quantity × @line.Name</span><span>@ClubhouseHelpers.Amount(line.TotalCents)</span></li>
+                            }
+                        </ul>
+                    }
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Inject] private IClubhouseStore Store { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubhouseLocale> L { get; set; } = null!;
+
+    private enum Period
+    {
+        Today,
+        Week,
+        ThisMonth,
+        LastMonth,
+    }
+
+    private static readonly Period[] Periods = Enum.GetValues<Period>();
+
+    private Period period = Period.Today;
+    private int? expandedTabId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnClubhouseChanged += OnChanged;
+        await Load();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task OnPeriodChanged(Period value)
+    {
+        period = value;
+        expandedTabId = null;
+        await Load();
+    }
+
+    private Task Load()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var firstOfMonth = new DateOnly(today.Year, today.Month, 1);
+        var (from, to) = period switch
+        {
+            Period.Today => (today, today),
+            Period.Week => (today.AddDays(-6), today),
+            Period.ThisMonth => (firstOfMonth, today),
+            _ => (firstOfMonth.AddMonths(-1), firstOfMonth.AddDays(-1)),
+        };
+        return Store.LoadPaidTabs(from, to);
+    }
+
+    public void Dispose() => Store.OnClubhouseChanged -= OnChanged;
+}

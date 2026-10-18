@@ -58,6 +58,7 @@ else
             @if (IsUser)
             {
                 <MembershipCard ClubId="@ClubId" />
+                <ClubhouseCard />
             }
 
             @* Members who are not active get a 403 for statistics, leaderboard and Wrapped *@

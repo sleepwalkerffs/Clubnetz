@@ -37,7 +37,8 @@ public class ClubApiKeySecurityTests(ApiSecurityFixture app)
         "Wrapped",
 
         // Membership fees: plans, the orders of the key's creator, the treasurer's list and the status of the Stripe account.
-        // Connecting and disconnecting the Stripe account (PaymentAccount) is not open to keys, and neither are court sales (CourtSales).
+        // Connecting and disconnecting the Stripe account (PaymentAccount) is not open to keys, and neither are court sales (CourtSales)
+        // and the tabs of the clubhouse host (Clubhouse).
         "MembershipPlans", "Memberships", "MembershipPayments", "Payments",
     ];
 

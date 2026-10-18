@@ -1,0 +1,116 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Clubhouse
+@using Bookennis.Client.Services.Store.Clubhouse
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Clubhouse
+
+@* Adds an item to the menu or changes, hides or deletes one. Tabs keep the name and price an item had when it was booked. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@(!string.IsNullOrWhiteSpace(name) && price is >= 0)" Loading="@Store.IsSaving" Title="@L[Item is null ? "Item_New" : "Item_Edit"]">
+    <div class="item-form">
+        <MudTextField T="string" @bind-Value="name" Immediate="true" Label="@L["Item_Name"]" Placeholder="@L["Item_NamePlaceholder"]" MaxLength="60" AutoFocus="@(Item is null)"
+                      Variant="Variant.Outlined" />
+
+        <MudNumericField T="decimal?" @bind-Value="price" Immediate="true" Label="@L["Item_Price"]" Min="@(0m)" Max="@(1000m)" Step="@(0.1m)" Format="N2" Adornment="Adornment.Start" AdornmentText="€"
+                         Variant="Variant.Outlined" HideSpinButtons="true" InputMode="@(InputMode.@decimal)" />
+
+        <ChoiceChips TItem="ClubhouseItemCategory" Items="@ClubhouseHelpers.Categories" @bind-Value="category" Label="@L["Item_Category"]"
+                     TextFunc="@(c => $"{ClubhouseHelpers.CategoryEmoji(c)} {ClubhouseHelpers.CategoryText(L, c)}")" />
+
+        <div class="item-form__switch">
+            <MudSwitch T="bool" @bind-Value="isAvailable" Color="Color.Primary" Label="@L["Item_Available"]" />
+            <div class="item-form__hint">@L["Item_AvailableHint"]</div>
+        </div>
+
+        <MudNumericField T="int" @bind-Value="sortOrder" Label="@L["Item_SortOrder"]" HelperText="@L["Item_SortOrderHint"]" Min="0" Max="999" Variant="Variant.Outlined" />
+
+        @if (Item is not null)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteOutline" OnClick="Delete" Disabled="@Store.IsSaving" Class="item-form__delete">
+                @L["Item_Delete"]
+            </MudButton>
+        }
+    </div>
+</BaseDialog>
+
+@code {
+    /// <summary>The item to change; <c>null</c> adds a new one.</summary>
+    [Parameter] public ClubhouseItemDto? Item { get; set; }
+
+    [Inject] private IClubhouseStore Store { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubhouseLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private string? name;
+    private decimal? price;
+    private ClubhouseItemCategory category = ClubhouseItemCategory.Drink;
+    private bool isAvailable = true;
+    private int sortOrder;
+
+    protected override void OnInitialized()
+    {
+        if (Item is null)
+            return;
+
+        name = Item.Name;
+        price = Item.PriceCents / 100m;
+        category = Item.Category;
+        isAvailable = Item.IsAvailable;
+        sortOrder = Item.SortOrder;
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        var model = new SaveClubhouseItemModel
+        {
+            Name = name?.Trim(),
+            PriceCents = (int)Math.Round((price ?? 0) * 100m, MidpointRounding.AwayFromZero),
+            Category = category,
+            IsAvailable = isAvailable,
+            SortOrder = sortOrder,
+        };
+
+        var result = await Store.SaveItem(Item?.Id, model);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(string.Format(L["Item_Saved"], result.Dto.Name), Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private async Task Delete()
+    {
+        if (Item is null)
+            return;
+
+        if (await DialogService.ShowMessageBox(L["Item_DeleteTitle"], string.Format(L["Item_DeleteText"], Item.Name), yesText: L["Item_Delete"], cancelText: SharedLocale["Cancel"]) != true)
+            return;
+
+        var result = await Store.DeleteItem(Item.Id);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(string.Format(L["Item_Deleted"], Item.Name), Severity.Success);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

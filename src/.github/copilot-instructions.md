@@ -34,7 +34,7 @@
 
 ### Active members (`Business/Members/ActiveMembership.cs`)
 
-- **The one helper that decides it**: a member is active when enrolled in the active season (the season whose period contains today), a parent of a family with an enrolled child, or has a role other than `User`/`Guest` (Admin, Maintainer, Treasurer, SportsDirector, YouthSportsDirector, Trainer). Application administrators (support mode) count as active. Use `ActiveMembership.IsActive` / `IsEnrolledInActiveSeason` / `OwnAndChildMemberIds`, never write the rule again.
+- **The one helper that decides it**: a member is active when enrolled in the active season (the season whose period contains today), a parent of a family with an enrolled child, or has a staff role (`ActiveMembership.StaffRoles`: Admin, Maintainer, Treasurer, SportsDirector, YouthSportsDirector, Trainer). `ClubhouseHost` is **not** a staff role: the host is a business partner of the club and only gets names and pictures in the clubhouse screens. Application administrators (support mode) count as active. Use `ActiveMembership.IsActive` / `IsEnrolledInActiveSeason` / `OwnAndChildMemberIds`, never write the rule again.
 - Policy `AuthorizationPolicies.ActiveMember` (`ActiveMemberRequirement`, `ActiveMemberAuthorizationHandler`, accepts API keys like the other club policies; a key's creator is an admin and therefore active) guards everything that shows other members: `Leaderboards` (GET), own `Statistics`, `Wrapped` (GETs), `OneTimeBadges` (GET list with awardees), `Bookings/RecurringSeries/{id}`, and - for another member than oneself - `Members/{id}/profile`, `MemberBadges/Members/{id}/badges|trophy-case` (`IAuthorizationService.EnsureSelfOrActiveMember`).
 - Members who are not active keep: their own profile and member record, the booking calendar **anonymized**, courts, club info, play modes, court blockings, news and the club calendar (without names of others: `CreatedByName` and other registrations are stripped in the controllers), the membership page (they must be able to buy a membership), notifications, court sales and the own family. `Families/AvailableFamilyMembers` returns an empty list to them (treasurers put their families together in the payments dialogs).
 - **Anonymized calendar**: `GET Bookings` / `GET Bookings/{id}` pass `AnonymousViewerUserId` for members who are not active (`BookingsController.AnonymousViewer`). `BookingAnonymizer` empties `Players`, `Comment`, `RecurringBookingSeriesId` and replaces the play mode by `BookingAnonymizer.NeutralPlayMode` (id 0, empty name, gray) with `BookingResult.IsAnonymized = true` - except for bookings the caller or a child of their family plays in. `GET Players` returns only the caller and their family's children (`GetPlayers(OnlyMemberIds)`).
@@ -87,6 +87,37 @@ A member of the club who is **not enrolled in the active season** (joined with "
 - `GET|PUT settings`, `POST|PUT|DELETE price-rules[/{ruleId}]`, `GET purchases?from&to&status`, `POST purchases/{id}/cancel`, `GET|POST credits`, `GET credits/members?search` (names only): `CourtSalesManager`. `GET price-rules`, `GET options`, `GET quote?courtId&from&to`, `POST purchases`: `CourtSalesMember`. `GET purchases/{id}` (runs the sync), `POST purchases/{id}/release`: `OwnsCourtPurchase`.
 - The treasurers' lists carry names only, never email, birthday or Stripe ids. `ExportPersonalData` lists `CourtPurchases` and `BookingCredits`.
 - `CourtSalesSecurityTests` attack it over HTTP (other buyer, other club, members editing prices or credits, enrolled member buying, releasing a hold of somebody else, webhook of a foreign account).
+
+## Clubhouse Tabs (Wirt)
+
+### Overview
+
+The clubhouse host ("Wirt", role `MemberRole.ClubhouseHost` = 8, English "Clubhouse host") rents the clubhouse and sells food and drinks. Instead of a paper list, the host books what a guest takes onto the guest's tab; the guest pays at the end. **The money goes to the host, not to the club**: Clubnetz only keeps the list and records how it was paid (cash, the host's own card terminal, other). No payment provider is involved yet (see Not built yet).
+
+### Domain (`Bookennis.Domain/Clubhouse`)
+
+- `ClubhouseItem` (`TenantDomainEntity`): `Name` (≤ 60), `Category` (`Drink`, `Food`, `Other`), `PriceCents` (0-100000, 0 = free), `Currency` ("eur"), `IsAvailable` (hidden from the host's buttons when `false`, kept), `SortOrder`. Menu order: category, sort order, name (`InMenuOrder`).
+- `ClubhouseTab` (`TenantDomainEntity`, aggregate root): for a member (`MemberId`) **or** a guest from outside (`GuestName` ≤ 80, e.g. "Table 3"), never both (`ClubhouseTabGuestInvalid`). `Status` `Open` → `Paid` (`MarkPaid(method, paidTo, now)`, not for an empty tab), `OpenedAt`, `OpenedByMemberId?`, `PaidAt?`, `PaymentMethod?`, `PaidToMemberId?`. **A member has one open tab per club** (unique filtered index on `ClubId, MemberId` where open): opening again returns it. Only an open, empty tab can be discarded (deleted).
+- `ClubhouseTabLine`: a snapshot of the item (`Name`, `Category`, `UnitPriceCents`) plus `Quantity` (1-50), `AddedAt`, `AddedByMemberId?`, `ItemId?` (set null when the item is deleted). **Changing or deleting an item never changes a tab.** At most 300 lines per tab; a paid tab can't be changed (`ClubhouseTabNotOpen`).
+- The tab stays as the host's record when the member leaves (FK set null, the name then shows as "former member"). `ExportPersonalData` lists the own tabs with their lines (`ClubhouseTabs`).
+
+### API (`ClubhouseController`, `api/Clubs/{clubId}/Clubhouse`)
+
+- **Cookie only, never an API key** (money), not in `ControllersOpenToKeys`. Policies: `ClubhouseHost` (ClubhouseHost or Admin) and `ClubhouseGuest` (any member).
+- Host: `GET|POST items`, `PUT|DELETE items/{itemId}`, `GET board` (`GetClubhouseBoard`), `GET guests` (all members with name and picture, filtered on the device), `POST tabs` (open / get the open one), `GET tabs?from&to` (paid tabs by the local day they were paid, sums per method), `GET tabs/{tabId}`, `POST tabs/{tabId}/items` (one round: several items at once, the same item is merged into one line), `DELETE tabs/{tabId}/lines/{lineId}`, `POST tabs/{tabId}/pay`, `DELETE tabs/{tabId}` (discard an empty tab).
+- Member: `GET my-tabs` - the open and the last 10 paid tabs of the caller and of the children of the families they are a parent of (`ActiveMembership.OwnAndChildMemberIds`).
+- **The board is built for speed**: open tabs (last booked first), then the members who play today (bookings of the local day, on court now first, members of other clubs left out), then the regulars (most tabs in the last 60 days); every member is listed once. Days are local days of `ClubEventInfo.TimeZone` (`ClubhouseQueries.LocalDate/LocalMidnight`). "Playing today" shows that a member plays today, nothing else (no times, no courts).
+- `ClubhouseSecurityTests` attack it over HTTP (keys, members, treasurers, the guest of a tab, a host of another club with ids of club A).
+
+### FE
+
+- `Pages/ClubShell/Clubhouse`: `Clubhouse.razor` (`/clubs/{id}/clubhouse`, `?view=menu|history`): the start screen with search (every word matches the start of the first or last name, `ClubhouseHelpers.Matches`), "Guest from outside" (`WalkInDialog`), open tabs, playing today and regulars; the menu (`ClubhouseMenu`, `ClubhouseItemDialog`) and the paid tabs (`ClubhouseHistory`). `ClubhouseTabPage.razor` (`/clubs/{id}/clubhouse/tabs/{tabId}`): big item buttons (a tap = one more, "−" one less), a bar at the bottom books the round and goes back to the start screen; "Pay" at the top opens `PayTabDialog` (one tap per method). Texts in `ClubhouseLocale(.de).resx`, store `IClubhouseStore`.
+- My Club: `ClubhouseCard` (only while a tab is open or one was paid in the last 14 days).
+- Nav: section "Clubhouse" for ClubhouseHost and Admin (also in support mode).
+
+### Not built yet
+
+Paying a tab in the app (e.g. through the host's own SumUp account), receipts, stock, happy hours, a tab for a whole team.
 
 ## Member Data & Privacy
 
@@ -568,7 +599,7 @@ Club admins connect their own scripts and tools to their club with an API key (`
 - `ApiSecurityFixture` starts **the real app** (`Program.cs`, Production environment, `WebApplicationFactory`) against its own copy of the test database and seeds two clubs. `ClubApiKeySecurityTests` attack it over HTTP. They run with `dotnet test`, so also in CI.
 - **The sweeps read every endpoint from the running app** (`ApiEndpoint.All`), nothing is listed by hand: a new endpoint is attacked automatically. They check that a key is only accepted on the routes of its club, that every kind of rejected key (unknown, expired, revoked, other club, creator no longer admin) gets 401 everywhere, that a read-only key gets 403 on every write, and that a key of club A never reads or changes anything of club B.
 - Leaks are detected with a canary: every text of club B contains `ApiSecurityFixture.Canary`, which must never appear in an answer to club A. Changes are detected with `Fingerprint` (a hash over all rows with the club's `ClubId`). A probe middleware reports who a request really ran as (`ApiResponse.RanAsKey`), so the tests don't have to guess from status codes.
-- `ControllersOpenToKeys` in the test is the reviewed list of controllers a key can reach. **A new club controller fails the test until it is added there on purpose**; `ClubApiKeys`, `PaymentAccount` and `CourtSales` must never be in it.
+- `ControllersOpenToKeys` in the test is the reviewed list of controllers a key can reach. **A new club controller fails the test until it is added there on purpose**; `ClubApiKeys`, `PaymentAccount`, `CourtSales` and `Clubhouse` must never be in it.
 - When you add a tenant entity that a club endpoint returns or changes by id, seed one in `ApiSecurityFixture.AddClub` (with the canary text) and add its route parameter to `ApiEndpoint.Value`, otherwise the sweeps call that endpoint with an id that does not exist.
 - **`IgnoreQueryFilters()` switches the tenant filter off for the whole query, not only for the set it is called on.** A query that uses it for players of other clubs must filter its root entity by the club explicitly (`booking.ClubId == currentClub.Id`). The sweeps found exactly this in `GetBookings`, `GetBooking`, `GetUpcomingBookings`, `GetMemberBookingHistory` and `GetMember`.
 - Handler tests (`TestBase`) can't test tenant isolation: the tenant set with `SetTenantId` does not reach the handler's `AppDbContext`, so the tenant filter is off there. Test isolation between clubs in the security tests.
@@ -586,7 +617,7 @@ Club admins connect their own scripts and tools to their club with an API key (`
 ## Navigation & Club Switcher
 
 - `Shared/NavMenu.razor` builds its links in `Sections` (one place for all role rules): the club section without a title (My Club, Book, News, Calendar, Leaderboard), "Personal" (membership, own statistics, subscription planner), then the management sections "Members & fees", "Courts & play" and "Club setup", and "Account" at the bottom. A link is only listed in the section of its topic, whatever role sees it; empty sections are hidden. Support mode shows the management sections as for an admin. Section texts are `Section_*` in `NavigationLocale(.de).resx`.
-- Who sees what must match the backend policies: Members (Admin, Maintainer), Court sales / Membership plans / Membership fees (Admin, Treasurer), Court blockings (Admin, Maintainer, SportsDirector), Badges (Admin, SportsDirector, YouthSportsDirector), Club statistics (Admin, Maintainer), Club setup (Admin).
+- Who sees what must match the backend policies: Clubhouse (ClubhouseHost, Admin), Members (Admin, Maintainer), Court sales / Membership plans / Membership fees (Admin, Treasurer), Court blockings (Admin, Maintainer, SportsDirector), Badges (Admin, SportsDirector, YouthSportsDirector), Club statistics (Admin, Maintainer), Club setup (Admin).
 - Members who are not active (`IClubProfileStore.IsActiveMember`, see Members, Former Guests & Active Members) don't get Leaderboard, own statistics, Season Wrapped and the subscription planner.
 - Pages have no title heading in the content (no `PageHeader`): the nav shows where the user is, the browser tab gets the `<PageTitle>`.
 - `Components/Shared/ClubSwitcher.razor` (top of the drawer) shows the open club with the own roles and lists the clubs of the user (`IProfileStore.Clubs`, from `GetUserProfileResult.Clubs` with name and roles). Switching is `NavigationManager.SwitchToClub` (full page load, the stores still hold the data of the other club). "Join another club" opens `SelectClubDialog` (searchable cards, without the clubs the user is already a member of), which `App.razor` also shows to a user without a club. `ClubAvatar` draws the club initials on a color derived from the club id.

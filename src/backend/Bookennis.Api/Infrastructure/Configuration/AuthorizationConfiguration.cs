@@ -134,6 +134,20 @@ public static class AuthorizationConfiguration
                           .RequireAssertion(context => !context.User.IsClubApiKey())
                           .AddRequirements(new OwnsCourtPurchaseRequirement()))
 
+                // Clubhouse Policies: cookie only, the tabs are about the money of the host
+                .AddPolicy(AuthorizationPolicies.ClubhouseGuest, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [] }))
+                .AddPolicy(AuthorizationPolicies.ClubhouseHost, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.ClubhouseHost, MemberRole.Admin] }))
+
                 // Club User Policy
                 .AddPolicy(AuthorizationPolicies.Member, policy =>
                      policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)

@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Page_Title" xml:space="preserve">
+    <value>Clubhaus</value>
+  </data>
+  <data name="Page_Subtitle" xml:space="preserve">
+    <value>Buche Essen und Getränke auf die Rechnung deiner Gäste – bezahlt wird am Schluss.</value>
+  </data>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Nur der Wirt und die Administratoren des Vereins sehen das Clubhaus.</value>
+  </data>
+  <data name="Tab_Tabs" xml:space="preserve">
+    <value>Rechnungen</value>
+  </data>
+  <data name="Tab_Menu" xml:space="preserve">
+    <value>Karte</value>
+  </data>
+  <data name="Tab_History" xml:space="preserve">
+    <value>Bezahlt</value>
+  </data>
+  <data name="Hero_Open" xml:space="preserve">
+    <value>{0} offen</value>
+  </data>
+  <data name="Hero_Today" xml:space="preserve">
+    <value>{0} heute bezahlt</value>
+  </data>
+  <data name="Search_Label" xml:space="preserve">
+    <value>Gast suchen</value>
+  </data>
+  <data name="Search_Placeholder" xml:space="preserve">
+    <value>Vor- oder Nachname</value>
+  </data>
+  <data name="Search_NoResult" xml:space="preserve">
+    <value>Niemand gefunden. Ist es ein Gast von außerhalb?</value>
+  </data>
+  <data name="Search_More" xml:space="preserve">
+    <value>{0} weitere – tippe weiter</value>
+  </data>
+  <data name="WalkIn_Button" xml:space="preserve">
+    <value>Gast von außerhalb</value>
+  </data>
+  <data name="WalkIn_Title" xml:space="preserve">
+    <value>Rechnung für einen Gast von außerhalb</value>
+  </data>
+  <data name="WalkIn_Name" xml:space="preserve">
+    <value>Name oder Tisch</value>
+  </data>
+  <data name="WalkIn_Hint" xml:space="preserve">
+    <value>Damit du die Rechnung wiederfindest, z. B. „Tisch 3“ oder „Herr Huber“.</value>
+  </data>
+  <data name="WalkIn_Open" xml:space="preserve">
+    <value>Rechnung öffnen</value>
+  </data>
+  <data name="Section_OpenTabs" xml:space="preserve">
+    <value>Offene Rechnungen</value>
+  </data>
+  <data name="Section_OpenTabs_Empty" xml:space="preserve">
+    <value>Keine offenen Rechnungen. Tippe auf einen Gast, um eine zu beginnen.</value>
+  </data>
+  <data name="Section_PlayingToday" xml:space="preserve">
+    <value>Spielen heute</value>
+  </data>
+  <data name="Section_PlayingToday_Hint" xml:space="preserve">
+    <value>Wer gerade spielt, steht vorne</value>
+  </data>
+  <data name="Section_Regulars" xml:space="preserve">
+    <value>Stammgäste</value>
+  </data>
+  <data name="Section_Regulars_Hint" xml:space="preserve">
+    <value>Die meisten Rechnungen der letzten Wochen</value>
+  </data>
+  <data name="Section_Search" xml:space="preserve">
+    <value>Mitglieder</value>
+  </data>
+  <data name="FormerMember" xml:space="preserve">
+    <value>Ehemaliges Mitglied</value>
+  </data>
+  <data name="WalkIn_Chip" xml:space="preserve">
+    <value>Gast</value>
+  </data>
+  <data name="ItemCount" xml:space="preserve">
+    <value>{0} Stk.</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Alle Rechnungen</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Summe</value>
+  </data>
+  <data name="Category_All" xml:space="preserve">
+    <value>Alle</value>
+  </data>
+  <data name="Category_Drink" xml:space="preserve">
+    <value>Getränke</value>
+  </data>
+  <data name="Category_Food" xml:space="preserve">
+    <value>Essen</value>
+  </data>
+  <data name="Category_Other" xml:space="preserve">
+    <value>Sonstiges</value>
+  </data>
+  <data name="Round_Book" xml:space="preserve">
+    <value>{0} buchen · {1}</value>
+  </data>
+  <data name="Round_Clear" xml:space="preserve">
+    <value>Leeren</value>
+  </data>
+  <data name="Round_Booked" xml:space="preserve">
+    <value>Auf die Rechnung von {0} gebucht.</value>
+  </data>
+  <data name="Round_Hint" xml:space="preserve">
+    <value>Tippe an, was diese Runde ist, und buche sie dann.</value>
+  </data>
+  <data name="Round_Less" xml:space="preserve">
+    <value>Eins weniger</value>
+  </data>
+  <data name="Lines_Title" xml:space="preserve">
+    <value>Auf der Rechnung</value>
+  </data>
+  <data name="Lines_Empty" xml:space="preserve">
+    <value>Noch nichts auf der Rechnung.</value>
+  </data>
+  <data name="Lines_Remove" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="Lines_RemoveTitle" xml:space="preserve">
+    <value>Von der Rechnung entfernen?</value>
+  </data>
+  <data name="Lines_RemoveText" xml:space="preserve">
+    <value>{0} × {1} ({2}) wird von der Rechnung genommen.</value>
+  </data>
+  <data name="Pay_Button" xml:space="preserve">
+    <value>{0} kassieren</value>
+  </data>
+  <data name="Pay_Title" xml:space="preserve">
+    <value>{0} zahlt</value>
+  </data>
+  <data name="Pay_How" xml:space="preserve">
+    <value>Wie zahlt der Gast?</value>
+  </data>
+  <data name="Pay_CardHint" xml:space="preserve">
+    <value>Karte heißt dein eigenes Kartenterminal – Clubnetz merkt sich nur, wie bezahlt wurde.</value>
+  </data>
+  <data name="Pay_Done" xml:space="preserve">
+    <value>{0} hat {1} bezahlt.</value>
+  </data>
+  <data name="Method_Cash" xml:space="preserve">
+    <value>Bar</value>
+  </data>
+  <data name="Method_Card" xml:space="preserve">
+    <value>Karte</value>
+  </data>
+  <data name="Method_Other" xml:space="preserve">
+    <value>Sonstiges</value>
+  </data>
+  <data name="Discard" xml:space="preserve">
+    <value>Leere Rechnung verwerfen</value>
+  </data>
+  <data name="Discarded" xml:space="preserve">
+    <value>Rechnung verworfen.</value>
+  </data>
+  <data name="TabPaid" xml:space="preserve">
+    <value>Bezahlt am {0} · {1}</value>
+  </data>
+  <data name="TabNotFound" xml:space="preserve">
+    <value>Diese Rechnung gibt es (nicht mehr).</value>
+  </data>
+  <data name="MenuEmpty" xml:space="preserve">
+    <value>Die Karte ist leer. Lege zuerst deine Getränke und Speisen an.</value>
+  </data>
+  <data name="MenuEmpty_Action" xml:space="preserve">
+    <value>Karte anlegen</value>
+  </data>
+  <data name="Menu_Add" xml:space="preserve">
+    <value>Artikel hinzufügen</value>
+  </data>
+  <data name="Menu_Hidden" xml:space="preserve">
+    <value>Ausgeblendet</value>
+  </data>
+  <data name="Menu_Empty" xml:space="preserve">
+    <value>Noch nichts auf der Karte. Beginne mit dem, was du am meisten verkaufst.</value>
+  </data>
+  <data name="Menu_Hint" xml:space="preserve">
+    <value>Geänderte Preise gelten nur für das, was du ab jetzt buchst.</value>
+  </data>
+  <data name="Item_New" xml:space="preserve">
+    <value>Neuer Artikel</value>
+  </data>
+  <data name="Item_Edit" xml:space="preserve">
+    <value>Artikel bearbeiten</value>
+  </data>
+  <data name="Item_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Item_NamePlaceholder" xml:space="preserve">
+    <value>z. B. Bier 0,5 l</value>
+  </data>
+  <data name="Item_Price" xml:space="preserve">
+    <value>Preis</value>
+  </data>
+  <data name="Item_Category" xml:space="preserve">
+    <value>Kategorie</value>
+  </data>
+  <data name="Item_Available" xml:space="preserve">
+    <value>Auf der Karte</value>
+  </data>
+  <data name="Item_AvailableHint" xml:space="preserve">
+    <value>Schalte es aus, wenn es ausverkauft ist – der Artikel bleibt erhalten.</value>
+  </data>
+  <data name="Item_SortOrder" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="Item_SortOrderHint" xml:space="preserve">
+    <value>Kleinere Zahlen stehen in der Kategorie weiter vorne.</value>
+  </data>
+  <data name="Item_Saved" xml:space="preserve">
+    <value>{0} gespeichert.</value>
+  </data>
+  <data name="Item_Delete" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
+  <data name="Item_DeleteTitle" xml:space="preserve">
+    <value>Artikel löschen?</value>
+  </data>
+  <data name="Item_DeleteText" xml:space="preserve">
+    <value>{0} löschen? Rechnungen behalten Name und Preis.</value>
+  </data>
+  <data name="Item_Deleted" xml:space="preserve">
+    <value>{0} gelöscht.</value>
+  </data>
+  <data name="Free" xml:space="preserve">
+    <value>Gratis</value>
+  </data>
+  <data name="History_Today" xml:space="preserve">
+    <value>Heute</value>
+  </data>
+  <data name="History_Week" xml:space="preserve">
+    <value>Letzte 7 Tage</value>
+  </data>
+  <data name="History_ThisMonth" xml:space="preserve">
+    <value>Dieser Monat</value>
+  </data>
+  <data name="History_LastMonth" xml:space="preserve">
+    <value>Letzter Monat</value>
+  </data>
+  <data name="History_Empty" xml:space="preserve">
+    <value>Keine bezahlten Rechnungen in diesem Zeitraum.</value>
+  </data>
+  <data name="History_Total" xml:space="preserve">
+    <value>Gesamt</value>
+  </data>
+  <data name="History_Tabs" xml:space="preserve">
+    <value>Rechnungen: {0}</value>
+  </data>
+  <data name="Card_Title" xml:space="preserve">
+    <value>Clubhaus</value>
+  </data>
+  <data name="Card_Open" xml:space="preserve">
+    <value>{0} offen – bezahlt wird im Clubhaus.</value>
+  </data>
+  <data name="Card_OpenOf" xml:space="preserve">
+    <value>{0} auf der Rechnung von {1}</value>
+  </data>
+  <data name="Card_LastPaid" xml:space="preserve">
+    <value>Zuletzt bezahlt: {0} am {1}</value>
+  </data>
+  <data name="Card_Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Card_Hide" xml:space="preserve">
+    <value>Ausblenden</value>
+  </data>
+</root>

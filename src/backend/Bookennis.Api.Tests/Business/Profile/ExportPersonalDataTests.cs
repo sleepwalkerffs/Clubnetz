@@ -119,6 +119,33 @@ public class ExportPersonalDataTests(TestFixture fixture) : TestBase(fixture)
         json.Should().NotContain("Note of the treasurer").And.NotContain("cs_secret").And.NotContain("pi_secret").And.NotContain("Stranger");
     }
 
+    [Fact]
+    public async Task Export_ContainsTheOwnClubhouseTabs_NotThoseOfOthers()
+    {
+        await QueryAsync(async ctx =>
+        {
+            var beer = new Domain.Clubhouse.ClubhouseItem(TestDataSeed.ClubId, new Domain.Clubhouse.ClubhouseItem.ItemData("Beer", Domain.Clubhouse.ClubhouseItemCategory.Drink, 450, true, 0));
+            ctx.Add(beer);
+            await ctx.SaveChangesAsync();
+
+            var own = new Domain.Clubhouse.ClubhouseTab(TestDataSeed.ClubId, TestDataSeed.Member1Id, null, TestDataSeed.Member2Id, DateTimeOffset.UtcNow);
+            own.Add(beer, 2, null, DateTimeOffset.UtcNow);
+            own.MarkPaid(Domain.Clubhouse.ClubhousePaymentMethod.Cash, null, DateTimeOffset.UtcNow);
+            var other = new Domain.Clubhouse.ClubhouseTab(TestDataSeed.ClubId, TestDataSeed.Member2Id, null, null, DateTimeOffset.UtcNow);
+            other.Add(new Domain.Clubhouse.ClubhouseItem(TestDataSeed.ClubId, new Domain.Clubhouse.ClubhouseItem.ItemData("Secret wine", Domain.Clubhouse.ClubhouseItemCategory.Drink, 900, true, 0)), 1, null, DateTimeOffset.UtcNow);
+            ctx.AddRange(own, other);
+            await ctx.SaveChangesAsync();
+        });
+        SetCurrentUser(TestDataSeed.UserId);
+
+        var export = await SendAsync(new ExportPersonalData());
+
+        var tab = export.ClubhouseTabs.Should().ContainSingle().Subject;
+        tab.Should().BeEquivalentTo(new { Club = "TestClub", Status = Domain.Clubhouse.ClubhouseTabStatus.Paid, PaymentMethod = (Domain.Clubhouse.ClubhousePaymentMethod?)Domain.Clubhouse.ClubhousePaymentMethod.Cash }, o => o.ExcludingMissingMembers());
+        tab.Items.Should().ContainSingle().Which.Should().BeEquivalentTo(new { Name = "Beer", Quantity = 2, UnitPrice = 4.5m }, o => o.ExcludingMissingMembers());
+        System.Text.Json.JsonSerializer.Serialize(export).Should().NotContain("Secret wine");
+    }
+
     private void SetCurrentUser(int userId)
     {
         var userAccessor = GetInstance<IUserAccessor>();

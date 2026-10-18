@@ -705,4 +705,31 @@
   <data name="CourtSalePlayModeHasFixedDuration" xml:space="preserve">
     <value>This play mode has a fixed length and can't be used for bought slots.</value>
   </data>
+  <data name="ClubhouseItemNameInvalid" xml:space="preserve">
+    <value>Enter a name of at most {0} characters.</value>
+  </data>
+  <data name="ClubhouseItemPriceInvalid" xml:space="preserve">
+    <value>The price must be between 0 and {0} cents.</value>
+  </data>
+  <data name="ClubhouseTabGuestInvalid" xml:space="preserve">
+    <value>Choose a member or enter a name of at most {0} characters.</value>
+  </data>
+  <data name="ClubhouseTabNotOpen" xml:space="preserve">
+    <value>This tab was already paid.</value>
+  </data>
+  <data name="ClubhouseQuantityInvalid" xml:space="preserve">
+    <value>Book between 1 and {0} of an item at once.</value>
+  </data>
+  <data name="ClubhouseTabTooManyLines" xml:space="preserve">
+    <value>This tab is full ({0} entries). Let the guest pay and open a new one.</value>
+  </data>
+  <data name="ClubhouseTabEmpty" xml:space="preserve">
+    <value>There is nothing on this tab to pay.</value>
+  </data>
+  <data name="ClubhouseTabNotEmpty" xml:space="preserve">
+    <value>Only an empty tab can be discarded.</value>
+  </data>
+  <data name="ClubhouseItemNotAvailable" xml:space="preserve">
+    <value>This item is not on the menu any more.</value>
+  </data>
 </root>

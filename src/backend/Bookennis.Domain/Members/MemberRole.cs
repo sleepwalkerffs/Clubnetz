@@ -10,4 +10,7 @@ public enum MemberRole
     Trainer = 5,
     Guest = 6,
     Treasurer = 7,
+
+    /// <summary>Runs the clubhouse ("Wirt"): sells food and drinks and keeps the guests' tabs. Not a staff role of the club.</summary>
+    ClubhouseHost = 8,
 }

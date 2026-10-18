@@ -1,0 +1,86 @@
+.clubhouse-card {
+    --card-color: var(--bk-dark-amber, #B45309);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+}
+
+.clubhouse-card--open {
+    border-color: color-mix(in srgb, var(--card-color) 45%, var(--mud-palette-lines-default));
+    border-left: 5px solid var(--card-color);
+    background: color-mix(in srgb, var(--card-color) 7%, var(--mud-palette-surface));
+}
+
+.clubhouse-card__row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.clubhouse-card__emoji {
+    flex: 0 0 auto;
+    font-size: 1.9rem;
+    line-height: 1;
+}
+
+.clubhouse-card__body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.clubhouse-card__title {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.clubhouse-card__text {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.88rem;
+}
+
+::deep .clubhouse-card__action {
+    flex: 0 0 auto;
+    text-transform: none;
+    font-weight: 700;
+}
+
+.clubhouse-card__of {
+    margin-top: 4px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.clubhouse-card__lines {
+    margin: 0;
+    padding: 0 0 0 48px;
+    list-style: none;
+    font-size: 0.88rem;
+}
+
+.clubhouse-card__lines li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+    font-variant-numeric: tabular-nums;
+}
+
+.clubhouse-card__lines li:last-child {
+    border-bottom: none;
+}
+
+.clubhouse-card__time {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.78rem;
+}
+
+@media (max-width: 599.98px) {
+    .clubhouse-card__lines {
+        padding-left: 0;
+    }
+}

@@ -1,0 +1,284 @@
+@page "/clubs/{ClubId:int}/clubhouse"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Clubhouse
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Clubhouse
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Clubhouse
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+@* The start screen of the clubhouse host ("Wirt"): find the guest in one tap, the menu and what was paid. *@
+
+<PageTitle>@L["Page_Title"]</PageTitle>
+
+@if (!CanManage)
+{
+    <MudAlert Severity="Severity.Info">@L["NoAccess"]</MudAlert>
+}
+else
+{
+    var board = Store.Board;
+
+    <div class="clubhouse-page">
+        <AdminHero Emoji="🍻" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Page_Title"]" Subtitle="@L["Page_Subtitle"]">
+            <Chips>
+                @if (board is not null)
+                {
+                    <span class="hero-chip">🧾 @string.Format(L["Hero_Open"], ClubhouseHelpers.Amount(board.Today.OpenCents))</span>
+                    <span class="hero-chip">💶 @string.Format(L["Hero_Today"], ClubhouseHelpers.Amount(board.Today.CashCents + board.Today.CardCents + board.Today.OtherCents))</span>
+                }
+            </Chips>
+        </AdminHero>
+
+        <ChoiceChips TItem="View" Items="@Views" Value="@view" ValueChanged="OnViewChanged" TextFunc="@(v => L[$"Tab_{v}"])" />
+
+        @if (view == View.Tabs)
+        {
+            @RenderTabs(board)
+        }
+        else if (view == View.Menu)
+        {
+            <ClubhouseMenu />
+        }
+        else
+        {
+            <ClubhouseHistory />
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    /// <summary>"menu" or "history" opens that view (links from the tab page).</summary>
+    [SupplyParameterFromQuery(Name = "view")] public string? ViewName { get; set; }
+
+    [Inject] private IClubhouseStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubhouseLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private enum View
+    {
+        Tabs,
+        Menu,
+        History,
+    }
+
+    private static readonly View[] Views = Enum.GetValues<View>();
+
+    /// <summary>The search shows up to this many members; typing more narrows it down.</summary>
+    private const int MaxSearchResults = 24;
+
+    private View view = View.Tabs;
+    private string search = "";
+    private int? openingMemberId;
+
+    private bool CanManage => ClubProfileStore.IsSupportMode || ClubhouseHelpers.CanManage(ClubProfileStore.Roles);
+
+    private bool IsSearching => !string.IsNullOrWhiteSpace(search);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnClubhouseChanged += OnChanged;
+        ClubProfileStore.OnClubProfileChanged += OnChanged;
+
+        if (!CanManage)
+            return;
+
+        if (Enum.TryParse<View>(ViewName, ignoreCase: true, out var requested))
+            view = requested;
+
+        // The guests are only needed for the search; they are loaded once and filtered on the device
+        await Task.WhenAll(Store.LoadBoard(), Store.Guests is null ? Store.LoadGuests() : Task.CompletedTask);
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task OnViewChanged(View value)
+    {
+        view = value;
+        if (value == View.Tabs)
+            await Store.LoadBoard();
+    }
+
+    private async Task OpenFor(ClubhouseGuestDto guest)
+    {
+        if (openingMemberId is not null)
+            return;
+
+        // An open tab of the member is listed on the board already: go there without a request
+        if (Store.Board?.OpenTabs.FirstOrDefault(t => t.MemberId == guest.MemberId) is { } open)
+        {
+            NavigationManager.NavigateTo(ClubhouseHelpers.TabUrl(ClubId, open.Id));
+            return;
+        }
+
+        openingMemberId = guest.MemberId;
+        try
+        {
+            var result = await Store.OpenTab(guest.MemberId, null);
+            if (result is not { Success: true, Dto: not null })
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return;
+            }
+
+            NavigationManager.NavigateTo(ClubhouseHelpers.TabUrl(ClubId, result.Dto.Id));
+        }
+        finally
+        {
+            openingMemberId = null;
+        }
+    }
+
+    private async Task OpenWalkIn()
+    {
+        // What the host typed into the search is most likely the name of the guest
+        var parameters = new DialogParameters<WalkInDialog> { { d => d.Name, search.Trim() } };
+        var dialog = await DialogService.ShowAsync<WalkInDialog>(L["WalkIn_Title"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseOnEscapeKey = true });
+
+        if ((await dialog.Result) is { Canceled: false, Data: int tabId })
+            NavigationManager.NavigateTo(ClubhouseHelpers.TabUrl(ClubId, tabId));
+    }
+
+    private RenderFragment RenderTabs(ClubhouseBoardResult? board) => __builder =>
+    {
+        <div class="clubhouse-search">
+            <MudTextField T="string" Value="@search" ValueChanged="@(v => search = v ?? "")" Immediate="true" Variant="Variant.Outlined" Margin="Margin.Dense"
+                          Clearable="true" Label="@L["Search_Label"]" Placeholder="@L["Search_Placeholder"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          Class="clubhouse-search__field" />
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAddAlt" OnClick="OpenWalkIn" Class="clubhouse-search__walkin">
+                @L["WalkIn_Button"]
+            </MudButton>
+        </div>
+
+        @if (board is null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (IsSearching)
+        {
+            @RenderSearch(board)
+        }
+        else
+        {
+            <section class="clubhouse-section" aria-labelledby="open-tabs">
+                <h2 id="open-tabs" class="clubhouse-section__title">@L["Section_OpenTabs"] <span class="clubhouse-section__count">@board.OpenTabs.Count</span></h2>
+                @if (board.OpenTabs.Count == 0)
+                {
+                    <div class="clubhouse-empty">@L["Section_OpenTabs_Empty"]</div>
+                }
+                else
+                {
+                    <div class="clubhouse-tabs">
+                        @foreach (var tab in board.OpenTabs)
+                        {
+                            @RenderOpenTab(tab)
+                        }
+                    </div>
+                }
+            </section>
+
+            @RenderGuests(L["Section_PlayingToday"], L["Section_PlayingToday_Hint"], "🎾", board.PlayingToday)
+            @RenderGuests(L["Section_Regulars"], L["Section_Regulars_Hint"], "⭐", board.Regulars)
+        }
+    };
+
+    private RenderFragment RenderSearch(ClubhouseBoardResult board) => __builder =>
+    {
+        var term = search.Trim();
+        var tabs = board.OpenTabs.Where(t => t.IsWalkIn && t.Name.Contains(term, StringComparison.CurrentCultureIgnoreCase)).ToList();
+        var guests = (Store.Guests ?? []).Where(g => ClubhouseHelpers.Matches(g, term)).ToList();
+
+        @if (tabs.Count > 0)
+        {
+            <div class="clubhouse-tabs">
+                @foreach (var tab in tabs)
+                {
+                    @RenderOpenTab(tab)
+                }
+            </div>
+        }
+
+        @if (guests.Count == 0 && tabs.Count == 0)
+        {
+            <div class="clubhouse-empty">
+                <span>@L["Search_NoResult"]</span>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.PersonAddAlt" OnClick="OpenWalkIn">@L["WalkIn_Button"]</MudButton>
+            </div>
+        }
+        else if (guests.Count > 0)
+        {
+            @RenderGuests(L["Section_Search"], null, "🔎", guests.Take(MaxSearchResults).ToList())
+            @if (guests.Count > MaxSearchResults)
+            {
+                <div class="clubhouse-empty">@string.Format(L["Search_More"], guests.Count - MaxSearchResults)</div>
+            }
+        }
+    };
+
+    private RenderFragment RenderOpenTab(ClubhouseOpenTabDto tab) => __builder =>
+    {
+        var name = ClubhouseHelpers.TabName(L, tab.Name);
+        <a class="clubhouse-tab @(tab.IsWalkIn ? "clubhouse-tab--walkin" : null)" href="@ClubhouseHelpers.TabUrl(ClubId, tab.Id)">
+            <UserAvatar FirstName="@name" LastName="@(tab.IsWalkIn ? "" : name.Split(' ').LastOrDefault() ?? "")" ProfilePictureUrl="@tab.ProfilePictureUrl" Size="Size.Medium"
+                        Color="@(tab.IsWalkIn ? Color.Secondary : Color.Primary)" />
+            <span class="clubhouse-tab__body">
+                <span class="clubhouse-tab__name">@name</span>
+                <span class="clubhouse-tab__meta">
+                    @if (tab.IsWalkIn)
+                    {
+                        <span class="clubhouse-chip">@L["WalkIn_Chip"]</span>
+                    }
+                    @string.Format(L["ItemCount"], tab.ItemCount) · @ClubhouseHelpers.Time(tab.LastActivityAt)
+                </span>
+            </span>
+            <span class="clubhouse-tab__total">@ClubhouseHelpers.Amount(tab.TotalCents)</span>
+        </a>
+    };
+
+    private RenderFragment RenderGuests(string title, string? hint, string emoji, List<ClubhouseGuestDto> guests) => __builder =>
+    {
+        @if (guests.Count > 0)
+        {
+            <section class="clubhouse-section">
+                <h2 class="clubhouse-section__title">
+                    <span aria-hidden="true">@emoji</span> @title
+                    @if (hint is not null)
+                    {
+                        <span class="clubhouse-section__hint">@hint</span>
+                    }
+                </h2>
+                <div class="clubhouse-guests">
+                    @foreach (var guest in guests)
+                    {
+                        <button type="button" class="clubhouse-guest" disabled="@(openingMemberId is not null)" @onclick="() => OpenFor(guest)">
+                            <UserAvatar FirstName="@guest.FirstName" LastName="@guest.LastName" ProfilePictureUrl="@guest.ProfilePictureUrl" Size="Size.Small" Color="Color.Primary" />
+                            <span class="clubhouse-guest__name">@guest.FirstName @guest.LastName</span>
+                            @if (openingMemberId == guest.MemberId)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+                            }
+                        </button>
+                    }
+                </div>
+            </section>
+        }
+    };
+
+    public void Dispose()
+    {
+        Store.OnClubhouseChanged -= OnChanged;
+        ClubProfileStore.OnClubProfileChanged -= OnChanged;
+    }
+}

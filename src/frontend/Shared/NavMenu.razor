@@ -139,6 +139,10 @@
                 yield return new(Locale["Section_Personal"], personal);
             }
 
+            // The clubhouse host ("Wirt") books food and drinks onto tabs; admins set it up (same as the backend policy ClubhouseHost)
+            if (isAdmin || Has(MemberRole.ClubhouseHost))
+                yield return new(Locale["Section_Clubhouse"], [new($"{club}/clubhouse", Icons.Material.Filled.LocalBar, Locale["ClubhouseTabs"])]);
+
             var membersAndFees = new List<NavItem>();
             if (isAdmin || isMaintainer)
                 membersAndFees.Add(new($"{club}/members", Icons.Material.Filled.Groups2, Locale["Members"]));

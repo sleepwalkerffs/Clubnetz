@@ -67,6 +67,7 @@ public static class MemberAdminHelpers
         MemberRole.Treasurer => "#D97706",
         MemberRole.Maintainer => "#4B5563",
         MemberRole.Guest => "#9333EA",
+        MemberRole.ClubhouseHost => "#B45309",
         _ => "#059669",
     };
 
