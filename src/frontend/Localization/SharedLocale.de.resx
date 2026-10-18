@@ -423,4 +423,7 @@
   <data name="JoinClub_AllJoined" xml:space="preserve">
     <value>Du bist bereits Mitglied in allen Klubs auf Clubnetz.</value>
   </data>
+  <data name="Role_ClubhouseHost" xml:space="preserve">
+    <value>Wirt</value>
+  </data>
 </root>

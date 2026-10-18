@@ -1,0 +1,327 @@
+/* The clubhouse start screen; the menu and the history are rendered inside it (::deep). Everything a host taps is at least 48px high. */
+
+.clubhouse-page {
+    --clubhouse-accent: var(--bk-dark-amber, #B45309);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.clubhouse-search {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+::deep .clubhouse-search__field {
+    flex: 1 1 auto;
+    margin: 0;
+}
+
+::deep .clubhouse-search__walkin {
+    flex: 0 0 auto;
+    min-height: 40px;
+    text-transform: none;
+    font-weight: 700;
+}
+
+.clubhouse-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.clubhouse-section__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.clubhouse-section__count {
+    min-width: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--clubhouse-accent) 18%, var(--mud-palette-surface));
+    color: var(--clubhouse-accent);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.clubhouse-section__hint {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--mud-palette-text-secondary);
+}
+
+.clubhouse-page ::deep .clubhouse-empty {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px dashed var(--mud-palette-lines-default);
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.9rem;
+}
+
+.clubhouse-page ::deep .clubhouse-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--mud-palette-background-gray);
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.6;
+}
+
+/* Open tabs: big tiles, one tap opens the tab */
+.clubhouse-tabs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+}
+
+.clubhouse-tab {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 68px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--clubhouse-accent) 35%, var(--mud-palette-lines-default));
+    border-left: 5px solid var(--clubhouse-accent);
+    background: color-mix(in srgb, var(--clubhouse-accent) 6%, var(--mud-palette-surface));
+    color: var(--mud-palette-text-primary);
+    text-decoration: none;
+    transition: transform 0.08s ease, box-shadow 0.15s ease;
+}
+
+.clubhouse-tab:hover {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.clubhouse-tab:active {
+    transform: scale(0.98);
+}
+
+.clubhouse-tab--walkin {
+    border-left-color: var(--mud-palette-secondary);
+}
+
+.clubhouse-tab__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.clubhouse-tab__name {
+    overflow: hidden;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.clubhouse-tab__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8rem;
+}
+
+.clubhouse-tab__total {
+    flex: 0 0 auto;
+    font-size: 1.15rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Guests to open a tab for */
+.clubhouse-guests {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 8px;
+}
+
+.clubhouse-guest {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 6px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.clubhouse-guest:hover:not(:disabled) {
+    border-color: var(--mud-palette-primary);
+}
+
+.clubhouse-guest:disabled {
+    cursor: progress;
+    opacity: 0.7;
+}
+
+.clubhouse-guest__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Menu */
+.clubhouse-page ::deep .clubhouse-menu__group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.clubhouse-page ::deep .clubhouse-menu__category {
+    margin: 4px 0;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.clubhouse-page ::deep .clubhouse-menu__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 6px 10px 6px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.clubhouse-page ::deep .clubhouse-menu__row:hover {
+    border-color: var(--mud-palette-primary);
+}
+
+.clubhouse-page ::deep .clubhouse-menu__row--hidden .clubhouse-menu__name,
+.clubhouse-page ::deep .clubhouse-menu__row--hidden .clubhouse-menu__price {
+    color: var(--mud-palette-text-disabled);
+}
+
+.clubhouse-page ::deep .clubhouse-menu__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 600;
+}
+
+.clubhouse-page ::deep .clubhouse-menu__price {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.clubhouse-page ::deep .clubhouse-menu__chevron {
+    color: var(--mud-palette-text-secondary);
+}
+
+/* History */
+.clubhouse-page ::deep .clubhouse-history {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.clubhouse-page ::deep .clubhouse-paid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.clubhouse-page ::deep .clubhouse-paid__row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    padding: 8px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.clubhouse-page ::deep .clubhouse-paid__method {
+    font-size: 1.4rem;
+}
+
+.clubhouse-page ::deep .clubhouse-paid__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.clubhouse-page ::deep .clubhouse-paid__name {
+    font-weight: 700;
+}
+
+.clubhouse-page ::deep .clubhouse-paid__meta {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8rem;
+}
+
+.clubhouse-page ::deep .clubhouse-paid__total {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.clubhouse-page ::deep .clubhouse-paid__lines {
+    margin: -2px 0 6px;
+    padding: 8px 14px 8px 52px;
+    list-style: none;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.88rem;
+}
+
+.clubhouse-page ::deep .clubhouse-paid__lines li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 2px 0;
+}
+
+@media (max-width: 599.98px) {
+    .clubhouse-search {
+        flex-wrap: wrap;
+    }
+
+    ::deep .clubhouse-search__walkin {
+        flex: 1 1 100%;
+    }
+
+    .clubhouse-tabs {
+        grid-template-columns: 1fr;
+    }
+
+    .clubhouse-guests {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

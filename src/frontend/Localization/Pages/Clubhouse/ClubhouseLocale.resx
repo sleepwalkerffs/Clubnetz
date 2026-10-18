@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Page_Title" xml:space="preserve">
+    <value>Clubhouse</value>
+  </data>
+  <data name="Page_Subtitle" xml:space="preserve">
+    <value>Book food and drinks onto your guests' tabs – they pay at the end.</value>
+  </data>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Only the clubhouse host and the admins of the club see the clubhouse.</value>
+  </data>
+  <data name="Tab_Tabs" xml:space="preserve">
+    <value>Tabs</value>
+  </data>
+  <data name="Tab_Menu" xml:space="preserve">
+    <value>Menu</value>
+  </data>
+  <data name="Tab_History" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="Hero_Open" xml:space="preserve">
+    <value>{0} open</value>
+  </data>
+  <data name="Hero_Today" xml:space="preserve">
+    <value>{0} paid today</value>
+  </data>
+  <data name="Search_Label" xml:space="preserve">
+    <value>Find a guest</value>
+  </data>
+  <data name="Search_Placeholder" xml:space="preserve">
+    <value>First or last name</value>
+  </data>
+  <data name="Search_NoResult" xml:space="preserve">
+    <value>Nobody found. Is it a guest from outside?</value>
+  </data>
+  <data name="Search_More" xml:space="preserve">
+    <value>{0} more – keep typing</value>
+  </data>
+  <data name="WalkIn_Button" xml:space="preserve">
+    <value>Guest from outside</value>
+  </data>
+  <data name="WalkIn_Title" xml:space="preserve">
+    <value>Tab for a guest from outside</value>
+  </data>
+  <data name="WalkIn_Name" xml:space="preserve">
+    <value>Name or table</value>
+  </data>
+  <data name="WalkIn_Hint" xml:space="preserve">
+    <value>So you find the tab again, e.g. "Table 3" or "Mr Huber".</value>
+  </data>
+  <data name="WalkIn_Open" xml:space="preserve">
+    <value>Open tab</value>
+  </data>
+  <data name="Section_OpenTabs" xml:space="preserve">
+    <value>Open tabs</value>
+  </data>
+  <data name="Section_OpenTabs_Empty" xml:space="preserve">
+    <value>No open tabs. Tap a guest to start one.</value>
+  </data>
+  <data name="Section_PlayingToday" xml:space="preserve">
+    <value>Playing today</value>
+  </data>
+  <data name="Section_PlayingToday_Hint" xml:space="preserve">
+    <value>Whoever is on court now comes first</value>
+  </data>
+  <data name="Section_Regulars" xml:space="preserve">
+    <value>Regulars</value>
+  </data>
+  <data name="Section_Regulars_Hint" xml:space="preserve">
+    <value>Most tabs in the last weeks</value>
+  </data>
+  <data name="Section_Search" xml:space="preserve">
+    <value>Members</value>
+  </data>
+  <data name="FormerMember" xml:space="preserve">
+    <value>Former member</value>
+  </data>
+  <data name="WalkIn_Chip" xml:space="preserve">
+    <value>Guest</value>
+  </data>
+  <data name="ItemCount" xml:space="preserve">
+    <value>{0} items</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>All tabs</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Category_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Category_Drink" xml:space="preserve">
+    <value>Drinks</value>
+  </data>
+  <data name="Category_Food" xml:space="preserve">
+    <value>Food</value>
+  </data>
+  <data name="Category_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Round_Book" xml:space="preserve">
+    <value>Book {0} · {1}</value>
+  </data>
+  <data name="Round_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Round_Booked" xml:space="preserve">
+    <value>Booked onto the tab of {0}.</value>
+  </data>
+  <data name="Round_Hint" xml:space="preserve">
+    <value>Tap what this round is, then book it.</value>
+  </data>
+  <data name="Round_Less" xml:space="preserve">
+    <value>One less</value>
+  </data>
+  <data name="Lines_Title" xml:space="preserve">
+    <value>On the tab</value>
+  </data>
+  <data name="Lines_Empty" xml:space="preserve">
+    <value>Nothing on the tab yet.</value>
+  </data>
+  <data name="Lines_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Lines_RemoveTitle" xml:space="preserve">
+    <value>Remove from the tab?</value>
+  </data>
+  <data name="Lines_RemoveText" xml:space="preserve">
+    <value>{0} × {1} ({2}) is taken off the tab.</value>
+  </data>
+  <data name="Pay_Button" xml:space="preserve">
+    <value>Pay {0}</value>
+  </data>
+  <data name="Pay_Title" xml:space="preserve">
+    <value>{0} pays</value>
+  </data>
+  <data name="Pay_How" xml:space="preserve">
+    <value>How does the guest pay?</value>
+  </data>
+  <data name="Pay_CardHint" xml:space="preserve">
+    <value>Card means your own card terminal – Clubnetz only notes how it was paid.</value>
+  </data>
+  <data name="Pay_Done" xml:space="preserve">
+    <value>{0} paid {1}.</value>
+  </data>
+  <data name="Method_Cash" xml:space="preserve">
+    <value>Cash</value>
+  </data>
+  <data name="Method_Card" xml:space="preserve">
+    <value>Card</value>
+  </data>
+  <data name="Method_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Discard" xml:space="preserve">
+    <value>Discard empty tab</value>
+  </data>
+  <data name="Discarded" xml:space="preserve">
+    <value>Tab discarded.</value>
+  </data>
+  <data name="TabPaid" xml:space="preserve">
+    <value>Paid on {0} · {1}</value>
+  </data>
+  <data name="TabNotFound" xml:space="preserve">
+    <value>This tab does not exist (any more).</value>
+  </data>
+  <data name="MenuEmpty" xml:space="preserve">
+    <value>The menu is empty. Add your drinks and food first.</value>
+  </data>
+  <data name="MenuEmpty_Action" xml:space="preserve">
+    <value>Set up the menu</value>
+  </data>
+  <data name="Menu_Add" xml:space="preserve">
+    <value>Add item</value>
+  </data>
+  <data name="Menu_Hidden" xml:space="preserve">
+    <value>Hidden</value>
+  </data>
+  <data name="Menu_Empty" xml:space="preserve">
+    <value>Nothing on the menu yet. Start with what you sell most.</value>
+  </data>
+  <data name="Menu_Hint" xml:space="preserve">
+    <value>Prices changed here only count for what you book from now on.</value>
+  </data>
+  <data name="Item_New" xml:space="preserve">
+    <value>New item</value>
+  </data>
+  <data name="Item_Edit" xml:space="preserve">
+    <value>Edit item</value>
+  </data>
+  <data name="Item_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Item_NamePlaceholder" xml:space="preserve">
+    <value>e.g. Beer 0.5 l</value>
+  </data>
+  <data name="Item_Price" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="Item_Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="Item_Available" xml:space="preserve">
+    <value>On the menu</value>
+  </data>
+  <data name="Item_AvailableHint" xml:space="preserve">
+    <value>Switch it off when it's sold out; the item is kept.</value>
+  </data>
+  <data name="Item_SortOrder" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="Item_SortOrderHint" xml:space="preserve">
+    <value>Lower numbers come first within the category.</value>
+  </data>
+  <data name="Item_Saved" xml:space="preserve">
+    <value>Saved {0}.</value>
+  </data>
+  <data name="Item_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Item_DeleteTitle" xml:space="preserve">
+    <value>Delete item?</value>
+  </data>
+  <data name="Item_DeleteText" xml:space="preserve">
+    <value>Delete {0}? Tabs keep its name and price.</value>
+  </data>
+  <data name="Item_Deleted" xml:space="preserve">
+    <value>Deleted {0}.</value>
+  </data>
+  <data name="Free" xml:space="preserve">
+    <value>Free</value>
+  </data>
+  <data name="History_Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="History_Week" xml:space="preserve">
+    <value>Last 7 days</value>
+  </data>
+  <data name="History_ThisMonth" xml:space="preserve">
+    <value>This month</value>
+  </data>
+  <data name="History_LastMonth" xml:space="preserve">
+    <value>Last month</value>
+  </data>
+  <data name="History_Empty" xml:space="preserve">
+    <value>No paid tabs in this period.</value>
+  </data>
+  <data name="History_Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="History_Tabs" xml:space="preserve">
+    <value>Tabs: {0}</value>
+  </data>
+  <data name="Card_Title" xml:space="preserve">
+    <value>Clubhouse</value>
+  </data>
+  <data name="Card_Open" xml:space="preserve">
+    <value>{0} open – you pay at the clubhouse.</value>
+  </data>
+  <data name="Card_OpenOf" xml:space="preserve">
+    <value>{0} on the tab of {1}</value>
+  </data>
+  <data name="Card_LastPaid" xml:space="preserve">
+    <value>Last paid: {0} on {1}</value>
+  </data>
+  <data name="Card_Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Card_Hide" xml:space="preserve">
+    <value>Hide</value>
+  </data>
+</root>

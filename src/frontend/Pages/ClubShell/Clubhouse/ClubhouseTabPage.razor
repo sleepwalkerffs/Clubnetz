@@ -1,0 +1,303 @@
+@page "/clubs/{ClubId:int}/clubhouse/tabs/{TabId:int}"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Clubhouse
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Clubhouse
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Clubhouse
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+@*
+    One tab: the host taps what this round is (each tap is one more), books the round in one go and is back on the start screen.
+    When the guest leaves, the host lets them pay here.
+*@
+
+<PageTitle>@(Tab is { } t ? $"{ClubhouseHelpers.TabName(L, t.Name)} · {L["Page_Title"]}" : L["Page_Title"])</PageTitle>
+
+@if (!CanManage)
+{
+    <MudAlert Severity="Severity.Info">@L["NoAccess"]</MudAlert>
+}
+else if (notFound)
+{
+    <div class="clubhouse-page">
+        <MudAlert Severity="Severity.Warning">@L["TabNotFound"]</MudAlert>
+        <MudButton Href="@ClubhouseHelpers.Url(ClubId)" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ArrowBack">@L["Back"]</MudButton>
+    </div>
+}
+else if (Tab is not { } tab)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    var name = ClubhouseHelpers.TabName(L, tab.Name);
+    var isOpen = tab.Status == ClubhouseTabStatus.Open;
+
+    <div class="clubhouse-page @(round.Count > 0 ? "clubhouse-page--with-bar" : null)">
+        <div class="clubhouse-head">
+            <MudIconButton Href="@ClubhouseHelpers.Url(ClubId)" Icon="@Icons.Material.Filled.ArrowBack" aria-label="@L["Back"]" />
+            <UserAvatar FirstName="@name" LastName="@(tab.IsWalkIn ? "" : name.Split(' ').LastOrDefault() ?? "")" ProfilePictureUrl="@tab.ProfilePictureUrl" Size="Size.Medium"
+                        Color="@(tab.IsWalkIn ? Color.Secondary : Color.Primary)" />
+            <div class="clubhouse-head__text">
+                <h1 class="clubhouse-head__name">@name</h1>
+                <div class="clubhouse-head__meta">
+                    @if (tab.IsWalkIn)
+                    {
+                        <span class="clubhouse-chip">@L["WalkIn_Chip"]</span>
+                    }
+                    @if (!isOpen && tab.PaidAt is { } paidAt)
+                    {
+                        <span>@string.Format(L["TabPaid"], $"{ClubhouseHelpers.Day(paidAt)} {ClubhouseHelpers.Time(paidAt)}", ClubhouseHelpers.MethodText(L, tab.PaymentMethod ?? ClubhousePaymentMethod.Other))</span>
+                    }
+                </div>
+            </div>
+            <div class="clubhouse-head__total">
+                <span class="clubhouse-head__total-label">@L["Total"]</span>
+                <span class="clubhouse-head__total-value">@ClubhouseHelpers.Amount(tab.TotalCents)</span>
+            </div>
+        </div>
+
+        @* Paying is what the host does when the guest leaves: right at the top, not below the menu *@
+        @if (isOpen && tab.Lines.Count > 0 && round.Count == 0)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.PointOfSale" OnClick="Pay" Disabled="@Store.IsSaving" Class="clubhouse-pay">
+                @string.Format(L["Pay_Button"], ClubhouseHelpers.Amount(tab.TotalCents))
+            </MudButton>
+        }
+
+        @if (isOpen)
+        {
+            @RenderItems()
+        }
+
+        <SectionCard Emoji="🧾" Title="@L["Lines_Title"]">
+            <ChildContent>
+                @if (tab.Lines.Count == 0)
+                {
+                    <div class="clubhouse-empty">
+                        <span>@L["Lines_Empty"]</span>
+                        @if (isOpen)
+                        {
+                            <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.DeleteOutline" OnClick="Discard" Disabled="@Store.IsSaving">
+                                @L["Discard"]
+                            </MudButton>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <ul class="clubhouse-lines">
+                        @foreach (var line in tab.Lines)
+                        {
+                            <li class="clubhouse-line">
+                                <span class="clubhouse-line__qty">@line.Quantity×</span>
+                                <span class="clubhouse-line__body">
+                                    <span class="clubhouse-line__name">@line.Name</span>
+                                    <span class="clubhouse-line__meta">@ClubhouseHelpers.Time(line.AddedAt) · @ClubhouseHelpers.Price(L, line.UnitPriceCents)</span>
+                                </span>
+                                <span class="clubhouse-line__total">@ClubhouseHelpers.Amount(line.TotalCents)</span>
+                                @if (isOpen)
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" aria-label="@L["Lines_Remove"]" Disabled="@Store.IsSaving" OnClick="() => Remove(line)" />
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </ChildContent>
+        </SectionCard>
+
+        @if (round.Count > 0)
+        {
+            var count = round.Values.Sum();
+            var total = round.Sum(r => (ItemPrice(r.Key) ?? 0) * r.Value);
+            <div class="clubhouse-bar" role="region" aria-label="@L["Round_Hint"]">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="() => round.Clear()" Disabled="@Store.IsSaving" Class="clubhouse-bar__clear">@L["Round_Clear"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Book" Disabled="@Store.IsSaving" StartIcon="@Icons.Material.Filled.Check" Class="clubhouse-bar__book">
+                    @string.Format(L["Round_Book"], count, ClubhouseHelpers.Amount(total))
+                </MudButton>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+    [Parameter] public int TabId { get; set; }
+
+    [Inject] private IClubhouseStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubhouseLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    /// <summary>What the host tapped for this round and has not booked yet: item id → quantity.</summary>
+    private readonly Dictionary<int, int> round = [];
+
+    private ClubhouseItemCategory? category;
+    private bool notFound;
+    private bool itemsLoaded;
+
+    private bool CanManage => ClubProfileStore.IsSupportMode || ClubhouseHelpers.CanManage(ClubProfileStore.Roles);
+
+    private ClubhouseTabDto? Tab => Store.Tab?.Id == TabId ? Store.Tab : null;
+
+    private List<ClubhouseItemDto> AvailableItems => Store.Items.Where(i => i.IsAvailable).ToList();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Store.OnClubhouseChanged -= OnChanged;
+        Store.OnClubhouseChanged += OnChanged;
+
+        if (!CanManage)
+            return;
+
+        round.Clear();
+        notFound = false;
+        await Task.WhenAll(LoadTab(), itemsLoaded ? Task.CompletedTask : LoadItems());
+    }
+
+    /// <summary>Always loaded again: another device may have booked onto the tab meanwhile.</summary>
+    private async Task LoadTab()
+    {
+        await Store.LoadTab(TabId);
+        notFound = Tab is null;
+    }
+
+    private async Task LoadItems()
+    {
+        await Store.LoadItems();
+        itemsLoaded = true;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private int? ItemPrice(int itemId) => Store.Items.FirstOrDefault(i => i.Id == itemId)?.PriceCents;
+
+    private void Tap(ClubhouseItemDto item) => round[item.Id] = round.GetValueOrDefault(item.Id) + 1;
+
+    private void Less(ClubhouseItemDto item)
+    {
+        if (round.GetValueOrDefault(item.Id) <= 1)
+            round.Remove(item.Id);
+        else
+            round[item.Id]--;
+    }
+
+    private async Task Book()
+    {
+        if (Tab is not { } tab || round.Count == 0)
+            return;
+
+        var result = await Store.AddItems(tab.Id, round);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        // Booked: back to the start screen, the next guest is waiting
+        Snackbar.Add(string.Format(L["Round_Booked"], ClubhouseHelpers.TabName(L, result.Dto.Name)), Severity.Success);
+        round.Clear();
+        NavigationManager.NavigateTo(ClubhouseHelpers.Url(ClubId));
+    }
+
+    private async Task Remove(ClubhouseTabLineDto line)
+    {
+        if (Tab is not { } tab)
+            return;
+
+        var text = string.Format(L["Lines_RemoveText"], line.Quantity, line.Name, ClubhouseHelpers.Amount(line.TotalCents));
+        if (await DialogService.ShowMessageBox(L["Lines_RemoveTitle"], text, yesText: L["Lines_Remove"], cancelText: SharedLocale["Cancel"]) != true)
+            return;
+
+        var result = await Store.RemoveLine(tab.Id, line.Id);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private async Task Pay()
+    {
+        if (Tab is not { } tab)
+            return;
+
+        var parameters = new DialogParameters<PayTabDialog> { { d => d.Tab, tab } };
+        var dialog = await DialogService.ShowAsync<PayTabDialog>(string.Format(L["Pay_Title"], ClubhouseHelpers.TabName(L, tab.Name)), parameters,
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseOnEscapeKey = true });
+
+        if ((await dialog.Result) is { Canceled: false })
+            NavigationManager.NavigateTo(ClubhouseHelpers.Url(ClubId));
+    }
+
+    private async Task Discard()
+    {
+        if (Tab is not { } tab)
+            return;
+
+        var result = await Store.DiscardTab(tab.Id);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(L["Discarded"], Severity.Success);
+        NavigationManager.NavigateTo(ClubhouseHelpers.Url(ClubId));
+    }
+
+    private RenderFragment RenderItems() => __builder =>
+    {
+        var items = AvailableItems;
+        var categories = items.Select(i => i.Category).Distinct().OrderBy(c => c).ToList();
+
+        @if (!itemsLoaded)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (items.Count == 0)
+        {
+            <div class="clubhouse-empty">
+                <span>@L["MenuEmpty"]</span>
+                <MudButton Href="@ClubhouseHelpers.MenuUrl(ClubId)" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small">@L["MenuEmpty_Action"]</MudButton>
+            </div>
+        }
+        else
+        {
+            @if (categories.Count > 1)
+            {
+                <ChoiceChips TItem="ClubhouseItemCategory?" Items="@(new ClubhouseItemCategory?[] { null }.Concat(categories.Cast<ClubhouseItemCategory?>()))" @bind-Value="category"
+                             TextFunc="@(c => c is { } value ? $"{ClubhouseHelpers.CategoryEmoji(value)} {ClubhouseHelpers.CategoryText(L, value)}" : L["Category_All"])" />
+            }
+
+            <div class="clubhouse-items" role="group" aria-label="@L["Round_Hint"]">
+                @foreach (var item in items.Where(i => category is null || i.Category == category))
+                {
+                    var count = round.GetValueOrDefault(item.Id);
+                    <div class="clubhouse-item @(count > 0 ? "clubhouse-item--picked" : null)">
+                        <button type="button" class="clubhouse-item__tap" disabled="@Store.IsSaving" @onclick="() => Tap(item)">
+                            <span class="clubhouse-item__emoji" aria-hidden="true">@ClubhouseHelpers.CategoryEmoji(item.Category)</span>
+                            <span class="clubhouse-item__name">@item.Name</span>
+                            <span class="clubhouse-item__price">@ClubhouseHelpers.Price(L, item.PriceCents)</span>
+                        </button>
+                        @if (count > 0)
+                        {
+                            <span class="clubhouse-item__count" aria-live="polite">@count</span>
+                            <button type="button" class="clubhouse-item__less" aria-label="@L["Round_Less"]" disabled="@Store.IsSaving" @onclick="() => Less(item)">−</button>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    };
+
+    public void Dispose() => Store.OnClubhouseChanged -= OnChanged;
+}

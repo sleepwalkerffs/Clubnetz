@@ -143,6 +143,22 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                 select new PersonalDataBookingCredit(club.Name, grant.Count, grant.Reason, grant.Note, grant.Metadata.Created)
             ).ToListAsync(cancellationToken);
 
+            // What the clubhouse host booked onto the own tabs
+            var clubhouseTabs = await (
+                from tab in context.ClubhouseTabs.IgnoreQueryFilters()
+                join club in context.Clubs.IgnoreQueryFilters() on tab.ClubId equals club.Id
+                where memberIds.Contains(tab.MemberId ?? 0)
+                orderby tab.OpenedAt
+                select new PersonalDataClubhouseTab(
+                    club.Name,
+                    tab.OpenedAt,
+                    tab.Status,
+                    tab.PaymentMethod,
+                    tab.PaidAt,
+                    tab.Currency,
+                    tab.Lines.OrderBy(l => l.AddedAt).Select(l => new PersonalDataClubhouseTabLine(l.Name, l.Quantity, l.UnitPriceCents / 100m, l.AddedAt)).ToList())
+            ).ToListAsync(cancellationToken);
+
             var subscriptionPlans = await context.SubscriptionPlans
                 .IgnoreQueryFilters()
                 .AsNoTracking()
@@ -228,7 +244,8 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                 notificationPreferences,
                 membershipOrders,
                 courtPurchases,
-                bookingCredits);
+                bookingCredits,
+                clubhouseTabs);
         }
 
         private static string? NullIfEmpty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
@@ -249,7 +266,8 @@ public record PersonalDataExport(
     List<PersonalDataNotificationPreference> NotificationPreferences,
     List<PersonalDataMembershipOrder> MembershipOrders,
     List<PersonalDataCourtPurchase> CourtPurchases,
-    List<PersonalDataBookingCredit> BookingCredits);
+    List<PersonalDataBookingCredit> BookingCredits,
+    List<PersonalDataClubhouseTab> ClubhouseTabs);
 
 public record PersonalDataAccount(
     string FirstName,
@@ -300,6 +318,18 @@ public record PersonalDataCourtPurchase(
     DateTimeOffset? PaidAt);
 
 public record PersonalDataBookingCredit(string Club, int Count, Bookennis.Domain.CourtSales.BookingCreditReason Reason, string? Note, DateTime GrantedAt);
+
+/// <summary>A tab of the clubhouse host: what the user ate and drank there and how it was paid.</summary>
+public record PersonalDataClubhouseTab(
+    string Club,
+    DateTimeOffset OpenedAt,
+    Bookennis.Domain.Clubhouse.ClubhouseTabStatus Status,
+    Bookennis.Domain.Clubhouse.ClubhousePaymentMethod? PaymentMethod,
+    DateTimeOffset? PaidAt,
+    string Currency,
+    List<PersonalDataClubhouseTabLine> Items);
+
+public record PersonalDataClubhouseTabLine(string Name, int Quantity, decimal UnitPrice, DateTimeOffset AddedAt);
 
 public record PersonalDataSubscriptionPlan(string Name, DateOnly From, DateOnly To, List<PersonalDataPlanParticipant> Participants);
 

@@ -7,6 +7,7 @@ using Bookennis.Api.Infrastructure.Identity;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.ClubAnnouncements;
 using Bookennis.Domain.ClubEvents;
+using Bookennis.Domain.Clubhouse;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Clubs.ApiKeys;
 using Bookennis.Domain.Courts;
@@ -89,6 +90,9 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
     /// <summary>A treasurer of club A who is no admin: looks after the membership fees, but must not connect the club with Stripe.</summary>
     public SeededUser TreasurerOfA { get; private set; } = null!;
 
+    /// <summary>The clubhouse host ("Wirt") of club A: no other role, not enrolled. Keeps the tabs of the guests, nothing else.</summary>
+    public SeededUser HostOfA { get; private set; } = null!;
+
     /// <summary>The family of <see cref="MemberOfA"/> (the only parent) with one child that has no login of its own.</summary>
     public SeededFamily FamilyOfMemberOfA { get; private set; } = null!;
 
@@ -125,7 +129,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await Seed();
 
         // Signing in is limited per client address and the sweeps also hit the sign-in endpoints, so the tests sign in once up front
-        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, ClubA.Member, MemberOfA, OtherMemberOfA, TreasurerOfA, EnrolledMemberOfA })
+        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, ClubA.Member, MemberOfA, OtherMemberOfA, TreasurerOfA, EnrolledMemberOfA, HostOfA })
             cookies[user.UserId] = await SignIn(user);
     }
 
@@ -299,6 +303,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await context.SaveChangesAsync();
         EventOfEnrolledMemberOfA = activeEvent.Id;
         TreasurerOfA = await AddUser(context, ClubA, "treasurer-a", Marker, [MemberRole.User, MemberRole.Treasurer]);
+        HostOfA = await AddUser(context, ClubA, "host-a", Marker, [MemberRole.User, MemberRole.ClubhouseHost]);
         FamilyOfMemberOfA = await AddFamily(context, ClubA, MemberOfA, "Ownchild");
         FamilyOfOtherMemberOfA = await AddFamily(context, ClubA, OtherMemberOfA, "Otherchild");
 
@@ -391,6 +396,22 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         seeded.CourtPurchaseId = purchase.Id;
         seeded.PriceRuleId = rule.Id;
         seeded.BoughtBookingId = boughtBooking.Id;
+
+        // Clubhouse: an item on the menu and an open tab of the plain member with it, and a tab of a guest from outside
+        var item = new ClubhouseItem(club.Id, new ClubhouseItem.ItemData($"Beer {text}", ClubhouseItemCategory.Drink, 450, true, 0));
+        context.Add(item);
+        await context.SaveChangesAsync();
+
+        var tab = new ClubhouseTab(club.Id, seeded.Member.MemberId, null, seeded.Admin.MemberId, DateTimeOffset.UtcNow);
+        var line = tab.Add(item, 2, seeded.Admin.MemberId, DateTimeOffset.UtcNow);
+        var walkIn = new ClubhouseTab(club.Id, null, $"Guest {text}", seeded.Admin.MemberId, DateTimeOffset.UtcNow);
+        walkIn.Add(item, 1, seeded.Admin.MemberId, DateTimeOffset.UtcNow);
+        context.AddRange(tab, walkIn);
+        await context.SaveChangesAsync();
+
+        seeded.ClubhouseItemId = item.Id;
+        seeded.ClubhouseTabId = tab.Id;
+        seeded.ClubhouseTabLineId = line.Id;
         return seeded;
     }
 
@@ -513,6 +534,9 @@ public sealed class SeededClub
     public int CourtPurchaseId { get; set; }
     public int PriceRuleId { get; set; }
     public int BoughtBookingId { get; set; }
+    public int ClubhouseItemId { get; set; }
+    public int ClubhouseTabId { get; set; }
+    public int ClubhouseTabLineId { get; set; }
     public List<int> UserIds { get; } = [];
 }
 

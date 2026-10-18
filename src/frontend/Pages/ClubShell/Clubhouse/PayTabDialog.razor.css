@@ -1,0 +1,70 @@
+.pay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding-top: 4px;
+}
+
+.pay__total {
+    font-size: 2.2rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.pay__question {
+    color: var(--mud-palette-text-secondary);
+    font-weight: 600;
+}
+
+.pay__methods {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+}
+
+.pay__method {
+    --method-color: var(--mud-palette-text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-height: 84px;
+    padding: 12px 6px;
+    border-radius: 16px;
+    border: 2px solid color-mix(in srgb, var(--method-color) 55%, var(--mud-palette-lines-default));
+    background: color-mix(in srgb, var(--method-color) 8%, var(--mud-palette-surface));
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.pay__method:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.pay__method:disabled {
+    cursor: progress;
+    opacity: 0.6;
+}
+
+.pay__method--cash {
+    --method-color: var(--bk-dark-green, #059669);
+}
+
+.pay__method--card {
+    --method-color: var(--bk-dark-blue, #2563EB);
+}
+
+.pay__emoji {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.pay__hint {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8rem;
+    text-align: center;
+}

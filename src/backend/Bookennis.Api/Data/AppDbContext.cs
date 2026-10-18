@@ -2,6 +2,7 @@ using Bookennis.Api.Infrastructure.Tenant;
 using Bookennis.Domain.Base;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.ClubAnnouncements;
+using Bookennis.Domain.Clubhouse;
 using Bookennis.Domain.ClubEvents;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Clubs.ApiKeys;
@@ -82,6 +83,9 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<CourtPriceRule> CourtPriceRules => Set<CourtPriceRule>();
     public DbSet<CourtPurchase> CourtPurchases => Set<CourtPurchase>();
     public DbSet<BookingCreditGrant> BookingCreditGrants => Set<BookingCreditGrant>();
+    public DbSet<ClubhouseItem> ClubhouseItems => Set<ClubhouseItem>();
+    public DbSet<ClubhouseTab> ClubhouseTabs => Set<ClubhouseTab>();
+    public DbSet<ClubhouseTabLine> ClubhouseTabLines => Set<ClubhouseTabLine>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -1,0 +1,71 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Clubhouse
+@using Bookennis.Client.Services.Store.Clubhouse
+@using Bookennis.Shared.Controller.Clubhouse
+
+@implements IDisposable
+
+@* The menu of the clubhouse, by category. The host taps an item to change, hide or delete it. *@
+
+<SectionCard Emoji="📋" Title="@L["Tab_Menu"]" Subtitle="@L["Menu_Hint"]">
+    <Actions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => Edit(null)">@L["Menu_Add"]</MudButton>
+    </Actions>
+    <ChildContent>
+        @if (!loaded)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (Store.Items.Count == 0)
+        {
+            <div class="clubhouse-empty">@L["Menu_Empty"]</div>
+        }
+        else
+        {
+            @foreach (var group in Store.Items.GroupBy(i => i.Category))
+            {
+                <div class="clubhouse-menu__group">
+                    <div class="clubhouse-menu__category"><span aria-hidden="true">@ClubhouseHelpers.CategoryEmoji(group.Key)</span> @ClubhouseHelpers.CategoryText(L, group.Key)</div>
+                    @foreach (var item in group)
+                    {
+                        <button type="button" class="clubhouse-menu__row @(item.IsAvailable ? null : "clubhouse-menu__row--hidden")" @onclick="() => Edit(item)">
+                            <span class="clubhouse-menu__name">@item.Name</span>
+                            @if (!item.IsAvailable)
+                            {
+                                <span class="clubhouse-chip">@L["Menu_Hidden"]</span>
+                            }
+                            <span class="clubhouse-menu__price">@ClubhouseHelpers.Price(L, item.PriceCents)</span>
+                            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="clubhouse-menu__chevron" />
+                        </button>
+                    }
+                </div>
+            }
+        }
+    </ChildContent>
+</SectionCard>
+
+@code {
+    [Inject] private IClubhouseStore Store { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubhouseLocale> L { get; set; } = null!;
+
+    private bool loaded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnClubhouseChanged += OnChanged;
+        await Store.LoadItems();
+        loaded = true;
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task Edit(ClubhouseItemDto? item)
+    {
+        var parameters = new DialogParameters<ClubhouseItemDialog> { { d => d.Item, item } };
+        await DialogService.ShowAsync<ClubhouseItemDialog>(L[item is null ? "Item_New" : "Item_Edit"], parameters,
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseOnEscapeKey = true });
+    }
+
+    public void Dispose() => Store.OnClubhouseChanged -= OnChanged;
+}

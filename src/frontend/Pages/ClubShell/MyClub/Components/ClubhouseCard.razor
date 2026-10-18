@@ -1,0 +1,82 @@
+@using Bookennis.Client.Localization.Pages.Clubhouse
+@using Bookennis.Client.Pages.ClubShell.Clubhouse
+@using Bookennis.Client.Services.Store.Clubhouse
+@using Bookennis.Shared.Controller.Clubhouse
+
+@implements IDisposable
+
+@*
+    What the clubhouse host booked onto the tabs of the member and of their children. Only shown while a tab is open or one was paid in
+    the last days, so clubs without a host never see it.
+*@
+@if (Store.MyTabs is { } tabs && (tabs.Open.Count > 0 || LastPaid(tabs) is not null))
+{
+    var lastPaid = LastPaid(tabs);
+    var openTotal = tabs.Open.Sum(t => t.TotalCents);
+
+    <MudItem xs="12">
+        <div class="clubhouse-card @(tabs.Open.Count > 0 ? "clubhouse-card--open" : null)">
+            <div class="clubhouse-card__row">
+                <div class="clubhouse-card__emoji" aria-hidden="true">🍻</div>
+                <div class="clubhouse-card__body">
+                    <div class="clubhouse-card__title">@L["Card_Title"]</div>
+                    @if (tabs.Open.Count > 0)
+                    {
+                        <div class="clubhouse-card__text">@string.Format(L["Card_Open"], ClubhouseHelpers.Amount(openTotal))</div>
+                    }
+                    @if (lastPaid is { PaidAt: { } paidAt })
+                    {
+                        <div class="clubhouse-card__text">@string.Format(L["Card_LastPaid"], ClubhouseHelpers.Amount(lastPaid.TotalCents), ClubhouseHelpers.Day(paidAt))</div>
+                    }
+                </div>
+                @if (tabs.Open.Count > 0)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" OnClick="() => expanded = !expanded" aria-expanded="@(expanded ? "true" : "false")"
+                               EndIcon="@(expanded ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Class="clubhouse-card__action">
+                        @L[expanded ? "Card_Hide" : "Card_Details"]
+                    </MudButton>
+                }
+            </div>
+
+            @if (expanded)
+            {
+                @foreach (var tab in tabs.Open)
+                {
+                    @if (tabs.Open.Count > 1)
+                    {
+                        <div class="clubhouse-card__of">@string.Format(L["Card_OpenOf"], ClubhouseHelpers.Amount(tab.TotalCents), ClubhouseHelpers.TabName(L, tab.Name))</div>
+                    }
+                    <ul class="clubhouse-card__lines">
+                        @foreach (var line in tab.Lines)
+                        {
+                            <li><span>@line.Quantity × @line.Name <span class="clubhouse-card__time">@ClubhouseHelpers.Day(line.AddedAt) @ClubhouseHelpers.Time(line.AddedAt)</span></span><span>@ClubhouseHelpers.Amount(line.TotalCents)</span></li>
+                        }
+                    </ul>
+                }
+            }
+        </div>
+    </MudItem>
+}
+
+@code {
+    /// <summary>A paid tab is mentioned for this many days, so the member can check what they paid.</summary>
+    private const int ShowPaidDays = 14;
+
+    [Inject] private IClubhouseStore Store { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubhouseLocale> L { get; set; } = null!;
+
+    private bool expanded;
+
+    private static ClubhouseTabDto? LastPaid(MyClubhouseTabsResult tabs)
+        => tabs.RecentlyPaid.FirstOrDefault(t => t.PaidAt > DateTimeOffset.UtcNow.AddDays(-ShowPaidDays));
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnClubhouseChanged += OnChanged;
+        await Store.LoadMyTabs();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Store.OnClubhouseChanged -= OnChanged;
+}

@@ -44,6 +44,12 @@ public static class AuthorizationPolicies
     /// <summary>Resource: CourtPurchaseAuthorizationModel. The buyer, or a Treasurer or Admin of the club (not for releasing a hold).</summary>
     public const string OwnsCourtPurchase = nameof(OwnsCourtPurchase);
 
+    // Clubhouse: signed in with a cookie, never with an API key (money of the host)
+    /// <summary>Any member of the club, signed in (not with an API key): reads the own tabs and those of the children of their families.</summary>
+    public const string ClubhouseGuest = nameof(ClubhouseGuest);
+    /// <summary>ClubhouseHost or Admin, signed in (not with an API key): the menu and the tabs of all guests.</summary>
+    public const string ClubhouseHost = nameof(ClubhouseHost);
+
     //Booking Policies
     public const string OwnsBooking = nameof(OwnsBooking);
     public const string CanEditBooking = nameof(CanEditBooking);

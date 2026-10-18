@@ -14,7 +14,7 @@ internal static class NewsHelpers
 
     /// <summary>The roles an announcement can be sent to. Every member has the role <c>User</c>, so it is not listed.</summary>
     public static readonly MemberRole[] EmailRoles =
-        [MemberRole.Admin, MemberRole.SportsDirector, MemberRole.YouthSportsDirector, MemberRole.Trainer, MemberRole.Maintainer, MemberRole.Treasurer];
+        [MemberRole.Admin, MemberRole.SportsDirector, MemberRole.YouthSportsDirector, MemberRole.Trainer, MemberRole.Maintainer, MemberRole.Treasurer, MemberRole.ClubhouseHost];
 
     /// <summary>Roles that write announcements, same as the backend policy <c>ClubAnnouncementManager</c>.</summary>
     public static bool CanManage(IEnumerable<MemberRole> roles)

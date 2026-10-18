@@ -705,4 +705,31 @@
   <data name="CourtSalePlayModeHasFixedDuration" xml:space="preserve">
     <value>Diese Spielart hat eine feste Dauer und ist für gekaufte Zeiten nicht möglich.</value>
   </data>
+  <data name="ClubhouseItemNameInvalid" xml:space="preserve">
+    <value>Gib einen Namen mit höchstens {0} Zeichen ein.</value>
+  </data>
+  <data name="ClubhouseItemPriceInvalid" xml:space="preserve">
+    <value>Der Preis muss zwischen 0 und {0} Cent liegen.</value>
+  </data>
+  <data name="ClubhouseTabGuestInvalid" xml:space="preserve">
+    <value>Wähle ein Mitglied oder gib einen Namen mit höchstens {0} Zeichen ein.</value>
+  </data>
+  <data name="ClubhouseTabNotOpen" xml:space="preserve">
+    <value>Diese Rechnung wurde bereits bezahlt.</value>
+  </data>
+  <data name="ClubhouseQuantityInvalid" xml:space="preserve">
+    <value>Buche zwischen 1 und {0} Stück eines Artikels auf einmal.</value>
+  </data>
+  <data name="ClubhouseTabTooManyLines" xml:space="preserve">
+    <value>Diese Rechnung ist voll ({0} Einträge). Lass den Gast zahlen und öffne eine neue.</value>
+  </data>
+  <data name="ClubhouseTabEmpty" xml:space="preserve">
+    <value>Auf dieser Rechnung ist nichts zu bezahlen.</value>
+  </data>
+  <data name="ClubhouseTabNotEmpty" xml:space="preserve">
+    <value>Nur eine leere Rechnung kann verworfen werden.</value>
+  </data>
+  <data name="ClubhouseItemNotAvailable" xml:space="preserve">
+    <value>Dieser Artikel ist nicht mehr auf der Karte.</value>
+  </data>
 </root>

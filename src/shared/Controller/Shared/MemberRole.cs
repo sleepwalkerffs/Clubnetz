@@ -9,5 +9,6 @@ public enum MemberRole
     YouthSportsDirector = 4,
     Trainer = 5,
     Guest = 6,
-    Treasurer = 7
+    Treasurer = 7,
+    ClubhouseHost = 8,
 }

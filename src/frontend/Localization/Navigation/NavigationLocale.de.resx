@@ -252,4 +252,10 @@
   <data name="CourtSales" xml:space="preserve">
     <value>Platzverkauf</value>
   </data>
+  <data name="Section_Clubhouse" xml:space="preserve">
+    <value>Clubhaus</value>
+  </data>
+  <data name="ClubhouseTabs" xml:space="preserve">
+    <value>Rechnungen &amp; Karte</value>
+  </data>
 </root>
