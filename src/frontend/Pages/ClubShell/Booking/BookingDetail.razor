@@ -20,7 +20,14 @@
 
 @if (booking is null)
 {
-    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    if (notFound)
+    {
+        <NotFoundState Title="@Locale["BookingNotFound"]" BackHref="@CalendarUrl" BackText="@Locale["BackToCalendar"]" />
+    }
+    else
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
 }
 else
 {
@@ -222,6 +229,7 @@ else
     public int BookingEntryId { get; set; }
 
     private BookingResult? booking;
+    private bool notFound;
     private bool processing;
     private bool isEditing;
 
@@ -405,8 +413,7 @@ else
 
             isEditing = false;
             Snackbar.Add(Locale["BookingSaved"], Severity.Success);
-            await BookingStore.LoadBooking(BookingEntryId);
-            booking = BookingStore.Booking;
+            await LoadBooking();
         }
         finally
         {
@@ -498,10 +505,16 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        await BookingStore.LoadBooking(BookingEntryId);
-        booking = BookingStore.Booking;
+        await LoadBooking();
 
         await base.OnParametersSetAsync();
+    }
+
+    private async Task LoadBooking()
+    {
+        await BookingStore.LoadBooking(BookingEntryId);
+        booking = BookingStore.Booking?.BookingEntryId == BookingEntryId ? BookingStore.Booking : null;
+        notFound = booking is null;
     }
 
     private string CalendarUrl

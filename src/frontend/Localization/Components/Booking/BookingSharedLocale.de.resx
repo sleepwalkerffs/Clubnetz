@@ -339,4 +339,13 @@
   <data name="OpenCourtSales" xml:space="preserve">
     <value>Platzverkauf öffnen</value>
   </data>
+  <data name="BookingNotFound" xml:space="preserve">
+    <value>Diese Buchung gibt es nicht (mehr).</value>
+  </data>
+  <data name="BookingsCountOne" xml:space="preserve">
+    <value>1 Buchung</value>
+  </data>
+  <data name="RecurringHintWeekly" xml:space="preserve">
+    <value>Wiederholt sich jede Woche am {0} bis Saisonende oder zum Enddatum.</value>
+  </data>
 </root>

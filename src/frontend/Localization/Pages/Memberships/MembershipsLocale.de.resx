@@ -942,4 +942,7 @@
   <data name="Cancel_RemoveEnrollmentsHint" xml:space="preserve">
     <value>Nimm das Häkchen weg, wenn sie nur einen anderen Tarif bekommen. Von Hand freigeschaltete Mitglieder bleiben freigeschaltet.</value>
   </data>
+  <data name="Plans_OrdersOne" xml:space="preserve">
+    <value>Einmal gewählt</value>
+  </data>
 </root>

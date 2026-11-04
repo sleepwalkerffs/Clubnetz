@@ -394,7 +394,7 @@
     <value>Take back {0}</value>
   </data>
   <data name="Credits_Saved" xml:space="preserve">
-    <value>{0} now has {1} credit(s)</value>
+    <value>{0} now has {1} credits</value>
   </data>
   <data name="Reason_GuestCardMigration" xml:space="preserve">
     <value>Guest card</value>
@@ -542,5 +542,11 @@
   </data>
   <data name="Sales_CompensatedWithOne" xml:space="preserve">
     <value>1 credit given</value>
+  </data>
+  <data name="Credits_SavedOne" xml:space="preserve">
+    <value>{0} now has 1 credit</value>
+  </data>
+  <data name="Reason_TakenBack" xml:space="preserve">
+    <value>Taken back by the club</value>
   </data>
 </root>

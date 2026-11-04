@@ -534,4 +534,7 @@
   <data name="NotifyMembersHint" xml:space="preserve">
     <value>Members get a push notification and an email when the event is published, and a reminder before the registration deadline. Switch it off for events you enter in bulk or after the fact.</value>
   </data>
+  <data name="PlacesLeftOne" xml:space="preserve">
+    <value>1 more place available</value>
+  </data>
 </root>

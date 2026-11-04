@@ -647,4 +647,16 @@
   <data name="ClubDetailLoadFailed" xml:space="preserve">
     <value>The club could not be loaded.</value>
   </data>
+  <data name="BookingsCountOne" xml:space="preserve">
+    <value>1 booking / 30 days</value>
+  </data>
+  <data name="MembersCountOne" xml:space="preserve">
+    <value>1 member</value>
+  </data>
+  <data name="GuestsCountOne" xml:space="preserve">
+    <value>1 guest</value>
+  </data>
+  <data name="BookingsChipOne" xml:space="preserve">
+    <value>1 booking in 30 days</value>
+  </data>
 </root>

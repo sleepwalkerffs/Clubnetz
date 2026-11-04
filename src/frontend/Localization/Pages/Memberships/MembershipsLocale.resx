@@ -942,4 +942,7 @@
   <data name="Cancel_RemoveEnrollmentsHint" xml:space="preserve">
     <value>Untick it when they only get another plan. Members enrolled by hand stay enrolled.</value>
   </data>
+  <data name="Plans_OrdersOne" xml:space="preserve">
+    <value>Chosen once</value>
+  </data>
 </root>

@@ -294,7 +294,17 @@
                 return;
             }
 
-            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", string.Join(separator, emails));
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("App.copyToClipboard", string.Join(separator, emails));
+            }
+            catch (JSException)
+            {
+                // A refused clipboard must not stop the app
+                Snackbar.Add(L["CopyFailed"], Severity.Warning);
+                return;
+            }
+
             var missing = MembersStore.TotalMembers - emails.Length;
             Snackbar.Add(missing > 0
                 ? string.Format(L["EmailsCopiedWithMissing"], emails.Length, missing)

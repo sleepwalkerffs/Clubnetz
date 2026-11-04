@@ -1,0 +1,17 @@
+@* Shown instead of an endless spinner when the entry of a page does not exist (any more), e.g. a deleted booking opened from an email *@
+<div class="not-found-state">
+    <div class="not-found-state__emoji" aria-hidden="true">🔍</div>
+    <div class="not-found-state__title">@Title</div>
+    @if (BackHref is not null && BackText is not null)
+    {
+        <MudButton Href="@BackHref" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mt-3">
+            @BackText
+        </MudButton>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public string? BackHref { get; set; }
+    [Parameter] public string? BackText { get; set; }
+}

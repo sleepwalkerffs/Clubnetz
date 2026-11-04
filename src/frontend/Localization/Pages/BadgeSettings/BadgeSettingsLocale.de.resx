@@ -193,4 +193,13 @@
   <data name="OneTimeRule" xml:space="preserve">
     <value>Wird von Hand verliehen</value>
   </data>
+  <data name="TiersChipOne" xml:space="preserve">
+    <value>1 Stufe</value>
+  </data>
+  <data name="OneTimeChipOne" xml:space="preserve">
+    <value>1 Sonderauszeichnung</value>
+  </data>
+  <data name="AwardsChipOne" xml:space="preserve">
+    <value>Einmal verliehen</value>
+  </data>
 </root>

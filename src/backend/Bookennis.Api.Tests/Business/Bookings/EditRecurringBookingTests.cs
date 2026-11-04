@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Bookennis.Api.Tests.Business.Bookings;
 
-/// <summary>Moving or changing one occurrence of a series (scope Single) runs the same rules as <see cref="EditBooking"/>.</summary>
+/// <summary>Moving or changing an occurrence of a series (scope Single, or ThisAndFollowing for the edited one) runs the same rules as <see cref="EditBooking"/>.</summary>
 public class EditRecurringBookingTests : TestBase
 {
     private static readonly DateOnly Day = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(3);
@@ -117,8 +117,62 @@ public class EditRecurringBookingTests : TestBase
         captured!.IntersectingBookings.Should().BeEmpty();
     }
 
-    private EditRecurringBooking Command(int bookingId, DateTimeOffsetInterval interval, List<int> players, int userId, int courtId = TestDataSeed.Court1Id)
-        => new(bookingId, courtId, interval, TimeZoneInfo.Utc.Id, TestPlayModeId, players, RecurringEditScope.Single, null, null, null, null, userId);
+    [Fact]
+    public async Task SeriesEdit_KeepsTheEditedOccurrenceAndCreatesTheLaterOnesAgain()
+    {
+        var (first, later) = await SeedSeries([TestDataSeed.Member1Id]);
+
+        await SendAsync(Command(first.Id, CourtBlockingSeed.At(Day, 12, 13), [TestDataSeed.Member1Id], TestDataSeed.UserId, scope: RecurringEditScope.ThisAndFollowing));
+
+        bookingService.Received(1).EditBooking(Arg.Any<BookingDomainService.Context>(), Arg.Is<Booking>(b => b.Id == first.Id), CourtBlockingSeed.At(Day, 12, 13), TimeZoneInfo.Utc.Id, null);
+        var bookings = await QueryAsync(ctx => ctx.Bookings.Where(b => b.RecurringBookingSeriesId == first.RecurringBookingSeriesId).OrderBy(b => b.Interval.From).ToListAsync());
+        bookings[0].Id.Should().Be(first.Id, "the detail page of the edited occurrence stays valid");
+        bookings.Select(b => b.Id).Should().NotIntersectWith(later.Select(b => b.Id));
+        bookings.Skip(1).Select(b => b.Interval).Should().Equal(CourtBlockingSeed.At(Day.AddDays(7), 12, 13), CourtBlockingSeed.At(Day.AddDays(14), 12, 13));
+    }
+
+    [Fact]
+    public async Task SeriesEdit_UserMayNotBookForThePlayers_IsRejectedAndKeepsTheSeries()
+    {
+        var (first, later) = await SeedSeries([TestDataSeed.Member2Id]);
+
+        var act = () => SendAsync(Command(first.Id, CourtBlockingSeed.At(Day, 12, 13), [TestDataSeed.Member2Id], TestDataSeed.UserId, scope: RecurringEditScope.ThisAndFollowing));
+
+        (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(EditBooking.ErrorCode.UserNotAllowedToBook));
+        var ids = await QueryAsync(ctx => ctx.Bookings.Where(b => b.RecurringBookingSeriesId == first.RecurringBookingSeriesId).Select(b => b.Id).ToListAsync());
+        ids.Should().BeEquivalentTo(later.Select(b => b.Id).Append(first.Id));
+    }
+
+    [Fact]
+    public async Task SeriesEdit_MovingTheOccurrenceOntoALaterOccurrence_IsNoConflictWithTheOwnSeries()
+    {
+        var (first, _) = await SeedSeries([TestDataSeed.Member1Id]);
+
+        await SendAsync(Command(first.Id, CourtBlockingSeed.At(Day.AddDays(7), 10, 11), [TestDataSeed.Member1Id], TestDataSeed.UserId, scope: RecurringEditScope.ThisAndFollowing));
+
+        captured!.IntersectingBookings.Should().BeEmpty();
+    }
+
+    private EditRecurringBooking Command(int bookingId, DateTimeOffsetInterval interval, List<int> players, int userId, int courtId = TestDataSeed.Court1Id, RecurringEditScope scope = RecurringEditScope.Single)
+        => new(bookingId, courtId, interval, TimeZoneInfo.Utc.Id, TestPlayModeId, players, scope, null, null, null, null, userId);
+
+    /// <summary>A weekly series from <see cref="Day"/> 10-11 with three occurrences.</summary>
+    private Task<(Booking First, List<Booking> Later)> SeedSeries(List<int> players)
+        => QueryAsync(async ctx =>
+        {
+            TestPlayModeId = ctx.TestData().Club.PlayModes[0].Id;
+            var series = new RecurringBookingSeries(TestDataSeed.ClubId, TestDataSeed.Court1Id, TestPlayModeId, Day.DayOfWeek, new TimeOnly(10, 0), new TimeOnly(11, 0),
+                TimeZoneInfo.Utc.Id, 1, Day, Day.AddDays(14), null, players);
+            ctx.Add(series);
+            await ctx.SaveChangesAsync();
+
+            var bookings = Enumerable.Range(0, 3)
+                .Select(week => new Booking(TestDataSeed.ClubId, TestDataSeed.Court1Id, TestPlayModeId, CourtBlockingSeed.At(Day.AddDays(7 * week), 10, 11), TimeZoneInfo.Utc.Id, players, null, series.Id))
+                .ToList();
+            ctx.AddRange(bookings);
+            await ctx.SaveChangesAsync();
+            return (bookings[0], bookings.Skip(1).ToList());
+        });
 
     private int TestPlayModeId { get; set; }
 

@@ -501,4 +501,10 @@
   <data name="MatchesOnlyHint" xml:space="preserve">
     <value>Only play modes that count as match (booking limit, badges, leaderboard)</value>
   </data>
+  <data name="UpcomingChipOne" xml:space="preserve">
+    <value>1 upcoming booking</value>
+  </data>
+  <data name="GuestsHintOne" xml:space="preserve">
+    <value>+ 1 guest</value>
+  </data>
 </root>

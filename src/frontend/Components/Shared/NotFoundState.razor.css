@@ -1,0 +1,17 @@
+.not-found-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 12px;
+    text-align: center;
+}
+
+.not-found-state__emoji {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+.not-found-state__title {
+    margin-top: 8px;
+    font-weight: 700;
+}

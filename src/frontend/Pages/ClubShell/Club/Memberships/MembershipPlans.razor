@@ -112,7 +112,7 @@ else
                                         }
                                     </div>
                                     <div class="plan-card__foot">
-                                        <span class="plan-card__orders">@(plan.OrderCount == 0 ? L["Plans_NoOrders"] : string.Format(L["Plans_Orders"], plan.OrderCount))</span>
+                                        <span class="plan-card__orders">@(plan.OrderCount == 0 ? L["Plans_NoOrders"] : L.Count("Plans_Orders", plan.OrderCount))</span>
                                         <span class="plan-card__actions">
                                             <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" aria-label="@L["Plans_MoveUp"]" title="@L["Plans_MoveUp"]"
                                                            Disabled="@(index == 0 || Store.IsSaving)" OnClick="() => Move(plan, -1)" />

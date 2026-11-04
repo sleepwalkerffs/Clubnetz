@@ -6,6 +6,7 @@
 @using Bookennis.Client.Services.Store.Admin
 @using Bookennis.Shared.Controller.Admin
 @using Bookennis.Shared.Controller.Shared
+@using Bookennis.Client.Utils
 
 @implements IDisposable
 
@@ -24,10 +25,10 @@ else
         <AdminHero Emoji="🎾" Eyebrow="@L["ClubEyebrow"]" Title="@club.Name"
                    Subtitle="@string.Format(L["ClubSince"], club.CreatedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))">
             <Chips>
-                <span class="hero-chip">👥 @string.Format(L["MembersCount"], club.MemberCount)</span>
-                <span class="hero-chip">🎟️ @string.Format(L["GuestsCount"], club.GuestCount)</span>
+                <span class="hero-chip">👥 @L.Count("MembersCount", club.MemberCount)</span>
+                <span class="hero-chip">🎟️ @L.Count("GuestsCount", club.GuestCount)</span>
                 <span class="hero-chip">🏟️ @string.Format(L["CourtsCount"], club.CourtCount)</span>
-                <span class="hero-chip">📅 @string.Format(L["BookingsCount"], club.BookingsLast30Days)</span>
+                <span class="hero-chip">📅 @L.Count("BookingsCount", club.BookingsLast30Days)</span>
                 @if (!hasActiveSeason)
                 {
                     <span class="hero-chip hero-chip--warn">⛔ @L["NoActiveSeason"]</span>

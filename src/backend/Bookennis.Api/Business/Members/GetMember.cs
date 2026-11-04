@@ -47,6 +47,7 @@ public record GetMember(int MemberId) : ICommand<MembersDetailResult>
                                     Birthday = user.Birthday,
                                     Roles = member.UserRoles.Select(x => (Bookennis.Shared.Controller.Shared.MemberRole)x).ToArray(),
                                     BookingsPerWeek = member.BookingsPerWeek == null ? club.ConcurrentAllowedBookings : member.BookingsPerWeek!.Value,
+                                    MaxBookingsPerWeek = club.ConcurrentAllowedBookings,
                                     AllowedSeasonIds = context.MemberSeasons
                                         .Where(ms => ms.MemberId == member.Id)
                                         .Select(ms => ms.SeasonId)

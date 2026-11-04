@@ -258,4 +258,7 @@
   <data name="ClubhouseTabs" xml:space="preserve">
     <value>Rechnungen &amp; Karte</value>
   </data>
+  <data name="Home" xml:space="preserve">
+    <value>Startseite</value>
+  </data>
 </root>

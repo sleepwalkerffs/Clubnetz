@@ -3,6 +3,7 @@
 @using Bookennis.Client.Services.Store.Admin
 @using Bookennis.Shared.Controller.Admin
 @using Bookennis.Global.Intervals
+@using Bookennis.Client.Utils
 
 @implements IDisposable
 
@@ -14,7 +15,7 @@
             @if (AdminStore.ClubsLoaded)
             {
                 <span class="hero-chip">🎾 @string.Format(L["ClubsChip"], AdminStore.Clubs.Count)</span>
-                <span class="hero-chip">👥 @string.Format(L["MembersCount"], AdminStore.Clubs.Sum(c => c.MemberCount))</span>
+                <span class="hero-chip">👥 @L.Count("MembersCount", AdminStore.Clubs.Sum(c => c.MemberCount))</span>
                 @if (AdminStore.Clubs.Count(c => !c.HasActiveSeason) is > 0 and var withoutSeason)
                 {
                     <span class="hero-chip hero-chip--warn">⛔ @string.Format(L["Tile_ClubsHint"], withoutSeason)</span>

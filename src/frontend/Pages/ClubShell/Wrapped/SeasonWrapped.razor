@@ -349,7 +349,7 @@
                            <div class="w-club__tile w-pop" style="--d: 3"><span class="w-club__value">@Number(w.Club.ActivePlayers)</span><span class="w-club__label">@L["ClubPlayers"]</span></div>
                            @if (w.Club.GuestPlayers > 0)
                            {
-                               <div class="w-club__tile w-pop" style="--d: 4"><span class="w-club__value">@Number(w.Club.GuestPlayers)</span><span class="w-club__label">@L["ClubGuests"]</span></div>
+                               <div class="w-club__tile w-pop" style="--d: 4"><span class="w-club__value">@Number(w.Club.GuestPlayers)</span><span class="w-club__label">@L[w.Club.GuestPlayers == 1 ? "ClubGuestsOne" : "ClubGuests"]</span></div>
                            }
                            @if (w.Club.Events > 0)
                            {

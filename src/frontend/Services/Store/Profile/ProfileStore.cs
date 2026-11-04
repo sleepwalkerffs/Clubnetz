@@ -63,7 +63,13 @@ public sealed class ProfileStore(IProfileHttpClient profileHttpClient) : Semapho
             // Hide it right away, the request only has to persist the choice
             IsProfileBannerDismissed = true;
             OnProfileChanged?.Invoke();
-            await profileHttpClient.DismissCompletionBanner(cancellationToken);
+            var result = await profileHttpClient.DismissCompletionBanner(cancellationToken);
+            if (!result.Success)
+            {
+                // Not saved: it would come back on the next start anyway, so show it again now
+                IsProfileBannerDismissed = false;
+                OnProfileChanged?.Invoke();
+            }
         }, nameof(DismissProfileBanner));
 
     public Task<HttpResult> RequestEmailChange(string currentPassword, string newEmail)

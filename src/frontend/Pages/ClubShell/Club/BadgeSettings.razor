@@ -31,9 +31,9 @@
 <div class="badge-page">
     <AdminHero Emoji="🏅" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Title"]" Subtitle="@L["Subtitle"]">
         <Chips>
-            <span class="hero-chip">🪜 @string.Format(L["TiersChip"], tiers.Count)</span>
-            <span class="hero-chip">✨ @string.Format(L["OneTimeChip"], oneTimeBadges.Count)</span>
-            <span class="hero-chip">🎉 @string.Format(L["AwardsChip"], tiers.Sum(t => t.EarnedCount) + oneTimeBadges.Sum(b => b.Awardees.Count))</span>
+            <span class="hero-chip">🪜 @L.Count("TiersChip", tiers.Count)</span>
+            <span class="hero-chip">✨ @L.Count("OneTimeChip", oneTimeBadges.Count)</span>
+            <span class="hero-chip">🎉 @L.Count("AwardsChip", tiers.Sum(t => t.EarnedCount) + oneTimeBadges.Sum(b => b.Awardees.Count))</span>
         </Chips>
         <Aside>
             <div class="badge-aside__caption">@L["SeasonCaption"]</div>

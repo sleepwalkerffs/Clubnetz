@@ -238,7 +238,7 @@
     <value>{0} h</value>
   </data>
   <data name="RecurringHint" xml:space="preserve">
-    <value>Repeats every {1}. week on {0} until the end of the season or the end date.</value>
+    <value>Repeats every {1} weeks on {0} until the end of the season or the end date.</value>
   </data>
   <data name="BookingCreated" xml:space="preserve">
     <value>Court booked – have a great match! 🎾</value>
@@ -338,5 +338,14 @@
   </data>
   <data name="OpenCourtSales" xml:space="preserve">
     <value>Open Court sales</value>
+  </data>
+  <data name="BookingNotFound" xml:space="preserve">
+    <value>This booking does not exist (anymore).</value>
+  </data>
+  <data name="BookingsCountOne" xml:space="preserve">
+    <value>1 booking</value>
+  </data>
+  <data name="RecurringHintWeekly" xml:space="preserve">
+    <value>Repeats every week on {0} until the end of the season or the end date.</value>
   </data>
 </root>

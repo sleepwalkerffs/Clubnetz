@@ -339,4 +339,7 @@
   <data name="ShareFailed" xml:space="preserve">
     <value>Sharing is not possible in this browser.</value>
   </data>
+  <data name="ClubGuestsOne" xml:space="preserve">
+    <value>guest played</value>
+  </data>
 </root>

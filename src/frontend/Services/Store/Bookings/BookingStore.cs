@@ -41,10 +41,8 @@ public class BookingStore(IBookingsHttpClient bookingsHttpClient) : SemaphoreSto
     public Task LoadBooking(int bookingId) => RunInLoadingContextAsync(async cancellationToken =>
     {
         var response = await bookingsHttpClient.GetBooking(bookingId, cancellationToken);
-        if (response is { Success: true, Dto: not null })
-        {
-            Booking = response.Dto.AsLocalTime();
-        }
+        // A booking that does not exist (any more) must not leave the previous one behind
+        Booking = response is { Success: true, Dto: not null } ? response.Dto.AsLocalTime() : null;
     }, nameof(LoadBooking));
 
     public async Task<HttpResult<BookCourtResult>> BookCourt(BookCourtModel model)

@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="BirthdayValidation" xml:space="preserve">
-    <value>Geburtstag ist verplichtend</value>
+    <value>Geburtstag ist verpflichtend</value>
   </data>
   <data name="ConfirmEmail" xml:space="preserve">
     <value>Email bestätigen</value>

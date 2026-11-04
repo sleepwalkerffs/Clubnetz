@@ -46,6 +46,7 @@ public class GetMembers(PaginationParameters pagination, SortParameters? sort, M
                                     Birthday = row.User.Birthday,
                                     Roles = row.Member.UserRoles.Select(x => (MemberRole)x).ToArray(),
                                     BookingsPerWeek = row.Member.BookingsPerWeek == null ? club.ConcurrentAllowedBookings : row.Member.BookingsPerWeek!.Value,
+                                    MaxBookingsPerWeek = club.ConcurrentAllowedBookings,
                                     AllowedSeasonIds = context.MemberSeasons
                                         .Where(ms => ms.MemberId == row.Member.Id)
                                         .Select(ms => ms.SeasonId)

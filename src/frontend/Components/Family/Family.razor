@@ -4,6 +4,8 @@
 @using Bookennis.Client.Localization.Components.Family
 @using Bookennis.Client.Services.Store.Family
 @using Bookennis.Shared.Controller.Families
+@using Bookennis.Client.Services.HttpClients
+@using Bookennis.Client.Utils
 
 @implements IDisposable
 
@@ -127,6 +129,10 @@ else
     private IStringLocalizer<FamilySharedLocale> FamilySharedLocale { get; set; } = null!;
     [Inject]
     private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
 
     private static readonly DialogOptions DialogOptions = new() { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true, CloseOnEscapeKey = true };
 
@@ -197,7 +203,13 @@ else
 
         if (approved is not null && approved.Value)
         {
-            await FamilyStore.RemoveFamilyMember(familyMember.MemberId);
+            var result = await FamilyStore.RemoveFamilyMember(familyMember.MemberId);
+            if (!result.Success)
+            {
+                Snackbar.ShowErrorDetails(result, BackendLocale);
+                return;
+            }
+
             await Notify();
         }
     }

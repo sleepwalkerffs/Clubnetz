@@ -4,6 +4,8 @@
 @using Bookennis.Client.Localization.Components.Family
 @using Bookennis.Client.Services.Store.Family
 @using Bookennis.Shared.Controller.Families
+@using Bookennis.Client.Services.HttpClients
+@using Bookennis.Client.Utils
 
 <BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Add"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]" CanSubmit="@(selected.Count == 1)"
             Loading="@FamilyStore.IsSaving" Title="@FamilySharedLocale["SelectPartner"]" AllowFullScreen="false">
@@ -34,6 +36,10 @@
     private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
     [Inject]
     private IStringLocalizer<FamilySharedLocale> FamilySharedLocale { get; set; } = null!;
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
 
     private IReadOnlyCollection<int> selected = [];
     private bool loaded;
@@ -52,10 +58,16 @@
             return null;
 
         var partnerId = selected.Single();
-        if (FamilyStore.Family is null)
-            await FamilyStore.CreateFamily(new CreateFamilyRequest { ParentContractUserIds = [MemberId, partnerId] });
-        else
-            await FamilyStore.AddParent(partnerId);
+        var result = FamilyStore.Family is null
+            ? await FamilyStore.CreateFamily(new CreateFamilyRequest { ParentContractUserIds = [MemberId, partnerId] })
+            : await FamilyStore.AddParent(partnerId);
+
+        // The dialog stays open with the message when the server refuses
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
 
         return DialogResult.Ok((object?)null);
     }

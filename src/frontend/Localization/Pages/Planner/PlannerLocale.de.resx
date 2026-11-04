@@ -201,4 +201,19 @@
   <data name="BookingChangedMeanwhile" xml:space="preserve">
     <value>Die Buchung wurde in der Zwischenzeit geändert. Der Planer zeigt jetzt den aktuellen Stand.</value>
   </data>
+  <data name="SlotsTitleOne" xml:space="preserve">
+    <value>1 Buchung</value>
+  </data>
+  <data name="BookingsToRemoveTitleOne" xml:space="preserve">
+    <value>1 Buchung wird ersetzt</value>
+  </data>
+  <data name="CreateBookingsOne" xml:space="preserve">
+    <value>1 Buchung anlegen</value>
+  </data>
+  <data name="BookingsCreatedOne" xml:space="preserve">
+    <value>1 Buchung angelegt</value>
+  </data>
+  <data name="BookingMovedReplacedOne" xml:space="preserve">
+    <value>Buchung geändert, 1 Buchung ersetzt</value>
+  </data>
 </root>

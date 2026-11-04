@@ -13,6 +13,10 @@ public record DeleteFamilyMember(int FamilyId, int MemberId) : ICommand
 
             family.DeleteFamilyMember(request.MemberId);
 
+            // One person is no family: the last member would be stuck in it without a way out (the editor does not list oneself)
+            if (family.Parents.Count + family.Children.Count <= 1)
+                context.Remove(family);
+
             await context.SaveChangesAsync(cancellationToken);
 
             return Unit.Value;

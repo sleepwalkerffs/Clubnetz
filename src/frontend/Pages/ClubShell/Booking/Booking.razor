@@ -40,7 +40,7 @@ else
                 <h1 class="booking-toolbar__title">@SelectedDate.ToString(DateFormats.Localized("dddd, d. MMMM"), CultureInfo.CurrentCulture)</h1>
                 <div class="booking-toolbar__chips">
                     <span class="toolbar-chip">
-                        🎾 @(dayBookings.Count == 0 ? Locale["NoBookingsOnDay"] : string.Format(Locale["BookingsCount"], dayBookings.Count))
+                        🎾 @(dayBookings.Count == 0 ? Locale["NoBookingsOnDay"] : Locale.Count("BookingsCount", dayBookings.Count))
                     </span>
                     @if (ownBookings.FirstOrDefault() is { } ownBooking)
                     {
