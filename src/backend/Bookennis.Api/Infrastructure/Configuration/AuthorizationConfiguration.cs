@@ -135,6 +135,12 @@ public static class AuthorizationConfiguration
                           .AddRequirements(new OwnsCourtPurchaseRequirement()))
 
                 // Clubhouse Policies: cookie only, the tabs are about the money of the host
+                .AddPolicy(AuthorizationPolicies.PaysClubhouseTab, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new PaysClubhouseTabRequirement()))
                 .AddPolicy(AuthorizationPolicies.ClubhouseGuest, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
                           .RequireAuthenticatedUser()

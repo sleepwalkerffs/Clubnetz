@@ -15,6 +15,7 @@ public class ClubhouseStore(IClubhouseHttpClient httpClient) : SemaphoreStore, I
     public ClubhouseTabDto? Tab { get; private set; }
     public GetClubhouseTabsResult? PaidTabs { get; private set; }
     public MyClubhouseTabsResult? MyTabs { get; private set; }
+    public ClubhouseSumUpAccountDto? SumUpAccount { get; private set; }
 
     public Task LoadItems() => RunInLoadingContextAsync(async cancellationToken =>
     {
@@ -79,6 +80,16 @@ public class ClubhouseStore(IClubhouseHttpClient httpClient) : SemaphoreStore, I
         }
     }, nameof(LoadMyTabs));
 
+    public Task LoadSumUpAccount() => RunInLoadingContextAsync(async cancellationToken =>
+    {
+        var response = await httpClient.GetSumUpAccount(cancellationToken);
+        if (response is { Success: true, Dto: not null })
+        {
+            SumUpAccount = response.Dto;
+            OnClubhouseChanged?.Invoke();
+        }
+    }, nameof(LoadSumUpAccount));
+
     public async Task<HttpResult<ClubhouseItemDto>> SaveItem(int? itemId, SaveClubhouseItemModel model)
         => (HttpResult<ClubhouseItemDto>)await RunInSavingContextAsync(async cancellationToken =>
         {
@@ -132,6 +143,40 @@ public class ClubhouseStore(IClubhouseHttpClient httpClient) : SemaphoreStore, I
 
             return result;
         }, nameof(DiscardTab));
+
+    public async Task<HttpResult<ClubhouseRedirectResult>> StartTabPayment(int tabId)
+        => (HttpResult<ClubhouseRedirectResult>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.StartTabPayment(tabId, cancellationToken);
+
+            // A tab that can't be paid (any more): show what it is now
+            if (!result.Success)
+                await LoadMyTabs();
+
+            return result;
+        }, nameof(StartTabPayment));
+
+    public async Task<HttpResult<ClubhouseTabPaymentDto>> CheckTabPayment(int tabId, int paymentId)
+        => (HttpResult<ClubhouseTabPaymentDto>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.GetTabPayment(tabId, paymentId, cancellationToken);
+            if (result is { Success: true, Dto.Status: not ClubhouseTabPaymentStatus.Pending })
+                await LoadMyTabs();
+
+            return result;
+        }, nameof(CheckTabPayment));
+
+    public async Task<HttpResult<ClubhouseRedirectResult>> ConnectSumUp()
+        => (HttpResult<ClubhouseRedirectResult>)await RunInSavingContextAsync(async cancellationToken =>
+            await httpClient.ConnectSumUp(cancellationToken), nameof(ConnectSumUp));
+
+    public Task<HttpResult> DisconnectSumUp()
+        => RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.DisconnectSumUp(cancellationToken);
+            await LoadSumUpAccount();
+            return result;
+        }, nameof(DisconnectSumUp));
 
     private HttpResult<ClubhouseTabDto> SetTab(HttpResult<ClubhouseTabDto> result)
     {

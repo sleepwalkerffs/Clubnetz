@@ -17,17 +17,20 @@
     else
     {
         <MudGrid Spacing="2">
-            <MudItem xs="6" md="3">
-                <StatTile Icon="@Icons.Material.Filled.Receipt" Value="@ClubhouseHelpers.Amount(paid.CashCents + paid.CardCents + paid.OtherCents)" Label="@L["History_Total"]"
+            <MudItem xs="12" sm="4">
+                <StatTile Icon="@Icons.Material.Filled.Receipt" Value="@ClubhouseHelpers.Amount(paid.CashCents + paid.CardCents + paid.OtherCents + paid.OnlineCents)" Label="@L["History_Total"]"
                           Hint="@string.Format(L["History_Tabs"], paid.Tabs.Count)" Color="#B45309" />
             </MudItem>
-            <MudItem xs="6" md="3">
+            <MudItem xs="6" sm="2">
                 <StatTile Icon="@Icons.Material.Filled.Payments" Value="@ClubhouseHelpers.Amount(paid.CashCents)" Label="@L["Method_Cash"]" Color="#059669" />
             </MudItem>
-            <MudItem xs="6" md="3">
+            <MudItem xs="6" sm="2">
                 <StatTile Icon="@Icons.Material.Filled.CreditCard" Value="@ClubhouseHelpers.Amount(paid.CardCents)" Label="@L["Method_Card"]" Color="#2563EB" />
             </MudItem>
-            <MudItem xs="6" md="3">
+            <MudItem xs="6" sm="2">
+                <StatTile Icon="@Icons.Material.Filled.PhoneIphone" Value="@ClubhouseHelpers.Amount(paid.OnlineCents)" Label="@L["Method_Online"]" Color="#7C3AED" />
+            </MudItem>
+            <MudItem xs="6" sm="2">
                 <StatTile Icon="@Icons.Material.Filled.MoreHoriz" Value="@ClubhouseHelpers.Amount(paid.OtherCents)" Label="@L["Method_Other"]" Color="#6B7280" />
             </MudItem>
         </MudGrid>

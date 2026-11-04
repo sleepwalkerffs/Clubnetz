@@ -472,4 +472,34 @@
   <data name="Variable_credits" xml:space="preserve">
     <value>Erhaltenes Guthaben</value>
   </data>
+  <data name="Type_ClubhouseTabPaid" xml:space="preserve">
+    <value>Clubhaus-Rechnung bezahlt</value>
+  </data>
+  <data name="TypeDescription_ClubhouseTabPaid" xml:space="preserve">
+    <value>An ein Mitglied, das seine Rechnung im Clubhaus in der App bezahlt hat.</value>
+  </data>
+  <data name="Type_ClubhouseTabNeedsAttention" xml:space="preserve">
+    <value>Clubhaus-Zahlung: bitte ansehen</value>
+  </data>
+  <data name="TypeDescription_ClubhouseTabNeedsAttention" xml:space="preserve">
+    <value>An den Wirt (oder die Admins, wenn es keinen gibt): eine Online-Zahlung, die nicht auf ihre Rechnung gebucht werden konnte.</value>
+  </data>
+  <data name="Variable_tab.amount" xml:space="preserve">
+    <value>Bezahlter Betrag mit Währung</value>
+  </data>
+  <data name="Variable_tab.date" xml:space="preserve">
+    <value>Tag der Zahlung</value>
+  </data>
+  <data name="Variable_tab.items" xml:space="preserve">
+    <value>Was auf der Rechnung war (z. B. „2× Bier“)</value>
+  </data>
+  <data name="Variable_tab.transaction_code" xml:space="preserve">
+    <value>Transaktionscode bei SumUp</value>
+  </data>
+  <data name="Variable_tab.url" xml:space="preserve">
+    <value>Link zu Mein Club (zum Clubhaus für den Wirt)</value>
+  </data>
+  <data name="Variable_guest" xml:space="preserve">
+    <value>Name des Gasts der Rechnung</value>
+  </data>
 </root>

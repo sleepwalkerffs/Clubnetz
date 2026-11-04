@@ -84,3 +84,42 @@
         padding-left: 0;
     }
 }
+
+/* Paying in the app: one button per open tab, below the summary */
+.clubhouse-card__pay {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    padding-left: 48px;
+}
+
+::deep .clubhouse-card__pay-button {
+    text-transform: none;
+    font-weight: 700;
+}
+
+.clubhouse-card__pay-hint {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8rem;
+}
+
+.clubhouse-card__checking {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 48px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 599.98px) {
+    .clubhouse-card__pay,
+    .clubhouse-card__checking {
+        padding-left: 0;
+    }
+
+    ::deep .clubhouse-card__pay-button {
+        width: 100%;
+    }
+}

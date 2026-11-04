@@ -1,0 +1,173 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Clubhouse
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Clubhouse
+@using Bookennis.Client.Utils
+
+@implements IDisposable
+
+@*
+    The host's own SumUp account: once it is connected, members pay their tabs in the app and the money goes straight to the host.
+    Connecting happens on a page of SumUp; SumUp sends the host back to ?view=sumup&sumup=connected|failed.
+*@
+
+<SectionCard Emoji="📱" Title="@L["SumUp_Title"]" Subtitle="@L["SumUp_Subtitle"]">
+    <ChildContent>
+        @if (Store.SumUpAccount is not { } account)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (!account.IsConfigured)
+        {
+            <div class="sumup-state">
+                <div class="sumup-state__emoji" aria-hidden="true">🧾</div>
+                <div class="sumup-state__body">
+                    <div class="sumup-state__title">@L["SumUp_UnavailableTitle"]</div>
+                    <div class="sumup-state__text">@L["SumUp_UnavailableText"]</div>
+                </div>
+            </div>
+        }
+        else if (!account.IsConnected || account.NeedsReconnect)
+        {
+            <div class="sumup-state @(account.NeedsReconnect ? "sumup-state--warn" : null)">
+                <div class="sumup-state__emoji" aria-hidden="true">@(account.NeedsReconnect ? "⚠️" : "🔌")</div>
+                <div class="sumup-state__body">
+                    <div class="sumup-state__title">@L[account.NeedsReconnect ? "SumUp_ReconnectTitle" : "SumUp_NotConnectedTitle"]</div>
+                    <div class="sumup-state__text">@L[account.NeedsReconnect ? "SumUp_ReconnectText" : "SumUp_NotConnectedText"]</div>
+                    <ul class="sumup-state__list">
+                        <li>@L["SumUp_Fact_Direct"]</li>
+                        <li>@L["SumUp_Fact_Account"]</li>
+                        <li>@L["SumUp_Fact_Reader"]</li>
+                    </ul>
+                    @if (CanConnect)
+                    {
+                        <div class="sumup-state__actions">
+                            <LoadButton Variant="Variant.Filled" Color="Color.Primary" Loading="@Store.IsSaving" OnClick="Connect">
+                                @L[account.NeedsReconnect ? "SumUp_Reconnect" : "SumUp_Connect"]
+                            </LoadButton>
+                            @if (account.IsConnected)
+                            {
+                                <MudButton Variant="Variant.Text" Color="Color.Error" Disabled="@Store.IsSaving" OnClick="Disconnect">@L["SumUp_Disconnect"]</MudButton>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="sumup-state__hint">🔒 @L["SumUp_MemberOnly"]</div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="sumup-state sumup-state--active">
+                <div class="sumup-state__emoji" aria-hidden="true">✅</div>
+                <div class="sumup-state__body">
+                    <div class="sumup-state__title">@L["SumUp_ActiveTitle"]</div>
+                    <div class="sumup-state__text">@L["SumUp_ActiveText"]</div>
+                    <div class="sumup-state__chips">
+                        @if (account.MerchantName is { } merchantName)
+                        {
+                            <span class="sumup-chip sumup-chip--ok">🏪 @merchantName</span>
+                        }
+                        <span class="sumup-chip">🔑 @string.Format(L["SumUp_MerchantCode"], account.MerchantCode)</span>
+                        @if (account.ConnectedAt is { } connectedAt)
+                        {
+                            <span class="sumup-chip">🔗 @string.Format(L["SumUp_ConnectedSince"], ClubhouseHelpers.Day(connectedAt))</span>
+                        }
+                        @if (account.PendingPayments > 0)
+                        {
+                            <span class="sumup-chip sumup-chip--warn">📱 @string.Format(L["SumUp_PendingPayments"], account.PendingPayments)</span>
+                        }
+                    </div>
+                    <div class="sumup-state__text">@L["SumUp_RefundHint"]</div>
+                    <div class="sumup-state__actions">
+                        <MudButton Href="https://me.sumup.com" Target="_blank" Rel="noopener" Variant="Variant.Outlined" Color="Color.Primary" EndIcon="@Icons.Material.Filled.OpenInNew">
+                            @L["SumUp_OpenDashboard"]
+                        </MudButton>
+                        @if (CanConnect)
+                        {
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" Disabled="@Store.IsSaving" OnClick="Connect">@L["SumUp_Reconnect"]</MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Error" Disabled="@(Store.IsSaving || account.PendingPayments > 0)" OnClick="Disconnect">@L["SumUp_Disconnect"]</MudButton>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </ChildContent>
+</SectionCard>
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    /// <summary>"connected" or "failed" when the host just came back from SumUp.</summary>
+    [SupplyParameterFromQuery(Name = "sumup")] public string? Returned { get; set; }
+
+    [Inject] private IClubhouseStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubhouseLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    /// <summary>
+    /// Only a member who is the host or an admin connects the account where the money goes: not in support mode, where there is no
+    /// member (the server refuses it too).
+    /// </summary>
+    private bool CanConnect => !ClubProfileStore.IsSupportMode && ClubhouseHelpers.CanManage(ClubProfileStore.Roles);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnClubhouseChanged += OnChanged;
+        await Store.LoadSumUpAccount();
+
+        if (Returned is null)
+            return;
+
+        if (Returned == "connected")
+            Snackbar.Add(L["SumUp_Connected"], Severity.Success);
+        else
+            Snackbar.Add(L["SumUp_ConnectFailed"], Severity.Warning);
+
+        // Don't show it again when the page is reloaded
+        NavigationManager.NavigateTo(ClubhouseHelpers.SumUpUrl(ClubId), replace: true);
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task Connect()
+    {
+        var result = await Store.ConnectSumUp();
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        // Signing in and allowing the access is a page of SumUp: leave the app
+        NavigationManager.NavigateTo(result.Dto.Url, forceLoad: true);
+    }
+
+    private async Task Disconnect()
+    {
+        var confirmed = await DialogService.ShowMessageBox(L["SumUp_DisconnectTitle"], L["SumUp_DisconnectConfirm"],
+            yesText: L["SumUp_Disconnect"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true)
+            return;
+
+        var result = await Store.DisconnectSumUp();
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(L["SumUp_Disconnected"], Severity.Success);
+    }
+
+    public void Dispose() => Store.OnClubhouseChanged -= OnChanged;
+}

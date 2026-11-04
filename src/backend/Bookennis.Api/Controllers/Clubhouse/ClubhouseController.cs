@@ -1,5 +1,7 @@
 using Bookennis.Api.Business.Clubhouse;
+using Bookennis.Api.Infrastructure;
 using Bookennis.Api.Infrastructure.Authorization;
+using Bookennis.Api.Infrastructure.Authorization.Models;
 using Bookennis.Api.Infrastructure.User;
 using Fusonic.Extensions.Common.Security;
 using Bookennis.Shared.Controller.Clubhouse;
@@ -11,9 +13,10 @@ namespace Bookennis.Api.Controllers.Clubhouse;
 
 /// <summary>
 /// The clubhouse: the host ("Wirt") keeps the menu and books what guests eat and drink onto their tabs, which they pay at the end.
-/// The money goes to the host, Clubnetz only keeps the list. Signed-in users only, never with an API key. Members read their own tabs.
+/// The money goes to the host, Clubnetz only keeps the list; members can also pay in the app, to the host's own SumUp account.
+/// Signed-in users only, never with an API key. Members read and pay their own tabs.
 /// </summary>
-public class ClubhouseController(IMediator mediator, IUserAccessor userAccessor) : ClubControllerBase
+public class ClubhouseController(IMediator mediator, IUserAccessor userAccessor, IAuthorizationService authorizationService) : ClubControllerBase
 {
     // ---------- menu ----------
 
@@ -91,6 +94,25 @@ public class ClubhouseController(IMediator mediator, IUserAccessor userAccessor)
     public Task DiscardClubhouseTab(int clubId, int tabId, CancellationToken cancellationToken)
         => mediator.Send(new DiscardClubhouseTab(clubId, tabId), cancellationToken);
 
+    // ---------- the host's SumUp account ----------
+
+    /// <summary>Whether the host connected a SumUp account (status only, never a token).</summary>
+    [HttpGet("sumup")]
+    [Authorize(AuthorizationPolicies.ClubhouseHost)]
+    public Task<ClubhouseSumUpAccountDto> GetClubhouseSumUpAccount(int clubId, CancellationToken cancellationToken)
+        => mediator.Send(new GetClubhouseSumUpAccount(clubId), cancellationToken);
+
+    /// <summary>The page of SumUp where the host allows Clubnetz to take payments to their account; it leads back to <c>api/SumUp/Callback</c>.</summary>
+    [HttpPost("sumup/connect")]
+    [Authorize(AuthorizationPolicies.ClubhouseHost)]
+    public Task<ClubhouseRedirectResult> ConnectClubhouseSumUp(int clubId, CancellationToken cancellationToken)
+        => mediator.Send(new StartClubhouseSumUpConnect(clubId, userAccessor.GetUserId()), cancellationToken);
+
+    [HttpDelete("sumup")]
+    [Authorize(AuthorizationPolicies.ClubhouseHost)]
+    public Task DisconnectClubhouseSumUp(int clubId, CancellationToken cancellationToken)
+        => mediator.Send(new DisconnectClubhouseSumUp(clubId, userAccessor.GetUserId()), cancellationToken);
+
     // ---------- members ----------
 
     /// <summary>The tabs of the caller and of the children of their families.</summary>
@@ -98,4 +120,25 @@ public class ClubhouseController(IMediator mediator, IUserAccessor userAccessor)
     [Authorize(AuthorizationPolicies.ClubhouseGuest)]
     public Task<MyClubhouseTabsResult> GetMyClubhouseTabs(int clubId, CancellationToken cancellationToken)
         => mediator.Send(new GetMyClubhouseTabs(clubId, userAccessor.GetUserId()), cancellationToken);
+
+    /// <summary>
+    /// Pays an open tab in the app: locks it and returns SumUp's payment page (open it with a full page load). Only the guest of the tab
+    /// or a parent of their family.
+    /// </summary>
+    [HttpPost("tabs/{tabId:int}/online-payment")]
+    [Authorize(AuthorizationPolicies.ClubhouseGuest)]
+    public async Task<ClubhouseRedirectResult> StartClubhouseTabPayment(int clubId, int tabId, CancellationToken cancellationToken)
+    {
+        await authorizationService.AuthorizeAsync(User, new ClubhouseTabAuthorizationModel(tabId), AuthorizationPolicies.PaysClubhouseTab).EnsureSucceeded();
+        return await mediator.Send(new StartClubhouseTabPayment(clubId, userAccessor.GetUserId(), tabId), cancellationToken);
+    }
+
+    /// <summary>An online payment of the tab, for the member coming back from SumUp. SumUp is asked first.</summary>
+    [HttpGet("tabs/{tabId:int}/online-payment/{paymentId:int}")]
+    [Authorize(AuthorizationPolicies.ClubhouseGuest)]
+    public async Task<ClubhouseTabPaymentDto> GetClubhouseTabPayment(int clubId, int tabId, int paymentId, CancellationToken cancellationToken)
+    {
+        await authorizationService.AuthorizeAsync(User, new ClubhouseTabAuthorizationModel(tabId), AuthorizationPolicies.PaysClubhouseTab).EnsureSucceeded();
+        return await mediator.Send(new GetClubhouseTabPayment(clubId, tabId, paymentId), cancellationToken);
+    }
 }

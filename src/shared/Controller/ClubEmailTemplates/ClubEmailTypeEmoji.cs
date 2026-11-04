@@ -23,6 +23,8 @@ public static class ClubEmailTypeEmoji
         ClubEmailType.CourtPurchaseFailed => "⚠️",
         ClubEmailType.CourtPurchaseNeedsAttention => "🧾",
         ClubEmailType.CourtPurchaseCompensated => "🎟️",
+        ClubEmailType.ClubhouseTabPaid => "🍺",
+        ClubEmailType.ClubhouseTabNeedsAttention => "🧾",
         _ => "✉️"
     };
 }

@@ -81,6 +81,18 @@
     line-height: 1.6;
 }
 
+.clubhouse-page ::deep .clubhouse-chip--paying {
+    color: var(--bk-dark-violet, #6D28D9);
+    background: color-mix(in srgb, var(--bk-dark-violet, #6D28D9) 14%, transparent);
+}
+
+.clubhouse-page ::deep .clubhouse-locked .mud-alert-message {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+}
+
 /* Open tabs: big tiles, one tap opens the tab */
 .clubhouse-tabs {
     display: grid;

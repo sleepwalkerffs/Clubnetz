@@ -32,4 +32,22 @@ public enum ClubhouseErrorCode
 
     /// <summary>The item is not on the menu any more (hidden).</summary>
     ClubhouseItemNotAvailable = 8,
+
+    /// <summary>The member is paying the tab online right now: it is locked until the payment succeeds, fails or expires (at most 30 minutes).</summary>
+    ClubhouseTabPaymentRunning = 9,
+
+    /// <summary>The host has not connected a SumUp account (or it has to be connected again): tabs can't be paid in the app.</summary>
+    ClubhouseOnlinePaymentNotAvailable = 10,
+
+    /// <summary>The tab of a guest from outside can't be paid in the app.</summary>
+    ClubhouseTabNotPayableOnline = 11,
+
+    /// <summary>SumUp declined the request or could not be reached. Details: the message of SumUp.</summary>
+    ClubhouseSumUpUnavailable = 12,
+
+    /// <summary>Connecting the SumUp account failed or was cancelled at SumUp, or the link was too old.</summary>
+    ClubhouseSumUpConnectFailed = 13,
+
+    /// <summary>The SumUp account can't be disconnected while a member is paying a tab with it.</summary>
+    ClubhouseSumUpPaymentsRunning = 14,
 }

@@ -98,7 +98,17 @@ public static class ClubEmailCatalog
                 SampleMember,
                 SampleCourtPurchase(language),
                 language == Language.German ? "Der Platz wird für ein Training gebraucht." : "The court is needed for a training.",
-                language == Language.German ? "1 Buchungsguthaben" : "1 booking credit"))
+                language == Language.German ? "1 Buchungsguthaben" : "1 booking credit")),
+        new(ClubEmailType.ClubhouseTabPaid, typeof(ClubhouseTabPaidEmailVariables),
+            language => new ClubhouseTabPaidEmailVariables(SampleMember, SampleClubhouseTab(language))),
+        new(ClubEmailType.ClubhouseTabNeedsAttention, typeof(ClubhouseTabNeedsAttentionEmailVariables),
+            language => new ClubhouseTabNeedsAttentionEmailVariables(
+                SampleMember,
+                SampleClubhouseTab(language),
+                language == Language.German
+                    ? "Die Rechnung war schon bezahlt, als die Online-Zahlung ankam. Bitte erstatte eine der beiden Zahlungen."
+                    : "The tab was already paid when the online payment arrived. Please refund one of the two payments.",
+                "Erika Muster"))
     ];
 
     public static ClubEmailDefinition Get(ClubEmailType type)
@@ -137,6 +147,17 @@ public static class ClubEmailCatalog
             "Max Muster, Erika Muster, Mia Muster",
             paid ? (language == Language.German ? "Online-Zahlung" : "Online payment") : "",
             "https://www.example.com/clubs/1/membership");
+    }
+
+    private static ClubhouseTabVariables SampleClubhouseTab(Language language)
+    {
+        var culture = language.ToCultureInfo();
+        return new ClubhouseTabVariables(
+            Memberships.MembershipTexts.Amount(1650, culture),
+            new DateOnly(2025, 6, 14).ToString("D", culture),
+            language == Language.German ? "2× Bier, 1× Schnitzel" : "2× Beer, 1× Schnitzel",
+            "TEENSK4W2K",
+            "https://www.example.com/clubs/1/my-club");
     }
 
     private static CourtPurchaseVariables SampleCourtPurchase(Language language)

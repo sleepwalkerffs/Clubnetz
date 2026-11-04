@@ -133,4 +133,79 @@ public class ClubhouseTabTests
         water.PriceCents.Should().Be(0);
         water.Currency.Should().Be("eur");
     }
+
+    // ---------- paying online ----------
+
+    [Fact]
+    public void OnlinePayment_LocksTheTab_UntilItEnds()
+    {
+        var tab = MemberTab();
+        tab.Add(Item(), 2, null, Now);
+
+        tab.StartOnlinePayment();
+
+        tab.Status.Should().Be(ClubhouseTabStatus.AwaitingPayment);
+        tab.IsUnpaid.Should().BeTrue();
+        foreach (var act in new Action[] { () => tab.Add(Item(), 1, null, Now), () => tab.Remove(1), () => tab.MarkPaid(ClubhousePaymentMethod.Cash, null, Now), tab.EnsureCanBeDiscarded, tab.StartOnlinePayment })
+            act.Should().Throw<PreconditionException>().Which.ErrorCode.Should().Be(nameof(ClubhouseErrorCode.ClubhouseTabPaymentRunning));
+
+        tab.EndOnlinePayment();
+
+        tab.IsOpen.Should().BeTrue();
+        tab.Add(Item(), 1, null, Now);
+    }
+
+    [Fact]
+    public void OnlinePayment_NotForAnEmptyTabOrAGuestFromOutside()
+    {
+        var empty = MemberTab();
+        var walkIn = new ClubhouseTab(ClubId, null, "Table 3", null, Now);
+        walkIn.Add(Item(), 1, null, Now);
+
+        empty.Invoking(t => t.StartOnlinePayment()).Should().Throw<PreconditionException>().Which.ErrorCode.Should().Be(nameof(ClubhouseErrorCode.ClubhouseTabEmpty));
+        walkIn.Invoking(t => t.StartOnlinePayment()).Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void MarkPaidOnline_PaysTheTab_OrReportsThatItWasAlreadyPaid()
+    {
+        var tab = MemberTab();
+        tab.Add(Item(), 2, null, Now);
+        tab.StartOnlinePayment();
+
+        tab.MarkPaidOnline(Now).Should().BeTrue();
+        tab.Should().BeEquivalentTo(new { Status = ClubhouseTabStatus.Paid, PaymentMethod = (ClubhousePaymentMethod?)ClubhousePaymentMethod.Online, PaidAt = (DateTimeOffset?)Now, PaidToMemberId = (int?)null }, o => o.ExcludingMissingMembers());
+
+        tab.MarkPaidOnline(Now.AddMinutes(5)).Should().BeFalse();
+        tab.PaidAt.Should().Be(Now);
+    }
+
+    [Fact]
+    public void Host_CannotMarkATabAsPaidOnline()
+    {
+        var tab = MemberTab();
+        tab.Add(Item(), 1, null, Now);
+
+        tab.Invoking(t => t.MarkPaid(ClubhousePaymentMethod.Online, 99, Now)).Should().Throw<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void Payment_TakesTheAmountOfTheLockedTab_AndIsPaidOnce()
+    {
+        var tab = MemberTab();
+        tab.Add(Item(priceCents: 450), 2, null, Now);
+        tab.Invoking(t => new ClubhouseTabPayment(t, 11, "M1", Now)).Should().Throw<InvalidOperationException>();
+        tab.StartOnlinePayment();
+
+        var payment = new ClubhouseTabPayment(tab, 11, "M1", Now);
+
+        payment.Should().BeEquivalentTo(new { AmountCents = 900, Currency = "eur", Status = ClubhouseTabPaymentStatus.Pending, ExpiresAt = Now + ClubhouseTabPayment.Lifetime }, o => o.ExcludingMissingMembers());
+        payment.CheckoutReference.Length.Should().BeLessThanOrEqualTo(64);
+
+        payment.MarkPaid("TX1", Now);
+        payment.MarkPaid("TX2", Now.AddMinutes(1));
+        payment.Expire();
+
+        payment.Should().BeEquivalentTo(new { Status = ClubhouseTabPaymentStatus.Paid, TransactionCode = "TX1", PaidAt = (DateTimeOffset?)Now }, o => o.ExcludingMissingMembers());
+    }
 }

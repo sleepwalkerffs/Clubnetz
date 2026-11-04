@@ -48,12 +48,13 @@ public class ClubhouseTabEntityConfiguration : IEntityTypeConfiguration<Clubhous
         builder.Property(x => x.Currency).HasMaxLength(3);
 
         builder.Ignore(x => x.IsOpen);
+        builder.Ignore(x => x.IsUnpaid);
         builder.Ignore(x => x.TotalCents);
 
-        // A member has one open tab per club, so the host always books onto the same one
+        // A member has one unpaid tab per club (open, or locked while paying online), so the host always books onto the same one
         builder.HasIndex(x => new { x.ClubId, x.MemberId })
                .IsUnique()
-               .HasFilter($"\"{nameof(ClubhouseTab.Status)}\" = {(int)ClubhouseTabStatus.Open} AND \"{nameof(ClubhouseTab.MemberId)}\" IS NOT NULL");
+               .HasFilter($"\"{nameof(ClubhouseTab.Status)}\" IN ({(int)ClubhouseTabStatus.Open}, {(int)ClubhouseTabStatus.AwaitingPayment}) AND \"{nameof(ClubhouseTab.MemberId)}\" IS NOT NULL");
         builder.HasIndex(x => new { x.ClubId, x.Status, x.PaidAt });
     }
 }
@@ -75,5 +76,60 @@ public class ClubhouseTabLineEntityConfiguration : IEntityTypeConfiguration<Club
 
         builder.Property(x => x.Name).HasMaxLength(ClubhouseItem.MaxNameLength);
         builder.Ignore(x => x.TotalCents);
+    }
+}
+
+public class ClubhouseTabPaymentEntityConfiguration : IEntityTypeConfiguration<ClubhouseTabPayment>
+{
+    public void Configure(EntityTypeBuilder<ClubhouseTabPayment> builder)
+    {
+        builder.ConfigureTenantRelation();
+
+        builder.HasOne<ClubhouseTab>()
+               .WithMany()
+               .HasForeignKey(x => x.TabId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+        // The payment is the host's record of the money: it stays without the person when the member leaves
+        builder.HasOne<Member>()
+               .WithMany()
+               .HasForeignKey(x => x.PayerMemberId)
+               .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Property(x => x.Currency).HasMaxLength(3);
+        builder.Property(x => x.MerchantCode).HasMaxLength(ClubhouseTabPayment.MaxMerchantCodeLength);
+        builder.Property(x => x.CheckoutId).HasMaxLength(ClubhouseTabPayment.MaxCheckoutIdLength);
+        builder.Property(x => x.CheckoutUrl).HasMaxLength(ClubhouseTabPayment.MaxUrlLength);
+        builder.Property(x => x.TransactionCode).HasMaxLength(ClubhouseTabPayment.MaxTransactionCodeLength);
+
+        builder.Ignore(x => x.IsPending);
+        builder.Ignore(x => x.CheckoutReference);
+
+        builder.HasIndex(x => x.Reference).IsUnique();
+        builder.HasIndex(x => x.CheckoutId).IsUnique();
+
+        // One payment page per tab at a time: it is what locks the tab
+        builder.HasIndex(x => x.TabId)
+               .IsUnique()
+               .HasFilter($"\"{nameof(ClubhouseTabPayment.Status)}\" = {(int)ClubhouseTabPaymentStatus.Pending}");
+        builder.HasIndex(x => new { x.Status, x.ExpiresAt });
+    }
+}
+
+public class ClubhouseSumUpAccountEntityConfiguration : IEntityTypeConfiguration<ClubhouseSumUpAccount>
+{
+    public void Configure(EntityTypeBuilder<ClubhouseSumUpAccount> builder)
+    {
+        builder.ConfigureTenantRelation();
+
+        builder.HasOne<Member>()
+               .WithMany()
+               .HasForeignKey(x => x.ConnectedByMemberId)
+               .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Property(x => x.MerchantCode).HasMaxLength(ClubhouseSumUpAccount.MaxMerchantCodeLength);
+        builder.Property(x => x.MerchantName).HasMaxLength(ClubhouseSumUpAccount.MaxMerchantNameLength);
+
+        builder.HasIndex(x => x.ClubId).IsUnique();
     }
 }

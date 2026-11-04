@@ -86,6 +86,8 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<ClubhouseItem> ClubhouseItems => Set<ClubhouseItem>();
     public DbSet<ClubhouseTab> ClubhouseTabs => Set<ClubhouseTab>();
     public DbSet<ClubhouseTabLine> ClubhouseTabLines => Set<ClubhouseTabLine>();
+    public DbSet<ClubhouseTabPayment> ClubhouseTabPayments => Set<ClubhouseTabPayment>();
+    public DbSet<ClubhouseSumUpAccount> ClubhouseSumUpAccounts => Set<ClubhouseSumUpAccount>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

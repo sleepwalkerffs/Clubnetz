@@ -49,6 +49,13 @@ public record MembershipVariables(string Plan, string Season, string Amount, str
 /// </summary>
 public record CourtPurchaseVariables(string Court, string Date, string Time, string Price, string Paid, string Url);
 
+/// <summary>
+/// A clubhouse tab paid in the app. <c>Amount</c> what was paid, <c>Date</c> when (club time zone), <c>Items</c> what was on it
+/// ("2× Beer, 1× Schnitzel"), <c>TransactionCode</c> the code of the payment at SumUp. <c>Url</c> leads to My Club (to the clubhouse
+/// for the host).
+/// </summary>
+public record ClubhouseTabVariables(string Amount, string Date, string Items, string TransactionCode, string Url);
+
 public abstract record ClubEmailVariables(MemberVariables Member)
 {
     /// <summary>Filled in by <see cref="SendClubEmail"/> from the club the email is sent for.</summary>
@@ -85,4 +92,10 @@ public record CourtPurchaseEmailVariables(MemberVariables Member, CourtPurchaseV
 public record CourtPurchaseNeedsAttentionEmailVariables(MemberVariables Member, CourtPurchaseVariables Purchase, string Reason, string Buyer) : ClubEmailVariables(Member);
 
 /// <summary>To the buyer: the club needed the court. <c>Reason</c> says why, <c>Credits</c> what they got back (e.g. "2 booking credits").</summary>
+/// <summary>To the member who paid a clubhouse tab in the app.</summary>
+public record ClubhouseTabPaidEmailVariables(MemberVariables Member, ClubhouseTabVariables Tab) : ClubEmailVariables(Member);
+
+/// <summary>To the clubhouse host: <c>Reason</c> says what happened to the payment, <c>Guest</c> whose tab it is.</summary>
+public record ClubhouseTabNeedsAttentionEmailVariables(MemberVariables Member, ClubhouseTabVariables Tab, string Reason, string Guest) : ClubEmailVariables(Member);
+
 public record CourtPurchaseCompensatedEmailVariables(MemberVariables Member, CourtPurchaseVariables Purchase, string Reason, string Credits) : ClubEmailVariables(Member);

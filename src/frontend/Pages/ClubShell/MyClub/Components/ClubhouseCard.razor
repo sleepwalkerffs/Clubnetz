@@ -1,13 +1,16 @@
+@using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Pages.Clubhouse
 @using Bookennis.Client.Pages.ClubShell.Clubhouse
 @using Bookennis.Client.Services.Store.Clubhouse
+@using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Clubhouse
 
 @implements IDisposable
 
 @*
     What the clubhouse host booked onto the tabs of the member and of their children. Only shown while a tab is open or one was paid in
-    the last days, so clubs without a host never see it.
+    the last days, so clubs without a host never see it. When the host connected a SumUp account, an open tab is paid right here:
+    SumUp's payment page opens and leads back to My Club with ?clubhouseTab=&clubhousePayment=, where the payment is checked.
 *@
 @if (Store.MyTabs is { } tabs && (tabs.Open.Count > 0 || LastPaid(tabs) is not null))
 {
@@ -22,7 +25,7 @@
                     <div class="clubhouse-card__title">@L["Card_Title"]</div>
                     @if (tabs.Open.Count > 0)
                     {
-                        <div class="clubhouse-card__text">@string.Format(L["Card_Open"], ClubhouseHelpers.Amount(openTotal))</div>
+                        <div class="clubhouse-card__text">@string.Format(L[tabs.CanPayOnline ? "Card_OpenOnline" : "Card_Open"], ClubhouseHelpers.Amount(openTotal))</div>
                     }
                     @if (lastPaid is { PaidAt: { } paidAt })
                     {
@@ -37,6 +40,32 @@
                     </MudButton>
                 }
             </div>
+
+            @if (tabs.CanPayOnline)
+            {
+                @foreach (var tab in tabs.Open.Where(t => t.TotalCents > 0))
+                {
+                    var paying = tab.Status == ClubhouseTabStatus.AwaitingPayment;
+                    <div class="clubhouse-card__pay">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PhoneIphone" OnClick="() => Pay(tab)"
+                                   Disabled="@(Store.IsSaving || checkingPayment)" Class="clubhouse-card__pay-button">
+                            @(paying
+                                ? L["Card_PayContinue"]
+                                : tabs.Open.Count > 1
+                                    ? string.Format(L["Card_PayFor"], ClubhouseHelpers.Amount(tab.TotalCents), ClubhouseHelpers.TabName(L, tab.Name))
+                                    : string.Format(L["Card_Pay"], ClubhouseHelpers.Amount(tab.TotalCents)))
+                        </MudButton>
+                        <span class="clubhouse-card__pay-hint">@L[paying ? "Card_PayRunning" : "Card_PayHint"]</span>
+                    </div>
+                }
+            }
+            @if (checkingPayment)
+            {
+                <div class="clubhouse-card__checking">
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+                    <span>@L["Card_PayChecking"]</span>
+                </div>
+            }
 
             @if (expanded)
             {
@@ -62,10 +91,24 @@
     /// <summary>A paid tab is mentioned for this many days, so the member can check what they paid.</summary>
     private const int ShowPaidDays = 14;
 
+    /// <summary>Set when the member comes back from SumUp's payment page.</summary>
+    [SupplyParameterFromQuery(Name = "clubhouseTab")] public int? ReturnedTabId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "clubhousePayment")] public int? ReturnedPaymentId { get; set; }
+
     [Inject] private IClubhouseStore Store { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private IStringLocalizer<ClubhouseLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    /// <summary>
+    /// The webhook of SumUp may come a moment after the member: the server asks SumUp on every check, a few times before giving up.
+    /// </summary>
+    private static readonly TimeSpan[] CheckDelays = [TimeSpan.Zero, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(5)];
 
     private bool expanded;
+    private bool checkingPayment;
 
     private static ClubhouseTabDto? LastPaid(MyClubhouseTabsResult tabs)
         => tabs.RecentlyPaid.FirstOrDefault(t => t.PaidAt > DateTimeOffset.UtcNow.AddDays(-ShowPaidDays));
@@ -73,6 +116,65 @@
     protected override async Task OnInitializedAsync()
     {
         Store.OnClubhouseChanged += OnChanged;
+        await Store.LoadMyTabs();
+
+        if (ReturnedTabId is { } tabId && ReturnedPaymentId is { } paymentId)
+            await CheckReturnedPayment(tabId, paymentId);
+    }
+
+    private async Task Pay(ClubhouseTabDto tab)
+    {
+        var result = await Store.StartTabPayment(tab.Id);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        // The payment page is SumUp's: leave the app (nothing of SumUp is embedded)
+        NavigationManager.NavigateTo(result.Dto.Url, forceLoad: true);
+    }
+
+    private async Task CheckReturnedPayment(int tabId, int paymentId)
+    {
+        checkingPayment = true;
+        StateHasChanged();
+
+        ClubhouseTabPaymentStatus? status = null;
+        try
+        {
+            foreach (var delay in CheckDelays)
+            {
+                await Task.Delay(delay);
+                var result = await Store.CheckTabPayment(tabId, paymentId);
+                if (!result.Success)
+                    break;
+
+                status = result.Dto?.Status;
+                if (status != ClubhouseTabPaymentStatus.Pending)
+                    break;
+            }
+        }
+        finally
+        {
+            checkingPayment = false;
+        }
+
+        switch (status)
+        {
+            case ClubhouseTabPaymentStatus.Paid:
+                Snackbar.Add(L["Card_PayDone"], Severity.Success);
+                break;
+            case ClubhouseTabPaymentStatus.Expired:
+                Snackbar.Add(L["Card_PayNotCompleted"], Severity.Warning);
+                break;
+            default:
+                Snackbar.Add(L["Card_PayStillRunning"], Severity.Info);
+                break;
+        }
+
+        // Don't check again when the page is reloaded
+        NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameters(new Dictionary<string, object?> { ["clubhouseTab"] = null, ["clubhousePayment"] = null }), replace: true);
         await Store.LoadMyTabs();
     }
 

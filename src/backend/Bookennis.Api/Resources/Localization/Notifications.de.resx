@@ -144,4 +144,13 @@
   <data name="CourtPurchase_CompensationTakenBack" xml:space="preserve">
     <value>Zahlung der entfernten Buchung wurde erstattet</value>
   </data>
+  <data name="ClubhouseTab_Reason_PaidTwice" xml:space="preserve">
+    <value>Ein Mitglied hat seine Rechnung im Clubhaus in der App bezahlt, aber die Rechnung war schon bezahlt (bar, mit Karte oder mit einer anderen Online-Zahlung). Das Geld ist auf deinem SumUp-Konto: Bitte erstatte eine der beiden Zahlungen im SumUp-Dashboard.</value>
+  </data>
+  <data name="ClubhouseTab_Reason_TabChanged" xml:space="preserve">
+    <value>Ein Mitglied hat seine Rechnung im Clubhaus in der App bezahlt, nachdem die Zahlungsseite abgelaufen war, und die Rechnung wurde inzwischen geändert (oder verworfen). Das Geld ist auf deinem SumUp-Konto, die Rechnung ist aber noch offen: Bitte kläre das mit dem Mitglied und markiere sie als bezahlt, oder erstatte die Zahlung im SumUp-Dashboard.</value>
+  </data>
+  <data name="ClubhouseTab_Reason_CouldNotVerify" xml:space="preserve">
+    <value>Ein Mitglied wollte seine Rechnung im Clubhaus in der App bezahlen, aber Clubnetz konnte die Zahlung nicht bei SumUp prüfen (das SumUp-Konto wurde getrennt oder muss neu verbunden werden). Die Rechnung ist wieder offen. Bitte sieh im SumUp-Dashboard nach, ob das Geld angekommen ist, bevor du die Rechnung kassierst.</value>
+  </data>
 </root>

@@ -309,4 +309,130 @@
   <data name="Card_Hide" xml:space="preserve">
     <value>Ausblenden</value>
   </data>
+  <data name="Tab_SumUp" xml:space="preserve">
+    <value>Online-Zahlung</value>
+  </data>
+  <data name="Method_Online" xml:space="preserve">
+    <value>In der App</value>
+  </data>
+  <data name="Paying_Chip" xml:space="preserve">
+    <value>Zahlt in der App</value>
+  </data>
+  <data name="Locked_Text" xml:space="preserve">
+    <value>Der Gast bezahlt diese Rechnung gerade in der App. Sie ist gesperrt, bis die Zahlung erledigt ist, fehlschlägt oder abläuft (höchstens 30 Minuten).</value>
+  </data>
+  <data name="Locked_Reload" xml:space="preserve">
+    <value>Neu laden</value>
+  </data>
+  <data name="Card_Pay" xml:space="preserve">
+    <value>Jetzt {0} bezahlen</value>
+  </data>
+  <data name="Card_PayFor" xml:space="preserve">
+    <value>{0} für {1} bezahlen</value>
+  </data>
+  <data name="Card_PayContinue" xml:space="preserve">
+    <value>Weiter bezahlen</value>
+  </data>
+  <data name="Card_PayHint" xml:space="preserve">
+    <value>Mit Karte, Apple Pay oder Google Pay über SumUp. Das Geld geht an den Wirt.</value>
+  </data>
+  <data name="Card_PayRunning" xml:space="preserve">
+    <value>Eine Zahlung läuft. Bis sie erledigt ist, kann der Wirt nichts dazubuchen.</value>
+  </data>
+  <data name="Card_PayChecking" xml:space="preserve">
+    <value>Deine Zahlung wird bei SumUp geprüft …</value>
+  </data>
+  <data name="Card_PayDone" xml:space="preserve">
+    <value>Danke! Deine Rechnung ist bezahlt.</value>
+  </data>
+  <data name="Card_PayNotCompleted" xml:space="preserve">
+    <value>Die Zahlung wurde nicht abgeschlossen. Deine Rechnung ist noch offen.</value>
+  </data>
+  <data name="Card_PayStillRunning" xml:space="preserve">
+    <value>SumUp hat die Zahlung noch nicht bestätigt. Deine Rechnung wird als bezahlt angezeigt, sobald das passiert ist.</value>
+  </data>
+  <data name="SumUp_Title" xml:space="preserve">
+    <value>Bezahlen in der App</value>
+  </data>
+  <data name="SumUp_Subtitle" xml:space="preserve">
+    <value>Mitglieder zahlen ihre Rechnung am Handy, direkt auf dein SumUp-Konto</value>
+  </data>
+  <data name="SumUp_UnavailableTitle" xml:space="preserve">
+    <value>In dieser Installation nicht verfügbar</value>
+  </data>
+  <data name="SumUp_UnavailableText" xml:space="preserve">
+    <value>Bezahlen in der App mit SumUp wurde vom Betreiber von Clubnetz nicht eingerichtet. Rechnungen werden wie bisher bar oder an deinem Kartenterminal bezahlt.</value>
+  </data>
+  <data name="SumUp_NotConnectedTitle" xml:space="preserve">
+    <value>Verbinde dein SumUp-Konto</value>
+  </data>
+  <data name="SumUp_NotConnectedText" xml:space="preserve">
+    <value>Sobald es verbunden ist, können Mitglieder ihre offene Rechnung in der App unter Mein Club bezahlen.</value>
+  </data>
+  <data name="SumUp_ReconnectTitle" xml:space="preserve">
+    <value>Verbinde dein SumUp-Konto neu</value>
+  </data>
+  <data name="SumUp_ReconnectText" xml:space="preserve">
+    <value>SumUp akzeptiert die Verbindung nicht mehr (sie wurde entfernt oder ist abgelaufen). Bis du sie neu verbindest, können Mitglieder nicht in der App bezahlen.</value>
+  </data>
+  <data name="SumUp_Fact_Direct" xml:space="preserve">
+    <value>Das Geld geht direkt auf dein SumUp-Konto, nicht an den Verein und nicht an Clubnetz.</value>
+  </data>
+  <data name="SumUp_Fact_Account" xml:space="preserve">
+    <value>Du meldest dich bei SumUp an und erlaubst Clubnetz, Zahlungen anzulegen. Dein Passwort sieht Clubnetz nie.</value>
+  </data>
+  <data name="SumUp_Fact_Reader" xml:space="preserve">
+    <value>Kartenzahlungen an deinem SumUp-Lesegerät bleiben wie bisher: Markiere diese Rechnungen als mit Karte bezahlt.</value>
+  </data>
+  <data name="SumUp_Connect" xml:space="preserve">
+    <value>SumUp verbinden</value>
+  </data>
+  <data name="SumUp_Reconnect" xml:space="preserve">
+    <value>Neu verbinden</value>
+  </data>
+  <data name="SumUp_Disconnect" xml:space="preserve">
+    <value>Trennen</value>
+  </data>
+  <data name="SumUp_MemberOnly" xml:space="preserve">
+    <value>Nur der Wirt oder ein Admin des Vereins kann das Konto verbinden (nicht im Support-Modus).</value>
+  </data>
+  <data name="SumUp_ActiveTitle" xml:space="preserve">
+    <value>Mitglieder können in der App bezahlen</value>
+  </data>
+  <data name="SumUp_ActiveText" xml:space="preserve">
+    <value>Offene Rechnungen zeigen unter Mein Club einen Button zum Bezahlen. Bezahlte Rechnungen werden automatisch als bezahlt markiert.</value>
+  </data>
+  <data name="SumUp_MerchantCode" xml:space="preserve">
+    <value>Händlercode {0}</value>
+  </data>
+  <data name="SumUp_ConnectedSince" xml:space="preserve">
+    <value>Verbunden am {0}</value>
+  </data>
+  <data name="SumUp_PendingPayments" xml:space="preserve">
+    <value>{0} Zahlung(en) laufen</value>
+  </data>
+  <data name="SumUp_RefundHint" xml:space="preserve">
+    <value>Erstattungen machst du in deinem SumUp-Dashboard. Die E-Mail zu jeder Zahlung enthält den SumUp-Transaktionscode.</value>
+  </data>
+  <data name="SumUp_OpenDashboard" xml:space="preserve">
+    <value>SumUp öffnen</value>
+  </data>
+  <data name="SumUp_Connected" xml:space="preserve">
+    <value>Dein SumUp-Konto ist verbunden.</value>
+  </data>
+  <data name="SumUp_ConnectFailed" xml:space="preserve">
+    <value>Das SumUp-Konto wurde nicht verbunden. Bitte versuche es noch einmal.</value>
+  </data>
+  <data name="SumUp_DisconnectTitle" xml:space="preserve">
+    <value>SumUp trennen?</value>
+  </data>
+  <data name="SumUp_DisconnectConfirm" xml:space="preserve">
+    <value>Mitglieder können dann nicht mehr in der App bezahlen. Bisherige Zahlungen bleiben auf deinem SumUp-Konto. Den Zugriff für Clubnetz kannst du auch in deinem SumUp-Konto entfernen.</value>
+  </data>
+  <data name="SumUp_Disconnected" xml:space="preserve">
+    <value>SumUp wurde getrennt.</value>
+  </data>
+  <data name="Card_OpenOnline" xml:space="preserve">
+    <value>{0} offen – bezahle hier in der App oder im Clubhaus.</value>
+  </data>
 </root>

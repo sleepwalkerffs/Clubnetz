@@ -49,6 +49,8 @@ public static class AuthorizationPolicies
     public const string ClubhouseGuest = nameof(ClubhouseGuest);
     /// <summary>ClubhouseHost or Admin, signed in (not with an API key): the menu and the tabs of all guests.</summary>
     public const string ClubhouseHost = nameof(ClubhouseHost);
+    /// <summary>Resource: ClubhouseTabAuthorizationModel. The guest of the tab or a parent of their family, signed in (not with an API key): pays it in the app.</summary>
+    public const string PaysClubhouseTab = nameof(PaysClubhouseTab);
 
     //Booking Policies
     public const string OwnsBooking = nameof(OwnsBooking);

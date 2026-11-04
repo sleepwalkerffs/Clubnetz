@@ -30,7 +30,7 @@ else
                 @if (board is not null)
                 {
                     <span class="hero-chip">🧾 @string.Format(L["Hero_Open"], ClubhouseHelpers.Amount(board.Today.OpenCents))</span>
-                    <span class="hero-chip">💶 @string.Format(L["Hero_Today"], ClubhouseHelpers.Amount(board.Today.CashCents + board.Today.CardCents + board.Today.OtherCents))</span>
+                    <span class="hero-chip">💶 @string.Format(L["Hero_Today"], ClubhouseHelpers.Amount(board.Today.CashCents + board.Today.CardCents + board.Today.OtherCents + board.Today.OnlineCents))</span>
                 }
             </Chips>
         </AdminHero>
@@ -45,6 +45,10 @@ else
         {
             <ClubhouseMenu />
         }
+        else if (view == View.SumUp)
+        {
+            <ClubhouseSumUp ClubId="ClubId" />
+        }
         else
         {
             <ClubhouseHistory />
@@ -55,7 +59,7 @@ else
 @code {
     [Parameter] public int ClubId { get; set; }
 
-    /// <summary>"menu" or "history" opens that view (links from the tab page).</summary>
+    /// <summary>"menu", "history" or "sumup" opens that view (links from the tab page, the way back from SumUp).</summary>
     [SupplyParameterFromQuery(Name = "view")] public string? ViewName { get; set; }
 
     [Inject] private IClubhouseStore Store { get; set; } = null!;
@@ -71,6 +75,7 @@ else
         Tabs,
         Menu,
         History,
+        SumUp,
     }
 
     private static readonly View[] Views = Enum.GetValues<View>();
@@ -239,6 +244,10 @@ else
                     @if (tab.IsWalkIn)
                     {
                         <span class="clubhouse-chip">@L["WalkIn_Chip"]</span>
+                    }
+                    @if (tab.IsAwaitingPayment)
+                    {
+                        <span class="clubhouse-chip clubhouse-chip--paying">📱 @L["Paying_Chip"]</span>
                     }
                     @string.Format(L["ItemCount"], tab.ItemCount) · @ClubhouseHelpers.Time(tab.LastActivityAt)
                 </span>

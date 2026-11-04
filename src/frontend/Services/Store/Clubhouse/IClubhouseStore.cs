@@ -30,6 +30,9 @@ public interface IClubhouseStore : ISemaphoreStore
     /// <summary>The tabs of the signed-in member and of their children; <c>null</c> until loaded.</summary>
     MyClubhouseTabsResult? MyTabs { get; }
 
+    /// <summary>The host's SumUp account (status only); <c>null</c> until loaded.</summary>
+    ClubhouseSumUpAccountDto? SumUpAccount { get; }
+
     Task LoadItems();
     Task LoadBoard();
 
@@ -39,6 +42,7 @@ public interface IClubhouseStore : ISemaphoreStore
     Task LoadTab(int tabId);
     Task LoadPaidTabs(DateOnly? from, DateOnly? to);
     Task LoadMyTabs();
+    Task LoadSumUpAccount();
 
     Task<HttpResult<ClubhouseItemDto>> SaveItem(int? itemId, SaveClubhouseItemModel model);
     Task<HttpResult> DeleteItem(int itemId);
@@ -50,4 +54,15 @@ public interface IClubhouseStore : ISemaphoreStore
     Task<HttpResult<ClubhouseTabDto>> RemoveLine(int tabId, int lineId);
     Task<HttpResult<ClubhouseTabDto>> PayTab(int tabId, ClubhousePaymentMethod paymentMethod);
     Task<HttpResult> DiscardTab(int tabId);
+
+    /// <summary>Locks the tab and returns SumUp's payment page; leave for it with a full page load.</summary>
+    Task<HttpResult<ClubhouseRedirectResult>> StartTabPayment(int tabId);
+
+    /// <summary>The payment the member comes back from; the server asks SumUp first. Reloads the own tabs when it was paid.</summary>
+    Task<HttpResult<ClubhouseTabPaymentDto>> CheckTabPayment(int tabId, int paymentId);
+
+    /// <summary>SumUp's page where the host allows the payments; leave for it with a full page load.</summary>
+    Task<HttpResult<ClubhouseRedirectResult>> ConnectSumUp();
+
+    Task<HttpResult> DisconnectSumUp();
 }

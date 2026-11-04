@@ -79,7 +79,15 @@ namespace Bookennis.Api.Data.Migrations
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence<int>("ClubhouseSumUpAccounts_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence<int>("ClubhouseTabLines_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence<int>("ClubhouseTabPayments_Id_Sequence")
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
@@ -686,6 +694,57 @@ namespace Bookennis.Api.Data.Migrations
                     b.ToTable("ClubhouseItems");
                 });
 
+            modelBuilder.Entity("Bookennis.Domain.Clubhouse.ClubhouseSumUpAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "ClubhouseSumUpAccounts_Id_Sequence");
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("AccessTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("ConnectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ConnectedByMemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MerchantCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("MerchantName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("NeedsReconnect")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ClubhouseSumUpAccounts_ClubId");
+
+                    b.HasIndex("ConnectedByMemberId");
+
+                    b.ToTable("ClubhouseSumUpAccounts");
+                });
+
             modelBuilder.Entity("Bookennis.Domain.Clubhouse.ClubhouseTab", b =>
                 {
                     b.Property<int>("Id")
@@ -738,7 +797,7 @@ namespace Bookennis.Api.Data.Migrations
                     b.HasIndex("ClubId", "MemberId")
                         .IsUnique()
                         .HasDatabaseName("UX_ClubhouseTabs_ClubId_MemberId")
-                        .HasFilter("\"Status\" = 0 AND \"MemberId\" IS NOT NULL");
+                        .HasFilter("\"Status\" IN (0, 2) AND \"MemberId\" IS NOT NULL");
 
                     b.HasIndex("ClubId", "Status", "PaidAt");
 
@@ -788,6 +847,87 @@ namespace Bookennis.Api.Data.Migrations
                     b.HasIndex("ItemId");
 
                     b.ToTable("ClubhouseTabLines");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Clubhouse.ClubhouseTabPayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "ClubhouseTabPayments_Id_Sequence");
+
+                    b.Property<int>("AmountCents")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CheckoutId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("CheckoutUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MerchantCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("PaidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("PayerMemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("Reference")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TabId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TransactionCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CheckoutId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ClubhouseTabPayments_CheckoutId");
+
+                    b.HasIndex("ClubId");
+
+                    b.HasIndex("PayerMemberId");
+
+                    b.HasIndex("Reference")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ClubhouseTabPayments_Reference");
+
+                    b.HasIndex("TabId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ClubhouseTabPayments_TabId")
+                        .HasFilter("\"Status\" = 0");
+
+                    b.HasIndex("Status", "ExpiresAt");
+
+                    b.ToTable("ClubhouseTabPayments");
                 });
 
             modelBuilder.Entity("Bookennis.Domain.Clubs.ApiKeys.ClubApiKey", b =>
@@ -2949,6 +3089,51 @@ namespace Bookennis.Api.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Bookennis.Domain.Clubhouse.ClubhouseSumUpAccount", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("ConnectedByMemberId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("ClubhouseSumUpAccounts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Bookennis.Domain.Clubhouse.ClubhouseTab", b =>
                 {
                     b.HasOne("Bookennis.Domain.Clubs.Club", null)
@@ -3017,7 +3202,7 @@ namespace Bookennis.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Bookennis.Domain.Clubhouse.ClubhouseItem", null)
+                    b.HasOne("Bookennis.Domain.Clubhouse.ClubhouseItem", "Item")
                         .WithMany()
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -3050,10 +3235,63 @@ namespace Bookennis.Api.Data.Migrations
                                 .HasForeignKey("EntityId");
                         });
 
+                    b.Navigation("Item");
+
                     b.Navigation("Metadata")
                         .IsRequired();
 
                     b.Navigation("Tab");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Clubhouse.ClubhouseTabPayment", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("PayerMemberId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bookennis.Domain.Clubhouse.ClubhouseTab", null)
+                        .WithMany()
+                        .HasForeignKey("TabId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("ClubhouseTabPayments");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Bookennis.Domain.Clubs.ApiKeys.ClubApiKey", b =>
