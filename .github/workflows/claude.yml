@@ -61,7 +61,7 @@ jobs:
             a plan as a single comment with `gh issue comment ${{ github.event.issue.number }} --body-file <file>`.
             Do not change any code in this run.
           claude_args: |
-            --allowedTools "Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh search:*),Bash(git log:*),Bash(git diff:*),Write"
+            --allowedTools "Agent,Task,Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh search:*),Bash(git log:*),Bash(git diff:*),Write"
 
   # "@claude ..." from the owner in a comment or review: plan, implement or address feedback
   respond:
@@ -121,4 +121,4 @@ jobs:
           additional_permissions: |
             actions: read
           claude_args: |
-            --allowedTools "Bash(dotnet:*),Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh run view:*),Bash(gh run list:*)"
+            --allowedTools "Agent,Task,Bash(dotnet:*),Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh run view:*),Bash(gh run list:*)"

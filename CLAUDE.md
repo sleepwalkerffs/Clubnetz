@@ -19,4 +19,5 @@ This applies when you run in GitHub Actions (the `Claude agent` workflow), trigg
 - Payments, credits, prices and purchases stay cookie-only and must never be reachable with club API keys.
 - Never add secrets, keys, real member data or database dumps. Never change `.github/workflows/` unless the issue asks for it.
 - Keep the change to what the issue asks. Mention other problems you notice in the comment instead of fixing them on the side.
+- Use the subagents in `.claude/agents/` where they fit (for example Database Optimizer for migrations and queries, Internationalization Engineer for texts). Before opening the pull request, have the Code Reviewer agent review your diff and fix what it finds.
 - Finish with a comment that covers what changed, how it was tested, what is left, and the link to the pull request.
