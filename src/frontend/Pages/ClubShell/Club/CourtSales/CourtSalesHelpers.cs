@@ -4,6 +4,7 @@ using Bookennis.Shared.Controller.Club;
 using Bookennis.Shared.Controller.CourtSales;
 using Bookennis.Shared.Controller.Shared;
 using Microsoft.Extensions.Localization;
+using Bookennis.Client.Utils;
 
 namespace Bookennis.Client.Pages.ClubShell.Club.CourtSales;
 
@@ -30,7 +31,7 @@ public static class CourtSalesHelpers
 
     public static string Time(DateTimeOffset time) => time.ToLocalTime().ToString("HH:mm", CultureInfo.CurrentCulture);
 
-    public static string Day(DateTimeOffset time) => time.ToLocalTime().ToString("ddd, d. MMM", CultureInfo.CurrentCulture);
+    public static string Day(DateTimeOffset time) => time.ToLocalTime().ToString(DateFormats.Localized("ddd, d. MMM"), CultureInfo.CurrentCulture);
 
     public static string ShortWeekday(DayOfWeek day) => CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day);
 

@@ -336,4 +336,7 @@
   <data name="CourtNumber" xml:space="preserve">
     <value>Court {0}</value>
   </data>
+  <data name="ShareFailed" xml:space="preserve">
+    <value>Sharing is not possible in this browser.</value>
+  </data>
 </root>

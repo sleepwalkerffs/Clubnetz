@@ -37,7 +37,7 @@ else
         <MudSwipeArea OnSwipeEnd="@OnSwiped" Class="booking-toolbar">
             <div class="booking-toolbar__date">
                 <div class="booking-toolbar__eyebrow">@RelativeDayLabel(SelectedDate)</div>
-                <h1 class="booking-toolbar__title">@SelectedDate.ToString("dddd, d. MMMM", CultureInfo.CurrentCulture)</h1>
+                <h1 class="booking-toolbar__title">@SelectedDate.ToString(DateFormats.Localized("dddd, d. MMMM"), CultureInfo.CurrentCulture)</h1>
                 <div class="booking-toolbar__chips">
                     <span class="toolbar-chip">
                         🎾 @(dayBookings.Count == 0 ? Locale["NoBookingsOnDay"] : string.Format(Locale["BookingsCount"], dayBookings.Count))

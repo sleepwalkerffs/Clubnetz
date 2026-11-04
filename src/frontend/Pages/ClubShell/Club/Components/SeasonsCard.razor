@@ -50,7 +50,7 @@
                                 </span>
                             </div>
                             <div class="season__dates">
-                                @season.StartDate.ToString("ddd, d. MMM yyyy", CultureInfo.CurrentCulture) → @season.EndDate.ToString("ddd, d. MMM yyyy", CultureInfo.CurrentCulture)
+                                @season.StartDate.ToString(DateFormats.Localized("ddd, d. MMM yyyy"), CultureInfo.CurrentCulture) → @season.EndDate.ToString(DateFormats.Localized("ddd, d. MMM yyyy"), CultureInfo.CurrentCulture)
                             </div>
                             <div class="season__meta">
                                 <span>📏 @string.Format(L["SeasonLength"], Math.Round(length / 7.0), length)</span>

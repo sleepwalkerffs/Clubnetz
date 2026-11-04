@@ -41,6 +41,7 @@
 }
 
 .stat-tile__unit {
+    margin-left: 0.2em;
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--mud-palette-text-secondary);

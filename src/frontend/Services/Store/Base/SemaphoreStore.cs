@@ -60,7 +60,15 @@ public abstract class SemaphoreStore : ISemaphoreStore, IDisposable
     protected async Task RunInLoadingContextAsync(Func<CancellationToken, Task> action, string? contextName)
     {
         var context = GetOrCreateLoadingContext(contextName ?? "default");
-        await ExecuteSaveContext(context, action);
+        try
+        {
+            await ExecuteSaveContext(context, action);
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer load of the same context superseded this one and brings the data. Throwing here would stop the app
+            // when the caller is an event handler or a component that loads the same store as the layout
+        }
     }
 
     protected Task RunInSavingContextAsync(Action action, string? contextName)

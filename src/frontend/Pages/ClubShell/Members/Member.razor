@@ -80,7 +80,7 @@
                 <div class="member-aside__value">@MemberAdminHelpers.RelativeDate(L, member.LastPlayed)</div>
                 @if (member.LastPlayed is { } lastPlayed)
                 {
-                    <div class="member-aside__text">@lastPlayed.LocalDateTime.ToString("dddd, d. MMMM yyyy", CultureInfo.CurrentCulture)</div>
+                    <div class="member-aside__text">@lastPlayed.LocalDateTime.ToString(DateFormats.Localized("dddd, d. MMMM yyyy"), CultureInfo.CurrentCulture)</div>
                 }
                 <div class="member-aside__actions">
                     <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Person" Class="member-aside__button" OnClick="OpenProfile">

@@ -75,14 +75,14 @@
 
                         <div class="wrapped-card__footer">
                             <span class="wrapped-card__dates">
-                                @season.StartDate.ToString("d. MMM yyyy", CultureInfo.CurrentCulture) – @season.EndDate.ToString("d. MMM yyyy", CultureInfo.CurrentCulture)
+                                @season.StartDate.ToString(DateFormats.Localized("d. MMM yyyy"), CultureInfo.CurrentCulture) – @season.EndDate.ToString(DateFormats.Localized("d. MMM yyyy"), CultureInfo.CurrentCulture)
                             </span>
                             @if (seasons.CanManage)
                             {
                                 <div class="wrapped-card__admin">
                                     @if (released)
                                     {
-                                        <span class="wrapped-chip wrapped-chip--released">✅ @string.Format(L["ReleasedOn"], season.PublishedAt!.Value.ToLocalTime().ToString("d. MMM yyyy", CultureInfo.CurrentCulture))</span>
+                                        <span class="wrapped-chip wrapped-chip--released">✅ @string.Format(L["ReleasedOn"], season.PublishedAt!.Value.ToLocalTime().ToString(DateFormats.Localized("d. MMM yyyy"), CultureInfo.CurrentCulture))</span>
                                         <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" Disabled="@WrappedStore.IsSaving" OnClick="() => Unpublish(season)">@L["TakeBack"]</MudButton>
                                     }
                                     else

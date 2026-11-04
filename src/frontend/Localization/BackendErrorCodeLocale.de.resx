@@ -750,4 +750,7 @@
   <data name="ClubhouseSumUpPaymentsRunning" xml:space="preserve">
     <value>Ein Mitglied bezahlt gerade eine Rechnung mit SumUp. Bitte trenne das Konto, wenn die Zahlung erledigt ist.</value>
   </data>
+  <data name="InvalidInput" xml:space="preserve">
+    <value>Einige Eingaben sind ungültig. Bitte überprüfe sie.</value>
+  </data>
 </root>

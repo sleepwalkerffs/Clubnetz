@@ -3,6 +3,7 @@ using Bookennis.Client.Localization.Pages.Clubhouse;
 using Bookennis.Shared.Controller.Clubhouse;
 using Bookennis.Shared.Controller.Shared;
 using Microsoft.Extensions.Localization;
+using Bookennis.Client.Utils;
 
 namespace Bookennis.Client.Pages.ClubShell.Clubhouse;
 
@@ -51,7 +52,7 @@ public static class ClubhouseHelpers
     /// <summary>The name of a tab: the member or the guest from outside, "former member" once the member left.</summary>
     public static string TabName(IStringLocalizer<ClubhouseLocale> locale, string name) => string.IsNullOrEmpty(name) ? locale["FormerMember"] : name;
 
-    public static string Day(DateTimeOffset time) => time.ToLocalTime().ToString("ddd, d. MMM", CultureInfo.CurrentCulture);
+    public static string Day(DateTimeOffset time) => time.ToLocalTime().ToString(DateFormats.Localized("ddd, d. MMM"), CultureInfo.CurrentCulture);
 
     public static string Time(DateTimeOffset time) => time.ToLocalTime().ToString("HH:mm", CultureInfo.CurrentCulture);
 

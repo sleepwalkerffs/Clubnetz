@@ -23,6 +23,8 @@ public class ExceptionFilter(ILogger<ExceptionFilter> logger) : IAsyncExceptionF
         HandleException<PreconditionException>(context, HttpStatusCode.PreconditionFailed, e => new ErrorCodeResponse(e.Message, e.ErrorCode, e.ErrorDetails));
         HandleException<HttpRequestException>(context, e => e.StatusCode ?? HttpStatusCode.InternalServerError);
         HandleException<AuthorizationFailedException>(context, HttpStatusCode.Unauthorized, e => new { e.Message });
+        // Invalid input that fails the data annotations of a request: a message for the user, not a 500
+        HandleException<Fusonic.Extensions.AspNetCore.Validation.RequestValidationException>(context, HttpStatusCode.PreconditionFailed, e => new ErrorCodeResponse(e.Message, "InvalidInput", null));
     }
 
     protected void HandleException<T>(ExceptionContext context, HttpStatusCode httpStatusCode, Func<T, object?>? getResponse = null) => HandleException(context, _ => httpStatusCode, getResponse);

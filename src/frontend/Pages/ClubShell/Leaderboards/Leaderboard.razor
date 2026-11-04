@@ -150,7 +150,7 @@ else
     private static LeaderboardEntry? OwnEntryBelowList(LeaderboardData data)
         => data.CurrentMemberEntry is { } own && data.Entries.All(e => e.MemberId != own.MemberId) ? own : null;
 
-    private static string FormatHours(double hours) => hours.ToString("0.#", CultureInfo.CurrentCulture);
+    private static string FormatHours(double hours) => hours.ToString(hours >= 100 ? "0" : "0.#", CultureInfo.CurrentCulture);
 
     private void NavigateToProfile(LeaderboardEntry entry)
         => NavigationManager.NavigateTo($"/clubs/{ClubId}/members/{entry.MemberId}/profile");

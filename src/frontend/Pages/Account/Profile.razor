@@ -35,7 +35,7 @@
                     @Locale["UploadPhoto"]
                 </MudButton>
             </label>
-            <InputFile id="profilePictureInput" OnChange="OnProfilePictureSelected" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
+            <InputFile @key="profilePictureInputKey" id="profilePictureInput" OnChange="OnProfilePictureSelected" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
         </div>
     </div>
 
@@ -204,6 +204,7 @@
     private bool processing = false;
     private bool exporting;
     private string? profilePictureUrl;
+    private int profilePictureInputKey;
     private string? pendingEmail;
     private ProfileInformationForm model = new();
 
@@ -215,13 +216,12 @@
         await FetchUserData();
     }
 
-    public async void Cancel()
+    private async Task Cancel()
     {
         await FetchUserData();
-        StateHasChanged();
     }
 
-    public async void Submit(EditContext editContext)
+    private async Task Submit(EditContext editContext)
     {
         processing = true;
         try
@@ -234,14 +234,12 @@
             }
 
             Snackbar.Add(Locale["Profile_Saved"], Severity.Success);
+            // Reloads the user and the profile (the completion banner)
             authStateChanged.AuthStateChanged();
-            // Refresh the completion banner
-            await ProfileStore.LoadProfileAsync();
         }
         finally
         {
             processing = false;
-            StateHasChanged();
         }
     }
 
@@ -344,6 +342,8 @@
         using var ms = new MemoryStream();
         await readStream.CopyToAsync(ms);
         var dataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+        // A new input element lets the member pick the same file again after cancelling the crop
+        profilePictureInputKey++;
 
         // Show crop dialog so the user can select the region
         var parameters = new DialogParameters<ProfilePictureCropDialog>();

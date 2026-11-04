@@ -201,4 +201,7 @@
   <data name="HowToGuide" xml:space="preserve">
     <value>API-Dokumentation öffnen</value>
   </data>
+  <data name="CopyFailed" xml:space="preserve">
+    <value>Der Schlüssel konnte nicht kopiert werden. Markiere ihn und kopiere ihn von Hand.</value>
+  </data>
 </root>
