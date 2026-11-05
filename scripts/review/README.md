@@ -96,7 +96,9 @@ In the repository settings → Environments, create the environment `Review` wit
 - secret `REVIEW_SSH_KEY`: the content of `/root/clubnetz-review-key` (the private key). Delete it from the
   server afterwards: `shred -u /root/clubnetz-review-key`.
 - secret `REVIEW_SSH_KNOWN_HOSTS`: output of `ssh-keyscan 2.31.24.78`.
-- variable `REVIEW_SSH_HOST`: `2.31.24.78`.
+
+Then, under Settings → Secrets and variables → Actions → Variables, add the repository variable
+`REVIEW_SSH_HOST` = `2.31.24.78`. The workflow does nothing on pull requests until it is set.
 
 Then open a pull request. When the workflow is done, the pull request shows "View deployment".
 

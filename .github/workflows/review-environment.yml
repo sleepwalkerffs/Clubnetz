@@ -5,10 +5,10 @@ name: Review environment
 # behind a username and password prompt. Pushing to the pull request updates it, closing it removes it.
 # Pull requests from forks never get one: their code would run on the server.
 #
-# Setup (server side, DNS and secrets): scripts/review/README.md. The GitHub environment "Review" needs
-#   secret   REVIEW_SSH_KEY          private key whose public key setup-server.sh installed
-#   secret   REVIEW_SSH_KNOWN_HOSTS  output of: ssh-keyscan <server>
-#   variable REVIEW_SSH_HOST         the server's address
+# Setup (server side, DNS and secrets): scripts/review/README.md. Needs
+#   repository variable  REVIEW_SSH_HOST         the server's address; nothing runs while it is not set
+#   environment "Review" secret REVIEW_SSH_KEY          private key whose public key setup-server.sh installed
+#   environment "Review" secret REVIEW_SSH_KNOWN_HOSTS  output of: ssh-keyscan <server>
 
 on:
   pull_request:
@@ -31,7 +31,8 @@ jobs:
     if: >-
       github.event.action != 'closed' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.user.login != 'dependabot[bot]'
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      vars.REVIEW_SSH_HOST != ''
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
@@ -84,7 +85,8 @@ jobs:
     if: >-
       github.event.action == 'closed' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.user.login != 'dependabot[bot]'
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      vars.REVIEW_SSH_HOST != ''
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: Review
