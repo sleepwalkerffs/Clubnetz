@@ -1,0 +1,118 @@
+@page "/clubs/{ClubId:int}/play-requests"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.PlayRequests
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.PlayRequests
+@using Bookennis.Shared.Controller.PlayRequests
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+@* "Spielersuche": the requests the member made and those they were asked for. Reachable from the push notification. *@
+
+<PageTitle>@L["Page_Title"]</PageTitle>
+
+@{
+    var requests = Store.Requests;
+    var forMe = requests?.Where(r => !r.IsMine).ToList() ?? [];
+    var mine = requests?.Where(r => r.IsMine).ToList() ?? [];
+}
+
+<div class="play-requests-page">
+    <AdminHero Emoji="🎾" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Page_Title"]" Subtitle="@L["Page_Subtitle"]">
+        <Chips>
+            @if (requests is not null)
+            {
+                @if (forMe.Count(PlayRequestHelpers.WaitsForMyAnswer) > 0)
+                {
+                    <span class="hero-chip">📨 @string.Format(L["Hero_Asked"], forMe.Count(PlayRequestHelpers.WaitsForMyAnswer))</span>
+                }
+                @if (mine.Count(PlayRequestHelpers.IsOpen) > 0)
+                {
+                    <span class="hero-chip">🙋 @string.Format(L["Hero_Mine"], mine.Count(PlayRequestHelpers.IsOpen))</span>
+                }
+            }
+        </Chips>
+    </AdminHero>
+
+    <div class="play-requests-toolbar">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="NewRequest">@L["Btn_New"]</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Groups" OnClick="OpenGroups">@L["Btn_Groups"]</MudButton>
+    </div>
+
+    @if (requests is null)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <SectionCard Emoji="📨" Title="@L["Section_ForMe"]" Subtitle="@L["Section_ForMe_Hint"]">
+            @if (forMe.Count == 0)
+            {
+                <div class="play-requests-empty">@L["Empty_ForMe"]</div>
+            }
+            else
+            {
+                <div class="play-requests-list">
+                    @foreach (var request in forMe)
+                    {
+                        <PlayRequestCard @key="request.Id" Request="@request" ClubId="@ClubId" OnChanged="Reload" />
+                    }
+                </div>
+            }
+        </SectionCard>
+
+        <SectionCard Emoji="🙋" Title="@L["Section_Mine"]" Subtitle="@L["Section_Mine_Hint"]">
+            @if (mine.Count == 0)
+            {
+                <div class="play-requests-empty">@L["Empty_Mine"]</div>
+            }
+            else
+            {
+                <div class="play-requests-list">
+                    @foreach (var request in mine)
+                    {
+                        <PlayRequestCard @key="request.Id" Request="@request" ClubId="@ClubId" OnChanged="Reload" />
+                    }
+                </div>
+            }
+        </SectionCard>
+    }
+</div>
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [Inject] private IPlayRequestsStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IStringLocalizer<PlayRequestsLocale> L { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnPlayRequestsChanged += OnChanged;
+        await Store.LoadRequests();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private Task Reload() => Store.LoadRequests();
+
+    private async Task NewRequest()
+    {
+        var dialog = await DialogService.ShowAsync<CreatePlayRequestDialog>(L["Create_Title"], new DialogParameters(),
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+
+        if (await dialog.Result is { Canceled: false })
+            await Store.LoadRequests();
+    }
+
+    private async Task OpenGroups()
+        => await (await DialogService.ShowAsync<PlayerGroupsDialog>(L["Groups_Title"], new DialogParameters(),
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true })).Result;
+
+    public void Dispose() => Store.OnPlayRequestsChanged -= OnChanged;
+}

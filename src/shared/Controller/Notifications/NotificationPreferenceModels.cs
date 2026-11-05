@@ -10,7 +10,8 @@ public enum NotificationType
     ClubEventReminder = 4,
     ClubEventRegistrationDeadline = 5,
     ClubAnnouncement = 6,
-    BadgeAwarded = 7
+    BadgeAwarded = 7,
+    PlayRequest = 8
 }
 
 /// <summary>The channels the user is notified on for one type of notification.</summary>

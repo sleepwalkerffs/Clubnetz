@@ -64,6 +64,7 @@ else
             @* Members who are not active get a 403 for statistics, leaderboard and Wrapped *@
             @if (IsActive)
             {
+                <PlayRequestsCard ClubId="@ClubId" />
                 <WrappedTeaser ClubId="@ClubId" />
                 @RenderTiles(seasonStatistics)
             }

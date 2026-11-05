@@ -1,0 +1,255 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Family
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Components.Booking
+@using Bookennis.Client.Localization.Pages.PlayRequests
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.PlayRequests
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Families
+@using Bookennis.Shared.Controller.PlayRequests
+
+@* Ask other members to play: one slot, one or more courts (the first free one is booked), and the members who may accept. *@
+<BaseDialog SubmitFunc="Submit" Title="@L["Create_Title"]" SubmitCaption="@L["Create_Submit"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@CanSubmit" Loading="@submitting">
+    @if (!loaded)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (PlayModes.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">@L["Create_NoPlayMode"]</MudAlert>
+    }
+    else
+    {
+        <div class="create-request">
+            <div class="create-request__summary">
+                <span class="create-request__summary-day">@(Start is { } start ? start.ToString("ddd d MMM", CultureInfo.CurrentCulture) : "–")</span>
+                <span>@string.Format(L["Summary_Line"], SummaryTime, selectedPlayMode.Name, SummaryCourts)</span>
+            </div>
+
+            @if (PlayModes.Count > 1)
+            {
+                <ChoiceChips TItem="PlayModeDto" Label="@L["Field_PlayMode"]" Items="@PlayModes" Value="@selectedPlayMode"
+                             ValueChanged="OnPlayModeChanged" TextFunc="@(playMode => playMode.Name)"
+                             ColorFunc="@(playMode => BookingColors.ToHex(playMode.Color))" />
+            }
+
+            <div class="create-request__row">
+                <MudDatePicker Date="Date" DateChanged="d => Date = d" Variant="Variant.Outlined" Label="@L["Field_Date"]" MinDate="DateTime.Today"
+                               PickerVariant="PickerVariant.Dialog" Editable="false" />
+                <MudTimePicker Time="Time" TimeChanged="t => Time = t" Variant="Variant.Outlined" Label="@L["Field_Time"]" MinuteSelectionStep="30"
+                               AdornmentIcon="@Icons.Material.Filled.Schedule" />
+            </div>
+            @if (StartInPast)
+            {
+                <div class="create-request__error">@L["Err_Past"]</div>
+            }
+
+            @if (!selectedPlayMode.FixedDuration.HasValue)
+            {
+                <ChoiceChips TItem="TimeSpan" Label="@L["Field_Duration"]" Items="@DurationPresets" Value="@duration" ValueChanged="d => duration = d"
+                             TextFunc="@FormatDuration" />
+            }
+
+            <MultiChoiceChips TItem="CourtResult" Label="@L["Field_Courts"]" Items="@Courts" Values="@selectedCourts" ValuesChanged="c => selectedCourts = c"
+                              TextFunc="@(court => court.Name)" />
+            <div class="create-request__hint">@L["Field_Courts_Hint"]</div>
+
+            @if (!selectedPlayMode.FixedPlayerCount.HasValue)
+            {
+                <ChoiceChips TItem="int" Label="@L["Field_Players"]" Items="@PlayerCounts" Value="@playersNeeded" ValueChanged="n => playersNeeded = n"
+                             TextFunc="@(n => L[n == 2 ? "Players_Singles" : "Players_Doubles"])" />
+            }
+
+            @if (Store.Groups.Count > 0)
+            {
+                <ChoiceChips TItem="PlayerGroupDto" Label="@L["Group_Label"]" Items="@Store.Groups" Value="@selectedGroup" ValueChanged="OnGroupChanged"
+                             TextFunc="@(g => g.Name)" />
+                <div class="create-request__hint">@L["Group_Hint"]</div>
+            }
+
+            <div>
+                <div class="create-request__label">@L["Invitees_Label"] <span class="create-request__count">@string.Format(L["Invitees_Count"], invitees.Count)</span></div>
+                <MemberPickList Items="@candidateItems" Values="@invitees" ValuesChanged="OnInviteesChanged" Multi="true" Label="@L["Invitees_Label"]" />
+                <div class="create-request__hint">@L["Invitees_Hint"]</div>
+            </div>
+
+            <MudTextField @bind-Value="comment" Variant="Variant.Outlined" Label="@L["Field_Comment"]" Lines="2" AutoGrow="true" MaxLength="300"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ChatBubbleOutline" />
+
+            <div>
+                <MudSwitch T="bool" @bind-Value="closeEarlier" Color="Color.Primary" Label="@L["Expire_Switch"]" />
+                @if (closeEarlier)
+                {
+                    <div class="create-request__row">
+                        <MudDatePicker @bind-Date="expiryDate" Variant="Variant.Outlined" Label="@L["Expire_Date"]" MinDate="DateTime.Today"
+                                       PickerVariant="PickerVariant.Dialog" Editable="false" />
+                        <MudTimePicker @bind-Time="expiryTime" Variant="Variant.Outlined" Label="@L["Expire_Time"]" MinuteSelectionStep="30"
+                                       AdornmentIcon="@Icons.Material.Filled.Schedule" />
+                    </div>
+                    @if (!ExpiryValid)
+                    {
+                        <div class="create-request__error">@L["Err_Expiry"]</div>
+                    }
+                }
+                else
+                {
+                    <div class="create-request__hint">@L["Expire_Hint"]</div>
+                }
+            </div>
+
+            <div>
+                <MudSwitch T="bool" @bind-Value="saveGroup" Color="Color.Primary" Label="@L["SaveGroup_Switch"]" Disabled="@(invitees.Count == 0)" />
+                @if (saveGroup)
+                {
+                    <MudTextField @bind-Value="groupName" Variant="Variant.Outlined" Label="@L["SaveGroup_Name"]" MaxLength="60" />
+                }
+            </div>
+        </div>
+    }
+</BaseDialog>
+
+@code {
+    private static readonly List<TimeSpan> DurationPresets = [TimeSpan.FromHours(1), TimeSpan.FromHours(1.5), TimeSpan.FromHours(2)];
+    private static readonly List<int> PlayerCounts = [2, 4];
+
+    [Inject] private IPlayRequestsStore Store { get; set; } = null!;
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<PlayRequestsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<BookingSharedLocale> BookingLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private bool loaded;
+    private bool submitting;
+
+    private List<PlayModeDto> PlayModes { get; set; } = [];
+    private List<CourtResult> Courts { get; set; } = [];
+    private PlayModeDto selectedPlayMode = null!;
+    private List<FamilyMemberDto> candidateItems = [];
+
+    private DateTime? Date { get; set; } = DateTime.Today.AddDays(1);
+    private TimeSpan? Time { get; set; } = TimeSpan.FromHours(18);
+    private TimeSpan duration = TimeSpan.FromHours(1.5);
+    private int playersNeeded = 2;
+    private IReadOnlyCollection<CourtResult> selectedCourts = [];
+    private PlayerGroupDto? selectedGroup;
+    private IReadOnlyCollection<int> invitees = [];
+    private string? comment;
+    private bool closeEarlier;
+    private DateTime? expiryDate = DateTime.Today;
+    private TimeSpan? expiryTime;
+    private bool saveGroup;
+    private string? groupName;
+
+    private DateTime? Start => Date is { } date && Time is { } time ? date.Date.Add(time) : null;
+
+    private TimeSpan EffectiveDuration => selectedPlayMode.FixedDuration ?? duration;
+
+    private bool StartInPast => Start is { } start && start <= DateTime.Now;
+
+    private DateTime? Expiry => closeEarlier && expiryDate is { } date && expiryTime is { } time ? date.Date.Add(time) : null;
+
+    private bool ExpiryValid => !closeEarlier || (Expiry is { } expiry && expiry > DateTime.Now && Start is { } start && expiry <= start);
+
+    private int PlayersInTotal => selectedPlayMode.FixedPlayerCount ?? playersNeeded;
+
+    private string SummaryTime => Time is { } time ? $"{time:hh\\:mm} – {(time + EffectiveDuration):hh\\:mm}" : "–";
+
+    private string SummaryCourts => selectedCourts.Count == 0 ? "–" : string.Join(", ", selectedCourts.Select(c => c.Name));
+
+    private bool CanSubmit => loaded && PlayModes.Count > 0 && !submitting && Start is not null && !StartInPast && selectedCourts.Count > 0
+        && invitees.Count >= Math.Max(1, PlayersInTotal - 1) && ExpiryValid && (!saveGroup || !string.IsNullOrWhiteSpace(groupName));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(ClubStore.LoadCourts(), ClubStore.LoadPlayModes(), Store.LoadCandidates(), Store.LoadGroups());
+
+        // The same play modes the member sees when booking
+        PlayModes = ClubStore.PlayModes.Where(mode => mode.AllowedRoles.Any(ClubProfileStore.Roles.Contains)).ToList();
+        Courts = ClubStore.Courts.OrderBy(c => c.SortOrder).ToList();
+        selectedCourts = Courts;
+        candidateItems = Store.Candidates.ConvertAll(c => new FamilyMemberDto { MemberId = c.MemberId, FirstName = c.FirstName, LastName = c.LastName });
+
+        if (PlayModes.Count > 0)
+            selectedPlayMode = PlayModes[0];
+
+        loaded = true;
+    }
+
+    private void OnPlayModeChanged(PlayModeDto playMode) => selectedPlayMode = playMode;
+
+    private void OnGroupChanged(PlayerGroupDto group)
+    {
+        selectedGroup = group;
+        // Members who are not active any more are not among the candidates
+        invitees = group.Members.Select(m => m.MemberId).Where(id => candidateItems.Any(c => c.MemberId == id)).ToList();
+    }
+
+    private void OnInviteesChanged(IReadOnlyCollection<int> values)
+    {
+        // Fine tuning for this request: the saved group stays as it is
+        invitees = values;
+    }
+
+    private string FormatDuration(TimeSpan value)
+        => value.TotalMinutes < 60
+            ? string.Format(BookingLocale["DurationMinutes"], (int)value.TotalMinutes)
+            : string.Format(BookingLocale["DurationHours"], value.TotalHours.ToString("0.#", CultureInfo.CurrentCulture));
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (Start is not { } start)
+            return null;
+
+        submitting = true;
+        try
+        {
+            var model = new CreatePlayRequestModel
+            {
+                PlayModeId = selectedPlayMode.Id,
+                // Local date and time of the club, like the booking dialog
+                From = new DateTimeOffset(start),
+                To = new DateTimeOffset(start.Add(EffectiveDuration)),
+                TimeZoneInfoId = TimeZoneInfo.Local.Id,
+                CourtIds = selectedCourts.Select(c => c.CourtId).ToList(),
+                PlayersNeeded = selectedPlayMode.FixedPlayerCount.HasValue ? null : playersNeeded,
+                InviteeMemberIds = invitees.ToList(),
+                Comment = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim(),
+                ExpiresAt = Expiry is { } expiry ? new DateTimeOffset(expiry) : null,
+            };
+
+            var response = await Store.Create(model);
+            if (!response.Success)
+            {
+                Snackbar.ShowErrorDetails(response, BackendLocale);
+                return null;
+            }
+
+            // The request is sent; saving the group is a convenience that must not undo it
+            if (saveGroup && !string.IsNullOrWhiteSpace(groupName))
+            {
+                var group = await Store.CreateGroup(new SavePlayerGroupModel { Name = groupName.Trim(), MemberIds = invitees.ToList() });
+                if (!group.Success)
+                    Snackbar.ShowErrorDetails(group, BackendLocale);
+            }
+
+            Snackbar.Add(L["Create_Done"], Severity.Success);
+            return DialogResult.Ok(response.Dto);
+        }
+        finally
+        {
+            submitting = false;
+        }
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+}

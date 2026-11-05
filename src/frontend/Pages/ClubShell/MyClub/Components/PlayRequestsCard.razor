@@ -1,0 +1,58 @@
+@using Bookennis.Client.Localization.Pages.PlayRequests
+@using Bookennis.Client.Pages.ClubShell.PlayRequests
+@using Bookennis.Client.Services.Store.PlayRequests
+
+@implements IDisposable
+
+@*
+    Players who look for players. Only shown while a request waits for the answer of the member or one of their own is open, so members
+    without anything to answer never see it.
+*@
+@if (Store.Requests is { } requests && Open(requests) is { Count: > 0 } open)
+{
+    var forMe = open.Where(PlayRequestHelpers.WaitsForMyAnswer).ToList();
+    var mine = open.Where(r => r.IsMine).ToList();
+    var next = (forMe.Count > 0 ? forMe : open).OrderBy(r => r.StartsAt).First();
+
+    <MudItem xs="12">
+        <div class="play-card @(forMe.Count > 0 ? "play-card--asked" : null)">
+            <div class="play-card__emoji" aria-hidden="true">🎾</div>
+            <div class="play-card__body">
+                <div class="play-card__title">@L["Card_Title"]</div>
+                @if (forMe.Count > 0)
+                {
+                    <div class="play-card__text">@string.Format(L["Card_ForMe"], forMe.Count)</div>
+                }
+                @if (mine.Count > 0)
+                {
+                    <div class="play-card__text">@string.Format(L["Card_Mine"], mine.Count)</div>
+                }
+                <div class="play-card__text">@string.Format(L["Card_Next"], $"{PlayRequestHelpers.Day(next)}, {PlayRequestHelpers.Times(next)}", next.PlayModeName)</div>
+            </div>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" Href="@($"/clubs/{ClubId}/play-requests")"
+                       EndIcon="@Icons.Material.Filled.ChevronRight" Class="play-card__action">
+                @L["Card_Open"]
+            </MudButton>
+        </div>
+    </MudItem>
+}
+
+@code {
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+
+    [Inject] private IPlayRequestsStore Store { get; set; } = null!;
+    [Inject] private IStringLocalizer<PlayRequestsLocale> L { get; set; } = null!;
+
+    private static List<Bookennis.Shared.Controller.PlayRequests.PlayRequestDto> Open(List<Bookennis.Shared.Controller.PlayRequests.PlayRequestDto> requests)
+        => requests.Where(PlayRequestHelpers.IsOpen).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnPlayRequestsChanged += OnChanged;
+        await Store.LoadRequests();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Store.OnPlayRequestsChanged -= OnChanged;
+}

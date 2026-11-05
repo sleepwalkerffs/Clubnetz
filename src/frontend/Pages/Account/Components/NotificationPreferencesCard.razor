@@ -62,8 +62,12 @@
                                        Disabled="@Store.IsSaving" aria-label="@string.Format(Locale["Notif_PushAria"], name)" />
                         </div>
                         <div class="prefs__switch">
-                            <MudSwitch T="bool" Value="preference.Email" ValueChanged="value => Set(preference with { Email = value })" Color="Color.Primary"
-                                       Disabled="@Store.IsSaving" aria-label="@string.Format(Locale["Notif_EmailAria"], name)" />
+                            @* Some notifications are push only: there is no email to switch *@
+                            @if (!PushOnly.Contains(type))
+                            {
+                                <MudSwitch T="bool" Value="preference.Email" ValueChanged="value => Set(preference with { Email = value })" Color="Color.Primary"
+                                           Disabled="@Store.IsSaving" aria-label="@string.Format(Locale["Notif_EmailAria"], name)" />
+                            }
                         </div>
                     </div>
                 }
@@ -77,8 +81,11 @@
     [
         ("Bookings", [NotificationType.BookingAdded, NotificationType.BookingDeleted, NotificationType.BookingReminder]),
         ("Events", [NotificationType.ClubEventCreated, NotificationType.ClubEventReminder, NotificationType.ClubEventRegistrationDeadline]),
-        ("Club", [NotificationType.ClubAnnouncement, NotificationType.BadgeAwarded])
+        ("Club", [NotificationType.ClubAnnouncement, NotificationType.BadgeAwarded, NotificationType.PlayRequest])
     ];
+
+    /// <summary>Types that are only sent as push notification (no email counterpart): they have no email switch.</summary>
+    private static readonly NotificationType[] PushOnly = [NotificationType.PlayRequest];
 
     [Inject] private INotificationPreferencesStore Store { get; set; } = null!;
     [Inject] private IPushStore PushStore { get; set; } = null!;
@@ -87,7 +94,7 @@
     [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
 
     private bool AllPush => Store.Preferences.All(p => p.Push);
-    private bool AllEmail => Store.Preferences.All(p => p.Email);
+    private bool AllEmail => Store.Preferences.Where(p => !PushOnly.Contains(p.Type)).All(p => p.Email);
 
     protected override async Task OnInitializedAsync()
     {
@@ -99,7 +106,7 @@
     private Task Set(NotificationPreferenceDto preference) => Save([preference]);
 
     private Task SetAll(bool? push, bool? email)
-        => Save(Store.Preferences.Select(p => p with { Push = push ?? p.Push, Email = email ?? p.Email }).ToList());
+        => Save(Store.Preferences.Select(p => p with { Push = push ?? p.Push, Email = PushOnly.Contains(p.Type) ? p.Email : email ?? p.Email }).ToList());
 
     private async Task Save(IReadOnlyCollection<NotificationPreferenceDto> preferences)
     {

@@ -18,7 +18,7 @@ namespace Bookennis.Api.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -175,7 +175,23 @@ namespace Bookennis.Api.Data.Migrations
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence<int>("PlayerGroupMembers_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence<int>("PlayerGroups_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence<int>("PlayModes_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence<int>("PlayRequestInvitees_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence<int>("PlayRequests_Id_Sequence")
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
@@ -2053,6 +2069,155 @@ namespace Bookennis.Api.Data.Migrations
                         .HasDatabaseName("UX_NotificationPreferences_UserId_Type");
 
                     b.ToTable("NotificationPreferences");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.PlayRequests.PlayRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "PlayRequests_Id_Sequence");
+
+                    b.Property<int?>("BookingId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.PrimitiveCollection<List<int>>("CourtIds")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PlayModeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PlayersNeeded")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RequesterMemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TimeZoneInfoId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
+
+                    b.HasIndex("RequesterMemberId");
+
+                    b.HasIndex("ClubId", "Status", "StartsAt");
+
+                    b.ToTable("PlayRequests");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.PlayRequests.PlayRequestInvitee", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "PlayRequestInvitees_Id_Sequence");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PlayRequestId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("RespondedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("PlayRequestId", "MemberId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_PlayRequestInvitees_PlayRequestId_MemberId");
+
+                    b.ToTable("PlayRequestInvitees");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.PlayRequests.PlayerGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "PlayerGroups_Id_Sequence");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("OwnerMemberId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
+
+                    b.HasIndex("OwnerMemberId");
+
+                    b.ToTable("PlayerGroups");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.PlayRequests.PlayerGroupMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "PlayerGroupMembers_Id_Sequence");
+
+                    b.Property<int>("MemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PlayerGroupId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MemberId");
+
+                    b.HasIndex("PlayerGroupId", "MemberId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_PlayerGroupMembers_PlayerGroupId_MemberId");
+
+                    b.ToTable("PlayerGroupMembers");
                 });
 
             modelBuilder.Entity("Bookennis.Domain.SubscriptionPlans.SubscriptionPlan", b =>
@@ -4730,6 +4895,199 @@ namespace Bookennis.Api.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Bookennis.Domain.PlayRequests.PlayRequest", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Bookings.Booking", null)
+                        .WithMany()
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("RequesterMemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("PlayRequests");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.PlayRequests.PlayRequestInvitee", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.PlayRequests.PlayRequest", "Request")
+                        .WithMany("Invitees")
+                        .HasForeignKey("PlayRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("PlayRequestInvitees");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+
+                    b.Navigation("Request");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.PlayRequests.PlayerGroup", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerMemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("PlayerGroups");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.PlayRequests.PlayerGroupMember", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.PlayRequests.PlayerGroup", "Group")
+                        .WithMany("Members")
+                        .HasForeignKey("PlayerGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("PlayerGroupMembers");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Group");
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Bookennis.Domain.SubscriptionPlans.SubscriptionPlan", b =>
                 {
                     b.HasOne("Bookennis.Domain.Clubs.Club", null)
@@ -5091,6 +5449,16 @@ namespace Bookennis.Api.Data.Migrations
                 });
 
             modelBuilder.Entity("Bookennis.Domain.Memberships.MembershipOrder", b =>
+                {
+                    b.Navigation("Members");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.PlayRequests.PlayRequest", b =>
+                {
+                    b.Navigation("Invitees");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.PlayRequests.PlayerGroup", b =>
                 {
                     b.Navigation("Members");
                 });

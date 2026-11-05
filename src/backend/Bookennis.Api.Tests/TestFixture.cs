@@ -5,6 +5,7 @@ using Bookennis.Api.Business.Memberships;
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Business.Payments;
 using Bookennis.Api.Business.Payments.Stripe;
+using Bookennis.Api.Business.PlayRequests;
 using Bookennis.Api.Business.Push;
 using Bookennis.Api.Config;
 using Bookennis.Api.Data;
@@ -101,6 +102,8 @@ public class TestFixture : SimpleInjectorTestFixture
                 container.RegisterSingleton(() => Substitute.For<IPushSender>());
                 container.Register<IPushNotificationService, PushNotificationService>();
                 container.Register<IBookingPushNotifier, BookingPushNotifier>();
+                // Play request handlers only call it; the notifier is tested with PlayRequestPushNotifierTests
+                container.RegisterSingleton(() => Substitute.For<IPlayRequestPushNotifier>());
                 // SendEmail has no handler in tests, the emails of deleted bookings are tested with the notifier itself
                 container.RegisterSingleton(() => Substitute.For<IBookingEmailNotifier>());
                 container.Register<IClubEventNotifier, ClubEventNotifier>();

@@ -16,6 +16,7 @@ using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Families;
 using Bookennis.Domain.Members;
 using Bookennis.Domain.Memberships;
+using Bookennis.Domain.PlayRequests;
 using Bookennis.Domain.User;
 using Bookennis.Global.Intervals;
 using FluentAssertions;
@@ -83,6 +84,12 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
 
     /// <summary>A club event of club A planned by <see cref="EnrolledMemberOfA"/>, who is also registered for it.</summary>
     public int EventOfEnrolledMemberOfA { get; private set; }
+
+    /// <summary>
+    /// An open play request of club A made by the admin of club A, asking <see cref="EnrolledMemberOfA"/> (active) and <see cref="TreasurerOfA"/> (active).
+    /// Nobody else is part of it. Its comment is <c>Request for active {Marker}</c>.
+    /// </summary>
+    public int PlayRequestOfActiveInviteesId { get; private set; }
 
     /// <summary>Another member of club A without any special role, who has nothing to do with <see cref="MemberOfA"/>.</summary>
     public SeededUser OtherMemberOfA { get; private set; } = null!;
@@ -192,6 +199,12 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         var result = new StringBuilder();
         foreach (var table in tables)
             result.Append(table).Append('=').Append(await Hash($"""SELECT t::text AS row FROM "{table}" t WHERE "ClubId" = {club.Id}""")).Append(';');
+
+        // The answers of the invitees and the players of the groups belong to the club through their parent
+        result.Append("PlayRequestInvitees=").Append(await Hash(
+            $"""SELECT t::text AS row FROM "PlayRequestInvitees" t WHERE t."PlayRequestId" IN (SELECT "Id" FROM "PlayRequests" WHERE "ClubId" = {club.Id})""")).Append(';');
+        result.Append("PlayerGroupMembers=").Append(await Hash(
+            $"""SELECT t::text AS row FROM "PlayerGroupMembers" t WHERE t."PlayerGroupId" IN (SELECT "Id" FROM "PlayerGroups" WHERE "ClubId" = {club.Id})""")).Append(';');
 
         result.Append("Clubs=").Append(await Hash($"""SELECT t::text AS row FROM "Clubs" t WHERE "Id" = {club.Id}""")).Append(';');
         result.Append("Users=").Append(await Hash($"""SELECT t::text AS row FROM "AspNetUsers" t WHERE "Id" IN ({string.Join(',', club.UserIds)})""")).Append(';');
@@ -303,6 +316,15 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await context.SaveChangesAsync();
         EventOfEnrolledMemberOfA = activeEvent.Id;
         TreasurerOfA = await AddUser(context, ClubA, "treasurer-a", Marker, [MemberRole.User, MemberRole.Treasurer]);
+
+        var activeRequestStart = new DateTimeOffset(DateOnly.FromDateTime(DateTime.UtcNow).AddDays(11).ToDateTime(new TimeOnly(16, 0)), TimeSpan.Zero);
+        var requestOfActiveInvitees = PlayRequest.Create(ClubA.Id, ClubA.Admin.MemberId, new PlayRequest.RequestData(
+            ClubA.PlayModeId, new DateTimeOffsetInterval(activeRequestStart, activeRequestStart.AddHours(1)), TimeZoneInfo.Utc.Id, [ClubA.CourtId], 3,
+            [EnrolledMemberOfA.MemberId, TreasurerOfA.MemberId], $"Request for active {Marker}", null), DateTimeOffset.UtcNow);
+        context.Add(requestOfActiveInvitees);
+        await context.SaveChangesAsync();
+        PlayRequestOfActiveInviteesId = requestOfActiveInvitees.Id;
+
         HostOfA = await AddUser(context, ClubA, "host-a", Marker, [MemberRole.User, MemberRole.ClubhouseHost]);
         FamilyOfMemberOfA = await AddFamily(context, ClubA, MemberOfA, "Ownchild");
         FamilyOfOtherMemberOfA = await AddFamily(context, ClubA, OtherMemberOfA, "Otherchild");
@@ -433,6 +455,18 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
 
         seeded.ClubhouseTabPaymentId = payment.Id;
         seeded.ClubhousePaidTabId = paidTab.Id;
+
+        // Play requests: an open request of the admin to the plain member, and the admin's group with that member
+        var requestStart = new DateTimeOffset(today.AddDays(10).ToDateTime(new TimeOnly(16, 0)), TimeSpan.Zero);
+        var playRequest = PlayRequest.Create(club.Id, seeded.Admin.MemberId, new PlayRequest.RequestData(
+            seeded.PlayModeId, new DateTimeOffsetInterval(requestStart, requestStart.AddHours(1)), TimeZoneInfo.Utc.Id, [court.Id], 2,
+            [seeded.Member.MemberId], $"Request {text}", null), DateTimeOffset.UtcNow);
+        var playerGroup = new PlayerGroup(club.Id, seeded.Admin.MemberId, $"Group {text}", [seeded.Member.MemberId]);
+        context.AddRange(playRequest, playerGroup);
+        await context.SaveChangesAsync();
+
+        seeded.PlayRequestId = playRequest.Id;
+        seeded.PlayerGroupId = playerGroup.Id;
         return seeded;
     }
 
@@ -559,6 +593,12 @@ public sealed class SeededClub
     public int ClubhouseTabId { get; set; }
     public int ClubhouseTabLineId { get; set; }
     public int ClubhouseTabPaymentId { get; set; }
+
+    /// <summary>An open play request of <see cref="Admin"/> that asks <see cref="Member"/> (who is not an active member). Comment <c>Request {text}</c>.</summary>
+    public int PlayRequestId { get; set; }
+
+    /// <summary>A group of <see cref="Admin"/> with <see cref="Member"/> in it, named <c>Group {text}</c>.</summary>
+    public int PlayerGroupId { get; set; }
 
     /// <summary>A tab of <see cref="Member"/> paid in the app with <see cref="ClubhouseTabPaymentId"/> (checkout <c>chk_{Id}</c>).</summary>
     public int ClubhousePaidTabId { get; set; }

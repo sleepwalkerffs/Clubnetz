@@ -91,6 +91,8 @@ public sealed record ApiEndpoint(string Method, RoutePattern Pattern, string Con
             "tabid" => ids.ClubhouseTabId,
             "lineid" => ids.ClubhouseTabLineId,
             "paymentid" => ids.ClubhouseTabPaymentId,
+            "playrequestid" => ids.PlayRequestId,
+            "groupid" => ids.PlayerGroupId,
             "id" => ids.BookingId,
             _ => (int?)null,
         };

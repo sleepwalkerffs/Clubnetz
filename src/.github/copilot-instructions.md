@@ -134,6 +134,35 @@ The clubhouse host ("Wirt", role `MemberRole.ClubhouseHost` = 8, English "Clubho
 
 Receipts, stock, happy hours, a tab for a whole team, sending the amount to the host's SumUp reader (Cloud API), guests from outside paying in the app, reflecting refunds made in SumUp.
 
+## Play Requests (Spielersuche)
+
+### Overview
+
+A member asks other members to play at a given time instead of writing around in a messenger: one exact slot, one or more alternative courts (in order of preference), a play mode and a list of members who may accept. **A request blocks nothing.** When the last spot is filled, the court is booked through the normal booking rules, so a request can never do what a booking could not. Push only, no email.
+
+### Domain (`Bookennis.Domain/PlayRequests`)
+
+- `PlayRequest` (`TenantDomainEntity`, aggregate root): `RequesterMemberId`, `PlayModeId`, `StartsAt`/`EndsAt`, `TimeZoneInfoId`, `CourtIds` (`integer[]`, first free court is booked), `PlayersNeeded` (all players including the requester: the play mode's `FixedPlayerCount`, else the requested 2-8), `Comment?`, `ExpiresAt` (the start at the latest, or an earlier time the requester chose), `Status` (`Open`, `Filled`, `Cancelled`; **expired is not stored**, an open request past `ExpiresAt` is shown as `Expired` and can't be answered), `BookingId?` (set null when the booking is deleted). Transitions are methods with `PlayRequest.ErrorCode`: `Create` (validates window, expiry, player count, enough invitees), `Accept` (returns `true` when it took the last spot), `Decline` (also takes back a yes while open), `MarkFilled`, `Cancel` (requester only).
+- `PlayRequestInvitee`: `MemberId`, `Status` (`Invited`, `Accepted`, `Declined`), `RespondedAt`. Unique per request and member.
+- `PlayerGroup` + `PlayerGroupMember` (`TenantDomainEntity`): the **personal** reusable list of one member in one club (max 20 groups, 30 players, the owner is never in it). A request starts from a group and the requester changes the invitees for that request without touching the group.
+
+### Rules (`Business/PlayRequests`)
+
+- **Booking**: `AcceptPlayRequest` takes `LockCourts` first (two people who accept the last two spots at once must see each other), then loads the request, checks the acceptor (play mode `AllowedRoles`, `ActiveMembership.IsActive`), `Accept`s, and **when the request is full** builds the context with `BookingContextBuilder.Load` for the requester plus all acceptors and books the first free court through `IBookingDomainService.BookCourt` (`PlayRequestBooking.BookFirstFreeCourt`). Only `CourtOccupied`/`CourtBlocked`/`CourtInactive` make it try the next court, every other broken rule (quota, enrollment, opening hours, ...) is returned as it is. Everything runs in one transaction: if the booking fails nothing is saved and the request stays open as it was. Doubles are booked when the last spot is filled, never earlier (`FixedPlayerCount` is enforced by the booking rules).
+- `CreatePlayRequest` does a dry check that the **requester** could book the slot on one of the courts (same call, the requester repeated up to the player count, `validateAsIfFull`), so no request is made that is doomed from the start. Requester and invitees must be **active members** (`ActiveMembership.ActiveMemberIds`, the bulk version of the one rule), invitees are never guests or other clubs' members.
+- **Visibility - the privacy rule**: only the requester and the invitees ever see a request (`GetPlayRequests`, policy `TakesPartInPlayRequest`). The requester sees all invitees and their answers. An invitee only sees open requests, filled ones they play in, and only the **names of those who accepted** (not who else was asked, not who declined). Cancelled requests disappear for invitees. Admins are no exception. Names only, never email.
+- Notifications (`IPlayRequestPushNotifier`, push only, `NotificationType.PlayRequest`, no email counterpart and no email switch in the FE): request created -> invitees; somebody accepted but spots are missing -> requester; cancelled -> invitees who have not declined. When the court is booked the players get the normal `BookingAdded` push. Open requests are listed in the app, so members without push still see them.
+
+### API (`PlayRequestsController`, `PlayerGroupsController`, `api/Clubs/{clubId}/PlayRequests|PlayerGroups`)
+
+- **Cookie only, never an API key** and not in `ControllersOpenToKeys`. Policy `PlayRequestMember` (any member who is also an active member) for everything, plus the resource policy `TakesPartInPlayRequest` (`PlayRequestAuthorizationModel`, requester or invitee of a request of this club) for `accept`, `decline` and `DELETE {id}`: everybody else gets 403 whether the request exists or not.
+- `GET` (own and asked-for requests), `GET candidates` (active members, names only), `POST` (create), `POST {id}/accept` (`PlayRequestAcceptResult`: `IsFilled`, `BookingId`), `POST {id}/decline`, `DELETE {id}` (cancel). Groups: `GET`, `POST`, `PUT {id}`, `DELETE {id}` - somebody else's group is a 404.
+- `PlayRequestSecurityTests` attack it over HTTP (keys, not active members even when asked, members who were not asked, other clubs, groups of others, what an invitee learns); `ApiSecurityFixture` seeds a request and a group per club.
+
+### Not built yet
+
+Several alternative date-times in one request (only alternative courts), a time range ("any time 18-21") where the system picks the slot, asking for substitutes after a decline, reminders before the start.
+
 ## Member Data & Privacy
 
 - **What a member gets to know about somebody else is name and picture, nothing more.** `GET Members/{memberId}/profile` (`GetMemberProfile`, `MemberProfileResult`, policy `Member`) returns exactly that, for members of the club and for players of a club it shares its players with (both `IsAtpClub`). Never add email, birthday, gender, roles or seasons to it.
@@ -614,7 +643,7 @@ Club admins connect their own scripts and tools to their club with an API key (`
 - `ApiSecurityFixture` starts **the real app** (`Program.cs`, Production environment, `WebApplicationFactory`) against its own copy of the test database and seeds two clubs. `ClubApiKeySecurityTests` attack it over HTTP. They run with `dotnet test`, so also in CI.
 - **The sweeps read every endpoint from the running app** (`ApiEndpoint.All`), nothing is listed by hand: a new endpoint is attacked automatically. They check that a key is only accepted on the routes of its club, that every kind of rejected key (unknown, expired, revoked, other club, creator no longer admin) gets 401 everywhere, that a read-only key gets 403 on every write, and that a key of club A never reads or changes anything of club B.
 - Leaks are detected with a canary: every text of club B contains `ApiSecurityFixture.Canary`, which must never appear in an answer to club A. Changes are detected with `Fingerprint` (a hash over all rows with the club's `ClubId`). A probe middleware reports who a request really ran as (`ApiResponse.RanAsKey`), so the tests don't have to guess from status codes.
-- `ControllersOpenToKeys` in the test is the reviewed list of controllers a key can reach. **A new club controller fails the test until it is added there on purpose**; `ClubApiKeys`, `PaymentAccount`, `CourtSales` and `Clubhouse` must never be in it.
+- `ControllersOpenToKeys` in the test is the reviewed list of controllers a key can reach. **A new club controller fails the test until it is added there on purpose**; `ClubApiKeys`, `PaymentAccount`, `CourtSales`, `Clubhouse`, `PlayRequests` and `PlayerGroups` must never be in it.
 - When you add a tenant entity that a club endpoint returns or changes by id, seed one in `ApiSecurityFixture.AddClub` (with the canary text) and add its route parameter to `ApiEndpoint.Value`, otherwise the sweeps call that endpoint with an id that does not exist.
 - **`IgnoreQueryFilters()` switches the tenant filter off for the whole query, not only for the set it is called on.** A query that uses it for players of other clubs must filter its root entity by the club explicitly (`booking.ClubId == currentClub.Id`). The sweeps found exactly this in `GetBookings`, `GetBooking`, `GetUpcomingBookings`, `GetMemberBookingHistory` and `GetMember`.
 - Handler tests (`TestBase`) can't test tenant isolation: the tenant set with `SetTenantId` does not reach the handler's `AppDbContext`, so the tenant filter is off there. Test isolation between clubs in the security tests.
@@ -782,6 +811,7 @@ Every one of them has a `NotificationType` and, except where noted, an email cou
 - **Club event reminder / registration deadline**: `SendClubEventReminders` (see Notifications).
 - **Club announcement published**: `NotifyClubAnnouncementCreatedHandler` (`EntityCreated<ClubAnnouncement>`), all club members except the author; not for announcements that are already expired. The email is only sent when a manager sends the announcement as email.
 - **Badge awarded**: `NotifyBadgeAwardedHandler` (tier and one-time badges).
+- **Play requests**: `IPlayRequestPushNotifier` (request created, somebody accepted, request cancelled). Push only, no email counterpart.
 
 ### FE
 
@@ -805,6 +835,7 @@ Members are notified about what happens to them by push notification and by emai
 | `ClubEventRegistrationDeadline` | `IClubEventNotifier` | `ClubEventRegistrationDeadline` | club members who have not registered |
 | `ClubAnnouncement` | `NotifyClubAnnouncementCreatedHandler` | `Announcement` (only when a manager sends it) | club members / the chosen audience |
 | `BadgeAwarded` | `NotifyBadgeAwardedHandler` | `BadgeAwarded` | the member |
+| `PlayRequest` | `IPlayRequestPushNotifier` | none (**push only**) | invitees of a request; the requester when somebody accepts (see Play Requests) |
 
 `Welcome`, `SeasonActivated`, the four membership emails, the court purchase emails and the two clubhouse payment emails (they are about money) are not notifications: they are always sent and have no preference.
 

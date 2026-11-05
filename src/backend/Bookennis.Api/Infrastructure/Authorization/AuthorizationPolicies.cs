@@ -52,6 +52,12 @@ public static class AuthorizationPolicies
     /// <summary>Resource: ClubhouseTabAuthorizationModel. The guest of the tab or a parent of their family, signed in (not with an API key): pays it in the app.</summary>
     public const string PaysClubhouseTab = nameof(PaysClubhouseTab);
 
+    // Play requests ("Spielersuche"): signed in with a cookie, never with an API key
+    /// <summary>An active member of the club, signed in (not with an API key): makes play requests, answers them and keeps groups.</summary>
+    public const string PlayRequestMember = nameof(PlayRequestMember);
+    /// <summary>Resource: PlayRequestAuthorizationModel. The requester or a member who was asked, signed in (not with an API key).</summary>
+    public const string TakesPartInPlayRequest = nameof(TakesPartInPlayRequest);
+
     //Booking Policies
     public const string OwnsBooking = nameof(OwnsBooking);
     public const string CanEditBooking = nameof(CanEditBooking);

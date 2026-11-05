@@ -90,4 +90,22 @@
   <data name="ClubEventDeadline_Body" xml:space="preserve">
     <value>Register by {0}</value>
   </data>
+  <data name="PlayRequest_Title" xml:space="preserve">
+    <value>{0} is looking for players</value>
+  </data>
+  <data name="PlayRequest_Body" xml:space="preserve">
+    <value>{0} · {1}. Tap to answer.</value>
+  </data>
+  <data name="PlayRequestAccepted_Title" xml:space="preserve">
+    <value>{0} wants to play</value>
+  </data>
+  <data name="PlayRequestAccepted_Body" xml:space="preserve">
+    <value>{0} · still looking for {1}</value>
+  </data>
+  <data name="PlayRequestCancelled_Title" xml:space="preserve">
+    <value>{0} withdrew the request</value>
+  </data>
+  <data name="PlayRequestCancelled_Body" xml:space="preserve">
+    <value>{0} is off.</value>
+  </data>
 </root>

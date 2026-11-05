@@ -1,0 +1,124 @@
+.request-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+}
+
+.request-card--mine {
+    border-left: 5px solid var(--mud-palette-primary);
+}
+
+.request-card--closed {
+    opacity: 0.65;
+}
+
+.request-card__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.request-card__date {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    min-width: 92px;
+}
+
+.request-card__day {
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+.request-card__time {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.request-card__title {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.request-card__who {
+    font-weight: 700;
+}
+
+.request-card__meta {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+    overflow-wrap: anywhere;
+}
+
+::deep .request-card__state {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.request-card__comment {
+    font-style: italic;
+    color: var(--mud-palette-text-secondary);
+    overflow-wrap: anywhere;
+}
+
+.request-card__progress {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.request-card__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+::deep .request-card__chip--declined {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.request-card__note {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: var(--mud-palette-background-gray);
+}
+
+.request-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.request-card__actions:empty {
+    display: none;
+}
+
+.request-card__actions ::deep .mud-button-root {
+    text-transform: none;
+    font-weight: 700;
+}
+
+@media (max-width: 599px) {
+    .request-card__head {
+        flex-wrap: wrap;
+    }
+
+    .request-card__date {
+        flex-direction: row;
+        gap: 8px;
+        align-items: baseline;
+        min-width: 0;
+    }
+
+    .request-card__actions ::deep .mud-button-root {
+        flex: 1 1 auto;
+    }
+}

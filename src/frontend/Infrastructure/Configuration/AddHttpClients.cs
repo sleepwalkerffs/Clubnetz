@@ -18,6 +18,7 @@ using Bookennis.Client.Services.HttpClients.ClubAnnouncements;
 using Bookennis.Client.Services.HttpClients.ClubEvents;
 using Bookennis.Client.Services.HttpClients.CourtBlockings;
 using Bookennis.Client.Services.HttpClients.Clubhouse;
+using Bookennis.Client.Services.HttpClients.PlayRequests;
 using Bookennis.Client.Services.HttpClients.CourtSales;
 using Bookennis.Client.Services.HttpClients.Memberships;
 using Bookennis.Client.Services.HttpClients.SubscriptionPlans;
@@ -193,6 +194,30 @@ public static class AddHttpClients
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
                     client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/Wrapped/");
+                }
+            )
+           .AddHttpMessageHandler<TenantDelegatingHandler>()
+           .AddHttpMessageHandler<RedirectToLoginOnUnauthorizedHandler>();
+
+        services
+           .AddHttpClient<IPlayRequestsHttpClient, PlayRequestsHttpClient>(
+                (serviceProvider, client) =>
+                {
+                    var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
+                    client.AddDefaultHeaders();
+                    client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/PlayRequests/");
+                }
+            )
+           .AddHttpMessageHandler<TenantDelegatingHandler>()
+           .AddHttpMessageHandler<RedirectToLoginOnUnauthorizedHandler>();
+
+        services
+           .AddHttpClient<IPlayerGroupsHttpClient, PlayerGroupsHttpClient>(
+                (serviceProvider, client) =>
+                {
+                    var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
+                    client.AddDefaultHeaders();
+                    client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/PlayerGroups/");
                 }
             )
            .AddHttpMessageHandler<TenantDelegatingHandler>()

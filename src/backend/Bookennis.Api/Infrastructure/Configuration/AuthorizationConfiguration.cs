@@ -154,6 +154,20 @@ public static class AuthorizationConfiguration
                           .RequireAssertion(context => !context.User.IsClubApiKey())
                           .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.ClubhouseHost, MemberRole.Admin] }))
 
+                // Play request policies: cookie only. Requests are personal (who plays with whom), so they are no business of API keys
+                .AddPolicy(AuthorizationPolicies.PlayRequestMember, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [] }, new ActiveMemberRequirement()))
+                .AddPolicy(AuthorizationPolicies.TakesPartInPlayRequest, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new TakesPartInPlayRequestRequirement()))
+
                 // Club User Policy
                 .AddPolicy(AuthorizationPolicies.Member, policy =>
                      policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)

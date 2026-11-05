@@ -90,4 +90,22 @@
   <data name="ClubEventDeadline_Body" xml:space="preserve">
     <value>Anmeldung bis {0}</value>
   </data>
+  <data name="PlayRequest_Title" xml:space="preserve">
+    <value>{0} sucht Mitspieler</value>
+  </data>
+  <data name="PlayRequest_Body" xml:space="preserve">
+    <value>{0} · {1}. Tippen zum Antworten.</value>
+  </data>
+  <data name="PlayRequestAccepted_Title" xml:space="preserve">
+    <value>{0} möchte spielen</value>
+  </data>
+  <data name="PlayRequestAccepted_Body" xml:space="preserve">
+    <value>{0} · noch {1} gesucht</value>
+  </data>
+  <data name="PlayRequestCancelled_Title" xml:space="preserve">
+    <value>{0} hat die Anfrage zurückgezogen</value>
+  </data>
+  <data name="PlayRequestCancelled_Body" xml:space="preserve">
+    <value>{0} findet nicht statt.</value>
+  </data>
 </root>

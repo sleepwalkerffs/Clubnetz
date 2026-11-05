@@ -73,6 +73,41 @@ public static class ActiveMembership
     }
 
     /// <summary>
+    /// The <see cref="IsActive">active</see> members among <paramref name="memberIds"/> (every club member when <c>null</c>), in one go:
+    /// same rule as <see cref="IsActive"/>, for lists of players.
+    /// </summary>
+    public static async Task<HashSet<int>> ActiveMemberIds(AppDbContext context, int clubId, IReadOnlyCollection<int>? memberIds, CancellationToken cancellationToken)
+    {
+        var query = context.ClubMembers.Where(m => m.ClubId == clubId);
+        if (memberIds is not null)
+            query = query.Where(m => memberIds.Contains(m.Id));
+
+        var members = await query.Select(m => new { m.Id, m.UserRoles }).ToListAsync(cancellationToken);
+        var active = members.Where(m => IsStaff(m.UserRoles)).Select(m => m.Id).ToHashSet();
+
+        var season = await context.GetActiveSeason(clubId, cancellationToken);
+        if (season is null || members.Count == 0)
+            return active;
+
+        var ids = members.Select(m => m.Id).ToList();
+        var enrolled = await context.MemberSeasons
+            .Where(ms => ms.SeasonId == season.Id && ids.Contains(ms.MemberId))
+            .Select(ms => ms.MemberId)
+            .ToListAsync(cancellationToken);
+        active.UnionWith(enrolled);
+
+        // A parent books for an enrolled child
+        var parents = await context.Families
+            .Where(family => family.ClubId == clubId
+                && family.Children.Any(child => context.MemberSeasons.Any(ms => ms.MemberId == child.MemberId && ms.SeasonId == season.Id)))
+            .SelectMany(family => family.Parents.Select(parent => parent.MemberId))
+            .ToListAsync(cancellationToken);
+        active.UnionWith(parents.Where(ids.Contains));
+
+        return active;
+    }
+
+    /// <summary>
     /// The members whose bookings a member who is not active sees in full: themself and the children of the families they are a parent of.
     /// </summary>
     public static async Task<HashSet<int>> OwnAndChildMemberIds(AppDbContext context, int clubId, int userId, CancellationToken cancellationToken)
