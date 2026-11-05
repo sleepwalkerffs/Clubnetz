@@ -2,17 +2,20 @@
 @using Bookennis.Client.Components.Shared.Dialogs
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Components.Family
+@using Bookennis.Client.Localization.Pages.Account
 @using Bookennis.Client.Services.Store.Family
 @using Bookennis.Shared.Controller.Families
 @using Bookennis.Shared.Controller.Shared
+@using Bookennis.Client.Services.HttpClients
+@using Bookennis.Client.Utils
 
 <BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
             Loading="@FamilyStore.IsSaving" Title="@FamilySharedLocale["EditChild"]" AllowFullScreen="false">
     <MudForm @ref="mudForm">
         <div class="family-dialog__form">
-            <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Firstname"]" @bind-Value="firstName" Required="true" MaxLength="100" />
-            <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Lastname"]" @bind-Value="lastName" Required="true" MaxLength="100" />
-            <MudDatePicker Variant="Variant.Outlined" Label="@SharedLocale["Birthday"]" @bind-Date="birthday" DateFormat="dd.MM.yyyy" Required="true"
+            <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Firstname"]" @bind-Value="firstName" Required="true" RequiredError="@AccountLocale["FirstnameValidation"]" MaxLength="100" />
+            <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Lastname"]" @bind-Value="lastName" Required="true" RequiredError="@AccountLocale["LastnameValidation"]" MaxLength="100" />
+            <MudDatePicker Variant="Variant.Outlined" Label="@SharedLocale["Birthday"]" @bind-Date="birthday" DateFormat="dd.MM.yyyy" Required="true" RequiredError="@AccountLocale["BirthdayValidation"]"
                            MaxDate="@DateTime.Today" PickerVariant="PickerVariant.Dialog" />
             <ChoiceChips TItem="Gender" Items="@Genders" @bind-Value="gender" TextFunc="@(value => FamilySharedLocale[$"Gender_{value}"])" Label="@SharedLocale["Gender"]" />
         </div>
@@ -31,6 +34,12 @@
     private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
     [Inject]
     private IStringLocalizer<FamilySharedLocale> FamilySharedLocale { get; set; } = null!;
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<AccountLocale> AccountLocale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
 
     private MudForm mudForm = null!;
     private string firstName = string.Empty;
@@ -52,9 +61,16 @@
         if (!mudForm.IsValid)
             return null;
 
-        await FamilyStore.UpdateOwnedChild(
+        var result = await FamilyStore.UpdateOwnedChild(
             Child.MemberId,
             new UpdateOwnedChildRequest(firstName, lastName, DateOnly.FromDateTime(birthday!.Value), gender));
+
+        // The dialog stays open with the message when the server refuses
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
 
         return DialogResult.Ok(Child);
     }

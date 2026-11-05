@@ -560,7 +560,7 @@ else
                                             <div class="credit-grant">
                                                 <span class="credit-grant__count @(grant.Count < 0 ? "credit-grant__count--negative" : null)">@(grant.Count > 0 ? "+" : null)@grant.Count</span>
                                                 <span class="credit-grant__text">
-                                                    @L[$"Reason_{grant.Reason}"] · @grant.CreatedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture)
+                                                    @L[grant.Count < 0 ? "Reason_TakenBack" : $"Reason_{grant.Reason}"] · @grant.CreatedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture)
                                                     @if (grant.GrantedByName is { } by)
                                                     {
                                                         <text> · @by</text>

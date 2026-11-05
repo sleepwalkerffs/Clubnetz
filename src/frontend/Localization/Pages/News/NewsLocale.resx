@@ -375,4 +375,7 @@
   <data name="PublishedWithoutAttachments" xml:space="preserve">
     <value>The announcement was published, but not all attachments could be saved. No email was sent.</value>
   </data>
+  <data name="EditAnnouncement" xml:space="preserve">
+    <value>Edit announcement</value>
+  </data>
 </root>

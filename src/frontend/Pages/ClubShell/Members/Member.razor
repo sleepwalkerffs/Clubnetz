@@ -80,7 +80,7 @@
                 <div class="member-aside__value">@MemberAdminHelpers.RelativeDate(L, member.LastPlayed)</div>
                 @if (member.LastPlayed is { } lastPlayed)
                 {
-                    <div class="member-aside__text">@lastPlayed.LocalDateTime.ToString("dddd, d. MMMM yyyy", CultureInfo.CurrentCulture)</div>
+                    <div class="member-aside__text">@lastPlayed.LocalDateTime.ToString(DateFormats.Localized("dddd, d. MMMM yyyy"), CultureInfo.CurrentCulture)</div>
                 }
                 <div class="member-aside__actions">
                     <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Person" Class="member-aside__button" OnClick="OpenProfile">
@@ -129,7 +129,7 @@
                         }
                     </SectionCard>
                     <SectionCard Emoji="🎾" Title="@L["BookingsPerWeek"]" Subtitle="@L["BookingsPerWeekHint"]">
-                        <NumberStepper @bind-Value="bookingsPerWeek" Min="0" Max="10" Unit="@L["PerWeek"]" Label="@L["BookingsPerWeek"]" Disabled="@EditingDisabled" />
+                        <NumberStepper @bind-Value="bookingsPerWeek" Min="0" Max="@member.MaxBookingsPerWeek" Unit="@L["PerWeek"]" Label="@L["BookingsPerWeek"]" Disabled="@EditingDisabled" />
                     </SectionCard>
                     <SectionCard Emoji="🪪" Title="@L["PersonalData"]">
                         <dl class="member-facts">
@@ -166,9 +166,13 @@
         }
     </div>
 }
-else if (MembersStore.IsLoading)
+else if (MembersStore.IsLoading || !loaded)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else
+{
+    <NotFoundState Title="@L["MemberNotFound"]" BackHref="@($"/clubs/{ClubId}/members")" BackText="@L["BackToMembers"]" />
 }
 
 @code {
@@ -191,6 +195,8 @@ else if (MembersStore.IsLoading)
     private List<int> selectedSeasonIds = [];
 
     private MembersDetailResult? Detail => MembersStore.MemberDetail;
+    // The member does not exist (or is not of this club) once loading is done and nothing came back
+    private bool loaded;
 
     private bool RolesChanged => Detail is not null && !Detail.Roles.Order().SequenceEqual(selectedRoles.Order());
 
@@ -215,7 +221,9 @@ else if (MembersStore.IsLoading)
             return;
 
         loadedMemberId = MemberId;
+        loaded = false;
         await Task.WhenAll(MembersStore.LoadMember(MemberId), MembersStore.LoadMemberOverview(MemberId), ClubStore.LoadSeasons());
+        loaded = true;
         ResetEdits();
     }
 
@@ -263,8 +271,16 @@ else if (MembersStore.IsLoading)
 
     private async Task CopyEmail(string email)
     {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", email);
-        Snackbar.Add(L["EmailCopied"], Severity.Success);
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("App.copyToClipboard", email);
+            Snackbar.Add(L["EmailCopied"], Severity.Success);
+        }
+        catch (JSException)
+        {
+            // A refused clipboard must not stop the app
+            Snackbar.Add(L["CopyFailed"], Severity.Warning);
+        }
     }
 
     private void BackToList()

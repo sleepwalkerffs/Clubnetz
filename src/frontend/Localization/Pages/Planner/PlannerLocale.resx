@@ -201,4 +201,19 @@
   <data name="BookingChangedMeanwhile" xml:space="preserve">
     <value>The booking was changed in the meantime. The planner shows the current state.</value>
   </data>
+  <data name="SlotsTitleOne" xml:space="preserve">
+    <value>1 booking</value>
+  </data>
+  <data name="BookingsToRemoveTitleOne" xml:space="preserve">
+    <value>1 booking will be replaced</value>
+  </data>
+  <data name="CreateBookingsOne" xml:space="preserve">
+    <value>Create 1 booking</value>
+  </data>
+  <data name="BookingsCreatedOne" xml:space="preserve">
+    <value>1 booking created</value>
+  </data>
+  <data name="BookingMovedReplacedOne" xml:space="preserve">
+    <value>Booking changed, 1 booking replaced</value>
+  </data>
 </root>

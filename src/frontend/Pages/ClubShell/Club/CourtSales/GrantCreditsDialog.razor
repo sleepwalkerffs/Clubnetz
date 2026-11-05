@@ -130,7 +130,7 @@
             return null;
         }
 
-        Snackbar.Add(string.Format(L["Credits_Saved"], $"{result.Dto.FirstName} {result.Dto.LastName}", result.Dto.Balance), Severity.Success);
+        Snackbar.Add(string.Format(L[result.Dto.Balance == 1 ? "Credits_SavedOne" : "Credits_Saved"], $"{result.Dto.FirstName} {result.Dto.LastName}", result.Dto.Balance), Severity.Success);
         return DialogResult.Ok(true);
     }
 

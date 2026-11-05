@@ -74,6 +74,9 @@ else
 
         var response = await confirmation;
         success = response.Success;
+        // A failed attempt (e.g. no connection) may be tried again from the same link
+        if (!success)
+            confirmations.Remove(Token);
         processing = false;
     }
 }

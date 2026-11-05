@@ -192,8 +192,15 @@ else
         if (newKey is null)
             return;
 
-        await JsRuntime.InvokeVoidAsync("App.copyToClipboard", newKey.Token);
-        Snackbar.Add(L["Copied"], Severity.Success);
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("App.copyToClipboard", newKey.Token);
+            Snackbar.Add(L["Copied"], Severity.Success);
+        }
+        catch (JSException)
+        {
+            Snackbar.Add(L["CopyFailed"], Severity.Warning);
+        }
     }
 
     private async Task Revoke(ClubApiKeyDto apiKey)

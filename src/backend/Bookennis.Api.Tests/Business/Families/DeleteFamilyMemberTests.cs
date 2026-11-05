@@ -9,7 +9,7 @@ namespace Bookennis.Api.Tests.Business.Families;
 public class DeleteFamilyMemberTests(TestFixture fixture) : TestBase(fixture)
 {
     [Fact]
-    public async Task DeleteFamilyMember_RemovesChildFromFamily()
+    public async Task DeleteFamilyMember_LastChildOfOneParent_DissolvesTheFamily()
     {
         var (familyId, childMemberId) = await QueryAsync(async ctx =>
         {
@@ -25,9 +25,23 @@ public class DeleteFamilyMemberTests(TestFixture fixture) : TestBase(fixture)
 
         await SendAsync(new DeleteFamilyMember(familyId, childMemberId));
 
-        var family = await QueryAsync(ctx => ctx.Families
-            .Include(f => f.Children)
-            .SingleAsync(f => f.Id == familyId));
-        family.Children.Should().BeEmpty();
+        (await QueryAsync(ctx => ctx.Families.AnyAsync(f => f.Id == familyId))).Should().BeFalse();
+        (await QueryAsync(ctx => ctx.FamilyMembers.AnyAsync(f => f.FamilyId == familyId))).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteFamilyMember_OneOfTwoParents_DissolvesTheFamily()
+    {
+        var familyId = await QueryAsync(async ctx =>
+        {
+            var family = new Domain.Families.Family(ctx.TestData().Club.Id, [ctx.TestData().Member1.Id, ctx.TestData().Member2.Id], []);
+            ctx.Add(family);
+            await ctx.SaveChangesAsync();
+            return family.Id;
+        });
+
+        await SendAsync(new DeleteFamilyMember(familyId, TestDataSeed.Member2Id));
+
+        (await QueryAsync(ctx => ctx.Families.AnyAsync(f => f.Id == familyId))).Should().BeFalse();
     }
 }

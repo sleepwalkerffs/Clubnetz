@@ -40,9 +40,15 @@ public static class PlannerHelpers
 
     public static bool HasElevatedRole(IEnumerable<MemberRole> roles) => roles.Any(ElevatedRoles.Contains);
 
-    /// <summary>Play modes the user may book: the allowed roles of the mode, admins (and support mode) all of them.</summary>
+    /// <summary>
+    /// Play modes the user may book: the allowed roles of the mode, admins (and support mode) all of them - except the old modes
+    /// only for guests, which nobody books any more since the guest system was removed.
+    /// </summary>
     public static bool MayUsePlayMode(PlayModeDto playMode, MemberRole[] roles, bool isSupportMode)
-        => isSupportMode || roles.Contains(MemberRole.Admin) || playMode.AllowedRoles.Any(roles.Contains);
+        => !IsGuestOnly(playMode) && (isSupportMode || roles.Contains(MemberRole.Admin) || playMode.AllowedRoles.Any(roles.Contains));
+
+    private static bool IsGuestOnly(PlayModeDto playMode)
+        => playMode.AllowedRoles.Count > 0 && playMode.AllowedRoles.All(r => r == MemberRole.Guest);
 
     public static DateTimeOffset FromUnixMilliseconds(long milliseconds) => DateTimeOffset.FromUnixTimeMilliseconds(milliseconds).ToLocalTime();
 

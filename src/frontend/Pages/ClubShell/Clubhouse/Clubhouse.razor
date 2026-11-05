@@ -84,6 +84,7 @@ else
     private const int MaxSearchResults = 24;
 
     private View view = View.Tabs;
+    private string? appliedViewName;
     private string search = "";
     private int? openingMemberId;
 
@@ -99,11 +100,22 @@ else
         if (!CanManage)
             return;
 
+        appliedViewName = ViewName;
         if (Enum.TryParse<View>(ViewName, ignoreCase: true, out var requested))
             view = requested;
 
         // The guests are only needed for the search; they are loaded once and filtered on the device
         await Task.WhenAll(Store.LoadBoard(), Store.Guests is null ? Store.LoadGuests() : Task.CompletedTask);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // The page stays when only the query changes (the nav link "Tabs & menu" from ?view=history): follow it
+        if (!CanManage || ViewName == appliedViewName)
+            return;
+
+        appliedViewName = ViewName;
+        await OnViewChanged(Enum.TryParse<View>(ViewName, ignoreCase: true, out var requested) ? requested : View.Tabs);
     }
 
     private void OnChanged() => InvokeAsync(StateHasChanged);

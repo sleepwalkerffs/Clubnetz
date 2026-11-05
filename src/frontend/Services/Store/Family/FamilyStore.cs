@@ -1,3 +1,4 @@
+using Bookennis.Client.Services.HttpClients;
 using Bookennis.Client.Services.HttpClients.Family;
 using Bookennis.Client.Services.Store.Base;
 using Bookennis.Shared.Controller.Families;
@@ -44,7 +45,7 @@ public class FamilyStore(IFamiliesHttpClient familiesHttpClient) : SemaphoreStor
             }
         }, nameof(LoadAvailableFamilyMembers));
 
-    public Task CreateFamily(CreateFamilyRequest request)
+    public Task<HttpResult> CreateFamily(CreateFamilyRequest request)
         => RunInSavingContextAsync(async cancellationToken =>
         {
             var createResponse = await familiesHttpClient.CreateFamily(request, cancellationToken);
@@ -54,13 +55,15 @@ public class FamilyStore(IFamiliesHttpClient familiesHttpClient) : SemaphoreStor
                 await LoadFamily(familyId);
                 OnFamilyChanged?.Invoke();
             }
+
+            return createResponse;
         }, nameof(CreateFamily));
 
-    public Task AddParent(int memberId)
+    public Task<HttpResult> AddParent(int memberId)
         => RunInSavingContextAsync(async cancellationToken =>
         {
             if (Family is null)
-                return;
+                return HttpResult.OkResult;
 
             var createResponse = await familiesHttpClient.AddParent(Family.FamilyId, new AddParentRequest(memberId), cancellationToken);
             if (createResponse is { Success: true })
@@ -68,13 +71,15 @@ public class FamilyStore(IFamiliesHttpClient familiesHttpClient) : SemaphoreStor
                 await LoadFamily(Family.FamilyId);
                 OnFamilyChanged?.Invoke();
             }
+
+            return createResponse;
         }, nameof(AddParent));
 
-    public Task AddNewChild(AddNewChildRequest request)
+    public Task<HttpResult> AddNewChild(AddNewChildRequest request)
         => RunInSavingContextAsync(async cancellationToken =>
         {
             if (Family is null)
-                return;
+                return HttpResult.OkResult;
 
             var createResponse = await familiesHttpClient.AddNewChild(Family.FamilyId, request, cancellationToken);
             if (createResponse is { Success: true })
@@ -82,13 +87,15 @@ public class FamilyStore(IFamiliesHttpClient familiesHttpClient) : SemaphoreStor
                 await LoadFamily(Family.FamilyId);
                 OnFamilyChanged?.Invoke();
             }
+
+            return createResponse;
         }, nameof(AddNewChild));
 
-    public Task AddChildren(List<int> memberId)
+    public Task<HttpResult> AddChildren(List<int> memberId)
         => RunInSavingContextAsync(async cancellationToken =>
         {
             if (Family is null)
-                return;
+                return HttpResult.OkResult;
 
             var createResponse = await familiesHttpClient.AddChild(Family.FamilyId, new AddChildRequest(memberId), cancellationToken);
             if (createResponse is { Success: true })
@@ -96,13 +103,15 @@ public class FamilyStore(IFamiliesHttpClient familiesHttpClient) : SemaphoreStor
                 await LoadFamily(Family.FamilyId);
                 OnFamilyChanged?.Invoke();
             }
+
+            return createResponse;
         }, nameof(AddChildren));
 
-    public Task UpdateOwnedChild(int memberId, UpdateOwnedChildRequest request)
+    public Task<HttpResult> UpdateOwnedChild(int memberId, UpdateOwnedChildRequest request)
         => RunInSavingContextAsync(async cancellationToken =>
         {
             if (Family is null)
-                return;
+                return HttpResult.OkResult;
 
             var response = await familiesHttpClient.UpdateOwnedChild(Family.FamilyId, memberId, request, cancellationToken);
             if (response is { Success: true })
@@ -110,19 +119,28 @@ public class FamilyStore(IFamiliesHttpClient familiesHttpClient) : SemaphoreStor
                 await LoadFamily(Family.FamilyId);
                 OnFamilyChanged?.Invoke();
             }
+
+            return response;
         }, nameof(UpdateOwnedChild));
 
-    public Task RemoveFamilyMember(int memberId)
+    public Task<HttpResult> RemoveFamilyMember(int memberId)
         => RunInSavingContextAsync(async cancellationToken =>
         {
             if (Family is null)
-                return;
+                return HttpResult.OkResult;
 
+            // The server dissolves a family that would be left with one person
+            var dissolves = Family.Parents.Count + Family.Children.Count <= 2;
             var createResponse = await familiesHttpClient.DeleteFamilyMember(Family.FamilyId, memberId, cancellationToken);
             if (createResponse is { Success: true })
             {
-                await LoadFamily(Family.FamilyId);
+                if (dissolves)
+                    ResetFamily();
+                else
+                    await LoadFamily(Family.FamilyId);
                 OnFamilyChanged?.Invoke();
             }
+
+            return createResponse;
         }, nameof(RemoveFamilyMember));
 }

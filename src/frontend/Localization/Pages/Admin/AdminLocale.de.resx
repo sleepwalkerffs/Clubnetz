@@ -642,4 +642,16 @@
   <data name="ClubDetailLoadFailed" xml:space="preserve">
     <value>Der Verein konnte nicht geladen werden.</value>
   </data>
+  <data name="BookingsCountOne" xml:space="preserve">
+    <value>1 Buchung / 30 Tage</value>
+  </data>
+  <data name="MembersCountOne" xml:space="preserve">
+    <value>1 Mitglied</value>
+  </data>
+  <data name="GuestsCountOne" xml:space="preserve">
+    <value>1 Gast</value>
+  </data>
+  <data name="BookingsChipOne" xml:space="preserve">
+    <value>1 Buchung in 30 Tagen</value>
+  </data>
 </root>

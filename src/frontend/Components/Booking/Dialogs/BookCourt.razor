@@ -89,7 +89,7 @@
                         <MudNumericField @bind-Value="RecurrenceIntervalWeeks" Label="@Locale["RepeatEveryWeeks"]" Variant="Variant.Outlined" Min="1" Max="52" />
                         <MudDatePicker @bind-Date="RecurringEndDate" Variant="Variant.Outlined" Label="@Locale["RecurringEndDate"]" Clearable="true" />
                     </div>
-                    <div class="book-court__hint">@string.Format(Locale["RecurringHint"], Date.ToString("dddd", CultureInfo.CurrentCulture), RecurrenceIntervalWeeks)</div>
+                    <div class="book-court__hint">@string.Format(Locale[RecurrenceIntervalWeeks == 1 ? "RecurringHintWeekly" : "RecurringHint"], Date.ToString("dddd", CultureInfo.CurrentCulture), RecurrenceIntervalWeeks)</div>
                 }
             </div>
         }

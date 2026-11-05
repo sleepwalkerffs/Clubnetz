@@ -750,4 +750,13 @@
   <data name="ClubhouseSumUpPaymentsRunning" xml:space="preserve">
     <value>A member is paying a tab with SumUp right now. Please disconnect after the payment is done.</value>
   </data>
+  <data name="InvalidInput" xml:space="preserve">
+    <value>Some of the entered values are not valid. Please check them.</value>
+  </data>
+  <data name="Error_NotFound" xml:space="preserve">
+    <value>This entry does not exist (anymore). Please reload the page.</value>
+  </data>
+  <data name="Error_Unexpected" xml:space="preserve">
+    <value>Something went wrong. Please try again.</value>
+  </data>
 </root>

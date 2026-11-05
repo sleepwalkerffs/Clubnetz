@@ -375,4 +375,7 @@
   <data name="PublishedWithoutAttachments" xml:space="preserve">
     <value>Die Mitteilung wurde veröffentlicht, es konnten aber nicht alle Anhänge gespeichert werden. Es wurde keine E-Mail verschickt.</value>
   </data>
+  <data name="EditAnnouncement" xml:space="preserve">
+    <value>Ankündigung bearbeiten</value>
+  </data>
 </root>

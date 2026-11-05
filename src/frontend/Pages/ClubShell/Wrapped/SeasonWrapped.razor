@@ -16,7 +16,7 @@
 <PageTitle>@L["PageTitle"]</PageTitle>
 
 <div class="wrapped" tabindex="0" @ref="root" @onkeydown="OnKeyDown" role="dialog" aria-modal="true" aria-label="@L["PageTitle"]">
-    @if (WrappedStore.Wrapped is { SeasonId: var loadedId } wrapped && loadedId == SeasonId)
+    @if (WrappedStore.Wrapped is { SeasonId: var loadedId } wrapped && loadedId == SeasonId && slides.Count > 0)
     {
         var slide = slides[Math.Clamp(index, 0, slides.Count - 1)];
         var isLast = index >= slides.Count - 1;
@@ -128,6 +128,8 @@
         WrappedStore.OnWrappedChanged -= OnWrappedChanged;
         WrappedStore.OnWrappedChanged += OnWrappedChanged;
         index = 0;
+        // The store may still hold this season from an earlier visit: render it right away instead of waiting for the reload
+        slides = WrappedStore.Wrapped is { } cached && cached.SeasonId == SeasonId ? BuildSlides(cached) : [];
         await WrappedStore.LoadWrapped(SeasonId);
     }
 
@@ -220,7 +222,7 @@
                               {
                                   <div class="w-fact w-in" style="--d: 6">
                                       <span class="w-fact__emoji">🚀</span>
-                                      <span>@((MarkupString)string.Format(L["FirstMatch"], Strong(first.ToString("d. MMMM", CultureInfo.CurrentCulture))))</span>
+                                      <span>@((MarkupString)string.Format(L["FirstMatch"], Strong(first.ToString(DateFormats.Localized("d. MMMM"), CultureInfo.CurrentCulture))))</span>
                                   </div>
                               }
                           </div>
@@ -303,7 +305,7 @@
                                   <div class="w-record w-in" style="--d: 5">
                                       <span class="w-record__emoji">⚡</span>
                                       <span class="w-record__value">@week.Count</span>
-                                      <span class="w-record__label">@string.Format(L["BestWeekLabel"], week.WeekStart.ToString("d. MMM", CultureInfo.CurrentCulture))</span>
+                                      <span class="w-record__label">@string.Format(L["BestWeekLabel"], week.WeekStart.ToString(DateFormats.Localized("d. MMM"), CultureInfo.CurrentCulture))</span>
                                   </div>
                               }
                           </div>
@@ -347,7 +349,7 @@
                            <div class="w-club__tile w-pop" style="--d: 3"><span class="w-club__value">@Number(w.Club.ActivePlayers)</span><span class="w-club__label">@L["ClubPlayers"]</span></div>
                            @if (w.Club.GuestPlayers > 0)
                            {
-                               <div class="w-club__tile w-pop" style="--d: 4"><span class="w-club__value">@Number(w.Club.GuestPlayers)</span><span class="w-club__label">@L["ClubGuests"]</span></div>
+                               <div class="w-club__tile w-pop" style="--d: 4"><span class="w-club__value">@Number(w.Club.GuestPlayers)</span><span class="w-club__label">@L[w.Club.GuestPlayers == 1 ? "ClubGuestsOne" : "ClubGuests"]</span></div>
                            }
                            @if (w.Club.Events > 0)
                            {
@@ -506,18 +508,21 @@
     private void Release() => paused = false;
 
     // Holding a finger on the story pauses it; letting go after a long press must not also skip the slide
-    private bool WasLongPress => (DateTime.UtcNow - pressedAt).TotalMilliseconds > 350;
+    // A click without a pointer (keyboard, screen reader) is never a long press
+    private bool WasLongPress => pressedAt != default && (DateTime.UtcNow - pressedAt).TotalMilliseconds > 350;
 
     private void TapNext()
     {
         if (!WasLongPress)
             Next();
+        pressedAt = default;
     }
 
     private void TapPrevious()
     {
         if (!WasLongPress)
             Previous();
+        pressedAt = default;
     }
 
     private void OnKeyDown(KeyboardEventArgs e)
@@ -545,9 +550,16 @@
     {
         var url = NavigationManager.ToAbsoluteUri($"/clubs/{ClubId}/wrapped/{SeasonId}").ToString();
         var text = string.Format(L["ShareText"], SeasonLabel(w), w.ClubName, w.Matches, Number(w.HoursOnCourt));
-        var result = await JsRuntime.InvokeAsync<string>("App.shareOrCopy", string.Format(L["SummaryTitle"], SeasonLabel(w)), text, url);
-        if (result == "copied")
-            Snackbar.Add(L["LinkCopied"], Severity.Success);
+        try
+        {
+            var result = await JsRuntime.InvokeAsync<string>("App.shareOrCopy", string.Format(L["SummaryTitle"], SeasonLabel(w)), text, url);
+            if (result == "copied")
+                Snackbar.Add(L["LinkCopied"], Severity.Success);
+        }
+        catch (JSException)
+        {
+            Snackbar.Add(L["ShareFailed"], Severity.Warning);
+        }
     }
 
     public void Dispose() => WrappedStore.OnWrappedChanged -= OnWrappedChanged;

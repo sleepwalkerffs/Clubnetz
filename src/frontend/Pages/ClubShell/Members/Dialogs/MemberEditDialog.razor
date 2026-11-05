@@ -38,7 +38,7 @@
                 <h3 class="member-edit__title">🎾 @L["BookingsPerWeek"]</h3>
                 <p class="member-edit__hint">@L["BookingsPerWeekHint"]</p>
             </div>
-            <NumberStepper @bind-Value="bookingsPerWeek" Min="0" Max="10" Unit="@L["PerWeek"]" Label="@L["BookingsPerWeek"]" />
+            <NumberStepper @bind-Value="bookingsPerWeek" Min="0" Max="@Member.MaxBookingsPerWeek" Unit="@L["PerWeek"]" Label="@L["BookingsPerWeek"]" />
         </section>
     </div>
 </BaseDialog>

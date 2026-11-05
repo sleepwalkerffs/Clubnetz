@@ -48,7 +48,7 @@
 
         <div>
             <div class="book-selection__heading">
-                <span>@string.Format(Locale["SlotsTitle"], Slots.Count)</span>
+                <span>@Locale.Count("SlotsTitle", Slots.Count)</span>
                 @if (checking)
                 {
                     <span class="book-selection__checking"><MudProgressCircular Size="Size.Small" Indeterminate="true" /> @Locale["Checking"]</span>
@@ -103,7 +103,7 @@
         @if (checkResult is { BookingsToRemove.Count: > 0 } result)
         {
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
-                <div class="book-selection__remove-title">@string.Format(Locale["BookingsToRemoveTitle"], result.BookingsToRemove.Count)</div>
+                <div class="book-selection__remove-title">@Locale.Count("BookingsToRemoveTitle", result.BookingsToRemove.Count)</div>
                 <ul class="book-selection__remove">
                     @foreach (var booking in result.BookingsToRemove.OrderBy(b => b.Interval.From))
                     {
@@ -169,7 +169,7 @@
 
     private bool CanSubmit => !submitting && !checking && checkResult is not null && checkError is null && InvalidCount == 0 && Slots.Count > 0;
 
-    private string SubmitCaption => string.Format(Locale["CreateBookings"], Slots.Count);
+    private string SubmitCaption => Locale.Count("CreateBookings", Slots.Count);
 
     protected override void OnInitialized()
     {
@@ -314,7 +314,7 @@
                 return null;
             }
 
-            Snackbar.Add(string.Format(Locale["BookingsCreated"], response.Dto?.CreatedBookingIds.Count ?? Slots.Count), Severity.Success);
+            Snackbar.Add(Locale.Count("BookingsCreated", response.Dto?.CreatedBookingIds.Count ?? Slots.Count), Severity.Success);
             return DialogResult.Ok(response.Dto);
         }
         finally

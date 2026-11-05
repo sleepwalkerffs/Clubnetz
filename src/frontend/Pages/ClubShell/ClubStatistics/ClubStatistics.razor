@@ -6,6 +6,7 @@
 @using Bookennis.Client.Pages.ClubShell.ClubStatistics.Components
 @using Bookennis.Client.Services.Store.Statistics
 @using Bookennis.Shared.Controller.Statistics
+@using Bookennis.Client.Utils
 
 @implements IDisposable
 
@@ -126,7 +127,7 @@ else
                 <span class="hero-chip">👥 @string.Format(L["EnrolledChip"], activity.EnrolledMembers)</span>
                 @if (play.UpcomingBookings > 0)
                 {
-                    <span class="hero-chip">📅 @string.Format(L["UpcomingChip"], play.UpcomingBookings)</span>
+                    <span class="hero-chip">📅 @L.Count("UpcomingChip", play.UpcomingBookings)</span>
                 }
             </Chips>
             <Aside>
@@ -169,7 +170,7 @@ else
             </MudItem>
             <MudItem xs="6" md="4">
                 <StatTile Icon="@Icons.Material.Filled.People" Color="#0EA5E9" Value="@play.AveragePlayersPerBooking.ToString("0.#", CultureInfo.CurrentCulture)" Label="@L["PlayersPerBooking"]"
-                          Hint="@(activity.GuestPlayers > 0 ? string.Format(L["GuestsHint"], activity.GuestPlayers) : null)" />
+                          Hint="@(activity.GuestPlayers > 0 ? L.Count("GuestsHint", activity.GuestPlayers) : null)" />
             </MudItem>
             <MudItem xs="6" md="4">
                 <StatTile Icon="@Icons.Material.Filled.LocalFireDepartment" Color="#DC2626"

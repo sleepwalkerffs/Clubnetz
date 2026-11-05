@@ -19,6 +19,9 @@ public record MemberResult
     public int[] PaidSeasonIds { get; set; } = [];
     public required int BookingsPerWeek { get; set; }
 
+    /// <summary>The most bookings per week the club allows (the server refuses more).</summary>
+    public int MaxBookingsPerWeek { get; set; }
+
     /// <summary>The member's email or, for children without an email, the email of a parent.</summary>
     public string? ContactEmail { get; set; }
     public string? ProfilePictureUrl { get; set; }

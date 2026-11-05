@@ -1,5 +1,6 @@
 @using Bookennis.Client.Services
 @using Bookennis.Shared.Controller.Admin
+@using Bookennis.Client.Utils
 
 <div class="admin-club-card">
     <div class="admin-club-card__header">
@@ -8,9 +9,9 @@
     </div>
 
     <div class="admin-chips">
-        <span class="admin-chip">👥 @string.Format(L["MembersCount"], Club.MemberCount)</span>
+        <span class="admin-chip">👥 @L.Count("MembersCount", Club.MemberCount)</span>
         <span class="admin-chip">🏟️ @string.Format(L["CourtsCount"], Club.CourtCount)</span>
-        <span class="admin-chip admin-chip--info">📅 @string.Format(L["BookingsCount"], Club.BookingsLast30Days)</span>
+        <span class="admin-chip admin-chip--info">📅 @L.Count("BookingsCount", Club.BookingsLast30Days)</span>
         @if (!Club.HasActiveSeason)
         {
             <span class="admin-chip admin-chip--warn">⛔ @L["NoActiveSeason"]</span>

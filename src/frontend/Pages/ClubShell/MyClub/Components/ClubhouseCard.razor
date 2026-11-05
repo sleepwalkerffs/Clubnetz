@@ -141,6 +141,7 @@
         StateHasChanged();
 
         ClubhouseTabPaymentStatus? status = null;
+        Services.HttpClients.HttpResult? failed = null;
         try
         {
             foreach (var delay in CheckDelays)
@@ -148,7 +149,10 @@
                 await Task.Delay(delay);
                 var result = await Store.CheckTabPayment(tabId, paymentId);
                 if (!result.Success)
+                {
+                    failed = result;
                     break;
+                }
 
                 status = result.Dto?.Status;
                 if (status != ClubhouseTabPaymentStatus.Pending)
@@ -162,6 +166,9 @@
 
         switch (status)
         {
+            case null when failed is not null:
+                Snackbar.ShowErrorDetails(failed, BackendLocale);
+                break;
             case ClubhouseTabPaymentStatus.Paid:
                 Snackbar.Add(L["Card_PayDone"], Severity.Success);
                 break;

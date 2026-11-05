@@ -534,4 +534,7 @@
   <data name="NotifyMembersHint" xml:space="preserve">
     <value>Die Mitglieder bekommen eine Push-Benachrichtigung und eine E-Mail, wenn die Veranstaltung veröffentlicht wird, und eine Erinnerung vor dem Anmeldeschluss. Schalte das aus, wenn du viele Veranstaltungen auf einmal oder im Nachhinein einträgst.</value>
   </data>
+  <data name="PlacesLeftOne" xml:space="preserve">
+    <value>Noch 1 Platz frei</value>
+  </data>
 </root>

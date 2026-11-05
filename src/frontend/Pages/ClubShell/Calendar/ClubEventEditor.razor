@@ -270,6 +270,11 @@ else
             original = Store.Event;
             draft = ClubEventDraft.From(Store.Event);
         }
+        else
+        {
+            // The event page tells that the event does not exist (any more) instead of an endless spinner here
+            NavigationManager.NavigateTo(BackUrl, replace: true);
+        }
     }
 
     private async Task OnDescriptionViewChanged(string view)

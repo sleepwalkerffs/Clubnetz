@@ -33,7 +33,7 @@
         <MudNavMenu Rounded="true" Color="Color.Primary">
             @if (ClubProfileStore.SelectedClub is null)
             {
-                <MudNavLink Match="NavLinkMatch.All" Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+                <MudNavLink Match="NavLinkMatch.All" Href="/" Icon="@Icons.Material.Filled.Home">@Locale["Home"]</MudNavLink>
             }
             else
             {

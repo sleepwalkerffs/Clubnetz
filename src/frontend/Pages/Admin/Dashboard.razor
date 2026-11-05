@@ -3,6 +3,7 @@
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Pages.Admin.Clubs
 @using Bookennis.Client.Services.Store.Admin
+@using Bookennis.Client.Utils
 
 @implements IDisposable
 
@@ -15,7 +16,7 @@
             {
                 <span class="hero-chip">🎾 @string.Format(L["ClubsChip"], chips.ClubCount)</span>
                 <span class="hero-chip">👤 @string.Format(L["UsersChip"], chips.UserCount)</span>
-                <span class="hero-chip">📅 @string.Format(L["BookingsChip"], chips.BookingsLast30Days)</span>
+                <span class="hero-chip">📅 @L.Count("BookingsChip", chips.BookingsLast30Days)</span>
             }
         </Chips>
     </AdminHero>

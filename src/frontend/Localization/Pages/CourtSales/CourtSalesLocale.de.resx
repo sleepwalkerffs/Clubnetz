@@ -543,4 +543,10 @@
   <data name="Sales_CompensatedWithOne" xml:space="preserve">
     <value>1 Guthaben vergeben</value>
   </data>
+  <data name="Credits_SavedOne" xml:space="preserve">
+    <value>{0} hat jetzt 1 Guthaben</value>
+  </data>
+  <data name="Reason_TakenBack" xml:space="preserve">
+    <value>Vom Verein zurückgenommen</value>
+  </data>
 </root>

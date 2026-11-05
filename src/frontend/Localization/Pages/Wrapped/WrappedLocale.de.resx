@@ -336,4 +336,10 @@
   <data name="CourtNumber" xml:space="preserve">
     <value>Platz {0}</value>
   </data>
+  <data name="ShareFailed" xml:space="preserve">
+    <value>Teilen ist in diesem Browser nicht möglich.</value>
+  </data>
+  <data name="ClubGuestsOne" xml:space="preserve">
+    <value>Gast hat gespielt</value>
+  </data>
 </root>

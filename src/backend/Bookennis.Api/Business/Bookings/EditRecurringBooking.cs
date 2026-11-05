@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Bookennis.Api.Business.CourtBlockings;
+using Bookennis.Api.Business.CourtSales;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.Exceptions;
@@ -82,21 +83,47 @@ public record EditRecurringBooking(
             if (booking.RecurringBookingSeriesId is null)
                 throw new PreconditionException(ErrorCode.BookingNotPartOfSeries, "Booking is not part of a recurring series");
 
+            var hasElevatedRole = await BookingEditRules.EnsureMayEdit(context, booking, request.UserId, cancellationToken);
+
             var series = await context.RecurringBookingSeries
                 .Include(s => s.SeriesPlayers)
                 .SingleAsync(s => s.Id == booking.RecurringBookingSeriesId, cancellationToken);
 
             var tz = TimeZoneInfo.FindSystemTimeZoneById(request.TimeZoneInfoId);
-            var editFromDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(booking.Interval.From.UtcDateTime, tz));
+            // The date the member picked: moving the occurrence to another day moves the series to that weekday
+            var editFromDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(request.Interval.From.UtcDateTime, tz));
 
-            // Delete all future bookings in the series from this date onward (excluding individually edited ones)
-            var futureBookings = await context.Bookings
+            await context.LockCourts(series.ClubId, cancellationToken);
+
+            // The later occurrences go (individually edited ones stay) and are created again below. They are removed before the
+            // edited occurrence is checked, so moving it onto the slot of a later occurrence is not a conflict with the own series.
+            // A failed check rolls this back with the transaction of the command.
+            var laterBookings = await context.Bookings
                 .Where(b => b.RecurringBookingSeriesId == series.Id
+                    && b.Id != booking.Id
                     && b.Interval.From >= booking.Interval.From
                     && !b.IsExcludedFromSeries)
                 .ToListAsync(cancellationToken);
 
-            context.Bookings.RemoveRange(futureBookings);
+            context.Bookings.RemoveRange(laterBookings);
+            await context.SaveChangesAsync(cancellationToken);
+
+            // The edited occurrence keeps its id (the detail page stays on it) and goes through exactly the rules of a single edit:
+            // who may book for the players, opening hours, inactive or blocked courts, conflicts, enrollment
+            var builder = await BookingContextBuilder.Load(
+                context,
+                request.PlayModeId,
+                [request.CourtId],
+                request.Players,
+                request.UserId,
+                [request.Interval],
+                cancellationToken,
+                editedBookingId: booking.Id);
+
+            var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, request.ClientTimeZoneOffset, [], cancellationToken)
+                with { SkipPastBookingValidation = hasElevatedRole };
+
+            bookingService.EditBooking(bookingContext, booking, request.Interval, request.TimeZoneInfoId, request.Comment);
 
             // Update series template
             var newStartTime = TimeOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(request.Interval.From.UtcDateTime, tz));
@@ -128,8 +155,8 @@ public record EditRecurringBooking(
             var seriesEndDate = series.EndDate ?? activeSeason?.Period.To ?? editFromDate.AddMonths(6);
             var duration = request.Interval.To - request.Interval.From;
 
-            // Regenerate future bookings
-            var current = editFromDate;
+            // Regenerate the later occurrences, the edited one is the first
+            var current = editFromDate.AddDays(7 * newIntervalWeeks);
             var playMode = await context.PlayModes.FindRequiredAsync(request.PlayModeId, cancellationToken);
 
             while (current <= seriesEndDate)

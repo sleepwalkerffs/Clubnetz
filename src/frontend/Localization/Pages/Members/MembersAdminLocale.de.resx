@@ -385,4 +385,10 @@
   <data name="RemovePaidSeasonConfirm" xml:space="preserve">
     <value>Herausnehmen</value>
   </data>
+  <data name="CopyFailed" xml:space="preserve">
+    <value>Kopieren ist in diesem Browser nicht möglich.</value>
+  </data>
+  <data name="MemberNotFound" xml:space="preserve">
+    <value>Dieses Mitglied gibt es nicht (mehr).</value>
+  </data>
 </root>

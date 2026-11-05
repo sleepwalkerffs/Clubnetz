@@ -33,7 +33,7 @@
                            Unit="@Locale[headCount == 1 ? "PersonUnit" : "PeopleUnit"]" />
             @if (Event.MaxParticipants is not null)
             {
-                <div class="registration-field__hint mt-1">@string.Format(Locale["PlacesLeft"], MaxHeadCount - headCount)</div>
+                <div class="registration-field__hint mt-1">@Locale.Count("PlacesLeft", MaxHeadCount - headCount)</div>
             }
         </div>
 

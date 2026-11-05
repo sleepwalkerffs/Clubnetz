@@ -65,6 +65,18 @@
 
     private async void AuthStateChanged(Task<AuthenticationState> authState)
     {
+        try
+        {
+            await HandleAuthStateChanged(authState);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected: a newer load of the profile or club superseded this one. An exception must never leave an async void handler, it stops the app
+        }
+    }
+
+    private async Task HandleAuthStateChanged(Task<AuthenticationState> authState)
+    {
         var state = await authState;
         if (state.User.Identity?.IsAuthenticated ?? false)
         {

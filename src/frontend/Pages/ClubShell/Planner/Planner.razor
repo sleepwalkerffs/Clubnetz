@@ -476,7 +476,7 @@
                 return false;
             }
 
-            Snackbar.Add(conflicts.Count > 0 ? string.Format(Locale["BookingMovedReplaced"], conflicts.Count) : Locale["BookingMoved"], Severity.Success);
+            Snackbar.Add(conflicts.Count > 0 ? Locale.Count("BookingMovedReplaced", conflicts.Count) : Locale["BookingMoved"], Severity.Success);
             await LoadBookings();
             return true;
         }
