@@ -732,6 +732,7 @@ Add-ons (e.g. a locker fee), booking rules per plan (a "light" membership is a p
 - Self-service in the profile (`AccountOwner` policy): `GET api/Profile/export` (`ExportPersonalData`, JSON download of all personal data - extend `PersonalDataExport` when adding new personal data), `POST api/Profile/LeaveClub` (`LeaveClub`, removes the `ClubMember` only, never a `GuestMember`) and `POST api/Profile/DeleteAccount` (`DeleteOwnAccount`, requires the password, signs out).
 - Removing members/users always goes through `MemberRemoval` (`Business/Members`) and `UserDeletion` (`Business/Users`, also used by the admin `DeleteAdminUser`): `FamilyMember.MemberId` has no FK, so family links are removed explicitly and families without a parent are deleted; upcoming bookings/recurring series without remaining players are deleted; children (`BelongsToUserId`) are handed over to another parent of their family or deleted. The last admin of a club can't leave it or delete the account (`LastClubAdmin`).
 - A member can only be in one family (unique index on `FamilyMembers.MemberId`).
+- Review environments of pull requests run on a pseudonymized copy of production (`scripts/review`, see its README). A new column or table that can hold personal data, free text or a secret must also be handled in `scripts/review/pseudonymize.sql`.
 
 ## Security Headers
 
