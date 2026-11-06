@@ -8,7 +8,7 @@
 
 **Open-source club management and court booking for tennis clubs.**
 
-Members book courts in seconds. The board manages members, seasons, fees, court sales, events and news in one place.<br />
+Members book courts in seconds. The board manages members, seasons, fees, court sales, events, news, the clubhouse and the club's books in one place.<br />
 Free, self-hostable, installable on any phone, in English and German.
 
 *Kostenlose Open-Source-Vereinsverwaltung und Platzbuchung für Tennisvereine.*
@@ -23,6 +23,8 @@ Free, self-hostable, installable on any phone, in English and German.
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-65A30D)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 
+**At a glance:** ~1,600 automated tests against a real PostgreSQL · every text in English and German · 300+ endpoints, with a public API for clubs · one Docker image, one database
+
 [Features](#-features) · [Tech stack](#-tech-stack) · [Getting started](#-getting-started) · [Hosting](#-hosting-it-yourself) · [Project structure](#-project-structure) · [Contributing](#-contributing)
 
 </div>
@@ -31,7 +33,7 @@ Free, self-hostable, installable on any phone, in English and German.
 
 ## 🎾 What is Clubnetz?
 
-Clubnetz is a free and open-source web app for tennis clubs, and for any other sports club with courts to book. It started as a court booking system for a tennis club and grew into a full club management platform: court reservations, membership, court sales to non-members, a club calendar, news, statistics and a bit of friendly competition.
+Clubnetz is a free and open-source web app for tennis clubs, and for any other sports club with courts to book. It started as a court booking system for a tennis club and grew into a full club management platform: court reservations, finding players, membership, court sales to non-members, a club calendar, news, the clubhouse tab, the club's accounting, statistics and a bit of friendly competition.
 
 There are two ways to use it:
 
@@ -52,6 +54,7 @@ One installation serves many clubs. Every club is its own tenant with its own co
 |---|---|
 | 🎾 **Court booking** | Book a court in a few taps, with play modes, opening hours, prime time rules and per-season quotas. |
 | 🔁 **Recurring bookings** | Reserve the same slot every week or every few weeks. Edit or cancel a single date, or this and all following ones. |
+| 🤝 **Finding players** | Looking for a match? Ask a few members, or one of your saved groups, for an exact time and a choice of courts. When the last spot is filled, Clubnetz books the first free court. Nothing is blocked while you wait. |
 | 👨‍👩‍👧 **Families** | Parents book and manage on behalf of their children. |
 | 📅 **Club calendar** | Work efforts, parties, tournaments and meetings, with registration, head counts and the organizer's questions ("2x Schnitzel, please"). Share an event via link or WhatsApp. |
 | 📰 **Club news** | Announcements with attachments, pinned posts and expiry dates. |
@@ -61,6 +64,7 @@ One installation serves many clubs. Every club is its own tenant with its own co
 | ✨ **Season Wrapped** | A story-style review of your season (hours on court, partners, badges, events), released by the club. |
 | 🔔 **Notifications** | Booking added or cancelled, reminders before a match, new events, news and badges. By push, by email, or not at all. |
 | 💳 **Membership** | Choose a plan for yourself or the whole family and pay the fee online. |
+| 🍺 **Clubhouse tab** | See what's on your tab at the clubhouse and pay it in the app with SumUp. |
 | 📱 **Installable app** | Add it to the home screen on iOS, Android and desktop. Light and dark mode included. |
 
 ### For the board
@@ -70,12 +74,17 @@ One installation serves many clubs. Every club is its own tenant with its own co
 | 👥 **Members & seasons** | Members, roles (admin, sports director, treasurer, trainer, …) and season enrollment. |
 | 💶 **Membership fees** | Your own price list per season: adult, youth by birth year, couple, family, student, free plans and more. Members choose their plan and pay online with card or SEPA direct debit (Stripe, straight to the club's account), which enrolls them automatically. The treasurer sees who has paid, records bank transfers and cash, and exports the list to Excel. |
 | 🎟️ **Court sales** | Sell free court time to members who are not enrolled in the season, with prices per court, weekday and time. They pay online (Stripe) or with a booking credit the club gives them. Enrolled members keep booking for free. |
-| 🧭 **Planner** | Sports directors plan tournaments on a timeline of several days: move and resize bookings by dragging and book many slots at once. |
+| 🧭 **Planner** | Sports directors plan tournaments on a timeline of several days: move and resize bookings by dragging and book many slots at once. Staff can book for any member without playing themselves. |
 | 🏟️ **Courts & play modes** | Courts, opening hours, prime time, booking rules and who may book what. |
 | 🚧 **Court blockings** | Block courts for tournaments, maintenance, weather or weekly training. Affected players are informed. |
 | ✉️ **Email templates** | Customize every club email per language with Markdown and variables, with live preview and test send. |
 | 📣 **Announcements by email** | Send news to all members, the active season, the youth or selected roles. |
 | 📈 **Club statistics** | Court utilization and activity over the season. |
+| 📒 **Accounting** | The club's books: fiscal years, income and expenses split by category, tax sphere and cost center, transfers between accounts, receipts photographed on the phone, reports, an Excel export and a printable annual report. An auditor role checks and signs off each closed year. |
+| 🏦 **Automatic entries & bank import** | Membership fees, court sales, clubhouse days and Stripe fees and payouts are booked automatically or suggested for review. Import bank statements (camt.053, MT940, CSV, including the ELBA and Volksbank exports) and match each line with one click or with your own rules. |
+| 🧾 **Invoices** | Invoices to members, sponsors or other clubs as a PDF with an EPC payment QR code, sent by email, with reminders. Paying an invoice books it, with the PDF as its receipt. |
+| 🍻 **Clubhouse** | A digital version of the paper list for the clubhouse host (Wirt). Open tabs, today's players and regulars are one tap away, a round is booked in seconds, and tabs are paid in cash, by card, or by members in the app with SumUp. The money goes to the host, Clubnetz only keeps the list. |
+| 🔑 **API keys** | Connect your own scripts and tools to your club, read only or read and write, with an [OpenAPI reference](https://clubnetz.app/docs/api/). Payments, prices and the books are never reachable with a key. |
 
 ### Built in
 
@@ -94,6 +103,8 @@ One installation serves many clubs. Every club is its own tenant with its own co
 | Background jobs | [Hangfire](https://www.hangfire.io/) |
 | Email | MailKit, Liquid ([Fluid](https://github.com/sebastienros/fluid)) and Markdown ([Markdig](https://github.com/xoofx/markdig)) templates |
 | Push | Web Push (VAPID) |
+| Payments | [Stripe Connect](https://docs.stripe.com/connect) for fees and court sales, [SumUp](https://developer.sumup.com/) Hosted Checkout for clubhouse tabs |
+| PDF | Invoices drawn with [SkiaSharp](https://github.com/mono/SkiaSharp), payment QR codes from [QRCoder](https://github.com/codebude/QRCoder) |
 | Tests | xUnit v3, NSubstitute and FluentAssertions against a real PostgreSQL database |
 
 ```mermaid
@@ -192,6 +203,14 @@ stripe listen --forward-connect-to http://localhost:5080/api/Stripe/Webhook --ev
 
 `Stripe:ApplicationFeePercent` (default `0`) is the share of every payment that goes to the platform account. Before you take payments in production, have the terms for your clubs and the privacy policy checked: the texts in the app name Stripe as the payment provider of the club.
 
+#### Clubhouse payments with SumUp (optional)
+
+Members can pay their clubhouse tab in the app. This is switched off until a SumUp OAuth app is configured; the host's tabs, cash and card payments work without it.
+
+1. Create an OAuth app at SumUp and register `https://<your app>/api/SumUp/Callback` as its redirect URL. SumUp has to approve the `payments` scope for the app.
+2. Put its credentials into `SumUp:ClientId` and `SumUp:ClientSecret` (environment variables `SumUp__ClientId`, `SumUp__ClientSecret`).
+3. The clubhouse host then connects their own SumUp account under *Clubhouse → Online payment*. The money goes straight to the host's account.
+
 ## 🐳 Hosting it yourself
 
 The [Dockerfile](Dockerfile) builds one image that runs the whole app. It needs a PostgreSQL 16 database (the database has to exist, the tables are created on startup) and an SMTP server.
@@ -217,6 +236,7 @@ Settings are passed as environment variables:
 | `Push__PublicKey`, `Push__PrivateKey`, `Push__Subject` | Optional: VAPID keys for push notifications (see above). Never change them on a running installation. |
 | `Stripe__SecretKey`, `Stripe__WebhookSecret` | Optional: Stripe keys for the online payment of membership fees (see [Payments](#payments-optional)). Without them the online payment is switched off. |
 | `Stripe__ApplicationFeePercent` | Optional: share of every payment that goes to your platform account, in percent. Default `0`. |
+| `SumUp__ClientId`, `SumUp__ClientSecret` | Optional: SumUp OAuth app for paying clubhouse tabs in the app (see [Clubhouse payments](#clubhouse-payments-with-sumup-optional)). |
 | `BccRecipient` | Optional: address that gets a blind copy of every email |
 
 [.github/workflows/deploy.yml](.github/workflows/deploy.yml) shows how the image is built and rolled out with [Coolify](https://coolify.io/) on every push to `stage` and `production`.
