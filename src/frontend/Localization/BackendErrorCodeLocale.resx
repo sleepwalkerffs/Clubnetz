@@ -942,4 +942,7 @@
   <data name="AccountingBankFileOtherAccount" xml:space="preserve">
     <value>The statement is about the account {0}, not this one.</value>
   </data>
+  <data name="AccountingBankFileSeveralAccounts" xml:space="preserve">
+    <value>The file holds statements of several accounts. Give the money account its IBAN under Setup: then only its statements are imported.</value>
+  </data>
 </root>

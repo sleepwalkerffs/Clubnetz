@@ -457,9 +457,9 @@ namespace Bookennis.Api.Data.Migrations
                 column: "ImportId");
 
             migrationBuilder.CreateIndex(
-                name: "UX_BankTransactions_EntryId",
+                name: "UX_BankTransactions_EntryId_MoneyAccountId",
                 table: "BankTransactions",
-                column: "EntryId",
+                columns: new[] { "EntryId", "MoneyAccountId" },
                 unique: true,
                 filter: "\"EntryId\" IS NOT NULL");
 

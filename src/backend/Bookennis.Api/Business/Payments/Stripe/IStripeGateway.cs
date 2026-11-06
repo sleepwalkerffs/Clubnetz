@@ -63,6 +63,9 @@ public record StripeBalanceTransaction(string Id, string Type, long AmountCents,
     public const string TypePayout = "payout";
     public const string TypePayoutFailure = "payout_failure";
     public const string TypeStripeFee = "stripe_fee";
+
+    /// <summary>Disputes (source <c>dp_...</c>): the amount taken back, or given back when the dispute is won.</summary>
+    public const string TypeAdjustment = "adjustment";
 }
 
 public record StripeAccountData(int ClubId, string ClubName, string? Email, string? WebsiteUrl, string Country);

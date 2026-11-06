@@ -730,7 +730,7 @@
     <value>Stripe-Gebühren und Auszahlungen</value>
   </data>
   <data name="SourceHint_MembershipFees" xml:space="preserve">
-    <value>Bezahlte Bestellungen: online, per Überweisung oder bar; Rückerstattungen von Onlinezahlungen</value>
+    <value>Bezahlte Bestellungen: online, per Überweisung oder bar; Rückerstattungen von Onlinezahlungen (am Tag, an dem Clubnetz davon erfährt)</value>
   </data>
   <data name="SourceHint_CourtSales" xml:space="preserve">
     <value>Online bezahlte Platzbuchungen, Rückerstattungen</value>
@@ -739,7 +739,7 @@
     <value>Für Vereine mit eigener Kantine: die bezahlten Deckel jedes Tages, je Zahlungsart</value>
   </data>
   <data name="SourceHint_Stripe" xml:space="preserve">
-    <value>Die Gebühren jedes Tages und jede Auszahlung auf die Bank</value>
+    <value>Die Gebühren jedes Tages, jede Auszahlung auf die Bank und Zahlungseinsprüche (verloren und gewonnen)</value>
   </data>
   <data name="Mode_Off" xml:space="preserve">
     <value>Aus</value>
@@ -929,5 +929,17 @@
   </data>
   <data name="Rules_TextHint" xml:space="preserve">
     <value>Leer = Name und Text der Bankzeile</value>
+  </data>
+  <data name="Proposals_ProblemNoYear" xml:space="preserve">
+    <value>Noch kein Rechnungsjahr für dieses Datum</value>
+  </data>
+  <data name="Proposals_ProblemYearClosed" xml:space="preserve">
+    <value>Das Rechnungsjahr ist abgeschlossen</value>
+  </data>
+  <data name="Proposals_ProblemArchived" xml:space="preserve">
+    <value>Das Konto oder die Kategorie ist archiviert</value>
+  </data>
+  <data name="Proposals_ProblemOther" xml:space="preserve">
+    <value>Konnte nicht von selbst gebucht werden</value>
   </data>
 </root>

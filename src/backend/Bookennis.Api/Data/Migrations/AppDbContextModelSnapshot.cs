@@ -878,9 +878,9 @@ namespace Bookennis.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EntryId")
+                    b.HasIndex("EntryId", "MoneyAccountId")
                         .IsUnique()
-                        .HasDatabaseName("UX_BankTransactions_EntryId")
+                        .HasDatabaseName("UX_BankTransactions_EntryId_MoneyAccountId")
                         .HasFilter("\"EntryId\" IS NOT NULL");
 
                     b.HasIndex("ImportId");

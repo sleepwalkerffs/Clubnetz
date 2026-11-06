@@ -33,7 +33,7 @@ public record ImportBankStatement(int ClubId, int UserId, int MoneyAccountId, st
 
             var saved = await context.BankCsvLayouts.SingleOrDefaultAsync(l => l.ClubId == request.ClubId && l.MoneyAccountId == account.Id, cancellationToken);
             var given = request.Layout is null ? null : BankMapper.ToDomain(request.Layout);
-            var result = BankStatementReader.Read(request.Data, given ?? saved?.Columns, preferSavedLayout: given is not null);
+            var result = BankStatementReader.Read(request.Data, given ?? saved?.Columns, preferSavedLayout: given is not null, accountIban: account.Iban);
 
             if (result.NeedsCsvLayout)
             {
@@ -336,6 +336,8 @@ public record CreateBankRule(int ClubId, SaveBankRuleModel Model) : ICommand<Ban
     {
         public async Task<BankRuleDto> Handle(CreateBankRule request, CancellationToken cancellationToken)
         {
+            // Deleting a category, cost center or account checks for rules under the lock
+            await context.LockAccounting(request.ClubId, cancellationToken);
             await context.GetAccountingSettings(request.ClubId, cancellationToken);
             var rule = new BankRule(request.ClubId, await BankMapper.RuleData(context, request.ClubId, request.Model, cancellationToken));
             context.Add(rule);
@@ -351,6 +353,7 @@ public record UpdateBankRule(int ClubId, int BankRuleId, SaveBankRuleModel Model
     {
         public async Task<BankRuleDto> Handle(UpdateBankRule request, CancellationToken cancellationToken)
         {
+            await context.LockAccounting(request.ClubId, cancellationToken);
             var rule = await context.BankRules.SingleRequiredAsync(r => r.Id == request.BankRuleId && r.ClubId == request.ClubId, cancellationToken);
             rule.Change(await BankMapper.RuleData(context, request.ClubId, request.Model, cancellationToken));
             await context.SaveChangesAsync(cancellationToken);
@@ -400,19 +403,23 @@ internal sealed class BankMatchFinder
         var from = lines.Min(l => l.BookingDate).AddDays(-GetBankTransactions.MatchDays);
         var to = lines.Max(l => l.BookingDate).AddDays(GetBankTransactions.MatchDays);
 
-        var matched = context.BankTransactions.Where(t => t.EntryId != null).Select(t => t.EntryId);
         var entries = await context.AccountingEntries.AsNoTracking().Include(e => e.Lines)
             .Where(e => e.ClubId == clubId && e.Status == Bookennis.Domain.Accounting.AccountingEntryStatus.Active && e.Date >= from && e.Date <= to
-                        && (accounts.Contains(e.MoneyAccountId) || (e.ToMoneyAccountId != null && accounts.Contains(e.ToMoneyAccountId.Value)))
-                        && !matched.Contains(e.Id))
+                        && (accounts.Contains(e.MoneyAccountId) || (e.ToMoneyAccountId != null && accounts.Contains(e.ToMoneyAccountId.Value))))
             .ToListAsync(cancellationToken);
+
+        // Matched already on an account: the entry isn't offered for that account any more (but the other side of a transfer is)
+        var entryIds = entries.Select(e => e.Id).ToList();
+        var matched = (await context.BankTransactions.Where(t => t.EntryId != null && entryIds.Contains(t.EntryId!.Value))
+            .Select(t => new { EntryId = t.EntryId!.Value, t.MoneyAccountId }).ToListAsync(cancellationToken))
+            .Select(t => (t.EntryId, t.MoneyAccountId)).ToHashSet();
         var proposals = await context.AccountingProposals.AsNoTracking()
             .Where(p => p.ClubId == clubId && p.Status == AccountingProposalStatus.Open && p.Date >= from && p.Date <= to
                         && (accounts.Contains(p.MoneyAccountId) || (p.ToMoneyAccountId != null && accounts.Contains(p.ToMoneyAccountId.Value))))
             .ToListAsync(cancellationToken);
 
         return new BankMatchFinder(
-            entries.Select(e => (e, accounts.ToDictionary(a => a, a => e.EffectOn(a, id => kinds[id])))).ToList(),
+            entries.Select(e => (e, accounts.Where(a => !matched.Contains((e.Id, a))).ToDictionary(a => a, a => e.EffectOn(a, id => kinds[id])))).ToList(),
             proposals, kinds, rules);
     }
 
@@ -465,7 +472,8 @@ internal static class BankMapper
 
     public static async Task Match(AppDbContext context, BankTransaction line, AccountingEntry entry, CancellationToken cancellationToken)
     {
-        if (await context.BankTransactions.AnyAsync(t => t.EntryId == entry.Id && t.Id != line.Id, cancellationToken))
+        // A transfer between two bank accounts is matched once on each of them
+        if (await context.BankTransactions.AnyAsync(t => t.EntryId == entry.Id && t.MoneyAccountId == line.MoneyAccountId && t.Id != line.Id, cancellationToken))
             throw new PreconditionException(AccountingErrorCode.AccountingEntryAlreadyMatched, [entry.Number.ToString(System.Globalization.CultureInfo.InvariantCulture)], "The entry is matched with another bank line.");
         var kinds = await context.CategoryKinds(line.ClubId, cancellationToken);
         line.Match(entry, id => kinds[id]);

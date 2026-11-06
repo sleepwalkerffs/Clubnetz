@@ -126,4 +126,7 @@ public enum AccountingErrorCode
 
     /// <summary>The statement is about another bank account. Details: the IBAN of the file.</summary>
     AccountingBankFileOtherAccount = 40,
+
+    /// <summary>The file holds statements of several accounts: give the money account its IBAN, then only its statements are read.</summary>
+    AccountingBankFileSeveralAccounts = 52,
 }

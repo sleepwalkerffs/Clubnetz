@@ -208,41 +208,42 @@ public record DismissAccountingProposal(int ClubId, int ProposalId) : ICommand
     }
 }
 
-/// <summary>Every hour: the suggestions of every club with a source of automatic entries that is on, one club after the other.</summary>
-public record SyncAllAccountingProposals : ICommand
+/// <summary>The clubs with a source of automatic entries that is on.</summary>
+public record GetClubsWithAccountingAutomation : IQuery<List<int>>
 {
-    public class Handler(AppDbContext context, IMediator mediator, ILogger<SyncAllAccountingProposals> logger) : IRequestHandler<SyncAllAccountingProposals>
+    public class Handler(AppDbContext context) : IRequestHandler<GetClubsWithAccountingAutomation, List<int>>
     {
-        public async Task<Unit> Handle(SyncAllAccountingProposals request, CancellationToken cancellationToken)
-        {
-            var clubIds = await context.AccountingSourceSettings.AsNoTracking()
+        public Task<List<int>> Handle(GetClubsWithAccountingAutomation request, CancellationToken cancellationToken)
+            => context.AccountingSourceSettings.AsNoTracking()
                 .Where(s => s.Mode != AccountingAutomationMode.Off)
                 .Select(s => s.ClubId).Distinct()
                 .ToListAsync(cancellationToken);
-
-            foreach (var clubId in clubIds)
-            {
-                try
-                {
-                    await mediator.Send(new SyncAccountingProposals(clubId, DateTimeOffset.UtcNow), cancellationToken);
-                }
-                catch (Exception e) when (e is not OperationCanceledException)
-                {
-                    logger.LogError(e, "The automatic entries of club {ClubId} failed", clubId);
-                }
-            }
-
-            return default;
-        }
     }
 }
 
-public class AccountingAutomationJob(IMediator mediator)
+/// <summary>
+/// Every hour: the suggestions of every club with a source that is on. One request (and so one transaction, one lock) per club: a club that
+/// fails doesn't take the others with it, and no club waits for the Stripe calls of the others.
+/// </summary>
+public class AccountingAutomationJob(IMediator mediator, ILogger<AccountingAutomationJob> logger)
 {
     public const string JobId = "accounting-automation";
     public const string Schedule = "41 * * * *";
 
-    public Task Run() => mediator.Send(new SyncAllAccountingProposals());
+    public async Task Run()
+    {
+        foreach (var clubId in await mediator.Send(new GetClubsWithAccountingAutomation()))
+        {
+            try
+            {
+                await mediator.Send(new SyncAccountingProposals(clubId, DateTimeOffset.UtcNow));
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                logger.LogError(e, "The automatic entries of club {ClubId} failed", clubId);
+            }
+        }
+    }
 }
 
 internal static class AccountingProposalBooking
@@ -379,10 +380,11 @@ internal sealed class AccountingProposalCollector(AppDbContext context, IStripeG
             candidates.Add(new Candidate(AccountingProposal.Key("membership-order", order.Id),
                 new AccountingProposal.ProposalData(LocalDate(order.PaidAt!.Value), text, AccountingEntryKind.Booking, account.Value, null, source.CategoryId, order.AmountCents, order.PayerMemberId, payer)));
 
-            // Online payments given back or taken back by the bank of the member (dispute): the money left the Stripe balance
-            if (order.PaymentMethod == MembershipPaymentMethod.Online && order.Status is MembershipOrderStatus.Refunded or MembershipOrderStatus.Disputed)
+            // Online payments given back: the money left the Stripe balance (on the day Clubnetz learns of it). Disputes come from
+            // Stripe itself (source Stripe): the order stays "disputed" also when the club wins the dispute and gets the money back.
+            if (order.PaymentMethod == MembershipPaymentMethod.Online && order.Status == MembershipOrderStatus.Refunded)
             {
-                var refund = order.Status == MembershipOrderStatus.Refunded ? (German ? "Rückerstattung " : "Refund ") : (German ? "Zahlungseinspruch " : "Dispute ");
+                var refund = German ? "Rückerstattung " : "Refund ";
                 candidates.Add(new Candidate(AccountingProposal.Key("membership-order", order.Id, "refund"),
                     new AccountingProposal.ProposalData(today, refund + text, AccountingEntryKind.Booking, account.Value, null, source.CategoryId, -order.AmountCents, order.PayerMemberId, payer)));
             }
@@ -417,9 +419,9 @@ internal sealed class AccountingProposalCollector(AppDbContext context, IStripeG
             candidates.Add(new Candidate(AccountingProposal.Key("court-purchase", purchase.Id),
                 new AccountingProposal.ProposalData(LocalDate(purchase.PaidAt!.Value), text, AccountingEntryKind.Booking, account, null, source.CategoryId, purchase.AmountDueCents, purchase.MemberId, member)));
 
-            if (purchase.Status is CourtPurchaseStatus.Refunded or CourtPurchaseStatus.Disputed)
+            if (purchase.Status == CourtPurchaseStatus.Refunded)
             {
-                var refund = purchase.Status == CourtPurchaseStatus.Refunded ? (German ? "Rückerstattung " : "Refund ") : (German ? "Zahlungseinspruch " : "Dispute ");
+                var refund = German ? "Rückerstattung " : "Refund ";
                 candidates.Add(new Candidate(AccountingProposal.Key("court-purchase", purchase.Id, "refund"),
                     new AccountingProposal.ProposalData(today, refund + text, AccountingEntryKind.Booking, account, null, source.CategoryId, -purchase.AmountDueCents, purchase.MemberId, member)));
             }
@@ -491,6 +493,20 @@ internal sealed class AccountingProposalCollector(AppDbContext context, IStripeG
                 candidates.Add(new Candidate(AccountingProposal.Key("stripe-fees", day.Key),
                     new AccountingProposal.ProposalData(day.Key, $"{(German ? "Stripe-Gebühren" : "Stripe fees")} {Date(day.Key)}", AccountingEntryKind.Booking, online, null, source.CategoryId, (int)fees, null, "Stripe")));
             }
+        }
+
+        // Disputes: the bank of the payer takes the money back (negative), and gives it back when the club wins (positive). Booked with
+        // the fees: the books follow the Stripe balance whatever the outcome.
+        foreach (var dispute in transactions.Where(t => t.Type == StripeBalanceTransaction.TypeAdjustment && t.SourceId?.StartsWith("dp_", StringComparison.Ordinal) == true))
+        {
+            var date = LocalDate(dispute.Created);
+            if (date < source.Since || dispute.AmountCents == 0 || Math.Abs(dispute.AmountCents) > AccountingEntry.MaxAmountCents)
+                continue;
+
+            var lost = dispute.AmountCents < 0;
+            var text = lost ? (German ? "Stripe-Zahlungseinspruch" : "Stripe dispute") : (German ? "Stripe-Zahlungseinspruch gewonnen" : "Stripe dispute won");
+            candidates.Add(new Candidate(AccountingProposal.Key("stripe-dispute", dispute.Id),
+                new AccountingProposal.ProposalData(date, text, AccountingEntryKind.Booking, online, null, source.CategoryId, (int)-dispute.AmountCents, null, "Stripe")));
         }
 
         foreach (var payout in transactions.Where(t => t.Type is StripeBalanceTransaction.TypePayout or StripeBalanceTransaction.TypePayoutFailure))

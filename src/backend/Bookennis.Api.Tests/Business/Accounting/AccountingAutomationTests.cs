@@ -99,15 +99,22 @@ public class AccountingAutomationTests(TestFixture fixture) : TestBase(fixture)
         var bankOrder = await PaidOrder(MembershipPaymentMethod.BankTransfer, 12_000);
         await PaidOrder(MembershipPaymentMethod.Cash, 6_000);
         var refunded = await PaidOrder(MembershipPaymentMethod.Online, 9_000, refunded: true);
+        var disputed = await PaidOrder(MembershipPaymentMethod.Online, 7_000);
+        await QueryAsync(async ctx =>
+        {
+            (await ctx.MembershipOrders.SingleAsync(o => o.Id == disputed.Id)).MarkDisputed();
+            await ctx.SaveChangesAsync();
+            return 0;
+        });
         await Automate(books, AccountingSource.MembershipFees, AccountingAutomationMode.Review, books.Membership);
 
         var result = await Sync();
 
-        result.Created.Should().Be(4);
+        result.Created.Should().Be(5, "a dispute comes from Stripe, not from the order");
         result.Booked.Should().Be(0);
         var open = await Open();
         open.Select(p => (p.MoneyAccountId, p.AmountCents)).Should().BeEquivalentTo(
-            [(books.Bank, 12_000), (books.Cash, 6_000), (books.Online, 9_000), (books.Online, -9_000)]);
+            [(books.Bank, 12_000), (books.Cash, 6_000), (books.Online, 9_000), (books.Online, -9_000), (books.Online, 7_000)]);
         var bank = open.Single(p => p.AmountCents == 12_000);
         bank.Text.Should().StartWith("Mitgliedsbeitrag ");
         bank.CounterpartyMemberId.Should().Be(TestDataSeed.Member1Id);
@@ -136,7 +143,7 @@ public class AccountingAutomationTests(TestFixture fixture) : TestBase(fixture)
         await Rejected(() => SendAsync(new DismissAccountingProposal(ClubId, bank.Id)), AccountingErrorCode.AccountingProposalNotOpen);
 
         (await Sync()).Created.Should().Be(0);
-        (await Open()).Should().ContainSingle().Which.AmountCents.Should().Be(-9_000);
+        (await Open()).Select(p => p.AmountCents).Should().BeEquivalentTo([-9_000, 7_000]);
         (await SendAsync(new GetAccountingProposals(ClubId, AccountingProposalStatus.Booked))).Select(p => p.EntryId).Should().Contain(entry.Id);
     }
 
@@ -230,6 +237,8 @@ public class AccountingAutomationTests(TestFixture fixture) : TestBase(fixture)
                 new StripeBalanceTransaction("txn_2", "charge", 2_500, 61, "eur", yesterday, "ch_2"),
                 new StripeBalanceTransaction("txn_3", StripeBalanceTransaction.TypePayout, -14_240, 0, "eur", yesterday, "po_1"),
                 new StripeBalanceTransaction("txn_4", "charge", 1_000, 40, "eur", Now, "ch_3"),
+                new StripeBalanceTransaction("txn_5", StripeBalanceTransaction.TypeAdjustment, -2_500, 1_500, "eur", yesterday, "dp_1"),
+                new StripeBalanceTransaction("txn_6", StripeBalanceTransaction.TypeAdjustment, 2_500, 0, "eur", yesterday, "dp_1"),
             ]);
         await Automate(books, AccountingSource.Stripe, AccountingAutomationMode.Book, books.Fees);
 
@@ -237,9 +246,10 @@ public class AccountingAutomationTests(TestFixture fixture) : TestBase(fixture)
         {
             var result = await Sync();
 
-            result.Booked.Should().Be(2, "the fees of today come tomorrow");
+            result.Booked.Should().Be(4, "the fees of today come tomorrow");
             var booked = await SendAsync(new GetAccountingProposals(ClubId, AccountingProposalStatus.Booked));
-            booked.Should().ContainSingle(p => p.Kind == AccountingEntryKind.Booking && p.AmountCents == 260 && p.MoneyAccountId == books.Online);
+            booked.Should().ContainSingle(p => p.Kind == AccountingEntryKind.Booking && p.AmountCents == 1_760 && p.MoneyAccountId == books.Online, "the dispute fee counts too");
+            booked.Where(p => p.Text.StartsWith("Stripe-Zahlungseinspruch", StringComparison.Ordinal)).Select(p => p.AmountCents).Should().BeEquivalentTo([2_500, -2_500], "lost, then won back");
             booked.Should().ContainSingle(p => p.Kind == AccountingEntryKind.Transfer && p.AmountCents == 14_240 && p.MoneyAccountId == books.Online && p.ToMoneyAccountId == books.Bank);
             (await Sync()).Created.Should().Be(0);
         }

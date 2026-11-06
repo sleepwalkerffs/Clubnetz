@@ -942,4 +942,7 @@
   <data name="AccountingBankFileOtherAccount" xml:space="preserve">
     <value>Der Auszug gehört zum Konto {0}, nicht zu diesem.</value>
   </data>
+  <data name="AccountingBankFileSeveralAccounts" xml:space="preserve">
+    <value>Die Datei enthält Auszüge mehrerer Konten. Gib dem Geldkonto unter Einrichtung seine IBAN: dann werden nur seine Auszüge importiert.</value>
+  </data>
 </root>

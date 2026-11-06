@@ -238,9 +238,9 @@ public class BankTransactionEntityConfiguration : IEntityTypeConfiguration<BankT
         builder.Property(x => x.Fingerprint).HasMaxLength(BankTransaction.MaxFingerprintLength);
         builder.Ignore(x => x.IsOpen);
 
-        // A line is imported once per money account, an entry books at most one line
+        // A line is imported once per money account, an entry books at most one line per money account (a transfer one on each side)
         builder.HasIndex(x => new { x.MoneyAccountId, x.Fingerprint }).IsUnique();
-        builder.HasIndex(x => x.EntryId).IsUnique().HasFilter("\"EntryId\" IS NOT NULL");
+        builder.HasIndex(x => new { x.EntryId, x.MoneyAccountId }).IsUnique().HasFilter("\"EntryId\" IS NOT NULL");
         builder.HasIndex(x => new { x.ClubId, x.Status, x.BookingDate });
     }
 }

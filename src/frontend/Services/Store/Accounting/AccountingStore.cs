@@ -278,12 +278,12 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         var transactions = httpClient.GetBankTransactions(moneyAccountId, status, cancellationToken);
         var imports = httpClient.GetBankStatementImports(moneyAccountId, cancellationToken);
         var rules = httpClient.GetBankRules(cancellationToken);
-        if (await transactions is { Success: true, Dto: not null } t && BankAccountId == moneyAccountId && BankStatus == status)
-            BankTransactions = t.Dto;
-        if (await imports is { Success: true, Dto: not null } i)
-            BankImports = i.Dto;
-        if (await rules is { Success: true, Dto: not null } r)
-            BankRules = r.Dto;
+        // A failed load shows nothing rather than what was there before (e.g. of another club)
+        var transactionResult = await transactions;
+        if (BankAccountId == moneyAccountId && BankStatus == status)
+            BankTransactions = transactionResult is { Success: true, Dto: not null } t ? t.Dto : null;
+        BankImports = await imports is { Success: true, Dto: not null } i ? i.Dto : [];
+        BankRules = await rules is { Success: true, Dto: not null } r ? r.Dto : [];
         OnAccountingChanged?.Invoke();
     }, nameof(LoadBank));
 

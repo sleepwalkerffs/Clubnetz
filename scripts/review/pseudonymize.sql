@@ -167,7 +167,8 @@ update "BankTransactions" set
     "CounterpartyName" = case when "CounterpartyName" is null then null else 'Partner ' || "Id" end,
     "CounterpartyIban" = null,
     "Reference" = 'Umsatz ' || "Id",
-    "BankReference" = null;
+    "BankReference" = null,
+    "Fingerprint" = 'fp-' || "Id";
 update "BankStatementImports" set "FileName" = 'auszug-' || "Id" || '.xml';
 update "BankRules" set "MatchText" = 'Regel ' || "Id", "MatchIban" = null, "Text" = null;
 
