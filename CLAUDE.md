@@ -12,7 +12,7 @@ This applies when you run in GitHub Actions (the `Claude agent` workflow), trigg
 - Write comments in the language of the issue (usually German or English).
 
 **When implementing:**
-- One issue, one branch, one pull request. If the issue already has an open pull request (`gh pr list --search "<issue number>"`), check out its branch with `gh pr checkout <number>`, commit there and push. The action may have created a fresh `claude/...` branch for this run: leave it empty, don't spread one issue over several branches.
+- One issue, one branch, one pull request. If the issue already has an open pull request (`gh pr list --search "<issue number>"`), check out its branch with `gh pr checkout <number>`, commit there and push it with the action's push script (`origin <branch name>`, plain `git push` is not allowed). The action may have created a fresh `claude/...` branch for this run: leave it empty, don't spread one issue over several branches.
 - Otherwise work on your own `claude/...` branch and target `master` with the pull request. Never push to `master`, `stage` or `production`. Pushing to `stage` or `production` deploys.
 - When you are done implementing, open the pull request yourself with `gh pr create --base master --body-file <file>` (body from `.github/PULL_REQUEST_TEMPLATE.md`, `Closes #<issue>`). Keep its description up to date with `gh pr edit` when you change the pull request later. Never merge pull requests.
 - Build and test from `src/`: `dotnet build`, then `dotnet test --no-build`. A PostgreSQL service runs at `127.0.0.1:5432`, and the tests create their own databases in it. Do not finish with a red build or failing tests. If you can't fix a failure, say so in the comment.
@@ -33,4 +33,4 @@ The workflow gives you a headless Chrome through the Playwright MCP server (`mcp
 - Add the data your feature needs with `psql -h 127.0.0.1 -U postgres -d clubnetz_ui`, or better through the UI or API as one of the test users. If the seed is missing something every feature needs, extend `seed.sh` in your pull request.
 - Log in at `/account/login`. Check every new or changed page and dialog at 390x844 (phone) and 1280x800 (desktop, `browser_resize`) and in light and dark mode (set `localStorage['bookennis-theme']` to `light` or `dark`, then reload). Click through the main flow, including errors and empty states, and look at the browser console for errors.
 - Save the screenshots you base your judgement on with `browser_take_screenshot` (a short file name per view, e.g. `play-requests-mobile-dark.png`). They are uploaded as the artifact `ui-check-<run id>` of the workflow run; link the run in your comment.
-- Fix what you find before you finish. Don't use real member data or any other server, only this local app.
+- Fix what you find before you finish. Don't use real member data or any other server, only this local app (the browser blocks every other site).

@@ -12,7 +12,8 @@ name: Claude agent
 #   - Install the Claude GitHub App on this repository: https://github.com/apps/claude
 #   - Run `claude setup-token` locally and store the token as the repository secret
 #     CLAUDE_CODE_OAUTH_TOKEN. Runs then count against the owner's Claude subscription.
-#   - Protect master, stage and production so Claude can only open pull requests.
+#   - Protect master, stage and production so Claude can only open pull requests (rulesets:
+#     master needs a pull request, only admins may push to stage and production).
 
 on:
   issues:
@@ -111,8 +112,8 @@ jobs:
         run: dotnet workload restore
 
       # A headless Chrome (preinstalled on the runner) that Claude drives through the Playwright MCP
-      # server to look at the UI it built, see "Checking the UI" in CLAUDE.md. Screenshots land in
-      # ui-check/ and are uploaded as an artifact of the run.
+      # server to look at the UI it built, see "Checking the UI" in CLAUDE.md. It may only load the
+      # local app (and its Google font). Screenshots land in ui-check/ and are uploaded as an artifact.
       - name: Set up the browser for UI checks
         run: |
           mkdir -p "$RUNNER_TEMP/ui-check"
@@ -122,6 +123,7 @@ jobs:
               "playwright": {
                 "command": "npx",
                 "args": ["-y", "@playwright/mcp@0.0.83", "--browser", "chrome", "--headless", "--isolated",
+                         "--allowed-origins", "http://localhost:5080;https://fonts.googleapis.com;https://fonts.gstatic.com",
                          "--output-dir", "$RUNNER_TEMP/ui-check"]
               }
             }
@@ -140,12 +142,18 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           additional_permissions: |
             actions: read
-          # gh pr: open, edit and look at pull requests (not merge them). git: switch to the branch of an
-          # existing pull request instead of leaving work on a new branch. scripts/ui-check, psql and
-          # mcp__playwright: run the app with test data and look at it in the browser.
+          # Only your comments and Claude's own reach the prompt, so text planted by others in a
+          # public issue or pull request can't steer it
+          include_comments_by_actor: sleepwalkerffs,claude[bot]
+          # gh pr: open, edit and look at pull requests (not merge them). git checkout/switch/merge: continue
+          # on the branch of an existing pull request (gh pr checkout fetches it). No plain git push or
+          # git fetch, they can run arbitrary commands via --receive-pack/--upload-pack: Claude pushes with
+          # the action's own push script, which only accepts "origin <branch>". stage and production
+          # only take pushes from admins (ruleset), master only takes pull requests.
+          # scripts/ui-check, psql and mcp__playwright: run the app with test data and look at it.
           claude_args: |
             --mcp-config ${{ runner.temp }}/playwright-mcp.json
-            --allowedTools "Agent,Task,Bash(dotnet:*),Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr list:*),Bash(gh pr create:*),Bash(gh pr edit:*),Bash(gh pr comment:*),Bash(gh pr checks:*),Bash(gh pr checkout:*),Bash(gh run view:*),Bash(gh run list:*),Bash(git fetch:*),Bash(git checkout:*),Bash(git switch:*),Bash(git branch:*),Bash(git status:*),Bash(git log:*),Bash(git diff:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git merge:*),Bash(scripts/ui-check/start-app.sh:*),Bash(scripts/ui-check/seed.sh:*),Bash(psql:*),mcp__playwright__*"
+            --allowedTools "Agent,Task,Bash(dotnet:*),Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr list:*),Bash(gh pr create:*),Bash(gh pr edit:*),Bash(gh pr comment:*),Bash(gh pr checks:*),Bash(gh pr checkout:*),Bash(gh run view:*),Bash(gh run list:*),Bash(git checkout:*),Bash(git switch:*),Bash(git branch:*),Bash(git status:*),Bash(git log:*),Bash(git diff:*),Bash(git add:*),Bash(git commit:*),Bash(git merge:*),Bash(scripts/ui-check/start-app.sh:*),Bash(scripts/ui-check/seed.sh:*),Bash(psql:*),mcp__playwright__*"
 
       - name: Upload UI check screenshots
         if: always()
