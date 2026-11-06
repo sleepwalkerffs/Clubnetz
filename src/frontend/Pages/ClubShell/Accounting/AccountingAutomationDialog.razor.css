@@ -9,14 +9,15 @@
     color: var(--mud-palette-text-secondary);
 }
 
-.automation-form__subtitle {
-    margin-top: 4px;
+.automation-source__subtitle {
+    margin-top: 2px;
+    font-size: 0.85rem;
     font-weight: 800;
 }
 
-.automation-form__accounts {
+.automation-source__accounts {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 12px;
 }
 

@@ -3,7 +3,7 @@
 @* A money account picked from the books (with its icon), for the settings of the automatic entries and the bank rules. *@
 
 <MudSelect T="int?" Value="@Value" ValueChanged="ValueChanged" Label="@Label" HelperText="@Hint" Variant="Variant.Outlined" Margin="Margin.Dense"
-           Clearable="@(!Required)" Required="@Required" Error="@(Required && Value is null)">
+           Clearable="@(!Required)" Required="@Required" Error="@(Required && Value is null || Invalid)" ErrorText="@(Invalid ? Hint : null)">
     @foreach (var account in Accounts)
     {
         <MudSelectItem T="int?" Value="@account.Id">@AccountingHelpers.AccountIcon(account.Kind) @account.Name</MudSelectItem>
@@ -17,4 +17,7 @@
     [Parameter] public int? Value { get; set; }
     [Parameter] public EventCallback<int?> ValueChanged { get; set; }
     [Parameter] public bool Required { get; set; }
+
+    /// <summary>Marked red although an account is chosen (e.g. one of the wrong kind).</summary>
+    [Parameter] public bool Invalid { get; set; }
 }

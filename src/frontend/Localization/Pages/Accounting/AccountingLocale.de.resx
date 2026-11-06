@@ -687,29 +687,8 @@
   <data name="Automation_SinceHint" xml:space="preserve">
     <value>Frühere Zahlungen bleiben weg (von Hand gebucht)</value>
   </data>
-  <data name="Automation_Accounts" xml:space="preserve">
-    <value>Wohin das Geld geht</value>
-  </data>
-  <data name="Automation_Online" xml:space="preserve">
-    <value>Online bezahlt (Stripe-Guthaben)</value>
-  </data>
-  <data name="Automation_OnlineHint" xml:space="preserve">
-    <value>Ein Geldkonto der Art „Zahlungsanbieter“</value>
-  </data>
-  <data name="Automation_Bank" xml:space="preserve">
-    <value>Überweisungen und Stripe-Auszahlungen</value>
-  </data>
-  <data name="Automation_Cash" xml:space="preserve">
-    <value>Bar</value>
-  </data>
-  <data name="Automation_Card" xml:space="preserve">
-    <value>Kartenzahlungen im Clubhaus</value>
-  </data>
   <data name="Automation_CardHint" xml:space="preserve">
     <value>Das Kartenterminal oder SumUp-Konto des Vereins</value>
-  </data>
-  <data name="Automation_NoStripe" xml:space="preserve">
-    <value>Der Verein nimmt noch keine Onlinezahlungen: Mitgliedsbeiträge gehen auf die Bank oder in die Kassa.</value>
   </data>
   <data name="Automation_MissingCategory" xml:space="preserve">
     <value>Wähl für jede eingeschaltete Quelle eine Kategorie.</value>
@@ -1215,5 +1194,35 @@
   </data>
   <data name="Years_OpenInbox" xml:space="preserve">
     <value>Belege noch im Eingang: {0}</value>
+  </data>
+  <data name="Automation_BookedInto" xml:space="preserve">
+    <value>Gebucht auf</value>
+  </data>
+  <data name="Booked_Online" xml:space="preserve">
+    <value>Online bezahlt</value>
+  </data>
+  <data name="Booked_Bank" xml:space="preserve">
+    <value>Per Überweisung bezahlt</value>
+  </data>
+  <data name="Booked_Cash" xml:space="preserve">
+    <value>Bar bezahlt</value>
+  </data>
+  <data name="Booked_Card" xml:space="preserve">
+    <value>Mit Karte oder SumUp bezahlt</value>
+  </data>
+  <data name="Booked_StripeBalance" xml:space="preserve">
+    <value>Gebühren vom Stripe-Guthaben</value>
+  </data>
+  <data name="Booked_Payouts" xml:space="preserve">
+    <value>Auszahlungen auf</value>
+  </data>
+  <data name="Automation_AlsoFor" xml:space="preserve">
+    <value>Auch für: {0}</value>
+  </data>
+  <data name="Automation_OnlineKind" xml:space="preserve">
+    <value>Wähl ein Geldkonto der Art „Zahlungsanbieter“: Onlinezahlungen liegen bis zur Auszahlung bei Stripe.</value>
+  </data>
+  <data name="Automation_NoProvider" xml:space="preserve">
+    <value>Leg zuerst unter Einrichtung ein Geldkonto der Art „Zahlungsanbieter“ an.</value>
   </data>
 </root>

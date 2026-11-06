@@ -687,29 +687,8 @@
   <data name="Automation_SinceHint" xml:space="preserve">
     <value>Payments before are left out (booked by hand)</value>
   </data>
-  <data name="Automation_Accounts" xml:space="preserve">
-    <value>Where the money goes</value>
-  </data>
-  <data name="Automation_Online" xml:space="preserve">
-    <value>Paid online (Stripe balance)</value>
-  </data>
-  <data name="Automation_OnlineHint" xml:space="preserve">
-    <value>A money account of the kind “payment provider”</value>
-  </data>
-  <data name="Automation_Bank" xml:space="preserve">
-    <value>Bank transfers and Stripe payouts</value>
-  </data>
-  <data name="Automation_Cash" xml:space="preserve">
-    <value>Cash</value>
-  </data>
-  <data name="Automation_Card" xml:space="preserve">
-    <value>Card payments in the clubhouse</value>
-  </data>
   <data name="Automation_CardHint" xml:space="preserve">
     <value>The card terminal or SumUp account of the club</value>
-  </data>
-  <data name="Automation_NoStripe" xml:space="preserve">
-    <value>The club takes no online payments yet: membership fees go to the bank or the cash box.</value>
   </data>
   <data name="Automation_MissingCategory" xml:space="preserve">
     <value>Choose a category for every source that is on.</value>
@@ -1215,5 +1194,35 @@
   </data>
   <data name="Years_OpenInbox" xml:space="preserve">
     <value>Receipts still in the inbox: {0}</value>
+  </data>
+  <data name="Automation_BookedInto" xml:space="preserve">
+    <value>Booked into</value>
+  </data>
+  <data name="Booked_Online" xml:space="preserve">
+    <value>Paid online</value>
+  </data>
+  <data name="Booked_Bank" xml:space="preserve">
+    <value>Paid by bank transfer</value>
+  </data>
+  <data name="Booked_Cash" xml:space="preserve">
+    <value>Paid in cash</value>
+  </data>
+  <data name="Booked_Card" xml:space="preserve">
+    <value>Paid by card or SumUp</value>
+  </data>
+  <data name="Booked_StripeBalance" xml:space="preserve">
+    <value>Fees from the Stripe balance</value>
+  </data>
+  <data name="Booked_Payouts" xml:space="preserve">
+    <value>Payouts to</value>
+  </data>
+  <data name="Automation_AlsoFor" xml:space="preserve">
+    <value>Also for: {0}</value>
+  </data>
+  <data name="Automation_OnlineKind" xml:space="preserve">
+    <value>Choose a money account of the kind “payment provider”: online payments wait at Stripe until the payout.</value>
+  </data>
+  <data name="Automation_NoProvider" xml:space="preserve">
+    <value>Add a money account of the kind “payment provider” under Setup first.</value>
   </data>
 </root>
