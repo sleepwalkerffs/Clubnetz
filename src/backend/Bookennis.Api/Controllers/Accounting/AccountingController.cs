@@ -250,7 +250,15 @@ public class AccountingController(IMediator mediator, IUserAccessor userAccessor
 
         using var stream = new MemoryStream();
         await file.CopyToAsync(stream, cancellationToken);
-        var columns = string.IsNullOrWhiteSpace(layout) ? null : System.Text.Json.JsonSerializer.Deserialize<CsvColumnsDto>(layout, LayoutJson);
+        CsvColumnsDto? columns;
+        try
+        {
+            columns = string.IsNullOrWhiteSpace(layout) ? null : System.Text.Json.JsonSerializer.Deserialize<CsvColumnsDto>(layout, LayoutJson);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            throw new Domain.Exceptions.PreconditionException(Domain.Accounting.AccountingErrorCode.AccountingBankCsvLayoutInvalid, "The columns are no valid JSON.");
+        }
         return await mediator.Send(new ImportBankStatement(clubId, userAccessor.GetUserId(), moneyAccountId, file.FileName, stream.ToArray(), columns, DateTimeOffset.UtcNow), cancellationToken);
     }
 

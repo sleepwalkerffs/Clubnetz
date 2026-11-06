@@ -199,6 +199,29 @@ public class BankTests(TestFixture fixture) : TestBase(fixture)
     }
 
     [Fact]
+    public async Task Transfer_BetweenTwoImportedAccounts_IsMatchedOnBothSides()
+    {
+        var books = await SetUp();
+        const string savingsIban = "AT483200000012345864";
+        var savings = await SendAsync(new CreateMoneyAccount(ClubId, new SaveMoneyAccountModel { Name = "Sparbuch", Kind = MoneyAccountKind.Bank, Iban = savingsIban }));
+        var transfer = await SendAsync(new CreateAccountingEntry(ClubId, TreasurerUserId, new SaveAccountingEntryModel
+        {
+            Date = new DateOnly(2026, 5, 5), Text = "Auf das Sparbuch", Kind = AccountingEntryKind.Transfer, MoneyAccountId = books.Bank, ToMoneyAccountId = savings.Id, TransferAmountCents = 50_000,
+        }, Now));
+        await Import(books.Bank, Camt(Iban, ("2026-05-05", -500m, "TC Vorderland", "Sparbuch")));
+        await Import(savings.Id, Camt(savingsIban, ("2026-05-05", 500m, "TC Vorderland", "Sparbuch")));
+
+        foreach (var account in new[] { books.Bank, savings.Id })
+        {
+            var line = (await SendAsync(new GetBankTransactions(ClubId, account, BankTransactionStatus.Open))).Transactions.Single();
+            line.Matches.Should().ContainSingle().Which.Id.Should().Be(transfer.Id);
+            await SendAsync(new MatchBankTransaction(ClubId, TreasurerUserId, line.Id, new MatchBankTransactionModel { EntryId = transfer.Id }, Now));
+        }
+
+        (await Lines()).OpenCount.Should().Be(0);
+    }
+
+    [Fact]
     public async Task IgnoredLine_ComesBack_WhenReopened()
     {
         var books = await SetUp();

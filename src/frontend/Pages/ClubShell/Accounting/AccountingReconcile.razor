@@ -53,7 +53,7 @@
                             </span>
                             @if (current.Problem is { } problem)
                             {
-                                <span class="acc-chip acc-chip--warn">⚠️ @BackendLocale[problem]</span>
+                                <span class="acc-chip acc-chip--warn">⚠️ @ProblemText(problem)</span>
                             }
                         </div>
                         <div class="acc-recon__end">
@@ -250,9 +250,22 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        var defaultAccount = Store.BankAccountId ?? Store.Basics?.MoneyAccounts.FirstOrDefault(a => a.Kind == MoneyAccountKind.Bank && !a.IsArchived)?.Id;
+        // The account picked before must be one of this club (the store outlives a change of club)
+        var accounts = Store.Basics?.MoneyAccounts ?? [];
+        var defaultAccount = accounts.Any(a => a.Id == Store.BankAccountId)
+            ? Store.BankAccountId
+            : accounts.FirstOrDefault(a => a.Kind == MoneyAccountKind.Bank && !a.IsArchived)?.Id;
         await Task.WhenAll(Store.LoadProposals(), Store.LoadAutomation(), Store.LoadBank(defaultAccount, Store.BankStatus));
     }
+
+    /// <summary>Only the code of the problem is kept (not its details): a text without placeholders.</summary>
+    private string ProblemText(string code) => code switch
+    {
+        "AccountingFiscalYearMissing" => L["Proposals_ProblemNoYear"],
+        "AccountingFiscalYearClosed" or "AccountingDateOutsideFiscalYear" => L["Proposals_ProblemYearClosed"],
+        "AccountingArchived" => L["Proposals_ProblemArchived"],
+        _ => L["Proposals_ProblemOther"],
+    };
 
     private string AccountName(int id) => Store.Basics?.MoneyAccounts.FirstOrDefault(a => a.Id == id)?.Name ?? "?";
 

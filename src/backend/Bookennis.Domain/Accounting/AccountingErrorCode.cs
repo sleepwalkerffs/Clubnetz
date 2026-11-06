@@ -158,4 +158,7 @@ public enum AccountingErrorCode
 
     /// <summary>The money account of the invoices needs an IBAN (for the payment details and the QR code).</summary>
     AccountingInvoiceAccountWithoutIban = 51,
+
+    /// <summary>The file holds statements of several accounts: give the money account its IBAN, then only its statements are read.</summary>
+    AccountingBankFileSeveralAccounts = 52,
 }

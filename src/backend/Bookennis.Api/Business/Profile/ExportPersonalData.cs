@@ -185,6 +185,15 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                     invoice.RecipientEmail, invoice.Subject, invoice.TotalCents / 100m, invoice.Status, invoice.PaidDate,
                     invoice.Lines.OrderBy(l => l.Position).Select(l => new PersonalDataInvoiceLine(l.Text, l.Quantity, l.UnitPriceCents / 100m)).ToList())
             ).ToListAsync(cancellationToken);
+
+            // Suggested entries of the automatic entries that name the user (booked ones are in the entries above)
+            var accountingProposals = await (
+                from proposal in context.AccountingProposals.IgnoreQueryFilters()
+                join club in context.Clubs.IgnoreQueryFilters() on proposal.ClubId equals club.Id
+                where memberIds.Contains(proposal.CounterpartyMemberId ?? 0) && proposal.Status != Domain.Accounting.AccountingProposalStatus.Booked
+                orderby proposal.Date
+                select new PersonalDataAccountingProposal(club.Name, proposal.Date, proposal.Text, proposal.CounterpartyName, proposal.AmountCents / 100m, proposal.Status)
+            ).ToListAsync(cancellationToken);
             var categoryIds = accountingEntries.SelectMany(e => e.Lines.Select(l => l.CategoryId)).Distinct().ToList();
             var categoryNames = await context.AccountingCategories.IgnoreQueryFilters()
                 .Where(c => categoryIds.Contains(c.Id))
@@ -280,6 +289,7 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                 accountingEntries.ConvertAll(e => new PersonalDataAccountingEntry(
                     e.Club, e.Date, e.Text, e.CounterpartyName, e.Status,
                     e.Lines.ConvertAll(l => new PersonalDataAccountingLine(categoryNames.GetValueOrDefault(l.CategoryId, ""), l.AmountCents / 100m)))),
+                accountingProposals,
                 invoices);
         }
 
@@ -304,7 +314,10 @@ public record PersonalDataExport(
     List<PersonalDataBookingCredit> BookingCredits,
     List<PersonalDataClubhouseTab> ClubhouseTabs,
     List<PersonalDataAccountingEntry> AccountingEntries,
+    List<PersonalDataAccountingProposal> AccountingProposals,
     List<PersonalDataInvoice> Invoices);
+
+public record PersonalDataAccountingProposal(string Club, DateOnly Date, string Text, string? Counterparty, decimal Amount, Bookennis.Domain.Accounting.AccountingProposalStatus Status);
 
 public record PersonalDataInvoice(string Club, string? Number, DateOnly Date, DateOnly DueDate, string Name, string? Address, string? Email, string? Subject, decimal Total,
     Bookennis.Domain.Accounting.InvoiceStatus Status, DateOnly? PaidDate, List<PersonalDataInvoiceLine> Lines);

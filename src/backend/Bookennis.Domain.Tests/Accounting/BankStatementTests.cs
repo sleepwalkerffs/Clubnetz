@@ -74,6 +74,32 @@ public class BankStatementTests
     }
 
     [Fact]
+    public void FileWithSeveralAccounts_IsReadForTheAccount_OrRefused()
+    {
+        const string twoAccounts = """
+            <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.02"><BkToCstmrStmt>
+              <Stmt><Acct><Id><IBAN>AT611904300234573201</IBAN></Id></Acct>
+                <Ntry><Amt Ccy="EUR">10.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><BookgDt><Dt>2026-05-02</Dt></BookgDt></Ntry></Stmt>
+              <Stmt><Acct><Id><IBAN>AT483200000012345864</IBAN></Id></Acct>
+                <Ntry><Amt Ccy="EUR">99.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><BookgDt><Dt>2026-05-02</Dt></BookgDt></Ntry></Stmt>
+            </BkToCstmrStmt></Document>
+            """;
+
+        var savings = BankStatementReader.Read(Encoding.UTF8.GetBytes(twoAccounts), null, accountIban: "AT48 3200 0000 1234 5864").Statement!;
+        savings.Iban.Should().Be("AT483200000012345864");
+        savings.Lines.Should().ContainSingle().Which.AmountCents.Should().Be(9_900);
+
+        FluentActions.Invoking(() => Read(twoAccounts)).Should().Throw<PreconditionException>()
+            .Which.ErrorCode.Should().Be(nameof(AccountingErrorCode.AccountingBankFileSeveralAccounts));
+
+        const string mt940 = ":20:A\n:25:AT611904300234573201\n:60F:C260430EUR0,00\n:61:2605020502C10,00NTRFNONREF\n:86:Giro\n:62F:C260502EUR10,00\n-\n"
+                             + ":20:B\n:25:AT483200000012345864\n:60F:C260430EUR0,00\n:61:2605020502C99,00NTRFNONREF\n:86:Spar\n:61:2605020502C0,00NTRFNONREF\n:62F:C260502EUR99,00\n-\n";
+        var spar = BankStatementReader.Read(Encoding.UTF8.GetBytes(mt940), null, accountIban: "AT483200000012345864").Statement!;
+        spar.Lines.Should().ContainSingle("the line of 0.00 is no movement").Which.Reference.Should().Be("Spar");
+        spar.ClosingBalanceCents.Should().Be(9_900);
+    }
+
+    [Fact]
     public void Mt940_ReadsStructuredAndFreeTextLines()
     {
         const string mt940 = """

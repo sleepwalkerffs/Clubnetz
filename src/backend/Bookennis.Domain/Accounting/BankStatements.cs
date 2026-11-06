@@ -55,7 +55,14 @@ public static class BankStatementReader
     /// Reads <paramref name="data"/>. A CSV is read with the columns it recognizes, else with <paramref name="savedLayout"/> (the layout
     /// mapped for this money account before); when neither works the result asks for a layout.
     /// </summary>
-    public static BankStatementReadResult Read(byte[] data, CsvColumns? savedLayout, bool preferSavedLayout = false)
+    /// <param name="data">The file.</param>
+    /// <param name="savedLayout">The CSV columns mapped for the money account before (or just now).</param>
+    /// <param name="preferSavedLayout">The layout was just mapped by the treasurer: it wins over the recognized columns.</param>
+    /// <param name="accountIban">
+    /// The IBAN of the money account: from a file with statements of several accounts only its statements are read. Without it, such a
+    /// file is refused (it can't be told which lines belong to the account).
+    /// </param>
+    public static BankStatementReadResult Read(byte[] data, CsvColumns? savedLayout, bool preferSavedLayout = false, string? accountIban = null)
     {
         if (data.Length == 0 || data.Length > MaxFileSize)
             throw new PreconditionException(AccountingErrorCode.AccountingBankFileInvalid, "Empty or too large file.");
@@ -63,9 +70,9 @@ public static class BankStatementReader
         var text = Decode(data);
         var start = text.TrimStart('﻿', ' ', '\r', '\n', '\t');
         if (start.StartsWith('<'))
-            return new BankStatementReadResult(BankStatementFormat.Camt053, ReadCamt(start), null, null);
+            return new BankStatementReadResult(BankStatementFormat.Camt053, ReadCamt(start, Compact(accountIban)), null, null);
         if (Regex.IsMatch(text, @"(^|\n):20:", RegexOptions.None, TimeSpan.FromSeconds(1)) && text.Contains(":61:", StringComparison.Ordinal))
-            return new BankStatementReadResult(BankStatementFormat.Mt940, ReadMt940(text), null, null);
+            return new BankStatementReadResult(BankStatementFormat.Mt940, ReadMt940(text, Compact(accountIban)), null, null);
 
         var delimiter = Csv.GuessDelimiter(text);
         var rows = Csv.Parse(text, delimiter);
@@ -97,7 +104,19 @@ public static class BankStatementReader
 
     // ---------- camt.053 ----------
 
-    private static BankStatement ReadCamt(string xml)
+    private static string? Compact(string? iban) => iban?.Replace(" ", "", StringComparison.Ordinal).ToUpperInvariant();
+
+    /// <summary>Whether a statement of <paramref name="statementIban"/> belongs to the account (statements without IBAN are taken).</summary>
+    private static bool OfAccount(string? statementIban, string? accountIban)
+        => accountIban is null || statementIban is null || string.Equals(Compact(statementIban), accountIban, StringComparison.Ordinal);
+
+    private static void EnsureOneAccount(IEnumerable<string?> ibans, string? accountIban)
+    {
+        if (accountIban is null && ibans.Where(i => i is not null).Select(Compact).Distinct().Count() > 1)
+            throw new PreconditionException(AccountingErrorCode.AccountingBankFileSeveralAccounts, "The file holds statements of several accounts.");
+    }
+
+    private static BankStatement ReadCamt(string xml, string? accountIban)
     {
         XDocument document;
         try
@@ -117,12 +136,15 @@ public static class BankStatementReader
             throw new PreconditionException(AccountingErrorCode.AccountingBankFileInvalid, "No statement in the XML.");
 
         var lines = new List<BankStatementLine>();
-        string? iban = null;
+        var ibans = statements.Select(s => Path(s, "Acct", "Id", "IBAN")?.Value).ToList();
+        EnsureOneAccount(ibans, accountIban);
+        string? iban = ibans.FirstOrDefault(i => i is not null && OfAccount(i, accountIban)) ?? ibans.FirstOrDefault(i => i is not null);
         long? opening = null, closing = null;
         DateOnly? closingDate = null, openingDate = null;
         foreach (var statement in statements)
         {
-            iban ??= Path(statement, "Acct", "Id", "IBAN")?.Value;
+            if (!OfAccount(Path(statement, "Acct", "Id", "IBAN")?.Value, accountIban))
+                continue; // another account of the same customer
             foreach (var balance in Children(statement, "Bal"))
             {
                 var type = Path(balance, "Tp", "CdOrPrtry", "Cd")?.Value;
@@ -244,23 +266,33 @@ public static class BankStatementReader
 
     // ---------- MT940 ----------
 
-    private static BankStatement ReadMt940(string text)
+    private static BankStatement ReadMt940(string text, string? accountIban)
     {
         var fields = Mt940Fields(text);
+        var ibans = fields.Where(f => f.Tag == "25").Select(f => Mt940Iban(f.Value)).ToList();
+        EnsureOneAccount(ibans, accountIban);
+
         var lines = new List<BankStatementLine>();
-        string? account = null;
+        string? iban = ibans.FirstOrDefault(i => i is not null && OfAccount(i, accountIban)) ?? ibans.FirstOrDefault(i => i is not null);
         long? opening = null, closing = null;
         DateOnly? closingDate = null;
         var openingTaken = false;
+        var included = true;
 
         for (var i = 0; i < fields.Count; i++)
         {
             var (tag, value) = fields[i];
+            if (tag == "25")
+            {
+                // A new statement: only the ones of the account count (a file can hold several accounts of the same customer)
+                included = OfAccount(Mt940Iban(value), accountIban);
+                continue;
+            }
+            if (!included)
+                continue;
+
             switch (tag)
             {
-                case "25":
-                    account ??= value.Trim();
-                    break;
                 case "60F" or "60M" when !openingTaken:
                     (opening, _) = Mt940Balance(value);
                     openingTaken = true;
@@ -276,9 +308,12 @@ public static class BankStatementReader
             }
         }
 
-        var iban = account is null ? null : Regex.Match(account, @"[A-Z]{2}\d{2}[A-Z0-9]{10,30}", RegexOptions.None, TimeSpan.FromSeconds(1)) is { Success: true } m ? m.Value : null;
-        return new BankStatement(iban, opening, closing, closingDate, lines);
+        // A line of 0.00 (fee information of some banks) is no movement
+        return new BankStatement(iban, opening, closing, closingDate, lines.Where(l => l.AmountCents != 0).ToList());
     }
+
+    private static string? Mt940Iban(string account)
+        => Regex.Match(account.Trim(), @"[A-Z]{2}\d{2}[A-Z0-9]{10,30}", RegexOptions.None, TimeSpan.FromSeconds(1)) is { Success: true } m ? m.Value : null;
 
     private static List<(string Tag, string Value)> Mt940Fields(string text)
     {
