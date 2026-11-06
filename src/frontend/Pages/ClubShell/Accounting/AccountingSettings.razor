@@ -1,0 +1,233 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+
+@inherits AccountingComponentBase
+
+@* The setup of the books: fiscal years (open, close, audit), money accounts, categories and cost centers. *@
+
+@{
+    var basics = Store.Basics;
+    var canManage = basics?.CanManage == true;
+    var canAudit = basics?.CanAudit == true;
+}
+
+@if (basics is not null)
+{
+    <SectionCard Emoji="📅" Title="@L["Years_Title"]" Subtitle="@L["Years_Subtitle"]">
+        <Actions>
+            @if (canManage)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="CreateYear">@L["Years_Add"]</MudButton>
+            }
+        </Actions>
+        <ChildContent>
+            <div class="acc-years">
+                @foreach (var year in basics.FiscalYears)
+                {
+                    var current = year;
+                    var open = year.Status == FiscalYearStatus.Open;
+                    <div class="acc-year @(open ? null : "acc-year--closed")">
+                        <div class="acc-year__head">
+                            <span class="acc-year__label">@year.Label</span>
+                            <span class="acc-chip">@(open ? "🟢 " + L["Year_Open"] : "🔒 " + L["Year_Closed"])</span>
+                            <span class="acc-chip">@AuditText(year)</span>
+                        </div>
+                        <div class="acc-note">
+                            @AccountingHelpers.Date(year.StartDate) – @AccountingHelpers.Date(year.EndDate)
+                            @if (year.ClosedAt is { } closedAt)
+                            {
+                                <span> · @string.Format(L["Years_ClosedBy"], year.ClosedByName ?? L["Change_BySupport"], AccountingHelpers.DateTime(closedAt))</span>
+                            }
+                        </div>
+                        @if (year.AuditComment is { } comment)
+                        {
+                            <div class="acc-year__comment">💬 @comment <span class="acc-note">– @year.AuditedByName</span></div>
+                        }
+                        <div class="acc-year__actions">
+                            @if (canManage && open)
+                            {
+                                <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.Savings" OnClick="() => OpenBalances(current)">
+                                    @L[current.OpeningBalancesCarried ? "Years_ShowBalances" : "Years_Balances"]
+                                </MudButton>
+                                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Lock" OnClick="() => Close(current)">@L["Years_Close"]</MudButton>
+                            }
+                            @if (canManage && !open)
+                            {
+                                <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.LockOpen" OnClick="() => Reopen(current)">@L["Years_Reopen"]</MudButton>
+                            }
+                            @if (canAudit && !open)
+                            {
+                                <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FactCheck" OnClick="() => Audit(current)">@L["Years_Audit"]</MudButton>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </ChildContent>
+    </SectionCard>
+
+    <SectionCard Emoji="🏦" Title="@L["Accounts_Title"]" Subtitle="@L["Accounts_Subtitle"]">
+        <Actions>
+            @if (canManage)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => EditAccount(null)">@L["Accounts_Add"]</MudButton>
+            }
+        </Actions>
+        <ChildContent>
+            <div class="acc-items">
+                @foreach (var account in basics.MoneyAccounts)
+                {
+                    var current = account;
+                    <button type="button" class="acc-item @(account.IsArchived ? "acc-item--archived" : null)" disabled="@(!canManage)" @onclick="() => EditAccount(current)">
+                        <span aria-hidden="true">@AccountingHelpers.AccountIcon(account.Kind)</span>
+                        <span class="acc-item__main">
+                            <span class="acc-item__name">@account.Name</span>
+                            <span class="acc-note">@L[$"AccountKind_{account.Kind}"] @(account.Iban is { } iban ? $"· {AccountingHelpers.Iban(iban)}" : null)</span>
+                        </span>
+                        @if (account.IsArchived)
+                        {
+                            <span class="acc-chip acc-chip--muted">@L["Archived"]</span>
+                        }
+                    </button>
+                }
+            </div>
+        </ChildContent>
+    </SectionCard>
+
+    <SectionCard Emoji="🗂️" Title="@L["Categories_Title"]" Subtitle="@L["Categories_Subtitle"]">
+        <Actions>
+            @if (canManage)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => EditCategory(null)">@L["Categories_Add"]</MudButton>
+            }
+        </Actions>
+        <ChildContent>
+            @foreach (var kind in new[] { AccountingCategoryKind.Income, AccountingCategoryKind.Expense })
+            {
+                <div class="acc-subtitle">@L[$"CategoryKind_{kind}"]</div>
+                <div class="acc-items">
+                    @foreach (var category in basics.Categories.Where(c => c.Kind == kind))
+                    {
+                        var current = category;
+                        <button type="button" class="acc-item @(category.IsArchived ? "acc-item--archived" : null)" disabled="@(!canManage)" @onclick="() => EditCategory(current)">
+                            <span class="acc-item__number">@category.Number</span>
+                            <span class="acc-item__main">
+                                <span class="acc-item__name">@category.Name</span>
+                                <span class="acc-note">@L[$"Sphere_{category.TaxSphere}"]</span>
+                            </span>
+                            @if (category.IsArchived)
+                            {
+                                <span class="acc-chip acc-chip--muted">@L["Archived"]</span>
+                            }
+                        </button>
+                    }
+                </div>
+            }
+        </ChildContent>
+    </SectionCard>
+
+    <SectionCard Emoji="🎯" Title="@L["CostCenters_Title"]" Subtitle="@L["CostCenters_Subtitle"]">
+        <Actions>
+            @if (canManage)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => EditCostCenter(null)">@L["CostCenters_Add"]</MudButton>
+            }
+        </Actions>
+        <ChildContent>
+            @if (basics.CostCenters.Count == 0)
+            {
+                <div class="acc-note">@L["CostCenters_None"]</div>
+            }
+            <div class="acc-items">
+                @foreach (var costCenter in basics.CostCenters)
+                {
+                    var current = costCenter;
+                    <button type="button" class="acc-item @(costCenter.IsArchived ? "acc-item--archived" : null)" disabled="@(!canManage)" @onclick="() => EditCostCenter(current)">
+                        <span aria-hidden="true">🎯</span>
+                        <span class="acc-item__main"><span class="acc-item__name">@costCenter.Name</span></span>
+                        @if (costCenter.IsArchived)
+                        {
+                            <span class="acc-chip acc-chip--muted">@L["Archived"]</span>
+                        }
+                    </button>
+                }
+            </div>
+        </ChildContent>
+    </SectionCard>
+}
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private string AuditText(FiscalYearDto year) => year.AuditStatus switch
+    {
+        FiscalYearAuditStatus.Audited => "✅ " + L["Audit_Audited"],
+        FiscalYearAuditStatus.AuditedWithRemarks => "⚠️ " + L["Audit_AuditedWithRemarks"],
+        _ => "🔍 " + L["Audit_NotAudited"],
+    };
+
+    private async Task CreateYear()
+    {
+        var result = await Store.CreateFiscalYear();
+        if (result is { Success: true, Dto: not null })
+            Snackbar.Add(string.Format(L["Years_Added"], result.Dto.Label), Severity.Success);
+        else
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private async Task Close(FiscalYearDto year)
+    {
+        if (await DialogService.ShowMessageBox(string.Format(L["Years_CloseTitle"], year.Label), L["Years_CloseConfirm"], yesText: L["Years_Close"], cancelText: SharedLocale["Cancel"]) != true)
+            return;
+
+        var result = await Store.CloseFiscalYear(year.Id);
+        if (result.Success)
+            Snackbar.Add(string.Format(L["Years_Closed"], year.Label), Severity.Success);
+        else
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private async Task Reopen(FiscalYearDto year)
+    {
+        if (await DialogService.ShowMessageBox(string.Format(L["Years_ReopenTitle"], year.Label), L["Years_ReopenConfirm"], yesText: L["Years_Reopen"], cancelText: SharedLocale["Cancel"]) != true)
+            return;
+
+        var result = await Store.ReopenFiscalYear(year.Id);
+        if (result.Success)
+            Snackbar.Add(string.Format(L["Years_Reopened"], year.Label), Severity.Success);
+        else
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private Task OpenBalances(FiscalYearDto year)
+        => AccountingDialogs.Open(DialogService, string.Format(L["Balances_Title"], year.Label), new DialogParameters<AccountingOpeningBalancesDialog> { { d => d.Year, year } });
+
+    private Task Audit(FiscalYearDto year)
+        => AccountingDialogs.Open(DialogService, string.Format(L["Audit_Title"], year.Label), new DialogParameters<AccountingAuditDialog> { { d => d.Year, year } });
+
+    private Task EditAccount(MoneyAccountDto? account)
+        => AccountingDialogs.Open(DialogService, L[account is null ? "Accounts_Add" : "Accounts_Edit"], new DialogParameters<AccountingMasterDataDialog>
+        {
+            { d => d.Kind, AccountingMasterDataDialog.DataKind.MoneyAccount },
+            { d => d.Account, account },
+        });
+
+    private Task EditCategory(AccountingCategoryDto? category)
+        => AccountingDialogs.Open(DialogService, L[category is null ? "Categories_Add" : "Categories_Edit"], new DialogParameters<AccountingMasterDataDialog>
+        {
+            { d => d.Kind, AccountingMasterDataDialog.DataKind.Category },
+            { d => d.Category, category },
+        });
+
+    private Task EditCostCenter(CostCenterDto? costCenter)
+        => AccountingDialogs.Open(DialogService, L[costCenter is null ? "CostCenters_Add" : "CostCenters_Edit"], new DialogParameters<AccountingMasterDataDialog>
+        {
+            { d => d.Kind, AccountingMasterDataDialog.DataKind.CostCenter },
+            { d => d.CostCenter, costCenter },
+        });
+}

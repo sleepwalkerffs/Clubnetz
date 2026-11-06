@@ -93,6 +93,12 @@ public sealed record ApiEndpoint(string Method, RoutePattern Pattern, string Con
             "paymentid" => ids.ClubhouseTabPaymentId,
             "playrequestid" => ids.PlayRequestId,
             "groupid" => ids.PlayerGroupId,
+            "fiscalyearid" => ids.FiscalYearId,
+            "moneyaccountid" => ids.MoneyAccountId,
+            "categoryid" => ids.AccountingCategoryId,
+            "costcenterid" => ids.CostCenterId,
+            "entryid" => ids.AccountingEntryId,
+            "receiptid" => ids.AccountingReceiptId,
             "id" => ids.BookingId,
             _ => (int?)null,
         };

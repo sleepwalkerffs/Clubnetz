@@ -14,6 +14,11 @@ public record DeleteAdminClub(int ClubId) : ICommand
                 .SingleOrDefaultAsync(c => c.Id == request.ClubId, cancellationToken)
                 ?? throw new Fusonic.Extensions.Common.Entities.EntityNotFoundException(typeof(Domain.Clubs.Club), request.ClubId);
 
+            // The books first: entries keep their categories and accounts from being deleted, also by the cascade of the club
+            await context.AccountingReceipts.IgnoreQueryFilters().Where(r => r.ClubId == request.ClubId).ExecuteDeleteAsync(cancellationToken);
+            await context.AccountingEntries.IgnoreQueryFilters().Where(e => e.ClubId == request.ClubId).ExecuteDeleteAsync(cancellationToken);
+            await context.FiscalYears.IgnoreQueryFilters().Where(y => y.ClubId == request.ClubId).ExecuteDeleteAsync(cancellationToken);
+
             // Remove associated members
             var members = await context.ClubMembers.Where(m => m.ClubId == request.ClubId).ToListAsync(cancellationToken);
             context.ClubMembers.RemoveRange(members);

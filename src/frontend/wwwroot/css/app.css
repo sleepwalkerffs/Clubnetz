@@ -139,3 +139,19 @@
     background: #2A1215;
     color: #FECACA;
 }
+
+/* Printing a page (e.g. the annual report of the finances): only the content, without the app bar and the navigation */
+@media print {
+    .mud-appbar,
+    .mud-drawer,
+    .mud-drawer-overlay,
+    .mud-snackbar-provider,
+    .no-print {
+        display: none !important;
+    }
+
+    .mud-main-content {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+}

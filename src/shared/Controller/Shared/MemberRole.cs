@@ -11,4 +11,5 @@ public enum MemberRole
     Guest = 6,
     Treasurer = 7,
     ClubhouseHost = 8,
+    Auditor = 9,
 }

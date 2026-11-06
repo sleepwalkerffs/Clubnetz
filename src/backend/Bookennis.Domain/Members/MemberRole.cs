@@ -13,4 +13,7 @@ public enum MemberRole
 
     /// <summary>Runs the clubhouse ("Wirt"): sells food and drinks and keeps the guests' tabs. Not a staff role of the club.</summary>
     ClubhouseHost = 8,
+
+    /// <summary>Auditor (Rechnungsprüfer): reads the whole accounting and records the audit of a fiscal year. Changes nothing else, not a staff role.</summary>
+    Auditor = 9,
 }

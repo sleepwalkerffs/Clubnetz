@@ -156,6 +156,10 @@
             }
             yield return new(Locale["Section_MembersAndFees"], membersAndFees);
 
+            // The books of the club: treasurers and admins keep them, auditors read them (same as the backend policy AccountingReader)
+            if (isTreasurer || Has(MemberRole.Auditor))
+                yield return new(Locale["Section_Finances"], [new($"{club}/finances", Icons.Material.Filled.AccountBalance, Locale["Finances"])]);
+
             var courtsAndPlay = new List<NavItem>();
             // The roles that may move any booking (see BookingDetail); the page itself needs a large screen
             if (isAdmin || isSportsDirector || Has(MemberRole.YouthSportsDirector) || isMaintainer || Has(MemberRole.Trainer))

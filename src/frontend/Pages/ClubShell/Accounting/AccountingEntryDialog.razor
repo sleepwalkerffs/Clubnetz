@@ -1,0 +1,356 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+@using Microsoft.JSInterop
+
+@* Adds or changes an entry: an income or an expense (split into lines by category) or a transfer between two money accounts, with its receipts. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@CanSubmit" Loading="@(Store.IsSaving || uploading)" Title="@L[Entry is null ? "Entry_AddTitle" : "Entry_EditTitle"]">
+    @{
+        var basics = Store.Basics;
+    }
+    <div class="entry-form">
+        <ChoiceChips TItem="EntryType" Items="@Types" Value="@type" ValueChanged="OnTypeChanged" TextFunc="@(t => L[$"EntryType_{t}"])" ColorFunc="TypeColor" />
+
+        <div class="entry-form__row">
+            <MudDatePicker Date="@date" DateChanged="d => date = d" Label="@L["Date"]" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true"
+                           MinDate="@MinDate" MaxDate="@MaxDate" HelperText="@YearHint" />
+            <MudTextField T="string" @bind-Value="text" Label="@L["Text"]" Placeholder="@L["Entry_TextPlaceholder"]" Variant="Variant.Outlined" Margin="Margin.Dense"
+                          Required="true" MaxLength="200" Immediate="true" />
+        </div>
+
+        @if (type == EntryType.Transfer)
+        {
+            <div class="entry-form__row">
+                <MudSelect T="int?" @bind-Value="moneyAccountId" Label="@L["Transfer_From"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var account in Accounts(basics))
+                    {
+                        <MudSelectItem T="int?" Value="@account.Id">@AccountingHelpers.AccountIcon(account.Kind) @account.Name</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect T="int?" @bind-Value="toMoneyAccountId" Label="@L["Transfer_To"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var account in Accounts(basics).Where(a => a.Id != moneyAccountId))
+                    {
+                        <MudSelectItem T="int?" Value="@account.Id">@AccountingHelpers.AccountIcon(account.Kind) @account.Name</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudNumericField T="decimal" @bind-Value="transferAmount" Label="@L["Amount"]" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Format="N2"
+                                 Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true" />
+            </div>
+        }
+        else
+        {
+            <MudSelect T="int?" @bind-Value="moneyAccountId" Label="@L[type == EntryType.Income ? "Entry_AccountIn" : "Entry_AccountOut"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                @foreach (var account in Accounts(basics))
+                {
+                    <MudSelectItem T="int?" Value="@account.Id">@AccountingHelpers.AccountIcon(account.Kind) @account.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <div class="entry-lines">
+                @foreach (var line in lines)
+                {
+                    var current = line;
+                    <div class="entry-line @(basics?.CostCenters.Count > 0 ? "entry-line--cost-center" : null)">
+                        @* MudSelect puts its Class on an inner element: the grid needs a wrapper of its own *@
+                        <div class="entry-line__category">
+                            <MudSelect T="int?" @bind-Value="current.CategoryId" Label="@L["Category"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                                @foreach (var category in Categories(basics, current.CategoryId))
+                                {
+                                    <MudSelectItem T="int?" Value="@category.Id">@AccountingHelpers.CategoryName(category)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </div>
+                        @if (basics?.CostCenters.Count > 0)
+                        {
+                            <div class="entry-line__cost-center">
+                                <MudSelect T="int?" @bind-Value="current.CostCenterId" Label="@L["CostCenter"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                                    @foreach (var costCenter in basics.CostCenters.Where(c => !c.IsArchived || c.Id == current.CostCenterId))
+                                    {
+                                        <MudSelectItem T="int?" Value="@costCenter.Id">@costCenter.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </div>
+                        }
+                        <MudNumericField T="decimal" @bind-Value="current.Amount" Label="@L["Amount"]" Variant="Variant.Outlined" Margin="Margin.Dense" Format="N2"
+                                         Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true" Class="entry-line__amount" />
+                        @if (lines.Count > 1)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => lines.Remove(current)" aria-label="@L["Entry_RemoveLine"]" Class="entry-line__remove" />
+                        }
+                    </div>
+                }
+                <div class="entry-lines__footer">
+                    @if (lines.Count < 20)
+                    {
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CallSplit" Size="Size.Small" OnClick="AddLine">@L["Entry_Split"]</MudButton>
+                    }
+                    <span class="entry-lines__total">@L["Entry_Total"] <b>@AccountingHelpers.Amount(AccountingHelpers.ToCents(lines.Sum(l => l.Amount)))</b></span>
+                </div>
+                <div class="entry-form__hint">@L["Entry_RefundHint"]</div>
+            </div>
+
+            <div class="entry-form__row">
+                <MudAutocomplete T="AccountingMemberDto" Value="@member" ValueChanged="OnMemberChanged" Label="@L["Entry_Member"]" SearchFunc="SearchMembers"
+                                 ToStringFunc="@(m => m?.Name ?? "")" DebounceInterval="300" ResetValueOnEmptyText="true" Clearable="true"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@L["Entry_MemberHint"]" />
+                <MudTextField T="string" @bind-Value="counterpartyName" Label="@L["Entry_Counterparty"]" Placeholder="@L["Entry_CounterpartyPlaceholder"]"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="120" />
+            </div>
+        }
+
+        <div class="entry-receipts">
+            <div class="entry-receipts__head">
+                <span class="entry-receipts__title">🧾 @L["Entry_Receipts"]</span>
+                <label class="entry-receipts__upload" for="entry-receipt-upload">
+                    <MudIcon Icon="@Icons.Material.Filled.AddAPhoto" Size="Size.Small" /> @L["Receipts_Upload"]
+                </label>
+                <InputFile id="entry-receipt-upload" OnChange="Upload" multiple accept="image/jpeg,image/png,image/webp,application/pdf" style="display:none" />
+            </div>
+            @if (receipts.Count == 0)
+            {
+                <div class="entry-form__hint">@L[type == EntryType.Transfer ? "Entry_NoReceiptTransfer" : "Entry_NoReceiptHint"]</div>
+            }
+            <div class="entry-receipts__list">
+                @foreach (var receipt in receipts)
+                {
+                    var current = receipt;
+                    <MudChip T="string" Icon="@(current.ContentType == "application/pdf" ? Icons.Material.Filled.PictureAsPdf : Icons.Material.Filled.Image)"
+                             OnClick="() => Show(current)" OnClose="_ => receipts.Remove(current)" Size="Size.Small">@current.FileName</MudChip>
+                }
+            </div>
+            @{
+                var inbox = Store.Inbox.Where(r => receipts.All(a => a.Id != r.Id)).ToList();
+            }
+            @if (inbox.Count > 0)
+            {
+                <MudSelect T="int?" Value="@((int?)null)" ValueChanged="AttachFromInbox" Label="@string.Format(L["Entry_FromInbox"], inbox.Count)" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var receipt in inbox)
+                    {
+                        <MudSelectItem T="int?" Value="@receipt.Id">@receipt.FileName · @AccountingHelpers.DateTime(receipt.UploadedAt)</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+        </div>
+    </div>
+</BaseDialog>
+
+@code {
+    private enum EntryType
+    {
+        Income,
+        Expense,
+        Transfer,
+    }
+
+    private sealed class LineInput
+    {
+        public int? CategoryId { get; set; }
+        public int? CostCenterId { get; set; }
+        public decimal Amount { get; set; }
+    }
+
+    private static readonly EntryType[] Types = Enum.GetValues<EntryType>();
+
+    [Parameter] public AccountingEntryDetailDto? Entry { get; set; }
+
+    /// <summary>Receipts of the inbox to attach to a new entry.</summary>
+    [Parameter] public List<int> ReceiptIds { get; set; } = [];
+
+    [Inject] private IAccountingStore Store { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private EntryType type = EntryType.Income;
+    private DateTime? date = DateTime.Today;
+    private string? text;
+    private int? moneyAccountId;
+    private int? toMoneyAccountId;
+    private decimal transferAmount;
+    private List<LineInput> lines = [new()];
+    private AccountingMemberDto? member;
+    private string? counterpartyName;
+    private List<AccountingReceiptDto> receipts = [];
+    private bool uploading;
+
+    private FiscalYearDto? Year => Entry is { } entry ? Store.Basics?.FiscalYears.FirstOrDefault(y => y.Id == entry.FiscalYearId) : Store.SelectedYear;
+
+    // A new entry goes into any open year (the date picks it), a changed one stays in its year
+    private DateTime? MinDate => Entry is not null && Year is { } year ? year.StartDate.ToDateTime(TimeOnly.MinValue) : null;
+    private DateTime? MaxDate => Entry is not null && Year is { } year ? year.EndDate.ToDateTime(TimeOnly.MinValue) : null;
+    private string? YearHint => Entry is not null && Year is { } year ? string.Format(L["Entry_StaysInYear"], year.Label) : null;
+
+    private bool CanSubmit => date is not null && !string.IsNullOrWhiteSpace(text) && moneyAccountId is not null && !uploading
+                              && (type == EntryType.Transfer
+                                  ? toMoneyAccountId is not null && toMoneyAccountId != moneyAccountId && transferAmount > 0
+                                  : lines.Count > 0 && lines.All(l => l.CategoryId is not null && l.Amount != 0));
+
+    protected override void OnInitialized()
+    {
+        var basics = Store.Basics;
+        if (Entry is { } entry)
+        {
+            date = entry.Date.ToDateTime(TimeOnly.MinValue);
+            text = entry.Text;
+            moneyAccountId = entry.MoneyAccountId;
+            counterpartyName = entry.CounterpartyName;
+            receipts = entry.Receipts.ToList();
+            if (entry.CounterpartyMemberId is { } memberId)
+                member = new AccountingMemberDto { MemberId = memberId, Name = entry.CounterpartyName ?? "" };
+
+            if (entry.Kind == AccountingEntryKind.Transfer)
+            {
+                type = EntryType.Transfer;
+                toMoneyAccountId = entry.ToMoneyAccountId;
+                transferAmount = AccountingHelpers.ToEuros(entry.TransferAmountCents ?? 0);
+            }
+            else
+            {
+                var firstKind = basics?.Categories.FirstOrDefault(c => c.Id == entry.Lines.FirstOrDefault()?.CategoryId)?.Kind;
+                type = firstKind == AccountingCategoryKind.Expense ? EntryType.Expense : EntryType.Income;
+                lines = entry.Lines.Select(l => new LineInput { CategoryId = l.CategoryId, CostCenterId = l.CostCenterId, Amount = AccountingHelpers.ToEuros(l.AmountCents) }).ToList();
+            }
+        }
+        else
+        {
+            moneyAccountId = basics?.MoneyAccounts.FirstOrDefault(a => !a.IsArchived)?.Id;
+            receipts = Store.Inbox.Where(r => ReceiptIds.Contains(r.Id)).ToList();
+
+            // Today is not in the selected year (an older one is open): start at its last day
+            if (Store.SelectedYear is { } year && !(DateOnly.FromDateTime(DateTime.Today) >= year.StartDate && DateOnly.FromDateTime(DateTime.Today) <= year.EndDate))
+                date = (DateOnly.FromDateTime(DateTime.Today) < year.StartDate ? year.StartDate : year.EndDate).ToDateTime(TimeOnly.MinValue);
+        }
+    }
+
+    private IEnumerable<MoneyAccountDto> Accounts(AccountingDto? basics)
+        => (basics?.MoneyAccounts ?? []).Where(a => !a.IsArchived || a.Id == moneyAccountId || a.Id == toMoneyAccountId || a.Id == Entry?.MoneyAccountId || a.Id == Entry?.ToMoneyAccountId);
+
+    private IEnumerable<AccountingCategoryDto> Categories(AccountingDto? basics, int? selected)
+    {
+        var kind = type == EntryType.Income ? AccountingCategoryKind.Income : AccountingCategoryKind.Expense;
+        var onEntry = Entry?.Lines.Select(l => l.CategoryId).ToHashSet() ?? [];
+        return (basics?.Categories ?? []).Where(c => c.Id == selected || (c.Kind == kind && (!c.IsArchived || onEntry.Contains(c.Id))));
+    }
+
+    private string? TypeColor(EntryType value) => value switch
+    {
+        EntryType.Income => "#059669",
+        EntryType.Expense => "#DC2626",
+        _ => "#2563EB",
+    };
+
+    private void OnTypeChanged(EntryType value)
+    {
+        if (value == type)
+            return;
+
+        // The categories of the other kind no longer fit
+        if (value != EntryType.Transfer && type != EntryType.Transfer)
+            foreach (var line in lines)
+                line.CategoryId = null;
+        type = value;
+    }
+
+    private void AddLine() => lines.Add(new LineInput { CostCenterId = lines.LastOrDefault()?.CostCenterId });
+
+    private async Task<IEnumerable<AccountingMemberDto>> SearchMembers(string? search, CancellationToken cancellationToken)
+    {
+        var result = await Store.GetMembers(search, cancellationToken);
+        return result is { Success: true, Dto: not null } ? result.Dto : [];
+    }
+
+    private void OnMemberChanged(AccountingMemberDto? value)
+    {
+        // The name follows the member unless the treasurer wrote another one
+        if (string.IsNullOrWhiteSpace(counterpartyName) || counterpartyName == member?.Name)
+            counterpartyName = value?.Name;
+        member = value;
+    }
+
+    private void AttachFromInbox(int? receiptId)
+    {
+        if (Store.Inbox.FirstOrDefault(r => r.Id == receiptId) is { } receipt && receipts.All(r => r.Id != receipt.Id))
+            receipts.Add(receipt);
+    }
+
+    private async Task Upload(InputFileChangeEventArgs e)
+    {
+        uploading = true;
+        try
+        {
+            foreach (var file in e.GetMultipleFiles(10))
+            {
+                if (file.Size > 10 * 1024 * 1024)
+                {
+                    Snackbar.Add(string.Format(L["Receipts_TooLarge"], file.Name), Severity.Warning);
+                    continue;
+                }
+
+                await using var stream = file.OpenReadStream(10 * 1024 * 1024);
+                using var buffer = new MemoryStream();
+                await stream.CopyToAsync(buffer);
+                buffer.Position = 0;
+
+                var result = await Store.UploadReceipt(buffer, file.Name);
+                if (result is { Success: true, Dto: not null })
+                    receipts.Add(result.Dto);
+                else
+                    Snackbar.ShowErrorDetails(result, BackendLocale);
+            }
+        }
+        finally
+        {
+            uploading = false;
+        }
+    }
+
+    private Task Show(AccountingReceiptDto receipt) => AccountingDialogs.ShowReceipt(Store, DialogService, JsRuntime, Snackbar, BackendLocale, receipt);
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (!CanSubmit || date is not { } day || moneyAccountId is not { } accountId)
+            return null;
+
+        var transfer = type == EntryType.Transfer;
+        var model = new SaveAccountingEntryModel
+        {
+            Date = DateOnly.FromDateTime(day),
+            Text = text?.Trim(),
+            Kind = transfer ? AccountingEntryKind.Transfer : AccountingEntryKind.Booking,
+            MoneyAccountId = accountId,
+            ToMoneyAccountId = transfer ? toMoneyAccountId : null,
+            TransferAmountCents = transfer ? AccountingHelpers.ToCents(transferAmount) : null,
+            Lines = transfer ? [] : lines.Select(l => new SaveAccountingEntryLineModel { CategoryId = l.CategoryId!.Value, CostCenterId = l.CostCenterId, AmountCents = AccountingHelpers.ToCents(l.Amount) }).ToList(),
+            CounterpartyMemberId = transfer ? null : member?.MemberId,
+            CounterpartyName = transfer || string.IsNullOrWhiteSpace(counterpartyName) ? null : counterpartyName.Trim(),
+            ReceiptIds = receipts.Select(r => r.Id).ToList(),
+        };
+
+        var result = await Store.SaveEntry(Entry?.Id, model);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(string.Format(L[Entry is null ? "Entry_Added" : "Entry_Saved"], result.Dto.Number), Severity.Success);
+        return DialogResult.Ok(result.Dto);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

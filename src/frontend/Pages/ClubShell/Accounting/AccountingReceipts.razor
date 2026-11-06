@@ -1,0 +1,125 @@
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+@using Microsoft.JSInterop
+
+@inherits AccountingComponentBase
+
+@* The inbox of receipts: photos and PDFs uploaded first (e.g. right after paying, from the phone) and booked later. *@
+
+@{
+    var canManage = Store.Basics?.CanManage == true;
+}
+
+@if (canManage)
+{
+    <label class="acc-dropzone" for="receipt-inbox-upload">
+        <span class="acc-dropzone__emoji" aria-hidden="true">📸</span>
+        <span class="acc-dropzone__title">@L["Receipts_UploadTitle"]</span>
+        <span class="acc-dropzone__text">@L["Receipts_UploadHint"]</span>
+        @if (uploading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+    </label>
+    <InputFile id="receipt-inbox-upload" OnChange="Upload" multiple accept="image/jpeg,image/png,image/webp,application/pdf" style="display:none" />
+}
+
+@if (Store.Inbox.Count == 0)
+{
+    <div class="acc-empty">
+        <div class="acc-empty__emoji" aria-hidden="true">✅</div>
+        <div class="acc-empty__title">@L["Receipts_Empty"]</div>
+        <div class="acc-empty__text">@L["Receipts_EmptyHint"]</div>
+    </div>
+}
+else
+{
+    <div class="acc-receipts">
+        @foreach (var receipt in Store.Inbox)
+        {
+            var current = receipt;
+            <div class="acc-receipt">
+                <button type="button" class="acc-receipt__main" @onclick="() => Show(current)">
+                    <MudIcon Icon="@(current.ContentType == "application/pdf" ? Icons.Material.Filled.PictureAsPdf : Icons.Material.Filled.Image)" />
+                    <span class="acc-receipt__text">
+                        <span class="acc-receipt__name">@current.FileName</span>
+                        <span class="acc-receipt__meta">@AccountingHelpers.DateTime(current.UploadedAt) · @AccountingHelpers.FileSize(current.Size) @(current.UploadedByName is { } by ? $"· {by}" : null)</span>
+                    </span>
+                </button>
+                @if (canManage)
+                {
+                    <div class="acc-receipt__actions">
+                        @if (Store.SelectedYear?.Status == FiscalYearStatus.Open)
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.PostAdd" OnClick="() => Book(current)">@L["Receipts_Book"]</MudButton>
+                        }
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => Delete(current)" aria-label="@SharedLocale["Delete"]" />
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private bool uploading;
+
+    protected override Task OnYearChangedAsync() => Store.LoadInbox();
+
+    private async Task Upload(InputFileChangeEventArgs e)
+    {
+        uploading = true;
+        var count = 0;
+        try
+        {
+            foreach (var file in e.GetMultipleFiles(20))
+            {
+                if (file.Size > 10 * 1024 * 1024)
+                {
+                    Snackbar.Add(string.Format(L["Receipts_TooLarge"], file.Name), Severity.Warning);
+                    continue;
+                }
+
+                await using var stream = file.OpenReadStream(10 * 1024 * 1024);
+                using var buffer = new MemoryStream();
+                await stream.CopyToAsync(buffer);
+                buffer.Position = 0;
+
+                var result = await Store.UploadReceipt(buffer, file.Name);
+                if (result.Success)
+                    count++;
+                else
+                    Snackbar.ShowErrorDetails(result, BackendLocale);
+            }
+        }
+        finally
+        {
+            uploading = false;
+        }
+
+        if (count > 0)
+            Snackbar.Add(string.Format(L[count == 1 ? "Receipts_UploadedOne" : "Receipts_Uploaded"], count), Severity.Success);
+    }
+
+    private Task Show(AccountingReceiptDto receipt) => AccountingDialogs.ShowReceipt(Store, DialogService, JsRuntime, Snackbar, BackendLocale, receipt);
+
+    private Task Book(AccountingReceiptDto receipt) => AccountingDialogs.OpenEntry(DialogService, L, null, [receipt.Id]);
+
+    private async Task Delete(AccountingReceiptDto receipt)
+    {
+        if (await DialogService.ShowMessageBox(L["Receipts_DeleteTitle"], string.Format(L["Receipts_DeleteConfirm"], receipt.FileName), yesText: SharedLocale["Delete"], cancelText: SharedLocale["Cancel"]) != true)
+            return;
+
+        var result = await Store.DeleteReceipt(receipt.Id);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+}

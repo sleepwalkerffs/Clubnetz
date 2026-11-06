@@ -426,4 +426,7 @@
   <data name="Role_ClubhouseHost" xml:space="preserve">
     <value>Wirt</value>
   </data>
+  <data name="Role_Auditor" xml:space="preserve">
+    <value>Rechnungsprüfer</value>
+  </data>
 </root>

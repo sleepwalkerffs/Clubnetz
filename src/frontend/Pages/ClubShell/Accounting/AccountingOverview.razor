@@ -1,0 +1,87 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Shared.Controller.Accounting
+
+@inherits AccountingComponentBase
+
+@* The fiscal year at a glance: totals, what still needs doing and the money accounts (Vermögensübersicht). *@
+
+@if (Store.Summary is not { } summary)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    var basics = Store.Basics;
+    var result = summary.IncomeCents - summary.ExpenseCents;
+
+    <div class="acc-tiles">
+        <StatTile Icon="@Icons.Material.Filled.TrendingUp" Value="@AccountingHelpers.Amount(summary.IncomeCents)" Label="@L["Overview_Income"]" Color="#059669" />
+        <StatTile Icon="@Icons.Material.Filled.TrendingDown" Value="@AccountingHelpers.Amount(summary.ExpenseCents)" Label="@L["Overview_Expense"]" Color="#DC2626" />
+        <StatTile Icon="@Icons.Material.Filled.Balance" Value="@AccountingHelpers.SignedAmount(result)" Label="@L[result >= 0 ? "Overview_Surplus" : "Overview_Deficit"]" Color="#2563EB" />
+        <StatTile Icon="@Icons.Material.Filled.AccountBalanceWallet" Value="@AccountingHelpers.Amount(summary.ClosingCents)" Label="@L["Overview_Assets"]"
+                  Hint="@string.Format(L["Overview_AssetsHint"], AccountingHelpers.Amount(summary.OpeningCents))" Color="#7C3AED" />
+    </div>
+
+    @if (summary.ReceiptsInInbox > 0 || summary.EntriesWithoutReceipt > 0 || Store.SelectedYear?.AuditStatus == FiscalYearAuditStatus.AuditedWithRemarks)
+    {
+        <div class="acc-todos">
+            @if (summary.ReceiptsInInbox > 0)
+            {
+                <button type="button" class="acc-todo" @onclick="() => OnOpenTab.InvokeAsync(AccountingTab.Receipts)">
+                    <span class="acc-todo__emoji" aria-hidden="true">📥</span>
+                    <span>@string.Format(L[summary.ReceiptsInInbox == 1 ? "Overview_InboxOne" : "Overview_Inbox"], summary.ReceiptsInInbox)</span>
+                </button>
+            }
+            @if (summary.EntriesWithoutReceipt > 0)
+            {
+                <button type="button" class="acc-todo" @onclick="() => OnOpenTab.InvokeAsync(AccountingTab.Entries)">
+                    <span class="acc-todo__emoji" aria-hidden="true">🧾</span>
+                    <span>@string.Format(L[summary.EntriesWithoutReceipt == 1 ? "Overview_WithoutReceiptOne" : "Overview_WithoutReceipt"], summary.EntriesWithoutReceipt)</span>
+                </button>
+            }
+            @if (Store.SelectedYear is { AuditStatus: FiscalYearAuditStatus.AuditedWithRemarks } audited)
+            {
+                <div class="acc-todo acc-todo--warn">
+                    <span class="acc-todo__emoji" aria-hidden="true">⚠️</span>
+                    <span>@string.Format(L["Overview_AuditRemarks"], audited.AuditedByName ?? "?", audited.AuditComment ?? "")</span>
+                </div>
+            }
+        </div>
+    }
+
+    <SectionCard Emoji="🏦" Title="@L["Overview_Accounts"]" Subtitle="@string.Format(L["Overview_AccountsHint"], summary.EntryCount)">
+        <div class="acc-balances">
+            @foreach (var balance in summary.Accounts)
+            {
+                var account = basics?.MoneyAccounts.FirstOrDefault(a => a.Id == balance.MoneyAccountId);
+                if (account is null || (account.IsArchived && balance.OpeningCents == 0 && balance.ClosingCents == 0))
+                    continue;
+
+                <div class="acc-balance">
+                    <div class="acc-balance__head">
+                        <span class="acc-balance__icon" aria-hidden="true">@AccountingHelpers.AccountIcon(account.Kind)</span>
+                        <span class="acc-balance__name">@account.Name</span>
+                        <span class="acc-balance__closing">@AccountingHelpers.Amount(balance.ClosingCents)</span>
+                    </div>
+                    <div class="acc-balance__rows">
+                        <span>@L["Opening"]</span><span>@AccountingHelpers.Amount(balance.OpeningCents)</span>
+                        <span>@L["Overview_Income"]</span><span class="acc-amount acc-amount--in">@AccountingHelpers.SignedAmount(balance.IncomeCents)</span>
+                        <span>@L["Overview_Expense"]</span><span class="acc-amount acc-amount--out">@AccountingHelpers.SignedAmount(-balance.ExpenseCents)</span>
+                        @if (balance.TransfersInCents != 0 || balance.TransfersOutCents != 0)
+                        {
+                            <span>@L["Overview_Transfers"]</span><span>@AccountingHelpers.SignedAmount(balance.TransfersInCents - balance.TransfersOutCents)</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </SectionCard>
+}
+
+@code {
+    [Parameter] public EventCallback<AccountingTab> OnOpenTab { get; set; }
+
+    protected override Task OnYearChangedAsync() => Store.Summary is null ? Store.LoadSummary() : Task.CompletedTask;
+}

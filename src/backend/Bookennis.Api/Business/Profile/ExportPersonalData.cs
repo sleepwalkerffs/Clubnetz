@@ -159,6 +159,27 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                     tab.Lines.OrderBy(l => l.AddedAt).Select(l => new PersonalDataClubhouseTabLine(l.Name, l.Quantity, l.UnitPriceCents / 100m, l.AddedAt)).ToList())
             ).ToListAsync(cancellationToken);
 
+            // Entries of the club's books that name the user as who paid or was paid
+            var accountingEntries = await (
+                from entry in context.AccountingEntries.IgnoreQueryFilters()
+                join club in context.Clubs.IgnoreQueryFilters() on entry.ClubId equals club.Id
+                where memberIds.Contains(entry.CounterpartyMemberId ?? 0)
+                orderby entry.Date, entry.Number
+                select new
+                {
+                    Club = club.Name,
+                    entry.Date,
+                    entry.Text,
+                    entry.CounterpartyName,
+                    entry.Status,
+                    Lines = entry.Lines.OrderBy(l => l.Position).Select(l => new { l.CategoryId, l.AmountCents }).ToList(),
+                }
+            ).ToListAsync(cancellationToken);
+            var categoryIds = accountingEntries.SelectMany(e => e.Lines.Select(l => l.CategoryId)).Distinct().ToList();
+            var categoryNames = await context.AccountingCategories.IgnoreQueryFilters()
+                .Where(c => categoryIds.Contains(c.Id))
+                .ToDictionaryAsync(c => c.Id, c => c.Name, cancellationToken);
+
             var subscriptionPlans = await context.SubscriptionPlans
                 .IgnoreQueryFilters()
                 .AsNoTracking()
@@ -245,7 +266,10 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                 membershipOrders,
                 courtPurchases,
                 bookingCredits,
-                clubhouseTabs);
+                clubhouseTabs,
+                accountingEntries.ConvertAll(e => new PersonalDataAccountingEntry(
+                    e.Club, e.Date, e.Text, e.CounterpartyName, e.Status,
+                    e.Lines.ConvertAll(l => new PersonalDataAccountingLine(categoryNames.GetValueOrDefault(l.CategoryId, ""), l.AmountCents / 100m)))));
         }
 
         private static string? NullIfEmpty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
@@ -267,7 +291,8 @@ public record PersonalDataExport(
     List<PersonalDataMembershipOrder> MembershipOrders,
     List<PersonalDataCourtPurchase> CourtPurchases,
     List<PersonalDataBookingCredit> BookingCredits,
-    List<PersonalDataClubhouseTab> ClubhouseTabs);
+    List<PersonalDataClubhouseTab> ClubhouseTabs,
+    List<PersonalDataAccountingEntry> AccountingEntries);
 
 public record PersonalDataAccount(
     string FirstName,
@@ -328,6 +353,11 @@ public record PersonalDataClubhouseTab(
     DateTimeOffset? PaidAt,
     string Currency,
     List<PersonalDataClubhouseTabLine> Items);
+
+/// <summary>An entry of the club's books that names the user as who paid or was paid (e.g. a membership fee or an expense paid back).</summary>
+public record PersonalDataAccountingEntry(string Club, DateOnly Date, string Text, string? Counterparty, Bookennis.Domain.Accounting.AccountingEntryStatus Status, List<PersonalDataAccountingLine> Lines);
+
+public record PersonalDataAccountingLine(string Category, decimal Amount);
 
 public record PersonalDataClubhouseTabLine(string Name, int Quantity, decimal UnitPrice, DateTimeOffset AddedAt);
 

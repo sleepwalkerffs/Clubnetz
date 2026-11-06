@@ -1,0 +1,188 @@
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.HttpClients.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Shared.Controller.Accounting
+
+@inherits AccountingComponentBase
+
+@* The journal of the selected fiscal year: filters, the entries (newest first) and adding one. *@
+
+@{
+    var basics = Store.Basics;
+    var year = Store.SelectedYear;
+    var canBook = basics?.CanManage == true && year?.Status == FiscalYearStatus.Open;
+}
+
+<div class="acc-toolbar">
+    <MudTextField T="string" Value="@search" ValueChanged="OnSearchChanged" Immediate="true" DebounceInterval="300" Variant="Variant.Outlined" Margin="Margin.Dense"
+                  Clearable="true" Placeholder="@L["Entries_Search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="acc-toolbar__search" />
+    <MudSelect T="int?" Value="@accountId" ValueChanged="OnAccountChanged" Label="@L["MoneyAccount"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="acc-toolbar__filter">
+        @foreach (var account in basics?.MoneyAccounts ?? [])
+        {
+            <MudSelectItem T="int?" Value="@account.Id">@account.Name</MudSelectItem>
+        }
+    </MudSelect>
+    <MudSelect T="int?" Value="@categoryId" ValueChanged="OnCategoryChanged" Label="@L["Category"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="acc-toolbar__filter">
+        @foreach (var category in basics?.Categories ?? [])
+        {
+            <MudSelectItem T="int?" Value="@category.Id">@AccountingHelpers.CategoryName(category)</MudSelectItem>
+        }
+    </MudSelect>
+    @if (basics?.CostCenters.Count > 0)
+    {
+        <MudSelect T="int?" Value="@costCenterId" ValueChanged="OnCostCenterChanged" Label="@L["CostCenter"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="acc-toolbar__filter">
+            @foreach (var costCenter in basics.CostCenters)
+            {
+                <MudSelectItem T="int?" Value="@costCenter.Id">@costCenter.Name</MudSelectItem>
+            }
+        </MudSelect>
+    }
+    <MudSwitch T="bool" Value="@includeCancelled" ValueChanged="OnIncludeCancelledChanged" Color="Color.Primary" Label="@L["Entries_ShowCancelled"]" />
+    @if (canBook)
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenEntryDialog(null)" Class="acc-toolbar__add">
+            @L["Entries_Add"]
+        </MudButton>
+    }
+</div>
+
+@if (year?.Status == FiscalYearStatus.Closed)
+{
+    <MudAlert Severity="Severity.Info" Dense="true">@string.Format(L["Entries_YearClosed"], year.Label)</MudAlert>
+}
+
+@if (Store.Entries is not { } result)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+}
+else if (result.Entries.Count == 0)
+{
+    <div class="acc-empty">
+        <div class="acc-empty__emoji" aria-hidden="true">📭</div>
+        <div class="acc-empty__title">@L[IsFiltered ? "Entries_NoneFound" : "Entries_None"]</div>
+        <div class="acc-empty__text">@L[IsFiltered ? "Entries_NoneFoundHint" : "Entries_NoneHint"]</div>
+    </div>
+}
+else
+{
+    <div class="acc-sums">
+        <span>@L["Overview_Income"] <b class="acc-amount acc-amount--in">@AccountingHelpers.Amount(result.IncomeCents)</b></span>
+        <span>@L["Overview_Expense"] <b class="acc-amount acc-amount--out">@AccountingHelpers.Amount(result.ExpenseCents)</b></span>
+        <span>@string.Format(L["Entries_Count"], result.Entries.Count)</span>
+    </div>
+
+    <div class="acc-entries" role="list">
+        @foreach (var entry in result.Entries)
+        {
+            var cancelled = entry.Status == AccountingEntryStatus.Cancelled;
+            <button type="button" role="listitem" class="acc-entry @(cancelled ? "acc-entry--cancelled" : null)" @onclick="() => OpenDetail(entry.Id)">
+                <span class="acc-entry__number">#@entry.Number</span>
+                <span class="acc-entry__date">@AccountingHelpers.ShortDate(entry.Date)</span>
+                <span class="acc-entry__main">
+                    <span class="acc-entry__text">@entry.Text</span>
+                    <span class="acc-entry__meta">
+                        @if (entry.Kind == AccountingEntryKind.Transfer)
+                        {
+                            <span>🔁 @AccountingHelpers.AccountName(basics, entry.MoneyAccountId) → @AccountingHelpers.AccountName(basics, entry.ToMoneyAccountId)</span>
+                        }
+                        else
+                        {
+                            <span>@string.Join(", ", entry.Lines.Select(l => AccountingHelpers.CategoryName(basics, l.CategoryId)).Distinct())</span>
+                            <span>@AccountingHelpers.AccountName(basics, entry.MoneyAccountId)</span>
+                        }
+                        @if (entry.CounterpartyName is { } counterparty)
+                        {
+                            <span>👤 @counterparty</span>
+                        }
+                    </span>
+                </span>
+                <span class="acc-entry__end">
+                    @if (entry.Kind == AccountingEntryKind.Transfer)
+                    {
+                        <span class="acc-amount">@AccountingHelpers.Amount(entry.AmountCents)</span>
+                    }
+                    else
+                    {
+                        <span class="@AccountingHelpers.AmountClass(entry.AmountCents)">@AccountingHelpers.SignedAmount(entry.AmountCents)</span>
+                    }
+                    <span class="acc-entry__flags">
+                        @if (cancelled)
+                        {
+                            <span class="acc-chip acc-chip--muted">@L["Entry_Cancelled"]</span>
+                        }
+                        else if (entry.Kind == AccountingEntryKind.Booking && entry.ReceiptCount == 0)
+                        {
+                            <span class="acc-chip acc-chip--warn" title="@L["Entry_NoReceipt"]">🧾 ✗</span>
+                        }
+                        else if (entry.ReceiptCount > 0)
+                        {
+                            <span class="acc-chip" title="@L["Entry_Receipts"]">🧾 @entry.ReceiptCount</span>
+                        }
+                    </span>
+                </span>
+            </button>
+        }
+    </div>
+}
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+
+    private string? search;
+    private int? accountId;
+    private int? categoryId;
+    private int? costCenterId;
+    private bool includeCancelled;
+
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(search) || accountId is not null || categoryId is not null || costCenterId is not null;
+
+    protected override Task OnInitializedAsync()
+    {
+        var filter = Store.Filter;
+        search = filter.Search;
+        accountId = filter.MoneyAccountId;
+        categoryId = filter.CategoryId;
+        costCenterId = filter.CostCenterId;
+        includeCancelled = filter.IncludeCancelled;
+        return base.OnInitializedAsync();
+    }
+
+    protected override Task OnYearChangedAsync() => Reload();
+
+    private Task Reload() => Store.LoadEntries(new AccountingEntryFilter(accountId, categoryId, costCenterId, search, includeCancelled));
+
+    private Task OnSearchChanged(string? value)
+    {
+        search = value;
+        return Reload();
+    }
+
+    private Task OnAccountChanged(int? value)
+    {
+        accountId = value;
+        return Reload();
+    }
+
+    private Task OnCategoryChanged(int? value)
+    {
+        categoryId = value;
+        return Reload();
+    }
+
+    private Task OnCostCenterChanged(int? value)
+    {
+        costCenterId = value;
+        return Reload();
+    }
+
+    private Task OnIncludeCancelledChanged(bool value)
+    {
+        includeCancelled = value;
+        return Reload();
+    }
+
+    private Task OpenEntryDialog(AccountingEntryDetailDto? entry) => AccountingDialogs.OpenEntry(DialogService, L, entry, []);
+
+    private Task OpenDetail(int entryId) => AccountingDialogs.OpenDetail(DialogService, L, entryId);
+}

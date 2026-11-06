@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Components;
 using Bookennis.Client.Services.HttpClients.ClubAnnouncements;
 using Bookennis.Client.Services.HttpClients.ClubEvents;
 using Bookennis.Client.Services.HttpClients.CourtBlockings;
+using Bookennis.Client.Services.HttpClients.Accounting;
 using Bookennis.Client.Services.HttpClients.Clubhouse;
 using Bookennis.Client.Services.HttpClients.PlayRequests;
 using Bookennis.Client.Services.HttpClients.CourtSales;
@@ -232,6 +233,7 @@ public static class AddHttpClients
         services.AddClubHttpClient<IMembershipPaymentsHttpClient, MembershipPaymentsHttpClient>("MembershipPayments");
         services.AddClubHttpClient<ICourtSalesHttpClient, CourtSalesHttpClient>("CourtSales");
         services.AddClubHttpClient<IClubhouseHttpClient, ClubhouseHttpClient>("Clubhouse");
+        services.AddClubHttpClient<IAccountingHttpClient, AccountingHttpClient>("Accounting");
         services.AddClubHttpClient<IPaymentAccountHttpClient, PaymentAccountHttpClient>("Payments");
 
         services

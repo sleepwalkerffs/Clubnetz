@@ -1,0 +1,635 @@
+/* The finances page and its parts (they render inside .acc-page, so ::deep reaches them). Colors come from the palette: light and dark. */
+
+.acc-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.acc-page ::deep .acc-note {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-amount {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.acc-page ::deep .acc-amount--in {
+    color: var(--mud-palette-success);
+}
+
+.acc-page ::deep .acc-amount--out {
+    color: var(--mud-palette-error);
+}
+
+.acc-page ::deep .acc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    background: var(--mud-palette-background-gray);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.acc-page ::deep .acc-chip--warn {
+    border-color: var(--mud-palette-warning);
+    color: var(--mud-palette-warning-darken);
+}
+
+.acc-page ::deep .acc-chip--muted {
+    color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px 16px;
+}
+
+.acc-page ::deep .acc-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* ---------- setting up ---------- */
+
+.acc-page ::deep .acc-setup {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.acc-page ::deep .acc-setup__list {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* ---------- overview ---------- */
+
+.acc-page ::deep .acc-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.acc-page ::deep .acc-todos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.acc-page ::deep .acc-todo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.acc-page ::deep button.acc-todo:hover {
+    border-color: var(--mud-palette-primary);
+}
+
+.acc-page ::deep .acc-todo--warn {
+    border-color: var(--mud-palette-warning);
+    cursor: default;
+}
+
+.acc-page ::deep .acc-todo__emoji {
+    font-size: 1.3rem;
+}
+
+.acc-page ::deep .acc-balances {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 10px;
+}
+
+.acc-page ::deep .acc-balance {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+}
+
+.acc-page ::deep .acc-balance__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.acc-page ::deep .acc-balance__name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.acc-page ::deep .acc-balance__closing {
+    font-size: 1.1rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.acc-page ::deep .acc-balance__rows {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 12px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-balance__rows > span:nth-child(even) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- toolbar, lists ---------- */
+
+.acc-page ::deep .acc-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+}
+
+/* Text fields and selects come with different outer margins: without them all fields sit on one line. */
+.acc-page ::deep .acc-toolbar .mud-input-control {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.acc-page ::deep .acc-toolbar__search {
+    flex: 2 1 220px;
+}
+
+.acc-page ::deep .acc-toolbar__filter {
+    flex: 1 1 160px;
+}
+
+.acc-page ::deep .acc-toolbar__add,
+.acc-page ::deep .acc-toolbar__end {
+    margin-left: auto;
+}
+
+.acc-page ::deep .acc-toolbar__end {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.acc-page ::deep .acc-sums {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-entries {
+    display: flex;
+    flex-direction: column;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    overflow: hidden;
+}
+
+.acc-page ::deep .acc-entry {
+    display: grid;
+    grid-template-columns: 52px 64px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 12px;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.acc-page ::deep .acc-entry + .acc-entry {
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.acc-page ::deep .acc-entry:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.acc-page ::deep .acc-entry--cancelled .acc-entry__text,
+.acc-page ::deep .acc-entry--cancelled .acc-amount {
+    text-decoration: line-through;
+    color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-entry__number {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.acc-page ::deep .acc-entry__date {
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.acc-page ::deep .acc-entry__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.acc-page ::deep .acc-entry__text {
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.acc-page ::deep .acc-entry__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 10px;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-entry__end {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-weight: 800;
+}
+
+.acc-page ::deep .acc-entry__flags {
+    font-weight: 400;
+}
+
+.acc-page ::deep .acc-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 28px 12px;
+    border-radius: 16px;
+    border: 2px dashed var(--mud-palette-lines-inputs);
+    text-align: center;
+}
+
+.acc-page ::deep .acc-empty__emoji {
+    font-size: 2.2rem;
+    line-height: 1;
+}
+
+.acc-page ::deep .acc-empty__title {
+    margin-top: 6px;
+    font-weight: 700;
+}
+
+.acc-page ::deep .acc-empty__text {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* ---------- receipts ---------- */
+
+.acc-page ::deep .acc-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 22px 12px;
+    border-radius: 16px;
+    border: 2px dashed var(--mud-palette-primary);
+    background: var(--mud-palette-primary-hover);
+    text-align: center;
+    cursor: pointer;
+}
+
+.acc-page ::deep .acc-dropzone__emoji {
+    font-size: 2rem;
+}
+
+.acc-page ::deep .acc-dropzone__title {
+    font-weight: 800;
+}
+
+.acc-page ::deep .acc-dropzone__text {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-receipts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 10px;
+}
+
+.acc-page ::deep .acc-receipt {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+}
+
+.acc-page ::deep .acc-receipt__main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.acc-page ::deep .acc-receipt__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.acc-page ::deep .acc-receipt__name {
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.acc-page ::deep .acc-receipt__meta {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-receipt__actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ---------- reports ---------- */
+
+.acc-page ::deep .acc-table {
+    width: 100%;
+    margin-top: 8px;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.acc-page ::deep .acc-table th,
+.acc-page ::deep .acc-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+    text-align: left;
+    vertical-align: top;
+}
+
+.acc-page ::deep .acc-table th {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-table__num {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.acc-page ::deep .acc-table__previous {
+    color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-table__group td {
+    padding-top: 14px;
+    font-weight: 800;
+}
+
+.acc-page ::deep .acc-table__sum td {
+    font-weight: 700;
+    background: var(--mud-palette-background-gray);
+}
+
+.acc-page ::deep .acc-table tfoot td {
+    font-weight: 700;
+}
+
+.acc-page ::deep .acc-table__result td {
+    font-size: 1rem;
+    font-weight: 800;
+    border-bottom: 3px double var(--mud-palette-lines-inputs);
+}
+
+.acc-page ::deep .print-only {
+    display: none;
+}
+
+.acc-page ::deep .acc-print-head__club {
+    font-size: 0.9rem;
+}
+
+.acc-page ::deep .acc-print-head__title {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.acc-page ::deep .acc-print-head__meta {
+    font-size: 0.85rem;
+}
+
+/* ---------- settings ---------- */
+
+.acc-page ::deep .acc-years {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+}
+
+.acc-page ::deep .acc-year {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-left: 4px solid var(--mud-palette-success);
+    background: var(--mud-palette-surface);
+}
+
+.acc-page ::deep .acc-year--closed {
+    border-left-color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-year__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.acc-page ::deep .acc-year__label {
+    margin-right: auto;
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.acc-page ::deep .acc-year__comment {
+    font-size: 0.85rem;
+}
+
+.acc-page ::deep .acc-year__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.acc-page ::deep .acc-subtitle {
+    margin: 12px 0 6px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.acc-page ::deep .acc-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 8px;
+}
+
+.acc-page ::deep .acc-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.acc-page ::deep .acc-item:disabled {
+    cursor: default;
+}
+
+.acc-page ::deep .acc-item:not(:disabled):hover {
+    border-color: var(--mud-palette-primary);
+}
+
+.acc-page ::deep .acc-item--archived {
+    opacity: 0.6;
+}
+
+.acc-page ::deep .acc-item__number {
+    min-width: 40px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.acc-page ::deep .acc-item__main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.acc-page ::deep .acc-item__name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---------- phones ---------- */
+
+@media (max-width: 600px) {
+    .acc-page ::deep .acc-entry {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas: "number date end" "main main end";
+        gap: 2px 8px;
+        padding: 10px 12px;
+    }
+
+    .acc-page ::deep .acc-entry__number {
+        grid-area: number;
+    }
+
+    .acc-page ::deep .acc-entry__date {
+        grid-area: date;
+        font-size: 0.8rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .acc-page ::deep .acc-entry__main {
+        grid-area: main;
+    }
+
+    .acc-page ::deep .acc-entry__end {
+        grid-area: end;
+    }
+
+    .acc-page ::deep .acc-table__wide {
+        display: none;
+    }
+
+    .acc-page ::deep .acc-toolbar__add {
+        width: 100%;
+    }
+}
+
+/* ---------- printing: the annual report ---------- */
+
+@media print {
+    .acc-page ::deep .no-print,
+    .no-print {
+        display: none !important;
+    }
+
+    .acc-page ::deep .print-only {
+        display: block;
+    }
+
+    .acc-page ::deep .acc-table__wide {
+        display: table-cell;
+    }
+
+    .acc-page ::deep .section-card {
+        break-inside: avoid;
+        box-shadow: none;
+    }
+}

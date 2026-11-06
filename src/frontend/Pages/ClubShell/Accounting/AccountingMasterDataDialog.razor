@@ -1,0 +1,188 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.HttpClients
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+
+@* Adds or changes a money account, a category or a cost center; one that nothing uses can be deleted, a used one is archived. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@(!string.IsNullOrWhiteSpace(name))" Loading="@Store.IsSaving" Title="@L["Page_Title"]">
+    <div class="master-form">
+        @switch (Kind)
+        {
+            case DataKind.MoneyAccount:
+                <MudTextField T="string" @bind-Value="name" Label="@L["Name"]" Placeholder="@L["Accounts_NamePlaceholder"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="60" Immediate="true" />
+                <MudSelect T="MoneyAccountKind" @bind-Value="accountKind" Label="@L["Accounts_Kind"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var value in Enum.GetValues<MoneyAccountKind>())
+                    {
+                        <MudSelectItem T="MoneyAccountKind" Value="@value">@AccountingHelpers.AccountIcon(value) @L[$"AccountKind_{value}"]</MudSelectItem>
+                    }
+                </MudSelect>
+                @if (accountKind == MoneyAccountKind.Bank)
+                {
+                    <MudTextField T="string" @bind-Value="iban" Label="IBAN" Placeholder="AT61 1904 3002 3457 3201" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="42" />
+                }
+                <MudNumericField T="int" @bind-Value="sortOrder" Label="@L["SortOrder"]" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="99" />
+                break;
+
+            case DataKind.Category:
+                <MudSelect T="AccountingCategoryKind" @bind-Value="categoryKind" Label="@L["Categories_Kind"]" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           Disabled="@(Category?.IsUsed == true)" HelperText="@(Category?.IsUsed == true ? L["Categories_KindUsed"] : null)">
+                    @foreach (var value in Enum.GetValues<AccountingCategoryKind>())
+                    {
+                        <MudSelectItem T="AccountingCategoryKind" Value="@value">@L[$"CategoryKind_{value}"]</MudSelectItem>
+                    }
+                </MudSelect>
+                <div class="master-form__row">
+                    <MudTextField T="string" @bind-Value="number" Label="@L["Number"]" Placeholder="4000" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="10" />
+                    <MudTextField T="string" @bind-Value="name" Label="@L["Name"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="80" Immediate="true" />
+                </div>
+                <MudSelect T="TaxSphere" @bind-Value="sphere" Label="@L["Categories_Sphere"]" HelperText="@L[$"SphereHint_{sphere}"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var value in Enum.GetValues<TaxSphere>())
+                    {
+                        <MudSelectItem T="TaxSphere" Value="@value">@L[$"Sphere_{value}"]</MudSelectItem>
+                    }
+                </MudSelect>
+                break;
+
+            default:
+                <MudTextField T="string" @bind-Value="name" Label="@L["Name"]" Placeholder="@L["CostCenters_NamePlaceholder"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="60" Immediate="true" />
+                break;
+        }
+
+        @if (Id is not null)
+        {
+            <MudSwitch T="bool" @bind-Value="archived" Color="Color.Primary" Label="@L["Archive"]" />
+            <div class="master-form__hint">@L["ArchiveHint"]</div>
+            @if (!IsUsed)
+            {
+                <div>
+                    <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="Delete" Disabled="@Store.IsSaving">@SharedLocale["Delete"]</MudButton>
+                </div>
+            }
+        }
+    </div>
+</BaseDialog>
+
+@code {
+    public enum DataKind
+    {
+        MoneyAccount,
+        Category,
+        CostCenter,
+    }
+
+    [Parameter] public DataKind Kind { get; set; }
+    [Parameter] public MoneyAccountDto? Account { get; set; }
+    [Parameter] public AccountingCategoryDto? Category { get; set; }
+    [Parameter] public CostCenterDto? CostCenter { get; set; }
+
+    [Inject] private IAccountingStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private string? name;
+    private bool archived;
+    private MoneyAccountKind accountKind = MoneyAccountKind.Bank;
+    private string? iban;
+    private int sortOrder;
+    private AccountingCategoryKind categoryKind;
+    private string? number;
+    private TaxSphere sphere;
+
+    private int? Id => Kind switch
+    {
+        DataKind.MoneyAccount => Account?.Id,
+        DataKind.Category => Category?.Id,
+        _ => CostCenter?.Id,
+    };
+
+    private bool IsUsed => Kind switch
+    {
+        DataKind.MoneyAccount => Account?.IsUsed == true,
+        DataKind.Category => Category?.IsUsed == true,
+        _ => CostCenter?.IsUsed == true,
+    };
+
+    protected override void OnInitialized()
+    {
+        if (Account is { } account)
+        {
+            name = account.Name;
+            archived = account.IsArchived;
+            accountKind = account.Kind;
+            iban = account.Iban is { } value ? AccountingHelpers.Iban(value) : null;
+            sortOrder = account.SortOrder;
+        }
+        else if (Kind == DataKind.MoneyAccount)
+        {
+            sortOrder = Store.Basics?.MoneyAccounts.Count ?? 0;
+        }
+
+        if (Category is { } category)
+        {
+            name = category.Name;
+            archived = category.IsArchived;
+            categoryKind = category.Kind;
+            number = category.Number;
+            sphere = category.TaxSphere;
+        }
+
+        if (CostCenter is { } costCenter)
+        {
+            name = costCenter.Name;
+            archived = costCenter.IsArchived;
+        }
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        HttpResult result = Kind switch
+        {
+            DataKind.MoneyAccount => await Store.SaveMoneyAccount(Account?.Id, new SaveMoneyAccountModel { Name = name, Kind = accountKind, Iban = iban, SortOrder = sortOrder, IsArchived = archived }),
+            DataKind.Category => await Store.SaveCategory(Category?.Id, new SaveAccountingCategoryModel { Kind = categoryKind, Number = number, Name = name, TaxSphere = sphere, IsArchived = archived }),
+            _ => await Store.SaveCostCenter(CostCenter?.Id, new SaveCostCenterModel { Name = name, IsArchived = archived }),
+        };
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Saved"], Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private async Task Delete()
+    {
+        var result = Kind switch
+        {
+            DataKind.MoneyAccount => await Store.DeleteMoneyAccount(Account!.Id),
+            DataKind.Category => await Store.DeleteCategory(Category!.Id),
+            _ => await Store.DeleteCostCenter(CostCenter!.Id),
+        };
+
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(L["Deleted"], Severity.Success);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

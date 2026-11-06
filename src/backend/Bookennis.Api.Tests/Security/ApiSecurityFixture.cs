@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure.Identity;
+using Bookennis.Domain.Accounting;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.ClubAnnouncements;
 using Bookennis.Domain.ClubEvents;
@@ -106,6 +107,9 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
     /// <summary>The clubhouse host ("Wirt") of club A: no other role, not enrolled. Keeps the tabs of the guests, nothing else.</summary>
     public SeededUser HostOfA { get; private set; } = null!;
 
+    /// <summary>An auditor (Rechnungsprüfer) of club A, no other role: reads the accounting and records the audit, changes nothing else.</summary>
+    public SeededUser AuditorOfA { get; private set; } = null!;
+
     /// <summary>The family of <see cref="MemberOfA"/> (the only parent) with one child that has no login of its own.</summary>
     public SeededFamily FamilyOfMemberOfA { get; private set; } = null!;
 
@@ -142,7 +146,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await Seed();
 
         // Signing in is limited per client address and the sweeps also hit the sign-in endpoints, so the tests sign in once up front
-        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, ClubA.Member, ClubB.Member, MemberOfA, OtherMemberOfA, TreasurerOfA, SportsDirectorOfA, SportsDirectorWithoutModeRoleOfA, EnrolledMemberOfA, HostOfA })
+        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, ClubA.Member, ClubB.Member, MemberOfA, OtherMemberOfA, TreasurerOfA, SportsDirectorOfA, SportsDirectorWithoutModeRoleOfA, EnrolledMemberOfA, HostOfA, AuditorOfA })
             cookies[user.UserId] = await SignIn(user);
     }
 
@@ -209,6 +213,9 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         // The answers of the invitees and the players of the groups belong to the club through their parent
         result.Append("PlayRequestInvitees=").Append(await Hash(
             $"""SELECT t::text AS row FROM "PlayRequestInvitees" t WHERE t."PlayRequestId" IN (SELECT "Id" FROM "PlayRequests" WHERE "ClubId" = {club.Id})""")).Append(';');
+        foreach (var (table, parent, key) in new[] { ("AccountingEntryLines", "AccountingEntries", "AccountingEntryId"), ("AccountingEntryChanges", "AccountingEntries", "AccountingEntryId"), ("FiscalYearOpeningBalances", "FiscalYears", "FiscalYearId") })
+            result.Append(table).Append('=').Append(await Hash(
+                $"""SELECT t::text AS row FROM "{table}" t WHERE t."{key}" IN (SELECT "Id" FROM "{parent}" WHERE "ClubId" = {club.Id})""")).Append(';');
         result.Append("PlayerGroupMembers=").Append(await Hash(
             $"""SELECT t::text AS row FROM "PlayerGroupMembers" t WHERE t."PlayerGroupId" IN (SELECT "Id" FROM "PlayerGroups" WHERE "ClubId" = {club.Id})""")).Append(';');
 
@@ -336,6 +343,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         PlayRequestOfActiveInviteesId = requestOfActiveInvitees.Id;
 
         HostOfA = await AddUser(context, ClubA, "host-a", Marker, [MemberRole.User, MemberRole.ClubhouseHost]);
+        AuditorOfA = await AddUser(context, ClubA, "auditor-a", Marker, [MemberRole.User, MemberRole.Auditor]);
         FamilyOfMemberOfA = await AddFamily(context, ClubA, MemberOfA, "Ownchild");
         FamilyOfOtherMemberOfA = await AddFamily(context, ClubA, OtherMemberOfA, "Otherchild");
 
@@ -477,6 +485,33 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
 
         seeded.PlayRequestId = playRequest.Id;
         seeded.PlayerGroupId = playerGroup.Id;
+
+        // Accounting: the books of the club with a bank account, a category, a cost center, an entry of the plain member with a
+        // receipt, and a receipt in the inbox, all with the text of the club
+        var fiscalYear = FiscalYear.First(club.Id, 1, today.Year, today);
+        var moneyAccount = new MoneyAccount(club.Id, new MoneyAccount.AccountData($"Bank {text}", MoneyAccountKind.Bank, "AT611904300234573201", 0));
+        var category = new AccountingCategory(club.Id, new AccountingCategory.CategoryData(AccountingCategoryKind.Income, "4000", $"Fees {text}", TaxSphere.NonProfit));
+        var costCenter = new CostCenter(club.Id, $"Youth {text}");
+        context.AddRange(new AccountingSettings(club.Id, 1), fiscalYear, moneyAccount, category, costCenter);
+        await context.SaveChangesAsync();
+        fiscalYear.SetOpeningBalance(moneyAccount.Id, 10_000);
+
+        var receipt = new AccountingReceipt(club.Id, $"receipt-{text}.pdf", Encoding.UTF8.GetBytes($"%PDF-1.7 {text}"), seeded.Admin.MemberId, now);
+        var inboxReceipt = new AccountingReceipt(club.Id, $"inbox-{text}.pdf", Encoding.UTF8.GetBytes($"%PDF-1.7 inbox {text}"), seeded.Admin.MemberId, now);
+        var entry = new AccountingEntry(fiscalYear, new AccountingEntry.EntryData(today, $"Entry {text}", AccountingEntryKind.Booking, moneyAccount.Id, null, null,
+            [new AccountingEntry.LineData(category.Id, costCenter.Id, 12_000)], seeded.Member.MemberId, $"Payer {text}"), [], seeded.Admin.MemberId, now);
+        context.AddRange(receipt, inboxReceipt, entry);
+        await context.SaveChangesAsync();
+        receipt.AttachTo(entry);
+        await context.SaveChangesAsync();
+
+        seeded.FiscalYearId = fiscalYear.Id;
+        seeded.MoneyAccountId = moneyAccount.Id;
+        seeded.AccountingCategoryId = category.Id;
+        seeded.CostCenterId = costCenter.Id;
+        seeded.AccountingEntryId = entry.Id;
+        seeded.AccountingReceiptId = receipt.Id;
+        seeded.AccountingInboxReceiptId = inboxReceipt.Id;
         return seeded;
     }
 
@@ -612,6 +647,23 @@ public sealed class SeededClub
 
     /// <summary>A tab of <see cref="Member"/> paid in the app with <see cref="ClubhouseTabPaymentId"/> (checkout <c>chk_{Id}</c>).</summary>
     public int ClubhousePaidTabId { get; set; }
+
+    /// <summary>The open fiscal year of this calendar year, with an opening balance of the bank account.</summary>
+    public int FiscalYearId { get; set; }
+
+    /// <summary>The bank account <c>Bank {text}</c>.</summary>
+    public int MoneyAccountId { get; set; }
+
+    public int AccountingCategoryId { get; set; }
+    public int CostCenterId { get; set; }
+
+    /// <summary>An income entry <c>Entry {text}</c> paid by <see cref="Member"/>, with <see cref="AccountingReceiptId"/>.</summary>
+    public int AccountingEntryId { get; set; }
+
+    public int AccountingReceiptId { get; set; }
+
+    /// <summary>A receipt in the inbox (no entry): the only one that can be deleted.</summary>
+    public int AccountingInboxReceiptId { get; set; }
     public List<int> UserIds { get; } = [];
 }
 

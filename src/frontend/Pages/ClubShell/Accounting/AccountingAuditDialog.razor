@@ -1,0 +1,62 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+
+@* The auditor (Rechnungsprüfer) records the audit of a closed fiscal year, with remarks for the general meeting. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@L["Audit_Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@(status != FiscalYearAuditStatus.AuditedWithRemarks || !string.IsNullOrWhiteSpace(comment))" Loading="@Store.IsSaving" Title="@L["Audit_Title"]">
+    <div class="audit-form">
+        <div class="audit-form__hint">@L["Audit_Hint"]</div>
+        <ChoiceChips TItem="FiscalYearAuditStatus" Items="@Statuses" @bind-Value="status" TextFunc="@(s => L[$"Audit_{s}"])" />
+        <MudTextField T="string" @bind-Value="comment" Label="@L["Audit_Comment"]" Placeholder="@L["Audit_CommentPlaceholder"]" Lines="4" MaxLength="2000"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" />
+    </div>
+</BaseDialog>
+
+@code {
+    private static readonly FiscalYearAuditStatus[] Statuses = [FiscalYearAuditStatus.Audited, FiscalYearAuditStatus.AuditedWithRemarks, FiscalYearAuditStatus.NotAudited];
+
+    [Parameter, EditorRequired] public FiscalYearDto Year { get; set; } = null!;
+
+    [Inject] private IAccountingStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private FiscalYearAuditStatus status = FiscalYearAuditStatus.Audited;
+    private string? comment;
+
+    protected override void OnInitialized()
+    {
+        if (Year.AuditStatus != FiscalYearAuditStatus.NotAudited)
+            status = Year.AuditStatus;
+        comment = Year.AuditComment;
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        var result = await Store.RecordAudit(Year.Id, new RecordAuditModel { Status = status, Comment = comment });
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Audit_Saved"], Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

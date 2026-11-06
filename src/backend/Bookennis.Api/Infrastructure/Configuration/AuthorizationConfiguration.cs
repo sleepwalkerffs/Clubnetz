@@ -154,6 +154,26 @@ public static class AuthorizationConfiguration
                           .RequireAssertion(context => !context.User.IsClubApiKey())
                           .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.ClubhouseHost, MemberRole.Admin] }))
 
+                // Accounting policies: cookie only, the books of the club are never open to an API key
+                .AddPolicy(AuthorizationPolicies.AccountingReader, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Treasurer, MemberRole.Admin, MemberRole.Auditor] }))
+                .AddPolicy(AuthorizationPolicies.AccountingManager, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Treasurer, MemberRole.Admin] }))
+                .AddPolicy(AuthorizationPolicies.AccountingAuditor, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Auditor] }))
+
                 // Play request policies: cookie only. Requests are personal (who plays with whom), so they are no business of API keys
                 .AddPolicy(AuthorizationPolicies.PlayRequestMember, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)

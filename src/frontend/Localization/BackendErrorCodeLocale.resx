@@ -819,4 +819,100 @@
   <data name="PlayerGroupEmpty" xml:space="preserve">
     <value>A group needs at least one player.</value>
   </data>
+  <data name="AccountingNotSetUp" xml:space="preserve">
+    <value>The accounting of the club is not set up yet.</value>
+  </data>
+  <data name="AccountingAlreadySetUp" xml:space="preserve">
+    <value>The accounting is already set up.</value>
+  </data>
+  <data name="AccountingFiscalYearStartInvalid" xml:space="preserve">
+    <value>Choose a month and a first fiscal year that starts at most ten years ago or next year.</value>
+  </data>
+  <data name="AccountingNameInvalid" xml:space="preserve">
+    <value>Enter a name of up to {0} characters.</value>
+  </data>
+  <data name="AccountingNameTaken" xml:space="preserve">
+    <value>"{0}" already exists.</value>
+  </data>
+  <data name="AccountingIbanInvalid" xml:space="preserve">
+    <value>This IBAN is not valid. Check it against the bank statement.</value>
+  </data>
+  <data name="AccountingCategoryNumberInvalid" xml:space="preserve">
+    <value>The number can have up to {0} characters.</value>
+  </data>
+  <data name="AccountingFiscalYearClosed" xml:space="preserve">
+    <value>The fiscal year {0} is closed: nothing in it can be changed.</value>
+  </data>
+  <data name="AccountingFiscalYearMissing" xml:space="preserve">
+    <value>There is no fiscal year for {0}. Create the next fiscal year under Setup first.</value>
+  </data>
+  <data name="AccountingDateOutsideFiscalYear" xml:space="preserve">
+    <value>The date must stay in the fiscal year {0}.</value>
+  </data>
+  <data name="AccountingTextInvalid" xml:space="preserve">
+    <value>Enter a text of up to {0} characters.</value>
+  </data>
+  <data name="AccountingAmountInvalid" xml:space="preserve">
+    <value>Enter an amount other than 0 and at most € {0}.</value>
+  </data>
+  <data name="AccountingLinesInvalid" xml:space="preserve">
+    <value>An income or expense needs between 1 and {0} lines.</value>
+  </data>
+  <data name="AccountingTransferInvalid" xml:space="preserve">
+    <value>A transfer goes from one money account to another one, with an amount above 0.</value>
+  </data>
+  <data name="AccountingArchived" xml:space="preserve">
+    <value>"{0}" is archived and can't be used for new entries.</value>
+  </data>
+  <data name="AccountingEntryCancelled" xml:space="preserve">
+    <value>The entry was cancelled and can't be changed any more.</value>
+  </data>
+  <data name="AccountingCounterpartyInvalid" xml:space="preserve">
+    <value>The name can have up to {0} characters.</value>
+  </data>
+  <data name="AccountingPreviousYearOpen" xml:space="preserve">
+    <value>Close the fiscal year {0} first.</value>
+  </data>
+  <data name="AccountingNextYearClosed" xml:space="preserve">
+    <value>The fiscal year {0} is closed: open it again first.</value>
+  </data>
+  <data name="AccountingFiscalYearNotClosed" xml:space="preserve">
+    <value>Only a closed fiscal year can be audited or opened again.</value>
+  </data>
+  <data name="AccountingOpeningBalancesCarried" xml:space="preserve">
+    <value>The opening balances come from the year before: change that year instead.</value>
+  </data>
+  <data name="AccountingInUse" xml:space="preserve">
+    <value>"{0}" is used by entries: archive it instead.</value>
+  </data>
+  <data name="AccountingCategoryKindInUse" xml:space="preserve">
+    <value>"{0}" is used by entries: it stays income or expense.</value>
+  </data>
+  <data name="AccountingReceiptTooLarge" xml:space="preserve">
+    <value>The file is too large (max. {0} MB).</value>
+  </data>
+  <data name="AccountingReceiptTypeNotAllowed" xml:space="preserve">
+    <value>Only these files can be receipts: {0}.</value>
+  </data>
+  <data name="AccountingReceiptAlreadyBooked" xml:space="preserve">
+    <value>The receipt belongs to entry #{0}.</value>
+  </data>
+  <data name="AccountingAuditorIsTreasurer" xml:space="preserve">
+    <value>Treasurers and admins keep the books, so they can't audit them.</value>
+  </data>
+  <data name="AccountingAuditorRequired" xml:space="preserve">
+    <value>Only an auditor of the club can record the audit.</value>
+  </data>
+  <data name="AccountingFiscalYearTooFarAhead" xml:space="preserve">
+    <value>The next fiscal year would start on {0}: it can be created at most a year ahead.</value>
+  </data>
+  <data name="AccountingCommentInvalid" xml:space="preserve">
+    <value>The text can have up to {0} characters.</value>
+  </data>
+  <data name="AccountingTooManyReceipts" xml:space="preserve">
+    <value>An entry can have up to {0} receipts.</value>
+  </data>
+  <data name="AccountingCategorySphereInUse" xml:space="preserve">
+    <value>"{0}" is used in a closed fiscal year, so its tax sphere stays: otherwise the reports of that year would change.</value>
+  </data>
 </root>

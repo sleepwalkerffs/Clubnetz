@@ -146,6 +146,36 @@ public class ExportPersonalDataTests(TestFixture fixture) : TestBase(fixture)
         System.Text.Json.JsonSerializer.Serialize(export).Should().NotContain("Secret wine");
     }
 
+    [Fact]
+    public async Task Export_ContainsTheEntriesOfTheClubsBooksThatNameTheUser()
+    {
+        await QueryAsync(async ctx =>
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var year = Domain.Accounting.FiscalYear.First(TestDataSeed.ClubId, 1, today.Year, today);
+            var account = new Domain.Accounting.MoneyAccount(TestDataSeed.ClubId, new Domain.Accounting.MoneyAccount.AccountData("Bank", Domain.Accounting.MoneyAccountKind.Bank, null, 0));
+            var category = new Domain.Accounting.AccountingCategory(TestDataSeed.ClubId,
+                new Domain.Accounting.AccountingCategory.CategoryData(Domain.Accounting.AccountingCategoryKind.Income, null, "Fees", Domain.Accounting.TaxSphere.NonProfit));
+            ctx.AddRange(year, account, category);
+            await ctx.SaveChangesAsync();
+
+            foreach (var memberId in new int?[] { TestDataSeed.Member1Id, TestDataSeed.Member2Id })
+            {
+                ctx.Add(new Domain.Accounting.AccountingEntry(year, new Domain.Accounting.AccountingEntry.EntryData(today, $"Fee of {memberId}", Domain.Accounting.AccountingEntryKind.Booking,
+                    account.Id, null, null, [new Domain.Accounting.AccountingEntry.LineData(category.Id, null, 12_000)], memberId, "Payer"), [], null, DateTimeOffset.UtcNow));
+            }
+
+            await ctx.SaveChangesAsync();
+        });
+        SetCurrentUser(TestDataSeed.UserId);
+
+        var export = await SendAsync(new ExportPersonalData());
+
+        var entry = export.AccountingEntries.Should().ContainSingle().Which;
+        entry.Text.Should().Be($"Fee of {TestDataSeed.Member1Id}");
+        entry.Lines.Should().ContainSingle().Which.Should().Be(new PersonalDataAccountingLine("Fees", 120m));
+    }
+
     private void SetCurrentUser(int userId)
     {
         var userAccessor = GetInstance<IUserAccessor>();

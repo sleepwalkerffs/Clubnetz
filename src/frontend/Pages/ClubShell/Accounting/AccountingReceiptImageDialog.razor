@@ -1,0 +1,23 @@
+@using Bookennis.Client.Localization
+
+@* A photo of a receipt, as large as the screen allows. *@
+
+<MudDialog>
+    <DialogContent>
+        <div class="receipt-image">
+            <img src="@DataUrl" alt="@FileName" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="() => MudDialog.Close()">@SharedLocale["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter, EditorRequired] public string DataUrl { get; set; } = "";
+    [Parameter] public string FileName { get; set; } = "";
+
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+}

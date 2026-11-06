@@ -1,0 +1,83 @@
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+
+@inherits AccountingComponentBase
+
+@* Shown while the accounting of the club is not set up: treasurers switch it on, auditors are told to wait. *@
+
+<SectionCard Emoji="🚀" Title="@L["SetUp_Title"]" Subtitle="@L["SetUp_Subtitle"]">
+    @if (Store.Basics?.CanManage != true)
+    {
+        <MudAlert Severity="Severity.Info">@L["SetUp_NotYet"]</MudAlert>
+    }
+    else
+    {
+        <div class="acc-setup">
+            <ul class="acc-setup__list">
+                <li>@L["SetUp_Point_Years"]</li>
+                <li>@L["SetUp_Point_Accounts"]</li>
+                <li>@L["SetUp_Point_Categories"]</li>
+                <li>@L["SetUp_Point_Change"]</li>
+            </ul>
+
+            <div class="acc-fields">
+                <MudSelect T="int" @bind-Value="startMonth" Label="@L["SetUp_StartMonth"]" HelperText="@L["SetUp_StartMonthHint"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @for (var month = 1; month <= 12; month++)
+                    {
+                        var value = month;
+                        <MudSelectItem T="int" Value="@value">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(value)</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect T="int" @bind-Value="firstYear" Label="@L["SetUp_FirstYear"]" HelperText="@FirstYearHint" Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var value in Years)
+                    {
+                        <MudSelectItem T="int" Value="@value">@value</MudSelectItem>
+                    }
+                </MudSelect>
+            </div>
+
+            <div class="acc-actions">
+                <LoadButton Variant="Variant.Filled" Color="Color.Primary" Loading="@Store.IsSaving" OnClick="SetUp" Icon="@Icons.Material.Filled.RocketLaunch" FullWidth="false">
+                    @L["SetUp_Start"]
+                </LoadButton>
+            </div>
+        </div>
+    }
+</SectionCard>
+
+@code {
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private static readonly int[] Years = Enumerable.Range(DateTime.Today.Year - 2, 4).ToArray();
+
+    private int startMonth = 1;
+    private int firstYear = DateTime.Today.Year;
+
+    private string FirstYearHint
+    {
+        get
+        {
+            var start = new DateOnly(firstYear, startMonth, 1);
+            return string.Format(L["SetUp_FirstYearHint"], AccountingHelpers.Date(start), AccountingHelpers.Date(start.AddYears(1).AddDays(-1)));
+        }
+    }
+
+    private async Task SetUp()
+    {
+        var result = await Store.SetUp(new SetUpAccountingModel { FiscalYearStartMonth = startMonth, FirstYear = firstYear });
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(L["SetUp_Done"], Severity.Success);
+    }
+}

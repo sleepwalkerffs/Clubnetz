@@ -1,0 +1,156 @@
+@page "/clubs/{ClubId:int}/finances"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Shared.Controller.Accounting
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+<PageTitle>@L["Page_Title"]</PageTitle>
+
+@if (!CanRead)
+{
+    <MudAlert Severity="Severity.Info">@L["NoAccess"]</MudAlert>
+}
+else
+{
+    var basics = Store.Basics;
+    var year = Store.SelectedYear;
+
+    <div class="acc-page">
+        <AdminHero Emoji="📒" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Page_Title"]" Subtitle="@L["Page_Subtitle"]" Class="no-print"
+                   Aside="@(basics is { IsSetUp: true } && basics.FiscalYears.Count > 0 ? YearSelect : null)">
+            <Chips>
+                @if (year is not null)
+                {
+                    <span class="hero-chip @(year.Status == FiscalYearStatus.Open ? null : "hero-chip--warn")">
+                        @(year.Status == FiscalYearStatus.Open ? "🟢" : "🔒") @L[year.Status == FiscalYearStatus.Open ? "Year_Open" : "Year_Closed"]
+                    </span>
+                    <span class="hero-chip">@AuditChip(year)</span>
+                    @if (basics?.CanManage != true)
+                    {
+                        <span class="hero-chip">👁️ @L["ReadOnly"]</span>
+                    }
+                }
+            </Chips>
+        </AdminHero>
+
+        @if (basics is null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else if (!basics.IsSetUp)
+        {
+            <AccountingSetUp />
+        }
+        else
+        {
+            <div class="no-print">
+                <ChoiceChips TItem="AccountingTab" Items="@Tabs" Value="@tab" ValueChanged="OnTabChanged" TextFunc="@TabText" />
+            </div>
+
+            @switch (tab)
+            {
+                case AccountingTab.Overview:
+                    <AccountingOverview OnOpenTab="OnTabChanged" />
+                    break;
+                case AccountingTab.Entries:
+                    <AccountingEntries />
+                    break;
+                case AccountingTab.Receipts:
+                    <AccountingReceipts />
+                    break;
+                case AccountingTab.Reports:
+                    <AccountingReports />
+                    break;
+                default:
+                    <AccountingSettings />
+                    break;
+            }
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [Inject] private IAccountingStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    private static readonly AccountingTab[] Tabs = Enum.GetValues<AccountingTab>();
+
+    private AccountingTab tab = AccountingTab.Overview;
+
+    private bool CanRead => AccountingHelpers.CanRead(ClubProfileStore.Roles);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnAccountingChanged += OnChanged;
+        ClubProfileStore.OnClubProfileChanged += OnClubProfileChanged;
+        await LoadIfAllowed();
+    }
+
+    private bool loaded;
+
+    private async Task LoadIfAllowed()
+    {
+        if (!CanRead || loaded)
+            return;
+
+        loaded = true;
+        await Store.Load();
+        await Store.LoadSummary();
+        await Store.LoadInbox();
+    }
+
+    private async void OnClubProfileChanged()
+    {
+        await InvokeAsync(LoadIfAllowed);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private Task OnTabChanged(AccountingTab value)
+    {
+        tab = value;
+        return Task.CompletedTask;
+    }
+
+    private Task OnYearChanged(int fiscalYearId) => Store.SelectYear(fiscalYearId);
+
+    /// <summary>The fiscal year the page shows, in the glass panel of the hero (only once there is a year to pick).</summary>
+    private RenderFragment YearSelect => __builder =>
+    {
+        var basics = Store.Basics;
+        <MudSelect T="int" Value="@(Store.SelectedYear?.Id ?? 0)" ValueChanged="OnYearChanged" Label="@L["FiscalYear"]" Variant="Variant.Outlined" Margin="Margin.Dense" Dense="true">
+            @foreach (var fiscalYear in basics?.FiscalYears ?? [])
+            {
+                <MudSelectItem T="int" Value="@fiscalYear.Id">@fiscalYear.Label @(fiscalYear.Status == FiscalYearStatus.Closed ? "🔒" : null)</MudSelectItem>
+            }
+        </MudSelect>
+    };
+
+    private string TabText(AccountingTab value)
+        => value == AccountingTab.Receipts && Store.Inbox.Count > 0 ? $"{L["Tab_Receipts"]} ({Store.Inbox.Count})" : L[$"Tab_{value}"];
+
+    private string AuditChip(FiscalYearDto year) => year.AuditStatus switch
+    {
+        FiscalYearAuditStatus.Audited => "✅ " + L["Audit_Audited"],
+        FiscalYearAuditStatus.AuditedWithRemarks => "⚠️ " + L["Audit_AuditedWithRemarks"],
+        _ => "🔍 " + L["Audit_NotAudited"],
+    };
+
+    public void Dispose()
+    {
+        Store.OnAccountingChanged -= OnChanged;
+        ClubProfileStore.OnClubProfileChanged -= OnClubProfileChanged;
+    }
+}

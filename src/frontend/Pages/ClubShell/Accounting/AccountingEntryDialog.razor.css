@@ -1,0 +1,125 @@
+.entry-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.entry-form__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.entry-form__hint {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.entry-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-background-gray);
+}
+
+/* Every part has its own area, so the columns line up from line to line, with or without cost centers and remove button. */
+.entry-line {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(110px, 1fr) 32px;
+    grid-template-areas: "category amount remove";
+    gap: 8px;
+    align-items: center;
+}
+
+.entry-line--cost-center {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(110px, 1fr) 32px;
+    grid-template-areas: "category cost-center amount remove";
+}
+
+.entry-line__category {
+    grid-area: category;
+    min-width: 0;
+}
+
+.entry-line__cost-center {
+    grid-area: cost-center;
+    min-width: 0;
+}
+
+.entry-line ::deep .entry-line__amount {
+    grid-area: amount;
+}
+
+.entry-line ::deep .entry-line__remove {
+    grid-area: remove;
+    justify-self: center;
+}
+
+.entry-lines__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.entry-lines__total {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+}
+
+.entry-receipts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.entry-receipts__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.entry-receipts__title {
+    font-weight: 700;
+}
+
+.entry-receipts__upload {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--mud-palette-primary);
+    color: var(--mud-palette-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.entry-receipts__upload:hover {
+    background: var(--mud-palette-primary-hover);
+}
+
+.entry-receipts__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+@media (max-width: 600px) {
+    .entry-line {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
+        grid-template-areas: "category category remove" "amount amount amount";
+        padding-bottom: 8px;
+        border-bottom: 1px dashed var(--mud-palette-lines-default);
+    }
+
+    .entry-line--cost-center {
+        grid-template-areas: "category category remove" "cost-center amount amount";
+    }
+}
