@@ -158,7 +158,12 @@
                                     {
                                         var candidate = match;
                                         <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Link" OnClick="() => Match(current, candidate)">
-                                            @(candidate.Kind == BankMatchKind.Entry ? $"#{candidate.Number} {candidate.Text}" : $"{L["Bank_Suggestion"]}: {candidate.Text}") · @AccountingHelpers.ShortDate(candidate.Date)
+                                            @(candidate.Kind switch
+                                            {
+                                                BankMatchKind.Entry => $"#{candidate.Number} {candidate.Text}",
+                                                BankMatchKind.Invoice => $"🧾 {candidate.Text}",
+                                                _ => $"{L["Bank_Suggestion"]}: {candidate.Text}",
+                                            }) · @AccountingHelpers.ShortDate(candidate.Date)
                                         </MudChip>
                                     }
                                     @if (rule is not null && current.Matches.Count == 0)
@@ -401,7 +406,12 @@
 
     private async Task Match(BankTransactionDto line, BankMatchDto match)
     {
-        var result = await Store.MatchBankTransaction(line.Id, match.Kind == BankMatchKind.Entry ? new MatchBankTransactionModel { EntryId = match.Id } : new MatchBankTransactionModel { ProposalId = match.Id });
+        var result = await Store.MatchBankTransaction(line.Id, match.Kind switch
+        {
+            BankMatchKind.Entry => new MatchBankTransactionModel { EntryId = match.Id },
+            BankMatchKind.Invoice => new MatchBankTransactionModel { InvoiceId = match.Id },
+            _ => new MatchBankTransactionModel { ProposalId = match.Id },
+        });
         if (result.Success)
             Snackbar.Add(L["Bank_Matched"], Severity.Success);
         else

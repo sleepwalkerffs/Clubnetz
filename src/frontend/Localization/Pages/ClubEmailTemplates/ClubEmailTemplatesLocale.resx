@@ -502,4 +502,16 @@
   <data name="Variable_guest" xml:space="preserve">
     <value>Name of the guest of the tab</value>
   </data>
+  <data name="Type_Invoice" xml:space="preserve">
+    <value>Invoice</value>
+  </data>
+  <data name="TypeDescription_Invoice" xml:space="preserve">
+    <value>Sent by the treasurer to the recipient of an invoice, with the invoice as PDF.</value>
+  </data>
+  <data name="Type_InvoiceReminder" xml:space="preserve">
+    <value>Payment reminder</value>
+  </data>
+  <data name="TypeDescription_InvoiceReminder" xml:space="preserve">
+    <value>Sent by the treasurer for an overdue invoice, with the invoice as PDF.</value>
+  </data>
 </root>

@@ -942,4 +942,263 @@
   <data name="Proposals_ProblemOther" xml:space="preserve">
     <value>Could not be booked by itself</value>
   </data>
+  <data name="Tab_Invoices" xml:space="preserve">
+    <value>Invoices</value>
+  </data>
+  <data name="Invoice" xml:space="preserve">
+    <value>Invoice</value>
+  </data>
+  <data name="Overview_Overdue" xml:space="preserve">
+    <value>{0} invoices are overdue</value>
+  </data>
+  <data name="Overview_OverdueOne" xml:space="preserve">
+    <value>1 invoice is overdue</value>
+  </data>
+  <data name="Invoices_SetUpTitle" xml:space="preserve">
+    <value>Write invoices from Clubnetz</value>
+  </data>
+  <data name="Invoices_SetUpText" xml:space="preserve">
+    <value>To sponsors, for courses or tournaments: as PDF with a payment QR code, sent by email, paid with one click or by the bank import. First enter the club's details once.</value>
+  </data>
+  <data name="Invoices_SetUp" xml:space="preserve">
+    <value>Enter the club's details</value>
+  </data>
+  <data name="Invoices_Settings" xml:space="preserve">
+    <value>Club details</value>
+  </data>
+  <data name="Invoices_Add" xml:space="preserve">
+    <value>New invoice</value>
+  </data>
+  <data name="Invoices_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Invoices_Open" xml:space="preserve">
+    <value>Open:</value>
+  </data>
+  <data name="Invoices_Overdue" xml:space="preserve">
+    <value>{0} overdue</value>
+  </data>
+  <data name="Invoices_OverdueChip" xml:space="preserve">
+    <value>Overdue</value>
+  </data>
+  <data name="Invoices_Empty" xml:space="preserve">
+    <value>No invoices yet</value>
+  </data>
+  <data name="Invoices_EmptyHint" xml:space="preserve">
+    <value>Write the first one with “New invoice”.</value>
+  </data>
+  <data name="Invoices_DueOn" xml:space="preserve">
+    <value>due {0}</value>
+  </data>
+  <data name="Invoices_PaidOn" xml:space="preserve">
+    <value>paid on {0}</value>
+  </data>
+  <data name="Invoices_Reminders" xml:space="preserve">
+    <value>{0}× reminded</value>
+  </data>
+  <data name="InvoiceStatus_Draft" xml:space="preserve">
+    <value>Draft</value>
+  </data>
+  <data name="InvoiceStatus_Issued" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="InvoiceStatus_Paid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="InvoiceStatus_Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="InvoiceSettings_Title" xml:space="preserve">
+    <value>Club details for invoices</value>
+  </data>
+  <data name="InvoiceSettings_Hint" xml:space="preserve">
+    <value>They are printed on every invoice. The name of the club comes from the club's settings.</value>
+  </data>
+  <data name="InvoiceSettings_Address" xml:space="preserve">
+    <value>Address of the club</value>
+  </data>
+  <data name="InvoiceSettings_AddressPlaceholder" xml:space="preserve">
+    <value>Sportplatzweg 1
+6800 Feldkirch</value>
+  </data>
+  <data name="InvoiceSettings_Zvr" xml:space="preserve">
+    <value>ZVR number</value>
+  </data>
+  <data name="InvoiceSettings_ZvrHint" xml:space="preserve">
+    <value>From the association register (Vereinsregister)</value>
+  </data>
+  <data name="InvoiceSettings_Contact" xml:space="preserve">
+    <value>Contact line</value>
+  </data>
+  <data name="InvoiceSettings_Account" xml:space="preserve">
+    <value>Bank account to pay to</value>
+  </data>
+  <data name="InvoiceSettings_AccountHint" xml:space="preserve">
+    <value>Its IBAN is printed with the QR code</value>
+  </data>
+  <data name="InvoiceSettings_Prefix" xml:space="preserve">
+    <value>Number prefix</value>
+  </data>
+  <data name="InvoiceSettings_PrefixHint" xml:space="preserve">
+    <value>The first invoice of a year gets {0}</value>
+  </data>
+  <data name="InvoiceSettings_Term" xml:space="preserve">
+    <value>Payment term (days)</value>
+  </data>
+  <data name="InvoiceSettings_TermHint" xml:space="preserve">
+    <value>Due date of new invoices</value>
+  </data>
+  <data name="InvoiceSettings_Footer" xml:space="preserve">
+    <value>Footer</value>
+  </data>
+  <data name="InvoiceSettings_FooterHint" xml:space="preserve">
+    <value>E.g. the note about VAT. Ask your tax adviser which applies to the club.</value>
+  </data>
+  <data name="InvoiceSettings_FooterDefault" xml:space="preserve">
+    <value>Exempt from VAT as a small business (§ 6 Abs. 1 Z 27 UStG).</value>
+  </data>
+  <data name="Invoice_AddTitle" xml:space="preserve">
+    <value>New invoice</value>
+  </data>
+  <data name="Invoice_EditTitle" xml:space="preserve">
+    <value>Change draft</value>
+  </data>
+  <data name="Invoice_SaveDraft" xml:space="preserve">
+    <value>Save draft</value>
+  </data>
+  <data name="Invoice_Saved" xml:space="preserve">
+    <value>Draft saved</value>
+  </data>
+  <data name="Invoice_Recipient" xml:space="preserve">
+    <value>Recipient</value>
+  </data>
+  <data name="Invoice_Member" xml:space="preserve">
+    <value>Member</value>
+  </data>
+  <data name="Invoice_MemberHint" xml:space="preserve">
+    <value>Optional: a member of the club</value>
+  </data>
+  <data name="Invoice_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Invoice_Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Invoice_Address" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="Invoice_Details" xml:space="preserve">
+    <value>Invoice</value>
+  </data>
+  <data name="Invoice_Subject" xml:space="preserve">
+    <value>Subject</value>
+  </data>
+  <data name="Invoice_SubjectPlaceholder" xml:space="preserve">
+    <value>Advertising board season 2026</value>
+  </data>
+  <data name="Invoice_ServicePeriod" xml:space="preserve">
+    <value>Service period</value>
+  </data>
+  <data name="Invoice_ServicePeriodPlaceholder" xml:space="preserve">
+    <value>Season 2026</value>
+  </data>
+  <data name="Invoice_Date" xml:space="preserve">
+    <value>Invoice date</value>
+  </data>
+  <data name="Invoice_DueDate" xml:space="preserve">
+    <value>Due</value>
+  </data>
+  <data name="Invoice_Notes" xml:space="preserve">
+    <value>Text above the lines</value>
+  </data>
+  <data name="Invoice_NotesPlaceholder" xml:space="preserve">
+    <value>Thank you for your support!</value>
+  </data>
+  <data name="Invoice_Lines" xml:space="preserve">
+    <value>Lines</value>
+  </data>
+  <data name="Invoice_LineText" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Invoice_Quantity" xml:space="preserve">
+    <value>Qty</value>
+  </data>
+  <data name="Invoice_UnitPrice" xml:space="preserve">
+    <value>Unit price</value>
+  </data>
+  <data name="Invoice_AddLine" xml:space="preserve">
+    <value>Add line</value>
+  </data>
+  <data name="Invoice_Issue" xml:space="preserve">
+    <value>Issue</value>
+  </data>
+  <data name="Invoice_Issued" xml:space="preserve">
+    <value>Issued: the invoice has its number and is final</value>
+  </data>
+  <data name="Invoice_Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="Invoice_SendHint" xml:space="preserve">
+    <value>The invoice goes as PDF with the club email “Invoice” (you can change its text under email templates).</value>
+  </data>
+  <data name="Invoice_SendNow" xml:space="preserve">
+    <value>Send invoice</value>
+  </data>
+  <data name="Invoice_Remind" xml:space="preserve">
+    <value>Remind</value>
+  </data>
+  <data name="Invoice_RemindHint" xml:space="preserve">
+    <value>A friendly payment reminder with the invoice attached again.</value>
+  </data>
+  <data name="Invoice_RemindNow" xml:space="preserve">
+    <value>Send reminder</value>
+  </data>
+  <data name="Invoice_SentNow" xml:space="preserve">
+    <value>Sent to {0}</value>
+  </data>
+  <data name="Invoice_SentTo" xml:space="preserve">
+    <value>sent to {0} on {1}</value>
+  </data>
+  <data name="Invoice_Reminded" xml:space="preserve">
+    <value>{0}× reminded, last on {1}</value>
+  </data>
+  <data name="Invoice_Pay" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="Invoice_PayHint" xml:space="preserve">
+    <value>Books the income of the invoice (its lines by category) on this account and day. A bank line with the invoice number is matched by itself in Reconcile.</value>
+  </data>
+  <data name="Invoice_PaidInto" xml:space="preserve">
+    <value>Paid into</value>
+  </data>
+  <data name="Invoice_PaidOn" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Invoice_PayNow" xml:space="preserve">
+    <value>Book payment</value>
+  </data>
+  <data name="Invoice_Paid" xml:space="preserve">
+    <value>Payment booked</value>
+  </data>
+  <data name="Invoice_PaidAs" xml:space="preserve">
+    <value>Paid on {0} (entry #{1})</value>
+  </data>
+  <data name="Invoice_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Invoice_CancelHint" xml:space="preserve">
+    <value>The invoice keeps its number and is never paid. Write a new one if needed.</value>
+  </data>
+  <data name="Invoice_CancelReason" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="Invoice_CancelNow" xml:space="preserve">
+    <value>Cancel invoice</value>
+  </data>
+  <data name="Invoice_Cancelled" xml:space="preserve">
+    <value>Invoice cancelled</value>
+  </data>
+  <data name="Invoice_Number" xml:space="preserve">
+    <value>Number</value>
+  </data>
 </root>

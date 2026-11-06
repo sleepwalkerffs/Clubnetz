@@ -240,7 +240,7 @@ public static class InvoicePdf
         {
             var payload = EpcQrPayload.For(data.ClubName, data.Iban, settings.Bic, invoice.TotalCents, number);
             DrawQr(canvas, payload, Right - qrSize - 12, boxTop + 8, qrSize);
-            Text(canvas, texts.QrCaption, Right - qrSize / 2 - 12, boxTop + qrSize + 18, 6.5f, color: Muted, align: SKTextAlign.Center);
+            Text(canvas, texts.QrCaption, Right - 12, boxTop + qrSize + 18, 6.5f, color: Muted, align: SKTextAlign.Right);
         }
 
         Footer(canvas, settings, texts, page, pageCount, invoice);

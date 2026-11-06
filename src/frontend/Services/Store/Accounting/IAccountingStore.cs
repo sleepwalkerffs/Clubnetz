@@ -93,4 +93,23 @@ public interface IAccountingStore : ISemaphoreStore
     Task<HttpResult> ReopenBankTransaction(int bankTransactionId);
     Task<HttpResult<BankRuleDto>> SaveBankRule(int? bankRuleId, SaveBankRuleModel model);
     Task<HttpResult> DeleteBankRule(int bankRuleId);
+
+    // ---------- invoices ----------
+
+    InvoiceSettingsDto? InvoiceSettings { get; }
+    GetInvoicesResult? Invoices { get; }
+
+    /// <summary>The status the list shows; <c>null</c> = all.</summary>
+    InvoiceStatus? InvoiceFilter { get; }
+
+    Task LoadInvoices(InvoiceStatus? status);
+    Task<HttpResult<InvoiceSettingsDto>> SaveInvoiceSettings(SaveInvoiceSettingsModel model);
+    Task<HttpResult<InvoiceDetailDto>> GetInvoice(int invoiceId);
+    Task<HttpResult<InvoiceDetailDto>> SaveInvoice(int? invoiceId, SaveInvoiceModel model);
+    Task<HttpResult> DeleteInvoice(int invoiceId);
+
+    /// <summary>issue, send, remind, pay or cancel; paying books an entry.</summary>
+    Task<HttpResult<InvoiceDetailDto>> InvoiceAction(int invoiceId, string action, object? body);
+
+    Task<HttpResult<FileDownload>> GetInvoicePdf(int invoiceId);
 }

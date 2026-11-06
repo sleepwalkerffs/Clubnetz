@@ -1,0 +1,107 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+
+@* What every invoice of the club says about the club: address, ZVR number, the bank account with its IBAN, numbering, payment term, footer. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@(!string.IsNullOrWhiteSpace(address) && moneyAccountId is not null)" Loading="@Store.IsSaving" Title="@L["InvoiceSettings_Title"]">
+    <div class="invoice-form">
+        <div class="invoice-form__hint">@L["InvoiceSettings_Hint"]</div>
+        <MudTextField T="string" @bind-Value="address" Label="@L["InvoiceSettings_Address"]" Placeholder="@L["InvoiceSettings_AddressPlaceholder"]" Lines="3" AutoGrow="true"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="300" Immediate="true" Required="true" />
+        <div class="invoice-form__row">
+            <MudTextField T="string" @bind-Value="zvr" Label="@L["InvoiceSettings_Zvr"]" HelperText="@L["InvoiceSettings_ZvrHint"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="20" />
+            <MudTextField T="string" @bind-Value="contact" Label="@L["InvoiceSettings_Contact"]" Placeholder="kassier@tc-beispiel.at · tc-beispiel.at" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200" />
+        </div>
+        <div class="invoice-form__row">
+            <AccountSelect Label="@L["InvoiceSettings_Account"]" Hint="@L["InvoiceSettings_AccountHint"]" Accounts="@Accounts" @bind-Value="moneyAccountId" Required="true" />
+            <MudTextField T="string" @bind-Value="bic" Label="BIC" Placeholder="BKAUATWW" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="11" />
+        </div>
+        <div class="invoice-form__row">
+            <MudTextField T="string" @bind-Value="prefix" Label="@L["InvoiceSettings_Prefix"]" HelperText="@string.Format(L["InvoiceSettings_PrefixHint"], Example)" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="10" Immediate="true" />
+            <MudNumericField T="int" @bind-Value="term" Label="@L["InvoiceSettings_Term"]" HelperText="@L["InvoiceSettings_TermHint"]" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="365" />
+        </div>
+        <MudTextField T="string" @bind-Value="footer" Label="@L["InvoiceSettings_Footer"]" HelperText="@L["InvoiceSettings_FooterHint"]" Lines="2" AutoGrow="true" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="600" />
+    </div>
+</BaseDialog>
+
+@code {
+    [Inject] private IAccountingStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private string? address;
+    private string? zvr;
+    private string? contact;
+    private int? moneyAccountId;
+    private string? bic;
+    private string? prefix = "RE";
+    private int term = 14;
+    private string? footer;
+
+    /// <summary>Bank accounts only: the invoice prints their IBAN.</summary>
+    private List<MoneyAccountDto> Accounts => (Store.Basics?.MoneyAccounts ?? []).Where(a => a.Kind == MoneyAccountKind.Bank && (!a.IsArchived || a.Id == moneyAccountId)).ToList();
+
+    private string Example => $"{prefix?.Trim()}{DateTime.Today.Year}-0001";
+
+    protected override void OnInitialized()
+    {
+        if (Store.InvoiceSettings is { IsSetUp: true } settings)
+        {
+            address = settings.Address;
+            zvr = settings.ZvrNumber;
+            contact = settings.Contact;
+            moneyAccountId = settings.MoneyAccountId;
+            bic = settings.Bic;
+            prefix = settings.NumberPrefix;
+            term = settings.PaymentTermDays;
+            footer = settings.Footer;
+        }
+        else
+        {
+            moneyAccountId = Accounts.FirstOrDefault(a => a.Iban is not null)?.Id;
+            footer = L["InvoiceSettings_FooterDefault"];
+        }
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (moneyAccountId is not { } accountId)
+            return null;
+
+        var result = await Store.SaveInvoiceSettings(new SaveInvoiceSettingsModel
+        {
+            Address = address,
+            ZvrNumber = zvr,
+            Contact = contact,
+            MoneyAccountId = accountId,
+            Bic = bic,
+            NumberPrefix = prefix,
+            PaymentTermDays = term,
+            Footer = footer,
+        });
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Saved"], Severity.Success);
+        await Store.LoadInvoices(Store.InvoiceFilter);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

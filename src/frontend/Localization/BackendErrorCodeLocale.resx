@@ -945,4 +945,37 @@
   <data name="AccountingBankFileSeveralAccounts" xml:space="preserve">
     <value>The file holds statements of several accounts. Give the money account its IBAN under Setup: then only its statements are imported.</value>
   </data>
+  <data name="AccountingInvoiceSettingsInvalid" xml:space="preserve">
+    <value>Check the BIC (8 or 11 characters), the number prefix (letters, digits, - / _) and the payment term (0 to 365 days).</value>
+  </data>
+  <data name="AccountingInvoiceTextInvalid" xml:space="preserve">
+    <value>Fill in the text (at most {0} characters).</value>
+  </data>
+  <data name="AccountingInvoiceNotDraft" xml:space="preserve">
+    <value>Invoice {0} is issued and final: cancel it and write a new one.</value>
+  </data>
+  <data name="AccountingInvoiceNotOpen" xml:space="preserve">
+    <value>Invoice {0} is paid or cancelled already.</value>
+  </data>
+  <data name="AccountingInvoiceNotIssued" xml:space="preserve">
+    <value>Issue the invoice first: a draft has no number yet.</value>
+  </data>
+  <data name="AccountingInvoiceEmailInvalid" xml:space="preserve">
+    <value>This email address is not valid.</value>
+  </data>
+  <data name="AccountingInvoiceDueDateInvalid" xml:space="preserve">
+    <value>The due date can't be before the invoice date.</value>
+  </data>
+  <data name="AccountingInvoiceQuantityInvalid" xml:space="preserve">
+    <value>Enter a quantity above 0 with at most two decimals.</value>
+  </data>
+  <data name="AccountingInvoicingNotSetUp" xml:space="preserve">
+    <value>Set up the club's details for invoices first (address and bank account).</value>
+  </data>
+  <data name="AccountingInvoiceNoEmail" xml:space="preserve">
+    <value>The invoice has no email address: enter one.</value>
+  </data>
+  <data name="AccountingInvoiceAccountWithoutIban" xml:space="preserve">
+    <value>Give this money account its IBAN under Setup: it is printed on the invoices with the QR code.</value>
+  </data>
 </root>

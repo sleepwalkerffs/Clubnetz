@@ -65,6 +65,9 @@ else
                 case AccountingTab.Receipts:
                     <AccountingReceipts />
                     break;
+                case AccountingTab.Invoices:
+                    <AccountingInvoices />
+                    break;
                 case AccountingTab.Reconcile:
                     <AccountingReconcile />
                     break;
@@ -112,7 +115,7 @@ else
         await Store.LoadSummary();
         await Store.LoadInbox();
         if (Store.Basics?.IsSetUp == true)
-            await Store.LoadProposals();
+            await Task.WhenAll(Store.LoadProposals(), Store.LoadInvoices(null));
     }
 
     private async void OnClubProfileChanged()
@@ -146,6 +149,7 @@ else
     private string TabText(AccountingTab value) => value switch
     {
         AccountingTab.Receipts when Store.Inbox.Count > 0 => $"{L["Tab_Receipts"]} ({Store.Inbox.Count})",
+        AccountingTab.Invoices when Store.Invoices?.OverdueCount is > 0 and var overdue => $"{L["Tab_Invoices"]} ({overdue} ⏰)",
         AccountingTab.Reconcile when Store.Proposals.Count + (Store.BankTransactions?.OpenCount ?? 0) is > 0 and var open => $"{L["Tab_Reconcile"]} ({open})",
         _ => L[$"Tab_{value}"],
     };

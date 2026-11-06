@@ -1,0 +1,112 @@
+.invoice-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.invoice-detail__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.invoice-detail__name {
+    font-weight: 800;
+    font-size: 1.05rem;
+}
+
+.invoice-detail__address {
+    white-space: pre-line;
+    font-size: 0.85rem;
+}
+
+.invoice-detail__meta {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.invoice-detail__total {
+    font-size: 1.4rem;
+    font-weight: 800;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.invoice-detail__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-size: 0.85rem;
+}
+
+.invoice-detail__subject {
+    font-weight: 700;
+}
+
+.invoice-detail__lines {
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.invoice-detail__line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 4px 12px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+}
+
+.invoice-detail__line + .invoice-detail__line {
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.invoice-detail__qty {
+    color: var(--mud-palette-text-secondary);
+    white-space: nowrap;
+}
+
+.invoice-detail__amount {
+    font-weight: 700;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.invoice-detail__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.invoice-detail__form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-primary);
+    background: var(--mud-palette-background-gray);
+}
+
+.invoice-form__hint {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.invoice-form__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 600px) {
+    .invoice-detail__line {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .invoice-detail__qty {
+        grid-column: 1;
+    }
+}

@@ -59,4 +59,13 @@ public interface IAccountingHttpClient
     public Task<HttpResult<List<BankRuleDto>>> GetBankRules(CancellationToken cancellationToken = default);
     public Task<HttpResult<BankRuleDto>> SaveBankRule(int? bankRuleId, SaveBankRuleModel model, CancellationToken cancellationToken = default);
     public Task<HttpResult> DeleteBankRule(int bankRuleId, CancellationToken cancellationToken = default);
+
+    public Task<HttpResult<InvoiceSettingsDto>> GetInvoiceSettings(CancellationToken cancellationToken = default);
+    public Task<HttpResult<InvoiceSettingsDto>> SaveInvoiceSettings(SaveInvoiceSettingsModel model, CancellationToken cancellationToken = default);
+    public Task<HttpResult<GetInvoicesResult>> GetInvoices(InvoiceStatus? status, CancellationToken cancellationToken = default);
+    public Task<HttpResult<InvoiceDetailDto>> GetInvoice(int invoiceId, CancellationToken cancellationToken = default);
+    public Task<HttpResult<InvoiceDetailDto>> SaveInvoice(int? invoiceId, SaveInvoiceModel model, CancellationToken cancellationToken = default);
+    public Task<HttpResult> DeleteInvoice(int invoiceId, CancellationToken cancellationToken = default);
+    public Task<HttpResult<InvoiceDetailDto>> InvoiceAction(int invoiceId, string action, object? body, CancellationToken cancellationToken = default);
+    public Task<HttpResult<FileDownload>> GetInvoicePdf(int invoiceId, CancellationToken cancellationToken = default);
 }

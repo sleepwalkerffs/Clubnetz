@@ -40,6 +40,14 @@ public static class AccountingDialogs
         return result is { Canceled: false };
     }
 
+    /// <summary>Writes a new draft invoice (<paramref name="invoice"/> = null) or changes a draft.</summary>
+    public static Task OpenInvoice(IDialogService dialogService, IStringLocalizer<AccountingLocale> locale, InvoiceDetailDto? invoice)
+        => dialogService.ShowAsync<InvoiceDialog>(locale[invoice is null ? "Invoice_AddTitle" : "Invoice_EditTitle"],
+            new DialogParameters<InvoiceDialog> { { d => d.Invoice, invoice } }, Wide);
+
+    public static Task OpenInvoiceDetail(IDialogService dialogService, IStringLocalizer<AccountingLocale> locale, int invoiceId)
+        => dialogService.ShowAsync<InvoiceDetailDialog>(locale["Invoice"], new DialogParameters<InvoiceDetailDialog> { { d => d.InvoiceId, invoiceId } }, Wide);
+
     public static async Task OpenDetail(IDialogService dialogService, IStringLocalizer<AccountingLocale> locale, int entryId)
     {
         var parameters = new DialogParameters<AccountingEntryDetailDialog> { { d => d.EntryId, entryId } };
