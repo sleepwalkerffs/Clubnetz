@@ -122,6 +122,16 @@ where "Id" = 1;
 update "Courts" set "Name" = 'Center Court', "Alias" = case when "Alias" is null then null else 'CC' end
 where "ClubId" = 1 and "Name" !~ '^[0-9]+$';
 
+-- The books, the clubhouse and play requests hold names, IBANs, bank lines, receipts and
+-- SumUp tokens. Pseudonymizing them field by field is easy to get wrong, so they are
+-- emptied; demo-features.sql fills them with invented data.
+truncate "AccountingEntryChanges", "AccountingEntryLines", "AccountingReceiptContents", "AccountingReceipts",
+         "AccountingProposals", "AccountingSourceSettings", "BankTransactions", "BankStatementImports", "BankRules",
+         "BankCsvLayouts", "InvoiceLines", "Invoices", "InvoiceSettings", "AccountingEntries", "FiscalYearOpeningBalances",
+         "FiscalYears", "AccountingSettings", "AccountingCategories", "CostCenters", "MoneyAccounts",
+         "ClubhouseTabPayments", "ClubhouseTabLines", "ClubhouseTabs", "ClubhouseItems", "ClubhouseSumUpAccounts",
+         "PlayRequestInvitees", "PlayRequests", "PlayerGroupMembers", "PlayerGroups" cascade;
+
 commit;
 
 -- Old background jobs carry real email addresses in their arguments. Hangfire

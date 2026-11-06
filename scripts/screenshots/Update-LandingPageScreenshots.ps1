@@ -50,6 +50,12 @@ $buyPath = "/clubs/1/booking?Start=$($buyDay.ToString('MM/dd/yyyy', $us))&End=$(
 $openBuyDialog = Get-Content -Raw "$PSScriptRoot/open-buy-dialog.js"
 $showSalesTab = "document.querySelectorAll('.choice-chip')[1].click(); true"
 $scrollToAfternoon = "document.querySelector('.day-scroll-container').scrollTop = 420; true"
+# The tabs of the accounting page, by position: 4 = reconcile, 5 = reports.
+$showAccountingTab = { param($i) "document.querySelectorAll('.choice-chip')[$i].click(); true" }
+$belowChips = "Math.round([...document.querySelectorAll('.choice-chip')].pop().getBoundingClientRect().bottom + scrollY + 12)"
+$belowHero = "Math.round(document.querySelector('.admin-hero').getBoundingClientRect().bottom + scrollY + 12)"
+# The open clubhouse tab of a member with the most items on it (demo-features.sql).
+$tabId = Query "select t.""Id"" from ""ClubhouseTabs"" t join ""ClubhouseTabLines"" l on l.""ClubhouseTabId"" = t.""Id"" where t.""ClubId"" = 1 and t.""Status"" = 0 and t.""MemberId"" is not null group by 1 order by count(*) desc, 1 limit 1"
 
 $desktop = @{ Width = 1280; Height = 800 }
 $phone = @{ Width = 390; Height = 844; Mobile = $true }
@@ -62,12 +68,18 @@ $shots = @(
     @{ Name = "members"; Path = "/clubs/1/members"; Email = $AdminEmail } + $desktop
     @{ Name = "statistics"; Path = "/clubs/1/club-statistics"; Email = $AdminEmail } + $desktop
     @{ Name = "court-sales"; Path = "/clubs/1/court-sales"; Email = $AdminEmail; Script = $showSalesTab } + $desktop
+    @{ Name = "accounting"; Path = "/clubs/1/finances"; Email = $AdminEmail; Script = (& $showAccountingTab 5) } + $desktop
+    @{ Name = "clubhouse"; Path = "/clubs/1/clubhouse/tabs/$tabId"; Email = $AdminEmail } + $desktop
+    @{ Name = "play-requests"; Path = "/clubs/1/play-requests"; Email = $AdminEmail } + $desktop
     @{ Name = "phone-booking"; Path = $bookingPath; Email = $AdminEmail; Script = $scrollToAfternoon } + $phone
     @{ Name = "phone-calendar"; Path = "/clubs/1/calendar"; Email = $AdminEmail } + $phone
     @{ Name = "phone-news"; Path = "/clubs/1/news"; Email = $AdminEmail } + $phone
     @{ Name = "phone-trophies"; Path = "/clubs/1/members/$topMemberId/trophy-case"; Email = $AdminEmail } + $phone
     @{ Name = "phone-membership"; Path = "/clubs/1/membership"; Email = $MemberEmail } + $phone
     @{ Name = "phone-court-buy"; Path = $buyPath; Email = "buyer@example.test"; Script = $openBuyDialog } + $phone
+    @{ Name = "phone-accounting"; Path = "/clubs/1/finances"; Email = $AdminEmail; Script = (& $showAccountingTab 4); ClipTop = $belowChips } + $phone
+    @{ Name = "phone-clubhouse"; Path = "/clubs/1/clubhouse"; Email = $AdminEmail } + $phone
+    @{ Name = "phone-play-requests"; Path = "/clubs/1/play-requests"; Email = $AdminEmail; ClipTop = $belowHero } + $phone
 )
 if ($Only) { $shots = $shots | Where-Object { $_.Name -in $Only } }
 

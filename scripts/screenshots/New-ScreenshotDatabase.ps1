@@ -8,8 +8,12 @@
     addresses, phone numbers, birthdays, profile pictures and free-text comments with
     invented values and renames club 1. The source database is not changed.
 
+    The books, the clubhouse and play requests are emptied instead of pseudonymized.
+
     Then it adds invented demo content to club 1 (a busy booking week around today,
-    upcoming events with registrations, news and membership fee orders) in the
+    upcoming events with registrations, news and membership fee orders from
+    demo-content.sql; two fiscal years with entries, a bank import, suggested entries,
+    invoices, clubhouse tabs and play requests from demo-features.sql) in the
     language given with -Language.
 
     Every user of the copy gets the password of the template account, so you can log
@@ -46,8 +50,11 @@ Get-Content -Raw -Encoding utf8 "$PSScriptRoot/pseudonymize.sql" |
     docker exec -i $Container psql -U postgres -d $Target -v ON_ERROR_STOP=1 -v "template_email=$TemplateEmail" -q
 $pseudonymized = $LASTEXITCODE -eq 0
 if ($pseudonymized) {
-    Get-Content -Raw -Encoding utf8 "$PSScriptRoot/demo-content.sql" |
-        docker exec -i $Container psql -U postgres -d $Target -v ON_ERROR_STOP=1 -v "lang=$Language" -q
+    foreach ($demo in "demo-content.sql", "demo-features.sql") {
+        Get-Content -Raw -Encoding utf8 "$PSScriptRoot/$demo" |
+            docker exec -i $Container psql -U postgres -d $Target -v ON_ERROR_STOP=1 -v "lang=$Language" -q
+        if ($LASTEXITCODE -ne 0) { break }
+    }
 }
 if (-not $pseudonymized) {
     docker exec $Container psql -U postgres -c "drop database if exists `"$Target`";" | Out-Null

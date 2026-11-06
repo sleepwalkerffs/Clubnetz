@@ -9,7 +9,9 @@
     New-ScreenshotDatabase.ps1; never point it at real data you don't want published.
 
     Each shot is a hashtable: @{ Name = "booking"; Path = "/clubs/1/book"; Email = "..."; Width = 390; Height = 844; Mobile = $true }
-    Optional keys: Wait (seconds, default 5), Theme ("light" | "dark"), Script (JavaScript run before the capture).
+    Optional keys: Wait (seconds, default 5), Theme ("light" | "dark"), Script (JavaScript run before the capture),
+    ClipTop (JavaScript returning the page offset in CSS pixels where the capture starts, for content further down
+    the page: scrolling does not work in the mobile emulation, so the page is captured beyond the viewport instead).
 #>
 param(
     [Parameter(Mandatory)] [hashtable[]] $Shots,
@@ -110,7 +112,13 @@ try {
             Start-Sleep -Seconds 2
         }
 
-        $image = Send-Cdp "Page.captureScreenshot" @{ format = "webp"; quality = 82 }
+        $capture = @{ format = "webp"; quality = 82 }
+        if ($shot.ClipTop) {
+            $top = [double] (Invoke-Js $shot.ClipTop)
+            $capture.clip = @{ x = 0; y = $top; width = $width; height = $height; scale = 1 }
+            $capture.captureBeyondViewport = $true
+        }
+        $image = Send-Cdp "Page.captureScreenshot" $capture
         $file = Join-Path $OutputDirectory "$($shot.Name).webp"
         [IO.File]::WriteAllBytes($file, [Convert]::FromBase64String($image.data))
         Write-Host "Saved $file"
