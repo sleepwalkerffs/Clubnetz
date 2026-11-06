@@ -426,9 +426,10 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
             var result = await httpClient.InvoiceAction(invoiceId, action, body, cancellationToken);
             if (result.Success)
             {
-                await LoadInvoices(InvoiceFilter);
                 if (action == "pay")
                     await AfterReconciled();
+                else
+                    await LoadInvoices(InvoiceFilter);
             }
 
             return result;
@@ -441,7 +442,8 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
     /// <summary>Entries were booked from suggestions or bank lines: everything that shows them.</summary>
     private async Task AfterReconciled()
     {
-        await Task.WhenAll(LoadProposals(), ReloadBank());
+        // A bank line may have paid an invoice
+        await Task.WhenAll(LoadProposals(), ReloadBank(), Invoices is null ? Task.CompletedTask : LoadInvoices(InvoiceFilter));
         await AfterEntryChanged();
     }
 

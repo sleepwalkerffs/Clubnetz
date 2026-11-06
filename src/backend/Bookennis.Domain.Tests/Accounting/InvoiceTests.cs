@@ -88,6 +88,25 @@ public class InvoiceTests
         Rejected(() => new InvoiceSettings(ClubId, new InvoiceSettings.SettingsData(" ", null, null, 1, null, "RE", 14, null)), AccountingErrorCode.AccountingInvoiceTextInvalid);
     }
 
+    [Theory]
+    [InlineData("buchhaltung@example.com", true)]
+    [InlineData("a@x.at, b@y.at", false)]
+    [InlineData("a@x.at;b@y.at", false)]
+    [InlineData("Max <max@x.at>", false)]
+    [InlineData("max@x.at\nBcc: c@d.at", false)]
+    [InlineData("kein mail", false)]
+    public void Email_IsOnePlainAddress(string value, bool valid) => Invoice.IsEmail(value).Should().Be(valid);
+
+    [Fact]
+    public void CancelledInvoice_IsNotSent()
+    {
+        var invoice = new Invoice(ClubId, Data(), german: true);
+        invoice.Issue(Settings(), 1, Now);
+        invoice.Cancel(null, Now);
+
+        Rejected(() => invoice.RecordSent("a@b.at", Now), AccountingErrorCode.AccountingInvoiceNotOpen);
+    }
+
     [Fact]
     public void EpcQrPayload_FollowsTheStandard()
     {

@@ -201,6 +201,7 @@ public class InvoiceHandlerTests(TestFixture fixture) : TestBase(fixture)
             => ScopedAsync(() => new SendInvoice.Handler(GetInstance<AppDbContext>(), mediator).Handle(new SendInvoice(ClubId, id, email, reminder, Now), CancellationToken.None));
 
         await Rejected(() => Send(draft.Id, false), AccountingErrorCode.AccountingInvoiceNotIssued);
+        await Rejected(() => Send(draft.Id, false, "a@x.at, b@y.at"), AccountingErrorCode.AccountingInvoiceEmailInvalid);
         await Issue(draft.Id);
 
         var sent = await Send(draft.Id, false);
@@ -218,5 +219,52 @@ public class InvoiceHandlerTests(TestFixture fixture) : TestBase(fixture)
         // The PDF is drawn when the email job sends it, without a tenant
         await using var pdf = await ScopedAsync(() => new InvoiceAttachmentResolver(GetInstance<AppDbContext>()).GetAttachmentAsync(InvoiceAttachmentResolver.CreateUri(draft.Id), CancellationToken.None));
         pdf.Length.Should().BeGreaterThan(1_000);
+    }
+
+    [Fact]
+    public async Task InvoiceAccount_KeepsItsIban()
+    {
+        var books = await SetUp();
+
+        await Rejected(() => SendAsync(new UpdateMoneyAccount(ClubId, books.Bank, new SaveMoneyAccountModel { Name = "Bank", Kind = MoneyAccountKind.Bank, Iban = null })),
+            AccountingErrorCode.AccountingInvoiceAccountWithoutIban);
+    }
+
+    [Fact]
+    public async Task ArchivingTheCategoryAfterIssuing_DoesNotBlockThePayment()
+    {
+        var books = await SetUp();
+        var invoice = await Issue((await Create(books)).Id);
+        var basics = await SendAsync(new GetAccounting(ClubId, TreasurerUserId, true, false));
+        var category = basics.Categories.Single(c => c.Id == books.Sponsoring);
+        await SendAsync(new UpdateAccountingCategory(ClubId, category.Id, new SaveAccountingCategoryModel { Kind = category.Kind, Name = category.Name, Number = category.Number, TaxSphere = category.TaxSphere, IsArchived = true }));
+
+        var paid = await SendAsync(new PayInvoice(ClubId, TreasurerUserId, invoice.Id, new PayInvoiceModel { MoneyAccountId = books.Bank, Date = new DateOnly(2026, 5, 10) }, Now));
+
+        paid.Status.Should().Be(Bookennis.Shared.Controller.Accounting.InvoiceStatus.Paid);
+        await FluentActions.Awaiting(() => Create(books)).Should().ThrowAsync<PreconditionException>("a new invoice can't use the archived category");
+    }
+
+    [Fact]
+    public async Task Pdf_WithLongTexts_StaysOnThePage()
+    {
+        var books = await SetUp();
+        await SendAsync(new SaveInvoiceSettings(ClubId, new SaveInvoiceSettingsModel
+        {
+            Address = "Sportplatzweg 1\n6800 Feldkirch", MoneyAccountId = books.Bank, NumberPrefix = "RE", PaymentTermDays = 14,
+            Contact = string.Join(" · ", Enumerable.Repeat("kassier@tc-vorderland.example", 6)),
+            Footer = string.Join("\n", Enumerable.Range(1, 5).Select(i => $"Zeile {i} der Fußzeile mit Bankverbindung, Vorstand und dem Hinweis zur Umsatzsteuer, der lang ist")),
+        }));
+        var model = Model(books) with
+        {
+            Subject = new string('W', 120),
+            ServicePeriod = "Saison 2026 von April bis Oktober mit Turnieren und Kursen",
+            Notes = string.Join("\n", Enumerable.Repeat("Ein langer Absatz über das Sponsoring, der umbrochen werden muss, damit er auf die Seite passt.", 9)),
+        };
+        var invoice = await SendAsync(new CreateInvoice(ClubId, model, Now));
+
+        var pdf = await SendAsync(new GetInvoicePdf(ClubId, invoice.Id));
+
+        Encoding.ASCII.GetString(pdf.Data, 0, 5).Should().Be("%PDF-");
     }
 }

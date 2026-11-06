@@ -19,7 +19,6 @@ public static class InvoicePdf
     private const float PageHeight = 842f;
     private const float Margin = 50f;
     private const float Right = PageWidth - Margin;
-    private const float BottomLimit = PageHeight - 110f;
 
     private static readonly Lazy<SKTypeface> Regular = new(() => LoadFont("Lato-Regular.ttf"));
     private static readonly Lazy<SKTypeface> Bold = new(() => LoadFont("Lato-Bold.ttf"));
@@ -47,7 +46,8 @@ public static class InvoicePdf
     {
         var invoice = data.Invoice;
         var texts = invoice.German ? German : English;
-        var culture = CultureInfo.GetCultureInfo(invoice.German ? "de-AT" : "en-GB");
+        // Austrian formats in both languages: the amounts are euros (en-GB would print pounds)
+        var culture = CultureInfo.GetCultureInfo(invoice.German ? "de-AT" : "en-AT");
 
         using var stream = new MemoryStream();
         var metadata = new SKDocumentPdfMetadata
@@ -76,24 +76,22 @@ public static class InvoicePdf
         var invoice = data.Invoice;
         var settings = data.Settings;
         var page = 1;
+        var bottomLimit = PageHeight - FooterHeight(settings) - 40;
         using var recorder = document is null ? new SKPictureRecorder() : null;
         var canvas = document?.BeginPage(PageWidth, PageHeight) ?? recorder!.BeginRecording(new SKRect(0, 0, PageWidth, PageHeight));
 
         string Money(long cents) => (cents / 100m).ToString("C", culture);
-        string Day(DateOnly date) => date.ToString(culture.Name == "de-AT" ? "dd.MM.yyyy" : "d MMM yyyy", culture);
+        string Day(DateOnly date) => date.ToString(invoice.German ? "dd.MM.yyyy" : "d MMM yyyy", culture);
 
         // ---------- head: the club on the left, the invoice details on the right ----------
         var y = Margin + 10;
         Text(canvas, data.ClubName, Margin, y, 16, bold: true, Accent);
         y += 18;
-        foreach (var line in settings.Address.Split('\n'))
+        // The club on the left half: the invoice details take the right one
+        const float headWidth = (Right - Margin) / 2 - 10;
+        foreach (var line in settings.Address.Split('\n').Concat(settings.Contact is { } contact ? [contact] : []).SelectMany(l => Wrap(l, headWidth, 9, bold: false)))
         {
             Text(canvas, line, Margin, y, 9, color: Muted);
-            y += 12;
-        }
-        if (settings.Contact is { } contact)
-        {
-            Text(canvas, contact, Margin, y, 9, color: Muted);
             y += 12;
         }
 
@@ -102,9 +100,14 @@ public static class InvoicePdf
         detailY += 22;
         void Detail(string label, string value)
         {
+            // A long value (service period) wraps under itself instead of running into its label
+            var lines = Wrap(value, 100, 9, bold: true);
             Text(canvas, label, Right - 110, detailY, 9, color: Muted, align: SKTextAlign.Right);
-            Text(canvas, value, Right, detailY, 9, bold: true, Ink, SKTextAlign.Right);
-            detailY += 13;
+            foreach (var line in lines)
+            {
+                Text(canvas, line, Right, detailY, 9, bold: true, Ink, SKTextAlign.Right);
+                detailY += 13;
+            }
         }
         Detail(texts.Number, invoice.Number ?? "—");
         Detail(texts.Date, Day(invoice.InvoiceDate));
@@ -116,8 +119,11 @@ public static class InvoicePdf
 
         // ---------- recipient ----------
         y = Math.Max(y, detailY) + 28;
-        Text(canvas, invoice.RecipientName, Margin, y, 11, bold: true, Ink);
-        y += 14;
+        foreach (var line in Wrap(invoice.RecipientName, headWidth, 11, bold: true))
+        {
+            Text(canvas, line, Margin, y, 11, bold: true, Ink);
+            y += 14;
+        }
         foreach (var line in (invoice.RecipientAddress ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
             Text(canvas, line, Margin, y, 10, color: Ink);
@@ -128,18 +134,24 @@ public static class InvoicePdf
         y += 22;
         if (invoice.Subject is { } subject)
         {
-            Text(canvas, subject, Margin, y, 13, bold: true, Ink);
-            y += 18;
+            foreach (var line in Wrap(subject, Right - Margin, 13, bold: true))
+            {
+                Text(canvas, line, Margin, y, 13, bold: true, Ink);
+                y += 18;
+            }
         }
+        var notesNeedPage = false;
         if (invoice.Notes is { } notes)
         {
-            foreach (var paragraph in notes.Split('\n'))
+            foreach (var line in notes.Split('\n').SelectMany(p => Wrap(p, Right - Margin, 10, bold: false)))
             {
-                foreach (var line in Wrap(paragraph, Right - Margin, 10, bold: false))
+                if (y > bottomLimit)
                 {
-                    Text(canvas, line, Margin, y, 10, color: Ink);
-                    y += 13;
+                    notesNeedPage = true;
+                    break;
                 }
+                Text(canvas, line, Margin, y, 10, color: Ink);
+                y += 13;
             }
             y += 6;
         }
@@ -163,7 +175,7 @@ public static class InvoicePdf
             y += 14;
         }
 
-        void NewPage()
+        void NewPage(bool header = true)
         {
             Footer(canvas, settings, texts, page, pageCount, invoice);
             Stamp(canvas, invoice, texts);
@@ -176,14 +188,20 @@ public static class InvoicePdf
             y = Margin + 10;
             Text(canvas, $"{texts.Invoice} {invoice.Number ?? ""}", Margin, y, 10, bold: true, Muted);
             y += 10;
-            Header();
+            if (header)
+                Header();
+            else
+                y += 24;
         }
 
+        // Notes longer than the page are cut (1,000 characters fit on a page): the lines start on the next one
+        if (notesNeedPage)
+            NewPage(header: false);
         Header();
         foreach (var line in invoice.Lines.OrderBy(l => l.Position))
         {
             var wrapped = Wrap(line.Text, colQty - colText - 40, 10, bold: false);
-            if (y + wrapped.Count * 13 > BottomLimit)
+            if (y + wrapped.Count * 13 > bottomLimit)
                 NewPage();
 
             Text(canvas, line.Position.ToString(CultureInfo.InvariantCulture), colPos, y, 10, color: Muted);
@@ -207,8 +225,8 @@ public static class InvoicePdf
 
         // ---------- payment with the QR code ----------
         const float qrSize = 92f;
-        if (y + qrSize + 20 > BottomLimit)
-            NewPage();
+        if (y + qrSize + 20 > bottomLimit)
+            NewPage(header: false);
 
         var boxTop = y - 14;
         using (var box = new SKPaint { Color = new SKColor(0xF3, 0xF4, 0xF6), IsAntialias = true })
@@ -230,7 +248,7 @@ public static class InvoicePdf
             Text(canvas, value, textX + 95, y, 9.5f, bold: true, Ink);
             y += 13;
         }
-        PayLine(culture.Name == "de-AT" ? "Empfänger" : "Beneficiary", data.ClubName);
+        PayLine(invoice.German ? "Empfänger" : "Beneficiary", data.ClubName);
         PayLine("IBAN", FormatIban(data.Iban));
         if (settings.Bic is { } bic)
             PayLine("BIC", bic);
@@ -256,20 +274,20 @@ public static class InvoicePdf
         return page;
     }
 
+    private static List<string> FooterLines(InvoiceSettings settings)
+        => settings.Footer is { } footer ? footer.Split('\n').SelectMany(p => Wrap(p, Right - Margin, 8, bold: false)).ToList() : [];
+
+    /// <summary>The footer grows upwards from above the page number: a long one takes room from the content, never runs off the page.</summary>
+    private static float FooterHeight(InvoiceSettings settings) => Math.Max(1, FooterLines(settings).Count) * 10 + 60;
+
     private static void Footer(SKCanvas canvas, InvoiceSettings settings, Texts texts, int page, int pageCount, Invoice invoice)
     {
-        var y = PageHeight - 72;
+        var y = PageHeight - FooterHeight(settings) + 10;
         Rule(canvas, y - 12);
-        if (settings.Footer is { } footer)
+        foreach (var line in FooterLines(settings))
         {
-            foreach (var paragraph in footer.Split('\n'))
-            {
-                foreach (var line in Wrap(paragraph, Right - Margin, 8, bold: false))
-                {
-                    Text(canvas, line, Margin, y, 8, color: Muted);
-                    y += 10;
-                }
-            }
+            Text(canvas, line, Margin, y, 8, color: Muted);
+            y += 10;
         }
         if (pageCount > 1)
             Text(canvas, string.Format(CultureInfo.InvariantCulture, texts.Page, page, pageCount), Right, PageHeight - 30, 8, color: Muted, align: SKTextAlign.Right);

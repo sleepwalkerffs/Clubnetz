@@ -40,6 +40,10 @@ public record UpdateMoneyAccount(int ClubId, int MoneyAccountId, SaveMoneyAccoun
             var account = await context.MoneyAccounts.SingleRequiredAsync(a => a.Id == request.MoneyAccountId && a.ClubId == request.ClubId, cancellationToken);
             account.Update(request.Model.ToData());
             account.SetArchived(request.Model.IsArchived);
+
+            // The invoices print its IBAN (and their PDFs are drawn again for every email)
+            if (account.Iban is null && await context.InvoiceSettings.AnyAsync(s => s.ClubId == request.ClubId && s.MoneyAccountId == account.Id, cancellationToken))
+                throw new PreconditionException(AccountingErrorCode.AccountingInvoiceAccountWithoutIban, "The invoices name this account.");
             await context.EnsureUniqueName(context.MoneyAccounts, account, cancellationToken);
 
             await context.SaveChangesAsync(cancellationToken);

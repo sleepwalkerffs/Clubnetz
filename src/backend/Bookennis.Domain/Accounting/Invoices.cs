@@ -192,6 +192,12 @@ public class Invoice : TenantDomainEntity, IAggregateRoot
 
     public bool IsOpen => Status == InvoiceStatus.Issued;
 
+    /// <summary>One plain address: no list ("a@x.at, b@y.at"), no display name, no line breaks.</summary>
+    public static bool IsEmail(string value)
+        => value.Length <= MaxEmailLength
+           && !value.Any(c => char.IsWhiteSpace(c) || c is ',' or ';' or '<' or '>' or '"' or '(' or ')')
+           && System.Net.Mail.MailAddress.TryCreate(value, out var address) && address.Address == value;
+
     /// <summary>Issued, unpaid and past its due date.</summary>
     public bool IsOverdue(DateOnly today) => IsOpen && today > DueDate;
 
@@ -219,9 +225,12 @@ public class Invoice : TenantDomainEntity, IAggregateRoot
         IssuedAt = now;
     }
 
+    /// <summary>Sent (again) to the recipient: an issued or paid invoice (as a copy); a cancelled one is not sent any more.</summary>
     public void RecordSent(string email, DateTimeOffset now)
     {
         EnsureIssued();
+        if (Status == InvoiceStatus.Cancelled)
+            throw new PreconditionException(AccountingErrorCode.AccountingInvoiceNotOpen, [Number ?? ""], "The invoice is cancelled.");
         SentAt = now;
         SentTo = email;
     }
@@ -272,7 +281,7 @@ public class Invoice : TenantDomainEntity, IAggregateRoot
         RecipientName = InvoiceSettings.Text(data.RecipientName, MaxNameLength, required: true)!;
         RecipientAddress = InvoiceSettings.Text(data.RecipientAddress, MaxAddressLength);
         var email = InvoiceSettings.Text(data.RecipientEmail, MaxEmailLength);
-        if (email is not null && (!email.Contains('@', StringComparison.Ordinal) || email.Contains(' ', StringComparison.Ordinal)))
+        if (email is not null && !IsEmail(email))
             throw new PreconditionException(AccountingErrorCode.AccountingInvoiceEmailInvalid, "Invalid email.");
         RecipientEmail = email;
         Subject = InvoiceSettings.Text(data.Subject, MaxSubjectLength);

@@ -49,6 +49,7 @@ public record SaveInvoiceSettings(int ClubId, SaveInvoiceSettingsModel Model) : 
     {
         public async Task<InvoiceSettingsDto> Handle(SaveInvoiceSettings request, CancellationToken cancellationToken)
         {
+            await context.LockAccounting(request.ClubId, cancellationToken);
             await context.GetAccountingSettings(request.ClubId, cancellationToken);
             var model = request.Model;
             var account = await context.MoneyAccounts.SingleRequiredAsync(a => a.Id == model.MoneyAccountId && a.ClubId == request.ClubId, cancellationToken);
@@ -238,11 +239,13 @@ public record SendInvoice(int ClubId, int InvoiceId, string? Email, bool Reminde
     {
         public async Task<InvoiceDetailDto> Handle(SendInvoice request, CancellationToken cancellationToken)
         {
+            // Under the lock: two reminders count twice, a reminder doesn't race a payment
+            await context.LockAccounting(request.ClubId, cancellationToken);
             var invoice = await context.Invoices.Include(i => i.Lines).SingleRequiredAsync(i => i.Id == request.InvoiceId && i.ClubId == request.ClubId, cancellationToken);
             var email = string.IsNullOrWhiteSpace(request.Email) ? invoice.RecipientEmail : request.Email.Trim();
             if (email is null)
                 throw new PreconditionException(AccountingErrorCode.AccountingInvoiceNoEmail, "The invoice has no email address.");
-            if (!email.Contains('@', StringComparison.Ordinal) || email.Contains(' ', StringComparison.Ordinal) || email.Length > Invoice.MaxEmailLength)
+            if (!Invoice.IsEmail(email))
                 throw new PreconditionException(AccountingErrorCode.AccountingInvoiceEmailInvalid, "Invalid email.");
 
             if (request.Reminder)
@@ -310,7 +313,8 @@ internal static class InvoicePayment
         if (model.Text!.Length > AccountingEntry.MaxTextLength)
             model = model with { Text = model.Text[..AccountingEntry.MaxTextLength] };
 
-        var entry = await AccountingEntryCreation.Create(context, invoice.ClubId, memberId, model, now, cancellationToken);
+        // The categories and cost centers were usable when the invoice was written: archiving them later doesn't block its payment
+        var entry = await AccountingEntryCreation.Create(context, invoice.ClubId, memberId, model, now, cancellationToken, allowArchivedLines: true);
         invoice.MarkPaid(entry, date);
         await context.SaveChangesAsync(cancellationToken);
         return entry;
@@ -338,6 +342,8 @@ internal static class InvoiceMapper
         var costCenters = await context.CostCenters.Where(c => c.ClubId == clubId && costCenterIds.Contains(c.Id)).ToListAsync(cancellationToken);
         if (costCenters.Count != costCenterIds.Count)
             throw new EntityNotFoundException(typeof(CostCenter));
+        foreach (var costCenter in costCenters.Where(c => existing is null || existing.Lines.All(l => l.CostCenterId != c.Id)))
+            costCenter.EnsureUsable();
 
         if (model.RecipientMemberId is { } memberId && !await context.ClubMembers.AnyAsync(m => m.Id == memberId && m.ClubId == clubId, cancellationToken))
             throw new EntityNotFoundException(typeof(Domain.Members.ClubMember), memberId);

@@ -183,7 +183,8 @@ internal static class AccountingEntryInput
     /// The money accounts, categories and cost centers must belong to the club and must not be archived - unless the entry
     /// already used them (an archived category stays on the entries it was used for).
     /// </summary>
-    public static async Task<AccountingEntry.EntryData> Check(AppDbContext context, int clubId, SaveAccountingEntryModel model, AccountingEntry? existing, CancellationToken cancellationToken)
+    public static async Task<AccountingEntry.EntryData> Check(AppDbContext context, int clubId, SaveAccountingEntryModel model, AccountingEntry? existing, CancellationToken cancellationToken,
+        bool allowArchivedLines = false)
     {
         var accountIds = new[] { model.MoneyAccountId, model.ToMoneyAccountId }.Where(id => id is not null).Select(id => id!.Value).Distinct().ToList();
         var accounts = await context.MoneyAccounts.Where(a => a.ClubId == clubId && accountIds.Contains(a.Id)).ToListAsync(cancellationToken);
@@ -196,14 +197,14 @@ internal static class AccountingEntryInput
         var categories = await context.AccountingCategories.Where(c => c.ClubId == clubId && categoryIds.Contains(c.Id)).ToListAsync(cancellationToken);
         if (categories.Count != categoryIds.Count)
             throw new EntityNotFoundException(typeof(AccountingCategory));
-        foreach (var category in categories.Where(c => existing is null || existing.Lines.All(l => l.CategoryId != c.Id)))
+        foreach (var category in categories.Where(c => !allowArchivedLines && (existing is null || existing.Lines.All(l => l.CategoryId != c.Id))))
             category.EnsureUsable();
 
         var costCenterIds = (model.Lines ?? []).Where(l => l.CostCenterId is not null).Select(l => l.CostCenterId!.Value).Distinct().ToList();
         var costCenters = await context.CostCenters.Where(c => c.ClubId == clubId && costCenterIds.Contains(c.Id)).ToListAsync(cancellationToken);
         if (costCenters.Count != costCenterIds.Count)
             throw new EntityNotFoundException(typeof(CostCenter));
-        foreach (var costCenter in costCenters.Where(c => existing is null || existing.Lines.All(l => l.CostCenterId != c.Id)))
+        foreach (var costCenter in costCenters.Where(c => !allowArchivedLines && (existing is null || existing.Lines.All(l => l.CostCenterId != c.Id))))
             costCenter.EnsureUsable();
 
         var counterpartyName = model.CounterpartyName;
@@ -319,12 +320,14 @@ internal static class AccountingEntryDetails
 /// </summary>
 internal static class AccountingEntryCreation
 {
-    public static async Task<AccountingEntry> Create(AppDbContext context, int clubId, int? memberId, SaveAccountingEntryModel model, DateTimeOffset now, CancellationToken cancellationToken)
+    // allowArchivedLines: archived categories and cost centers are taken (the payment of an invoice written before they were archived)
+    public static async Task<AccountingEntry> Create(AppDbContext context, int clubId, int? memberId, SaveAccountingEntryModel model, DateTimeOffset now, CancellationToken cancellationToken,
+        bool allowArchivedLines = false)
     {
         var date = model.Date;
         var year = await context.FiscalYears.Include(y => y.OpeningBalances).SingleOrDefaultAsync(y => y.ClubId == clubId && y.StartDate <= date && y.EndDate >= date, cancellationToken)
                    ?? throw new PreconditionException(AccountingErrorCode.AccountingFiscalYearMissing, [date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)], "No fiscal year contains the date.");
-        var data = await AccountingEntryInput.Check(context, clubId, model, null, cancellationToken);
+        var data = await AccountingEntryInput.Check(context, clubId, model, null, cancellationToken, allowArchivedLines);
         var receipts = await AccountingEntryInput.Receipts(context, clubId, model.ReceiptIds ?? [], null, cancellationToken);
 
         var entry = new AccountingEntry(year, data, receipts.Select(r => r.Id).ToList(), memberId, now);

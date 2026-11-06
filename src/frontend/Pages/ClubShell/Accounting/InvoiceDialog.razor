@@ -61,7 +61,7 @@
                             </MudSelect>
                         </div>
                     }
-                    <span class="invoice-line__total">@AccountingHelpers.Amount(AccountingHelpers.ToCents(current.Quantity * current.UnitPrice))</span>
+                    <span class="invoice-line__total">@AccountingHelpers.Amount(LineCents(current))</span>
                     @if (lines.Count > 1)
                     {
                         <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => lines.Remove(current)" aria-label="@L["Entry_RemoveLine"]" Class="invoice-line__remove" />
@@ -110,7 +110,10 @@
     private DateTime? dueDate;
     private List<LineInput> lines = [new()];
 
-    private long TotalCents => lines.Sum(l => (long)AccountingHelpers.ToCents(l.Quantity * l.UnitPrice));
+    /// <summary>As the server: the unit price in cents times the quantity, rounded.</summary>
+    private static long LineCents(LineInput line) => (long)Math.Round(line.Quantity * AccountingHelpers.ToCents(line.UnitPrice), MidpointRounding.AwayFromZero);
+
+    private long TotalCents => lines.Sum(LineCents);
 
     private bool CanSubmit => !string.IsNullOrWhiteSpace(name) && invoiceDate is not null && dueDate is not null && dueDate >= invoiceDate && TotalCents > 0
                               && lines.All(l => !string.IsNullOrWhiteSpace(l.Text) && l.Quantity > 0 && l.CategoryId is not null);
