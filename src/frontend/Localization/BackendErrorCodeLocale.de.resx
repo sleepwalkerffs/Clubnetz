@@ -898,7 +898,7 @@
     <value>Der Beleg gehört zu Buchung #{0}.</value>
   </data>
   <data name="AccountingAuditorIsTreasurer" xml:space="preserve">
-    <value>Ein Kassier kann seine eigene Kassa nicht prüfen.</value>
+    <value>Kassiere und Admins führen die Bücher und können sie deshalb nicht selbst prüfen.</value>
   </data>
   <data name="AccountingAuditorRequired" xml:space="preserve">
     <value>Nur ein Rechnungsprüfer des Vereins kann die Prüfung eintragen.</value>
@@ -911,5 +911,8 @@
   </data>
   <data name="AccountingTooManyReceipts" xml:space="preserve">
     <value>Eine Buchung kann höchstens {0} Belege haben.</value>
+  </data>
+  <data name="AccountingCategorySphereInUse" xml:space="preserve">
+    <value>„{0}“ wird in einem abgeschlossenen Rechnungsjahr verwendet: der Steuerbereich bleibt, sonst ändern sich die Berichte dieses Jahres.</value>
   </data>
 </root>

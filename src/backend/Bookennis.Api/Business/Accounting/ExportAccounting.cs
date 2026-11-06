@@ -107,7 +107,8 @@ public class AccountingExcelExporter(CultureInfo culture)
                 var to = entry.ToMoneyAccountId is { } toId ? data.Accounts[toId].Name : "";
                 sheet.Cell(row, 5).Value = $"{data.Accounts[entry.MoneyAccountId].Name} → {to}";
                 sheet.Cell(row, 6).Value = T("Transfer");
-                WriteAmount(sheet.Cell(row, 11), entry.TransferAmountCents ?? 0);
+                if (status == "")
+                    WriteAmount(sheet.Cell(row, 11), entry.TransferAmountCents ?? 0);
                 continue;
             }
 
@@ -119,7 +120,8 @@ public class AccountingExcelExporter(CultureInfo culture)
                 sheet.Cell(row, 6).Value = category.Name;
                 sheet.Cell(row, 7).Value = category.Number ?? "";
                 sheet.Cell(row, 8).Value = line.CostCenterId is { } costCenterId ? data.CostCenters.GetValueOrDefault(costCenterId, "") : "";
-                WriteAmount(sheet.Cell(row, category.Kind == AccountingCategoryKind.Income ? 9 : 10), line.AmountCents);
+                if (status == "")
+                    WriteAmount(sheet.Cell(row, category.Kind == AccountingCategoryKind.Income ? 9 : 10), line.AmountCents);
             }
         }
 

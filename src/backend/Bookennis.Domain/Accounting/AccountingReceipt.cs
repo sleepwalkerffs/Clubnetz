@@ -35,7 +35,7 @@ public class AccountingReceipt : TenantDomainEntity, IAggregateRoot
 
         var name = Path.GetFileName(fileName?.Trim() ?? "");
         var extension = Path.GetExtension(name);
-        if (data.Length == 0 || !AllowedFileTypes.TryGetValue(extension, out var contentType))
+        if (data.Length == 0 || !AllowedFileTypes.TryGetValue(extension, out var contentType) || !StartsLike(contentType, data))
             throw new PreconditionException(AccountingErrorCode.AccountingReceiptTypeNotAllowed, [string.Join(", ", AllowedFileTypes.Keys)], "The file type is not allowed.");
 
         if (name.Length > MaxFileNameLength)
@@ -48,6 +48,20 @@ public class AccountingReceipt : TenantDomainEntity, IAggregateRoot
         UploadedAt = now;
         UploadedByMemberId = uploadedByMemberId;
         Content = new AccountingReceiptContent(data);
+    }
+
+    /// <summary>Whether the first bytes of the file match its type: a file renamed to ".pdf" is not taken as a PDF.</summary>
+    private static bool StartsLike(string contentType, byte[] data)
+    {
+        ReadOnlySpan<byte> bytes = data;
+        return contentType switch
+        {
+            "application/pdf" => bytes.StartsWith("%PDF-"u8),
+            "image/jpeg" => bytes.StartsWith((ReadOnlySpan<byte>)[0xFF, 0xD8, 0xFF]),
+            "image/png" => bytes.StartsWith((ReadOnlySpan<byte>)[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]),
+            "image/webp" => bytes.Length >= 12 && bytes.StartsWith("RIFF"u8) && bytes[8..12].SequenceEqual("WEBP"u8),
+            _ => false,
+        };
     }
 
     /// <summary>The entry the receipt proves; <c>null</c> while it waits in the inbox.</summary>

@@ -125,8 +125,12 @@ public class AccountingCategory : AccountingMasterData
 
     public TaxSphere TaxSphere { get; private set; }
 
-    /// <summary>Changes the category. When <paramref name="isUsed"/> (an entry uses it) it can't change from income to expense: that would turn the sums of past entries around.</summary>
-    public void Update(CategoryData data, bool isUsed)
+    /// <summary>
+    /// Changes the category. When <paramref name="isUsed"/> (an entry uses it) it can't change from income to expense: that would turn
+    /// the sums of past entries around. When <paramref name="isUsedInClosedYear"/> its tax sphere stays too: the reports of a closed
+    /// (and maybe audited) year must not change afterwards.
+    /// </summary>
+    public void Update(CategoryData data, bool isUsed, bool isUsedInClosedYear = false)
     {
         if (!Enum.IsDefined(data.Kind))
             throw new ArgumentOutOfRangeException(nameof(data), data.Kind, "Unknown kind.");
@@ -140,6 +144,8 @@ public class AccountingCategory : AccountingMasterData
         var name = ValidName(data.Name, MaxNameLength);
         if (isUsed && data.Kind != Kind)
             throw new PreconditionException(AccountingErrorCode.AccountingCategoryKindInUse, [Name], "The category is used.");
+        if (isUsedInClosedYear && data.TaxSphere != TaxSphere)
+            throw new PreconditionException(AccountingErrorCode.AccountingCategorySphereInUse, [Name], "The category is used in a closed fiscal year.");
 
         Kind = data.Kind;
         Number = number;

@@ -82,7 +82,7 @@ public enum AccountingErrorCode
     /// <summary>The receipt belongs to another entry. Details: the number of that entry.</summary>
     AccountingReceiptAlreadyBooked = 25,
 
-    /// <summary>A treasurer doesn't audit their own accounts: the auditor must not also be a treasurer of the club.</summary>
+    /// <summary>Nobody audits the books they keep: the auditor must not also be a treasurer or an admin of the club.</summary>
     AccountingAuditorIsTreasurer = 26,
 
     /// <summary>Only a member with the role auditor records an audit (not in support mode).</summary>
@@ -96,4 +96,7 @@ public enum AccountingErrorCode
 
     /// <summary>Details: the maximum number of receipts of an entry.</summary>
     AccountingTooManyReceipts = 30,
+
+    /// <summary>A category used in a closed fiscal year keeps its tax sphere: the reports of that year must not change. Details: the name.</summary>
+    AccountingCategorySphereInUse = 31,
 }

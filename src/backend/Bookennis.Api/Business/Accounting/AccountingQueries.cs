@@ -70,7 +70,7 @@ internal static class AccountingQueries
         ClosedAt = year.ClosedAt,
         ClosedByName = year.ClosedByMemberId is { } closedBy ? names.GetValueOrDefault(closedBy) : null,
         OpeningBalancesCarried = year.OpeningBalancesCarried,
-        OpeningBalances = year.OpeningBalances.Select(b => new OpeningBalanceDto { MoneyAccountId = b.MoneyAccountId, AmountCents = b.AmountCents }).ToList(),
+        OpeningBalances = year.OpeningBalances.Select(b => new OpeningBalanceDto { MoneyAccountId = b.MoneyAccountId, AmountCents = b.AmountCents, IsCarried = b.IsCarried }).ToList(),
         AuditStatus = (global::Bookennis.Shared.Controller.Accounting.FiscalYearAuditStatus)year.AuditStatus,
         AuditedAt = year.AuditedAt,
         AuditedByName = year.AuditedByMemberId is { } auditedBy ? names.GetValueOrDefault(auditedBy) : null,

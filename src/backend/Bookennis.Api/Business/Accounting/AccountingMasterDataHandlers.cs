@@ -6,6 +6,7 @@ using Fusonic.Extensions.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using AccountingCategoryKind = Bookennis.Domain.Accounting.AccountingCategoryKind;
 using MoneyAccountKind = Bookennis.Domain.Accounting.MoneyAccountKind;
+using FiscalYearStatus = Bookennis.Domain.Accounting.FiscalYearStatus;
 using TaxSphere = Bookennis.Domain.Accounting.TaxSphere;
 
 namespace Bookennis.Api.Business.Accounting;
@@ -101,7 +102,10 @@ public record UpdateAccountingCategory(int ClubId, int CategoryId, SaveAccountin
             await context.LockAccounting(request.ClubId, cancellationToken);
             var category = await context.AccountingCategories.SingleRequiredAsync(c => c.Id == request.CategoryId && c.ClubId == request.ClubId, cancellationToken);
             var isUsed = await context.IsUsed(category, cancellationToken);
-            category.Update(request.Model.ToData(), isUsed);
+            var isUsedInClosedYear = isUsed && await context.AccountingEntries.AnyAsync(e => e.ClubId == request.ClubId
+                && e.Lines.Any(l => l.CategoryId == category.Id)
+                && context.FiscalYears.Any(y => y.Id == e.FiscalYearId && y.Status == FiscalYearStatus.Closed), cancellationToken);
+            category.Update(request.Model.ToData(), isUsed, isUsedInClosedYear);
             category.SetArchived(request.Model.IsArchived);
             await context.EnsureUniqueName(category, cancellationToken);
 

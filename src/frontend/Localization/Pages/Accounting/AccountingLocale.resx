@@ -535,7 +535,10 @@
     <value>What was on each money account at the start of the year (e.g. from your last annual report).</value>
   </data>
   <data name="Balances_Carried" xml:space="preserve">
-    <value>Carried over from the closing balances of the year before. Change that year to change them.</value>
+    <value>Accounts the year before used start with its closing balances: change that year to change them. For any other account, enter what was on it before the club kept it in Clubnetz.</value>
+  </data>
+  <data name="Balances_CarriedAccount" xml:space="preserve">
+    <value>Closing balance of the year before</value>
   </data>
   <data name="Audit_Title" xml:space="preserve">
     <value>Audit {0}</value>

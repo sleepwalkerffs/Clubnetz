@@ -535,7 +535,10 @@
     <value>Was zu Jahresbeginn auf jedem Geldkonto war (z. B. aus dem letzten Jahresabschluss).</value>
   </data>
   <data name="Balances_Carried" xml:space="preserve">
-    <value>Übernommen aus den Endbeständen des Vorjahres. Um sie zu ändern, änderst du das Vorjahr.</value>
+    <value>Konten, die das Vorjahr verwendet hat, starten mit seinen Endbeständen: um sie zu ändern, änderst du das Vorjahr. Bei allen anderen Konten trägst du ein, was darauf war, bevor der Verein sie in Clubnetz geführt hat.</value>
+  </data>
+  <data name="Balances_CarriedAccount" xml:space="preserve">
+    <value>Endbestand des Vorjahres</value>
   </data>
   <data name="Audit_Title" xml:space="preserve">
     <value>Prüfung {0}</value>

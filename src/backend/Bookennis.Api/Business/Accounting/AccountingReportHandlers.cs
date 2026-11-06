@@ -1,5 +1,7 @@
+using System.Globalization;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Accounting;
+using Bookennis.Domain.Exceptions;
 using Bookennis.Shared.Controller.Accounting;
 using Fusonic.Extensions.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -202,6 +204,28 @@ internal static class AccountingBalances
             };
         }).ToList();
     }
+
+    /// <summary>
+    /// After a change in <paramref name="year"/> (saved already): the open years after it start with the closing balances of the year
+    /// before them, for every money account that year used. Also while a closed year is open again for a correction. The caller saves.
+    /// </summary>
+    public static async Task CarryForward(AppDbContext context, FiscalYear year, CancellationToken cancellationToken)
+    {
+        // With its opening balances, also when the caller loaded the year without them
+        var current = await context.GetFiscalYear(year.ClubId, year.Id, cancellationToken);
+        while (await context.GetNextFiscalYear(current, cancellationToken) is { IsOpen: true } next)
+        {
+            var balances = await Load(context, current, cancellationToken);
+            next.CarryOver(balances
+                .Where(b => b.OpeningCents != 0 || b.IncomeCents != 0 || b.ExpenseCents != 0 || b.TransfersInCents != 0 || b.TransfersOutCents != 0)
+                .ToDictionary(b => b.MoneyAccountId, b => ToCents(b.ClosingCents)));
+            current = next;
+        }
+    }
+
+    private static int ToCents(long cents) => cents is >= int.MinValue and <= int.MaxValue
+        ? (int)cents
+        : throw new PreconditionException(AccountingErrorCode.AccountingAmountInvalid, [(AccountingEntry.MaxAmountCents / 100).ToString(CultureInfo.InvariantCulture)], "The balance is too large.");
 
     /// <summary>The sum of the lines per category (in the direction of the category, refunds count negative).</summary>
     public static Dictionary<int, long> ByCategory(IEnumerable<AccountingEntry> entries)

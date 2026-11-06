@@ -156,7 +156,9 @@ delete from "AccountingEntryChanges";
 delete from "AccountingReceiptContents";
 delete from "AccountingReceipts";
 update "FiscalYears" set "AuditComment" = null where "AuditComment" is not null;
-update "MoneyAccounts" set "Iban" = null where "Iban" is not null;
+-- Clubs name accounts and cost centers after people ("Sparbuch Max Muster", "Training Huber").
+update "MoneyAccounts" set "Iban" = null, "Name" = 'Konto ' || "Id";
+update "CostCenters" set "Name" = 'Kostenstelle ' || "Id";
 
 -- Email templates may carry names, phone numbers and bank details. The app falls back to its built-in texts.
 delete from "ClubEmailTemplates";

@@ -92,7 +92,7 @@ public record CreateAccountingEntry(int ClubId, int UserId, SaveAccountingEntryM
                        ?? throw new PreconditionException(AccountingErrorCode.AccountingFiscalYearMissing, [date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)], "No fiscal year contains the date.");
             var memberId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken);
             var data = await AccountingEntryInput.Check(context, request.ClubId, request.Model, null, cancellationToken);
-            var receipts = await AccountingEntryInput.Receipts(context, request.ClubId, request.Model.ReceiptIds, null, cancellationToken);
+            var receipts = await AccountingEntryInput.Receipts(context, request.ClubId, request.Model.ReceiptIds ?? [], null, cancellationToken);
 
             var entry = new AccountingEntry(year, data, receipts.Select(r => r.Id).ToList(), memberId, request.Now);
             context.Add(entry);
@@ -100,6 +100,8 @@ public record CreateAccountingEntry(int ClubId, int UserId, SaveAccountingEntryM
 
             foreach (var receipt in receipts)
                 receipt.AttachTo(entry);
+            await context.SaveChangesAsync(cancellationToken);
+            await AccountingBalances.CarryForward(context, year, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
 
             return await AccountingEntryDetails.Load(context, request.ClubId, entry.Id, cancellationToken);
@@ -122,7 +124,7 @@ public record UpdateAccountingEntry(int ClubId, int UserId, int EntryId, SaveAcc
 
             var memberId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken);
             var data = await AccountingEntryInput.Check(context, request.ClubId, request.Model, entry, cancellationToken);
-            var receipts = await AccountingEntryInput.Receipts(context, request.ClubId, request.Model.ReceiptIds, entry.Id, cancellationToken);
+            var receipts = await AccountingEntryInput.Receipts(context, request.ClubId, request.Model.ReceiptIds ?? [], entry.Id, cancellationToken);
 
             var detached = await context.AccountingReceipts.Where(r => r.ClubId == request.ClubId && r.EntryId == entry.Id).ToListAsync(cancellationToken);
             foreach (var receipt in detached.Where(r => receipts.All(kept => kept.Id != r.Id)))
@@ -131,6 +133,8 @@ public record UpdateAccountingEntry(int ClubId, int UserId, int EntryId, SaveAcc
                 receipt.AttachTo(entry);
 
             entry.Update(year, data, receipts.Select(r => r.Id).ToList(), memberId, request.Now);
+            await context.SaveChangesAsync(cancellationToken);
+            await AccountingBalances.CarryForward(context, year, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
 
             return await AccountingEntryDetails.Load(context, request.ClubId, entry.Id, cancellationToken);
@@ -152,6 +156,8 @@ public record CancelAccountingEntry(int ClubId, int UserId, int EntryId, string?
             var memberId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken);
 
             entry.Cancel(year, request.Reason, memberId, request.Now);
+            await context.SaveChangesAsync(cancellationToken);
+            await AccountingBalances.CarryForward(context, year, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
 
             return await AccountingEntryDetails.Load(context, request.ClubId, entry.Id, cancellationToken);
@@ -199,14 +205,14 @@ internal static class AccountingEntryInput
         foreach (var account in accounts.Where(a => existing is null || (existing.MoneyAccountId != a.Id && existing.ToMoneyAccountId != a.Id)))
             account.EnsureUsable();
 
-        var categoryIds = model.Lines.Select(l => l.CategoryId).Distinct().ToList();
+        var categoryIds = (model.Lines ?? []).Select(l => l.CategoryId).Distinct().ToList();
         var categories = await context.AccountingCategories.Where(c => c.ClubId == clubId && categoryIds.Contains(c.Id)).ToListAsync(cancellationToken);
         if (categories.Count != categoryIds.Count)
             throw new EntityNotFoundException(typeof(AccountingCategory));
         foreach (var category in categories.Where(c => existing is null || existing.Lines.All(l => l.CategoryId != c.Id)))
             category.EnsureUsable();
 
-        var costCenterIds = model.Lines.Where(l => l.CostCenterId is not null).Select(l => l.CostCenterId!.Value).Distinct().ToList();
+        var costCenterIds = (model.Lines ?? []).Where(l => l.CostCenterId is not null).Select(l => l.CostCenterId!.Value).Distinct().ToList();
         var costCenters = await context.CostCenters.Where(c => c.ClubId == clubId && costCenterIds.Contains(c.Id)).ToListAsync(cancellationToken);
         if (costCenters.Count != costCenterIds.Count)
             throw new EntityNotFoundException(typeof(CostCenter));
@@ -233,7 +239,7 @@ internal static class AccountingEntryInput
             model.MoneyAccountId,
             model.ToMoneyAccountId,
             model.TransferAmountCents,
-            model.Lines.Select(l => new AccountingEntry.LineData(l.CategoryId, l.CostCenterId, l.AmountCents)).ToList(),
+            (model.Lines ?? []).Select(l => new AccountingEntry.LineData(l.CategoryId, l.CostCenterId, l.AmountCents)).ToList(),
             model.CounterpartyMemberId,
             counterpartyName);
     }

@@ -98,7 +98,7 @@ public record FiscalYearDto
     public DateTimeOffset? ClosedAt { get; init; }
     public string? ClosedByName { get; init; }
 
-    /// <summary>The opening balances were carried over from the closed year before and can't be changed by hand.</summary>
+    /// <summary>The year before carries its closing balances into this year (see <see cref="OpeningBalanceDto.IsCarried"/>).</summary>
     public required bool OpeningBalancesCarried { get; init; }
 
     public List<OpeningBalanceDto> OpeningBalances { get; init; } = [];
@@ -112,6 +112,9 @@ public record OpeningBalanceDto
 {
     public required int MoneyAccountId { get; init; }
     public required long AmountCents { get; init; }
+
+    /// <summary>The closing balance of the year before: can't be changed by hand.</summary>
+    public required bool IsCarried { get; init; }
 }
 
 public record MoneyAccountDto

@@ -20,7 +20,7 @@ public class AccountingController(IMediator mediator, IUserAccessor userAccessor
     [HttpGet]
     [Authorize(AuthorizationPolicies.AccountingReader)]
     public async Task<AccountingDto> GetAccounting(int clubId, CancellationToken cancellationToken)
-        => await mediator.Send(new GetAccounting(clubId, await Passes(AuthorizationPolicies.AccountingManager), await Passes(AuthorizationPolicies.AccountingAuditor)), cancellationToken);
+        => await mediator.Send(new GetAccounting(clubId, userAccessor.GetUserId(), await Passes(AuthorizationPolicies.AccountingManager), await Passes(AuthorizationPolicies.AccountingAuditor)), cancellationToken);
 
     /// <summary>Switches the accounting on with the first fiscal year, a bank account, a cash box and the categories of the Austrian template.</summary>
     [HttpPost("setup")]
@@ -197,6 +197,7 @@ public class AccountingController(IMediator mediator, IUserAccessor userAccessor
     public async Task<IActionResult> GetAccountingReceiptFile(int clubId, int receiptId, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new GetAccountingReceiptFile(clubId, receiptId), cancellationToken);
+        Response.Headers.XContentTypeOptions = "nosniff";
         return File(result.Data, result.ContentType, result.FileName);
     }
 

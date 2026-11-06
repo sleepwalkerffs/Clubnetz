@@ -40,8 +40,11 @@ public static class AccountingHelpers
 
     public static string DateTime(DateTimeOffset value) => value.ToLocalTime().ToString(DateFormats.Localized("d. MMM yyyy, HH:mm"), CultureInfo.CurrentCulture);
 
-    /// <summary>Euros typed by the treasurer to cents (rounded to the cent).</summary>
-    public static int ToCents(decimal euros) => (int)Math.Round(euros * 100m, MidpointRounding.AwayFromZero);
+    /// <summary>
+    /// Euros typed by the treasurer to cents (rounded to the cent). Amounts beyond what a number of cents can hold are capped: the
+    /// server refuses them with its own message.
+    /// </summary>
+    public static int ToCents(decimal euros) => (int)Math.Clamp(Math.Round(euros * 100m, MidpointRounding.AwayFromZero), int.MinValue, int.MaxValue);
 
     public static decimal ToEuros(long cents) => cents / 100m;
 

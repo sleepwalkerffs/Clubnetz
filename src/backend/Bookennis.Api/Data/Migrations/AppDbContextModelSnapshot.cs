@@ -621,6 +621,9 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("FiscalYearId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsCarried")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("MoneyAccountId")
                         .HasColumnType("integer");
 

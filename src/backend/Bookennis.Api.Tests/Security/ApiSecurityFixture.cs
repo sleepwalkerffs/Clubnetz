@@ -496,8 +496,8 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await context.SaveChangesAsync();
         fiscalYear.SetOpeningBalance(moneyAccount.Id, 10_000);
 
-        var receipt = new AccountingReceipt(club.Id, $"receipt-{text}.pdf", Encoding.UTF8.GetBytes($"%PDF {text}"), seeded.Admin.MemberId, now);
-        var inboxReceipt = new AccountingReceipt(club.Id, $"inbox-{text}.pdf", Encoding.UTF8.GetBytes($"%PDF inbox {text}"), seeded.Admin.MemberId, now);
+        var receipt = new AccountingReceipt(club.Id, $"receipt-{text}.pdf", Encoding.UTF8.GetBytes($"%PDF-1.7 {text}"), seeded.Admin.MemberId, now);
+        var inboxReceipt = new AccountingReceipt(club.Id, $"inbox-{text}.pdf", Encoding.UTF8.GetBytes($"%PDF-1.7 inbox {text}"), seeded.Admin.MemberId, now);
         var entry = new AccountingEntry(fiscalYear, new AccountingEntry.EntryData(today, $"Entry {text}", AccountingEntryKind.Booking, moneyAccount.Id, null, null,
             [new AccountingEntry.LineData(category.Id, costCenter.Id, 12_000)], seeded.Member.MemberId, $"Payer {text}"), [], seeded.Admin.MemberId, now);
         context.AddRange(receipt, inboxReceipt, entry);

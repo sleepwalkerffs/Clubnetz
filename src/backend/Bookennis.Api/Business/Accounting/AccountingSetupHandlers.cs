@@ -11,12 +11,19 @@ using FiscalYearAuditStatus = Bookennis.Domain.Accounting.FiscalYearAuditStatus;
 namespace Bookennis.Api.Business.Accounting;
 
 /// <summary>Whether the accounting is set up, its fiscal years and everything entries are made with. What the caller may do is decided by the controller.</summary>
-public record GetAccounting(int ClubId, bool CanManage, bool CanAudit) : IQuery<AccountingDto>
+/// <remarks>
+/// <paramref name="CanAudit"/> is whether the caller passes the auditor policy (club admins and support pass every policy); the
+/// handler narrows it down to who <see cref="RecordFiscalYearAudit"/> accepts.
+/// </remarks>
+public record GetAccounting(int ClubId, int UserId, bool CanManage, bool CanAudit) : IQuery<AccountingDto>
 {
     public class Handler(AppDbContext context) : IRequestHandler<GetAccounting, AccountingDto>
     {
         public async Task<AccountingDto> Handle(GetAccounting request, CancellationToken cancellationToken)
         {
+            if (request.CanAudit && AccountingAudit.Refusal(await AccountingAudit.Member(context, request.UserId, request.ClubId, cancellationToken)) is not null)
+                request = request with { CanAudit = false };
+
             var settings = await context.AccountingSettings.AsNoTracking().SingleOrDefaultAsync(s => s.ClubId == request.ClubId, cancellationToken);
             if (settings is null)
                 return new AccountingDto { IsSetUp = false, CanManage = request.CanManage, CanAudit = request.CanAudit };
@@ -93,16 +100,22 @@ public record CreateFiscalYear(int ClubId, DateTimeOffset Now) : ICommand<Fiscal
             await context.LockAccounting(request.ClubId, cancellationToken);
             await context.GetAccountingSettings(request.ClubId, cancellationToken);
 
-            var newest = await context.FiscalYears.Where(y => y.ClubId == request.ClubId).OrderByDescending(y => y.StartDate).FirstAsync(cancellationToken);
+            var newest = await context.FiscalYears.Include(y => y.OpeningBalances).Where(y => y.ClubId == request.ClubId).OrderByDescending(y => y.StartDate).FirstAsync(cancellationToken);
             var next = newest.CreateNext(AccountingQueries.Today(request.Now));
             context.Add(next);
+            await context.SaveChangesAsync(cancellationToken);
+
+            await AccountingBalances.CarryForward(context, newest, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
             return next.ToDto(new Dictionary<int, string>());
         }
     }
 }
 
-/// <summary>The opening balances of the first fiscal year (later years get the closing balances of the year before).</summary>
+/// <summary>
+/// The opening balances set by hand: what was on the money accounts before the club used Clubnetz for them. An account the year
+/// before used gets its closing balance instead.
+/// </summary>
 public record SetOpeningBalances(int ClubId, int FiscalYearId, SetOpeningBalancesModel Model) : ICommand<FiscalYearDto>
 {
     public class Handler(AppDbContext context) : IRequestHandler<SetOpeningBalances, FiscalYearDto>
@@ -120,6 +133,8 @@ public record SetOpeningBalances(int ClubId, int FiscalYearId, SetOpeningBalance
             foreach (var balance in request.Model.Balances)
                 year.SetOpeningBalance(balance.MoneyAccountId, balance.AmountCents);
 
+            await context.SaveChangesAsync(cancellationToken);
+            await AccountingBalances.CarryForward(context, year, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
             return await YearDto(context, year, cancellationToken);
         }
@@ -145,16 +160,11 @@ public record CloseFiscalYear(int ClubId, int UserId, int FiscalYearId, DateTime
             var memberId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken);
 
             year.Close(previous, memberId, request.Now);
+            if (await context.GetNextFiscalYear(year, cancellationToken) is null)
+                context.Add(year.CreateNext(AccountingQueries.Today(request.Now), closing: true));
+            await context.SaveChangesAsync(cancellationToken);
 
-            var balances = await AccountingBalances.Load(context, year, cancellationToken);
-            var next = await context.GetNextFiscalYear(year, cancellationToken);
-            if (next is null)
-            {
-                next = year.CreateNext(AccountingQueries.Today(request.Now));
-                context.Add(next);
-            }
-
-            next.CarryOver(balances.ToDictionary(b => b.MoneyAccountId, b => checked((int)b.ClosingCents)));
+            await AccountingBalances.CarryForward(context, year, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
             return await SetOpeningBalances.YearDto(context, year, cancellationToken);
         }
@@ -178,8 +188,8 @@ public record ReopenFiscalYear(int ClubId, int FiscalYearId) : ICommand<FiscalYe
 }
 
 /// <summary>
-/// The auditor (Rechnungsprüfer) records the audit of a closed fiscal year. Only a member with the role auditor who is not also a
-/// treasurer of the club: nobody audits their own accounts, and in support mode there is no member to sign it.
+/// The auditor (Rechnungsprüfer) records the audit of a closed fiscal year. Only a member with the role auditor who is neither a
+/// treasurer nor an admin of the club: nobody audits the books they keep, and in support mode there is no member to sign it.
 /// </summary>
 public record RecordFiscalYearAudit(int ClubId, int UserId, int FiscalYearId, RecordAuditModel Model, DateTimeOffset Now) : ICommand<FiscalYearDto>
 {
@@ -187,20 +197,35 @@ public record RecordFiscalYearAudit(int ClubId, int UserId, int FiscalYearId, Re
     {
         public async Task<FiscalYearDto> Handle(RecordFiscalYearAudit request, CancellationToken cancellationToken)
         {
-            var auditor = await context.ClubMembers.AsNoTracking()
-                .Where(m => m.UserId == request.UserId && m.ClubId == request.ClubId)
-                .OrderBy(m => m.Id)
-                .FirstOrDefaultAsync(cancellationToken);
-            if (auditor is null || !auditor.UserRoles.Contains(MemberRole.Auditor))
-                throw new PreconditionException(AccountingErrorCode.AccountingAuditorRequired, "Only an auditor of the club records an audit.");
-            if (auditor.UserRoles.Contains(MemberRole.Treasurer))
-                throw new PreconditionException(AccountingErrorCode.AccountingAuditorIsTreasurer, "A treasurer doesn't audit their own accounts.");
+            var auditor = await AccountingAudit.Member(context, request.UserId, request.ClubId, cancellationToken);
+            if (AccountingAudit.Refusal(auditor) is { } refusal)
+                throw new PreconditionException(refusal, "The caller can't record an audit.");
 
             await context.LockAccounting(request.ClubId, cancellationToken);
             var year = await context.GetFiscalYear(request.ClubId, request.FiscalYearId, cancellationToken);
-            year.RecordAudit((FiscalYearAuditStatus)request.Model.Status, request.Model.Comment, auditor.Id, request.Now);
+            year.RecordAudit((FiscalYearAuditStatus)request.Model.Status, request.Model.Comment, auditor!.Id, request.Now);
             await context.SaveChangesAsync(cancellationToken);
             return await SetOpeningBalances.YearDto(context, year, cancellationToken);
         }
+    }
+}
+
+/// <summary>Who may record an audit: a member of the club with the role auditor who doesn't keep the books (treasurer or admin).</summary>
+internal static class AccountingAudit
+{
+    public static Task<ClubMember?> Member(AppDbContext context, int userId, int clubId, CancellationToken cancellationToken)
+        => context.ClubMembers.AsNoTracking()
+            .Where(m => m.UserId == userId && m.ClubId == clubId)
+            .OrderBy(m => m.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    /// <summary>Why <paramref name="member"/> can't record an audit, or <c>null</c> when they can.</summary>
+    public static AccountingErrorCode? Refusal(ClubMember? member)
+    {
+        if (member is null || !member.UserRoles.Contains(MemberRole.Auditor))
+            return AccountingErrorCode.AccountingAuditorRequired;
+        if (member.UserRoles.Contains(MemberRole.Treasurer) || member.UserRoles.Contains(MemberRole.Admin))
+            return AccountingErrorCode.AccountingAuditorIsTreasurer;
+        return null;
     }
 }

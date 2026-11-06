@@ -29,7 +29,7 @@ public class AccountingTests(TestFixture fixture) : TestBase(fixture)
     private const int TreasurerUserId = TestDataSeed.AdminId;
     private static readonly DateTimeOffset Now = new(2026, 11, 6, 10, 0, 0, TimeSpan.Zero);
 
-    private Task<AccountingDto> Basics() => SendAsync(new GetAccounting(ClubId, true, false));
+    private Task<AccountingDto> Basics() => SendAsync(new GetAccounting(ClubId, TreasurerUserId, true, false));
 
     private async Task<AccountingDto> SetUp(int startMonth = 1, int firstYear = 2026)
     {
@@ -65,8 +65,19 @@ public class AccountingTests(TestFixture fixture) : TestBase(fixture)
             TransferAmountCents = amountCents,
         }, Now));
 
-    private Task<AccountingReceiptDto> Upload(string fileName = "invoice.pdf", int size = 100)
-        => SendAsync(new UploadAccountingReceipt(ClubId, TreasurerUserId, ClubAnnouncementSeed.File(fileName, new byte[size]), Now));
+    private Task<AccountingReceiptDto> Upload(string fileName = "invoice.pdf", int size = 100, byte[]? start = null)
+    {
+        var data = new byte[size];
+        start ??= Path.GetExtension(fileName).ToLowerInvariant() switch
+        {
+            ".pdf" => "%PDF-1.7"u8.ToArray(),
+            ".jpg" or ".jpeg" => [0xFF, 0xD8, 0xFF, 0xE0],
+            ".png" => [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
+            _ => [],
+        };
+        start.AsSpan(0, Math.Min(start.Length, size)).CopyTo(data);
+        return SendAsync(new UploadAccountingReceipt(ClubId, TreasurerUserId, ClubAnnouncementSeed.File(fileName, data), Now));
+    }
 
     private static async Task Rejected(Func<Task> act, AccountingErrorCode code)
         => (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(code.ToString());
@@ -283,11 +294,53 @@ public class AccountingTests(TestFixture fixture) : TestBase(fixture)
         statement.PreviousIncomeCents.Should().Be(12_000);
         statement.IncomeCents.Should().Be(15_000);
 
-        // Reopened, corrected and closed again: the next year gets the new balance
+        // Reopened and corrected: the next year follows at once, not only when the year is closed again
         await SendAsync(new ReopenFiscalYear(ClubId, year.Id));
-        await Book(basics, 1_000, date: new DateOnly(2025, 12, 31));
+        var correction = await Book(basics, 1_000, date: new DateOnly(2025, 12, 31));
+        (await Basics()).FiscalYears[0].OpeningBalances.Single(b => b.MoneyAccountId == bank).AmountCents.Should().Be(63_000);
+        await SendAsync(new CancelAccountingEntry(ClubId, TreasurerUserId, correction.Id, "Wrong year", Now));
+        (await Basics()).FiscalYears[0].OpeningBalances.Single(b => b.MoneyAccountId == bank).AmountCents.Should().Be(62_000);
+
+        await Book(basics, 1_000, date: new DateOnly(2025, 12, 30));
         await SendAsync(new CloseFiscalYear(ClubId, TreasurerUserId, year.Id, Now));
         (await Basics()).FiscalYears[0].OpeningBalances.Single(b => b.MoneyAccountId == bank).AmountCents.Should().Be(63_000);
+    }
+
+    [Fact]
+    public async Task NextYear_FollowsTheYearBefore_AndAccountsItDidntUseGetTheirBalanceByHand()
+    {
+        var basics = await SetUp(firstYear: 2025);
+        var bank = Account(basics, MoneyAccountKind.Bank);
+        var first = basics.FiscalYears.Single();
+        await SendAsync(new SetOpeningBalances(ClubId, first.Id, new SetOpeningBalancesModel { Balances = [new OpeningBalanceModel { MoneyAccountId = bank, AmountCents = 50_000 }] }));
+
+        // Created while the year before is still open: it starts with its balances right away
+        var next = await SendAsync(new CreateFiscalYear(ClubId, Now));
+        next.OpeningBalancesCarried.Should().BeTrue();
+        next.OpeningBalances.Should().ContainSingle(b => b.MoneyAccountId == bank && b.AmountCents == 50_000 && b.IsCarried);
+        await Book(basics, 2_000, date: new DateOnly(2025, 5, 1));
+        (await Basics()).FiscalYears[0].OpeningBalances.Single(b => b.MoneyAccountId == bank).AmountCents.Should().Be(52_000);
+
+        // A savings book the club only adds in the second year: what was on it is entered by hand and stays when the year before closes
+        var savings = await SendAsync(new CreateMoneyAccount(ClubId, new SaveMoneyAccountModel { Name = "Sparbuch", Kind = MoneyAccountKind.Bank }));
+        await SendAsync(new SetOpeningBalances(ClubId, next.Id, new SetOpeningBalancesModel { Balances = [new OpeningBalanceModel { MoneyAccountId = savings.Id, AmountCents = 500_000 }] }));
+        await Rejected(() => SendAsync(new SetOpeningBalances(ClubId, next.Id, new SetOpeningBalancesModel { Balances = [new OpeningBalanceModel { MoneyAccountId = bank, AmountCents = 1 }] })),
+            AccountingErrorCode.AccountingOpeningBalancesCarried);
+
+        await SendAsync(new CloseFiscalYear(ClubId, TreasurerUserId, first.Id, Now));
+        var balances = (await Basics()).FiscalYears[0].OpeningBalances;
+        balances.Should().ContainSingle(b => b.MoneyAccountId == savings.Id && b.AmountCents == 500_000 && !b.IsCarried);
+        balances.Should().ContainSingle(b => b.MoneyAccountId == bank && b.AmountCents == 52_000 && b.IsCarried);
+    }
+
+    [Fact]
+    public async Task ClosingAYear_AlwaysCreatesTheNextOne_AlsoAYearAhead()
+    {
+        var basics = await SetUp(firstYear: 2027);
+
+        await SendAsync(new CloseFiscalYear(ClubId, TreasurerUserId, basics.FiscalYears.Single().Id, Now));
+
+        (await Basics()).FiscalYears.Select(y => y.Label).Should().Equal("2028", "2027");
     }
 
     [Fact]
@@ -329,6 +382,28 @@ public class AccountingTests(TestFixture fixture) : TestBase(fixture)
             return 0;
         });
         await Rejected(() => SendAsync(new RecordFiscalYearAudit(ClubId, auditorUserId, year, model, Now)), AccountingErrorCode.AccountingAuditorIsTreasurer);
+
+        // An admin keeps the books as well
+        await QueryAsync(async ctx =>
+        {
+            var member = await ctx.ClubMembers.SingleAsync(m => m.Id == auditorMemberId);
+            member.UpdateRoles([MemberRole.Auditor, MemberRole.Admin]);
+            await ctx.SaveChangesAsync();
+            return 0;
+        });
+        await Rejected(() => SendAsync(new RecordFiscalYearAudit(ClubId, auditorUserId, year, model, Now)), AccountingErrorCode.AccountingAuditorIsTreasurer);
+    }
+
+    [Fact]
+    public async Task CanAudit_OnlyForWhoMayRecordTheAudit()
+    {
+        await SetUp();
+        var (auditorUserId, _) = await QueryAsync(ctx => MemberSeed.AddUserWithMember(ctx, "auditor@test.com", MemberRole.Auditor));
+
+        // Admins pass every policy of the club, the button would only lead to an error
+        (await SendAsync(new GetAccounting(ClubId, TreasurerUserId, true, true))).CanAudit.Should().BeFalse();
+        (await SendAsync(new GetAccounting(ClubId, auditorUserId, false, true))).CanAudit.Should().BeTrue();
+        (await SendAsync(new GetAccounting(ClubId, auditorUserId, false, false))).CanAudit.Should().BeFalse();
     }
 
     // ---------- master data ----------
@@ -356,12 +431,31 @@ public class AccountingTests(TestFixture fixture) : TestBase(fixture)
         await Rejected(() => SendAsync(new DeleteMoneyAccount(ClubId, Account(basics, MoneyAccountKind.Bank))), AccountingErrorCode.AccountingInUse);
         await Rejected(() => SendAsync(new UpdateAccountingCategory(ClubId, canteenIncome.Id, new SaveAccountingCategoryModel { Kind = AccountingCategoryKind.Expense, Name = "Other name" })),
             AccountingErrorCode.AccountingCategoryKindInUse);
+        // Used in an open year only: the tax sphere may still change
+        await SendAsync(new UpdateAccountingCategory(ClubId, canteenIncome.Id, new SaveAccountingCategoryModel { Kind = AccountingCategoryKind.Income, Name = canteenIncome.Name, Number = canteenIncome.Number, TaxSphere = TaxSphere.CommercialOperation }));
         await SendAsync(new DeleteAccountingCategory(ClubId, category.Id));
 
         var costCenter = await SendAsync(new CreateCostCenter(ClubId, new SaveCostCenterModel { Name = "Clubmeisterschaft" }));
         await SendAsync(new UpdateCostCenter(ClubId, costCenter.Id, new SaveCostCenterModel { Name = "Club championship", IsArchived = true }));
         await SendAsync(new DeleteCostCenter(ClubId, costCenter.Id));
         (await Basics()).CostCenters.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task CategoryUsedInAClosedYear_KeepsItsTaxSphere()
+    {
+        var basics = await SetUp(firstYear: 2025);
+        var category = basics.Categories.Single(c => c.Number == "4000");
+        await Book(basics, 100, date: new DateOnly(2025, 3, 1));
+        await SendAsync(new CloseFiscalYear(ClubId, TreasurerUserId, basics.FiscalYears.Single().Id, Now));
+
+        SaveAccountingCategoryModel Model(TaxSphere sphere, string name) => new() { Kind = category.Kind, Name = name, Number = category.Number, TaxSphere = sphere };
+        var other = category.TaxSphere == TaxSphere.NonProfit ? TaxSphere.CommercialOperation : TaxSphere.NonProfit;
+        await Rejected(() => SendAsync(new UpdateAccountingCategory(ClubId, category.Id, Model(other, category.Name))), AccountingErrorCode.AccountingCategorySphereInUse);
+
+        // Renaming changes nothing the year adds up
+        var renamed = await SendAsync(new UpdateAccountingCategory(ClubId, category.Id, Model(category.TaxSphere, "Mitgliedsbeiträge neu")));
+        renamed.Name.Should().Be("Mitgliedsbeiträge neu");
     }
 
     // ---------- receipts ----------
@@ -382,6 +476,8 @@ public class AccountingTests(TestFixture fixture) : TestBase(fixture)
 
         await Rejected(() => Upload("script.html"), AccountingErrorCode.AccountingReceiptTypeNotAllowed);
         await Rejected(() => Upload("empty.pdf", 0), AccountingErrorCode.AccountingReceiptTypeNotAllowed);
+        await Rejected(() => Upload("renamed.pdf", start: "<html><script>"u8.ToArray()), AccountingErrorCode.AccountingReceiptTypeNotAllowed);
+        await Rejected(() => Upload("photo.jpg", start: [0x89, 0x50, 0x4E, 0x47]), AccountingErrorCode.AccountingReceiptTypeNotAllowed);
         await Rejected(() => Upload("huge.pdf", AccountingReceipt.MaxSizeInBytes + 1), AccountingErrorCode.AccountingReceiptTooLarge);
     }
 
@@ -415,6 +511,22 @@ public class AccountingTests(TestFixture fixture) : TestBase(fixture)
         var journal = workbook.Worksheet(1);
         journal.Cell(2, 9).GetValue<decimal>().Should().Be(120m);
         journal.Cell(3, 11).GetValue<decimal>().Should().Be(50m);
+    }
+
+    [Fact]
+    public async Task Export_ShowsCancelledEntriesWithoutAmounts()
+    {
+        var basics = await SetUp();
+        var entry = await Book(basics, 12_000);
+        await SendAsync(new CancelAccountingEntry(ClubId, TreasurerUserId, entry.Id, "Booked twice", Now));
+
+        var result = await SendAsync(new ExportAccounting(ClubId, basics.FiscalYears[0].Id));
+
+        using var workbook = new XLWorkbook(new MemoryStream(result.Data));
+        var journal = workbook.Worksheet(1);
+        journal.Cell(2, 1).GetValue<int>().Should().Be(entry.Number);
+        journal.Cell(2, 9).IsEmpty().Should().BeTrue();
+        journal.Cell(2, 13).GetString().Should().NotBeEmpty();
     }
 
     [Fact]

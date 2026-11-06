@@ -5,10 +5,10 @@
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Accounting
 
-@* The opening balances of the first fiscal year in Clubnetz (what was on the accounts before). Later years get the closing balances
-   of the year before and only show them. *@
+@* The opening balances of a fiscal year: what was on the accounts before the club used Clubnetz for them. Accounts the year before
+   used start with its closing balances, which are only shown. *@
 
-<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale[Year.OpeningBalancesCarried ? "Close" : "Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale[AllCarried ? "Close" : "Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
             Loading="@Store.IsSaving" Title="@L["Balances_Title"]">
     <div class="balances-form">
         <div class="balances-form__hint">@L[Year.OpeningBalancesCarried ? "Balances_Carried" : "Balances_Hint"]</div>
@@ -17,7 +17,7 @@
             var id = account.Id;
             <MudNumericField T="decimal" Value="@amounts.GetValueOrDefault(id)" ValueChanged="v => amounts[id] = v" Label="@($"{AccountingHelpers.AccountIcon(account.Kind)} {account.Name}")"
                              Variant="Variant.Outlined" Margin="Margin.Dense" Format="N2" Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true"
-                             ReadOnly="@Year.OpeningBalancesCarried" />
+                             ReadOnly="@carried.Contains(id)" HelperText="@(carried.Contains(id) ? L["Balances_CarriedAccount"] : null)" />
         }
     </div>
 </BaseDialog>
@@ -34,21 +34,29 @@
     [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
 
     private readonly Dictionary<int, decimal> amounts = new();
+    private readonly HashSet<int> carried = new();
+
+    /// <summary>Every account shown starts with the closing balance of the year before: nothing to set by hand.</summary>
+    private bool AllCarried => Store.Basics?.MoneyAccounts.Where(a => !a.IsArchived || amounts.GetValueOrDefault(a.Id) != 0).All(a => carried.Contains(a.Id)) ?? true;
 
     protected override void OnInitialized()
     {
         foreach (var balance in Year.OpeningBalances)
+        {
             amounts[balance.MoneyAccountId] = AccountingHelpers.ToEuros(balance.AmountCents);
+            if (balance.IsCarried)
+                carried.Add(balance.MoneyAccountId);
+        }
     }
 
     private async Task<DialogResult?> Submit()
     {
-        if (Year.OpeningBalancesCarried)
+        if (AllCarried)
             return DialogResult.Ok(true);
 
         var result = await Store.SetOpeningBalances(Year.Id, new SetOpeningBalancesModel
         {
-            Balances = amounts.Select(a => new OpeningBalanceModel { MoneyAccountId = a.Key, AmountCents = AccountingHelpers.ToCents(a.Value) }).ToList(),
+            Balances = amounts.Where(a => !carried.Contains(a.Key)).Select(a => new OpeningBalanceModel { MoneyAccountId = a.Key, AmountCents = AccountingHelpers.ToCents(a.Value) }).ToList(),
         });
         if (!result.Success)
         {

@@ -53,6 +53,7 @@ public class FiscalYearTests
 
         next.StartDate.Should().Be(new DateOnly(2027, 1, 1));
         Rejected(() => next.CreateNext(Today), AccountingErrorCode.AccountingFiscalYearTooFarAhead);
+        next.CreateNext(Today, closing: true).StartDate.Should().Be(next.EndDate.AddDays(1));
     }
 
     [Fact]
@@ -108,7 +109,7 @@ public class FiscalYearTests
     }
 
     [Fact]
-    public void OpeningBalances_AreSetByHandOnlyUntilTheYearBeforeIsCarriedOver()
+    public void OpeningBalances_OfAccountsTheYearBeforeUsed_AreCarried_OthersSetByHand()
     {
         var year = FiscalYear.First(ClubId, 1, 2026, Today);
         year.SetOpeningBalance(1, 150_000);
@@ -121,11 +122,17 @@ public class FiscalYearTests
 
         year.CarryOver(new Dictionary<int, int> { [1] = 90_000, [3] = 1_000 });
 
-        year.OpeningBalances.Should().HaveCount(2);
+        year.OpeningBalancesCarried.Should().BeTrue();
+        year.OpeningBalances.Should().HaveCount(3);
         year.OpeningBalanceCents(1).Should().Be(90_000);
-        year.OpeningBalanceCents(2).Should().Be(0);
+        year.OpeningBalanceCents(2).Should().Be(-500);
         year.OpeningBalanceCents(3).Should().Be(1_000);
         Rejected(() => year.SetOpeningBalance(1, 0), AccountingErrorCode.AccountingOpeningBalancesCarried);
+        year.SetOpeningBalance(2, -700);
+
+        // The year before no longer uses account 3: its carried balance goes, the one set by hand stays
+        year.CarryOver(new Dictionary<int, int> { [1] = 95_000 });
+        year.OpeningBalances.Select(b => (b.MoneyAccountId, b.AmountCents, b.IsCarried)).Should().BeEquivalentTo([(1, 95_000, true), (2, -700, false)]);
     }
 
     [Fact]
