@@ -30,18 +30,20 @@
     background: var(--mud-palette-background-gray);
 }
 
-/* Own areas per part: the columns line up with or without cost centers and remove button */
+/* Own areas per part: the columns line up with or without cost centers and remove button. Category and cost center get a row of
+   their own, in one row with the rest their names were cut off ("4400 · Spon…") */
 .invoice-line {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) 80px minmax(100px, 1fr) minmax(0, 1.4fr) 90px 32px;
-    grid-template-areas: "text qty price category total remove";
+    grid-template-columns: minmax(0, 2fr) 80px minmax(110px, 1fr) 90px 32px;
+    grid-template-areas: "text qty price total remove" "category category category . .";
     gap: 8px;
     align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--mud-palette-lines-default);
 }
 
 .invoice-line:has(.invoice-line__cost-center) {
-    grid-template-columns: minmax(0, 2fr) 80px minmax(100px, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) 90px 32px;
-    grid-template-areas: "text qty price category cost-center total remove";
+    grid-template-areas: "text qty price total remove" "category cost-center cost-center . .";
 }
 
 .invoice-line ::deep .invoice-line__text { grid-area: text; }

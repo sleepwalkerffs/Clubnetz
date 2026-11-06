@@ -9,7 +9,7 @@
 @* An invoice with what can be done with it: a draft is changed, deleted or issued; an issued one is sent, reminded, paid or cancelled; every
    one has its PDF. *@
 
-<BaseDialog SubmitFunc="Close" SubmitCaption="@SharedLocale["Close"]" CancelFunc="Close" CancelCaption="@SharedLocale["Cancel"]" Loading="@Store.IsSaving"
+<BaseDialog SubmitFunc="Close" SubmitCaption="@SharedLocale["Close"]" CancelFunc="Close" CancelCaption="@SharedLocale["Cancel"]" ShowCancel="false" Loading="@Store.IsSaving"
             Title="@(invoice?.Number is { } number ? $"{L["Invoice"]} {number}" : L["InvoiceStatus_Draft"])">
     @if (invoice is null)
     {

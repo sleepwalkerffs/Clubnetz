@@ -164,7 +164,7 @@ public class BankStatementTests
         line.AmountCents.Should().Be(57_500);
         line.CounterpartyName.Should().Be("Anna Muster");
         line.CounterpartyIban.Should().Be("AT483200000012345864");
-        line.Reference.Should().Contain("RE2026-0001");
+        line.Reference.Should().Be("1234567 SEPA-Gutschrift Anna Muster RE2026-0001", "the Verwendungszweck is already in the Umsatztext");
     }
 
     [Fact]

@@ -74,9 +74,10 @@
 
 /* ---------- overview ---------- */
 
+/* Wide enough for "€ 103,116.00" next to the icon: narrower tiles cut the amounts off */
 .acc-page ::deep .acc-tiles {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
     gap: 12px;
 }
 
@@ -573,6 +574,17 @@
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* An invoice number (RE2026-0001) is longer than an entry number and stays on one line */
+.acc-page ::deep .acc-entries--invoices .acc-entry__number {
+    white-space: nowrap;
+}
+
+@media (min-width: 601px) {
+    .acc-page ::deep .acc-entries--invoices .acc-entry {
+        grid-template-columns: 96px 64px minmax(0, 1fr) auto;
+    }
 }
 
 /* ---------- phones ---------- */

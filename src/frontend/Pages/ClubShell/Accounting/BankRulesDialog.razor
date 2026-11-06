@@ -7,7 +7,7 @@
 
 @* The bank rules: "lines of ÖTV are association fees". A line a rule fits gets its category, cost center and text with one click. *@
 
-<BaseDialog SubmitFunc="Close" SubmitCaption="@SharedLocale["Close"]" CancelFunc="Close" CancelCaption="@SharedLocale["Cancel"]" Loading="@Store.IsSaving"
+<BaseDialog SubmitFunc="Close" SubmitCaption="@SharedLocale["Close"]" CancelFunc="Close" CancelCaption="@SharedLocale["Cancel"]" ShowCancel="false" Loading="@Store.IsSaving"
             CanSubmit="@(editing is null)" Title="@L["Rules_Title"]">
     <div class="rules-form">
         <div class="rules-form__hint">@L["Rules_Hint"]</div>

@@ -580,7 +580,9 @@ public static class BankStatementReader
             if (Cell(columns.DebitCreditMarker) is { } marker && Normalize(marker) is "s" or "d" or "soll" or "debit" or "dbit" or "belastung")
                 amount = -Math.Abs(amount.Value);
 
-            var reference = string.Join(" ", columns.Reference.Select(i => Cell(i)).Where(v => v is not null).Distinct());
+            // A text another column already holds is left out: the Volksbank "Umsatztext" repeats the "Verwendungszweck"
+            var texts = columns.Reference.Select(i => Cell(i)).OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var reference = string.Join(" ", texts.Where(t => !texts.Any(o => o.Length > t.Length && o.Contains(t, StringComparison.OrdinalIgnoreCase))));
             return new BankStatementLine(date.Value, ParseDate(Cell(columns.ValueDate)), amount.Value, Cell(columns.CounterpartyName), Cell(columns.CounterpartyIban), reference, null);
         }
 
