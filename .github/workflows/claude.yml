@@ -110,15 +110,48 @@ jobs:
         working-directory: ./src/
         run: dotnet workload restore
 
+      # A headless Chrome (preinstalled on the runner) that Claude drives through the Playwright MCP
+      # server to look at the UI it built, see "Checking the UI" in CLAUDE.md. Screenshots land in
+      # ui-check/ and are uploaded as an artifact of the run.
+      - name: Set up the browser for UI checks
+        run: |
+          mkdir -p "$RUNNER_TEMP/ui-check"
+          cat > "$RUNNER_TEMP/playwright-mcp.json" <<JSON
+          {
+            "mcpServers": {
+              "playwright": {
+                "command": "npx",
+                "args": ["-y", "@playwright/mcp@0.0.83", "--browser", "chrome", "--headless", "--isolated",
+                         "--output-dir", "$RUNNER_TEMP/ui-check"]
+              }
+            }
+          }
+          JSON
+
       # No prompt given, so the action runs in tag mode: it answers in a progress comment,
       # commits to a claude/... branch and links a ready-made pull request
       - name: Run Claude
         uses: anthropics/claude-code-action@v1
         env:
           GH_TOKEN: ${{ github.token }}
+          # For psql against the job's PostgreSQL service (test databases only)
+          PGPASSWORD: developer
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           additional_permissions: |
             actions: read
+          # gh pr: open, edit and look at pull requests (not merge them). git: switch to the branch of an
+          # existing pull request instead of leaving work on a new branch. scripts/ui-check, psql and
+          # mcp__playwright: run the app with test data and look at it in the browser.
           claude_args: |
-            --allowedTools "Agent,Task,Bash(dotnet:*),Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh run view:*),Bash(gh run list:*)"
+            --mcp-config ${{ runner.temp }}/playwright-mcp.json
+            --allowedTools "Agent,Task,Bash(dotnet:*),Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr list:*),Bash(gh pr create:*),Bash(gh pr edit:*),Bash(gh pr comment:*),Bash(gh pr checks:*),Bash(gh pr checkout:*),Bash(gh run view:*),Bash(gh run list:*),Bash(git fetch:*),Bash(git checkout:*),Bash(git switch:*),Bash(git branch:*),Bash(git status:*),Bash(git log:*),Bash(git diff:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git merge:*),Bash(scripts/ui-check/start-app.sh:*),Bash(scripts/ui-check/seed.sh:*),Bash(psql:*),mcp__playwright__*"
+
+      - name: Upload UI check screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-check-${{ github.run_id }}
+          path: ${{ runner.temp }}/ui-check
+          if-no-files-found: ignore
+          retention-days: 14
