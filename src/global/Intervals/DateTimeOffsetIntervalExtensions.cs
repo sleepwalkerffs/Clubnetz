@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using EntityFrameworkCore.Projectables;
 
 namespace Bookennis.Global.Intervals;
@@ -13,7 +12,4 @@ public static class DateTimeOffsetIntervalExtensions
 
     [Projectable]
     public static bool Overlaps(this DateTimeOffsetInterval section, DateTimeOffsetInterval overlaps) => section.From < overlaps.From && section.To > overlaps.To;
-
-    public static bool TryToTimeOnly(this DateTimeOffsetInterval interval, [NotNullWhen(true)] out TimeOnlyInterval? timeOnlyInterval) =>
-        TimeOnlyIntervalExtensions.TryCreateTimeOnlyInterval(TimeOnly.FromDateTime(interval.From.DateTime), TimeOnly.FromDateTime(interval.To.DateTime), out timeOnlyInterval);
 }

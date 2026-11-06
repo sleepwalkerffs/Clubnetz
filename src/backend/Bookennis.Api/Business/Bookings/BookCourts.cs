@@ -23,7 +23,6 @@ public record BookCourts(
     [Required] List<int> Players,
     string? Comment,
     bool DryRun,
-    int? ClientTimeZoneOffset,
     int UserId,
     List<int>? ExpectedBookingIdsToRemove = null
 ) : ICommand<BookCourtsResult>
@@ -80,7 +79,7 @@ public record BookCourts(
                     if (overlapping is not null)
                         throw new PreconditionException(ErrorCode.BookingSlotsOverlap, [(overlapping.Index + 1).ToString()], "The slot overlaps another slot on the same court");
 
-                    var bookingContext = await builder.BuildContext(slot.CourtId, interval, request.ClientTimeZoneOffset, pendingIntervals, cancellationToken);
+                    var bookingContext = await builder.BuildContext(slot.CourtId, interval, pendingIntervals, cancellationToken);
                     var booking = bookingService.BookCourt(bookingContext, interval, request.TimeZoneInfoId, request.Comment);
 
                     bookings.Add(booking);

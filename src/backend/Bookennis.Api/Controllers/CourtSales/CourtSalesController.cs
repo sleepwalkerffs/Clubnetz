@@ -74,7 +74,7 @@ public class CourtSalesController(IMediator mediator, IUserAccessor userAccessor
             throw new Domain.Exceptions.PreconditionException(CourtPurchaseErrorCode.CourtPurchaseDurationInvalid, "Invalid slot.");
 
         var interval = new DateTimeOffsetInterval(model.From.ToUniversalTime(), model.To.ToUniversalTime());
-        return mediator.Send(new StartCourtPurchase(clubId, userAccessor.GetUserId(), model.CourtId, interval, HttpContext.GetRequestTimeZoneOffset()), cancellationToken);
+        return mediator.Send(new StartCourtPurchase(clubId, userAccessor.GetUserId(), model.CourtId, interval), cancellationToken);
     }
 
     /// <summary>A purchase of the caller (or any purchase for treasurers). While it waits for its payment, Stripe is asked how it went.</summary>

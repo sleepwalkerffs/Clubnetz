@@ -360,7 +360,7 @@ public class BookCourtsTests : TestBase
     }
 
     private static BookCourts Command(int playModeId, List<BookingSlotModel> slots, bool dryRun)
-        => new(slots, TimeZoneInfo.Utc.Id, playModeId, [TestDataSeed.Member1Id], Comment: null, dryRun, ClientTimeZoneOffset: null, TestDataSeed.UserId);
+        => new(slots, TimeZoneInfo.Utc.Id, playModeId, [TestDataSeed.Member1Id], Comment: null, dryRun, TestDataSeed.UserId);
 
     private static BookingSlotModel Slot(int courtId, DateOnly day, int fromHour, int? toHour = null)
     {

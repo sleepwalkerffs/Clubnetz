@@ -3,6 +3,7 @@ using Bookennis.Api.Business.ClubEmails;
 using Bookennis.Api.Business.Push;
 using Bookennis.Api.Config;
 using Bookennis.Api.Data;
+using Bookennis.Domain.Clubs;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Notifications;
@@ -21,10 +22,10 @@ public sealed record ClubEventInfo(
     DateTimeOffset? RegistrationDeadline)
 {
     /// <summary>
-    /// Club events have club-local dates and times without a time zone. The clubs are in Austria, Germany and
-    /// Switzerland, which share one time zone, so it is used to tell when an event starts and to show deadlines.
+    /// Club events have club-local dates and times without a time zone (wall-clock times, see <see cref="ClubTimeZone"/>),
+    /// so the club's time zone is used to tell when an event starts and to show deadlines.
     /// </summary>
-    public static readonly TimeZoneInfo TimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vienna");
+    public static readonly TimeZoneInfo TimeZone = ClubTimeZone.Instance;
 
     public DateTimeOffset? LocalRegistrationDeadline
         => RegistrationDeadline is { } deadline ? TimeZoneInfo.ConvertTime(deadline, TimeZone) : null;

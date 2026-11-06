@@ -23,7 +23,6 @@ public record BookRecurringCourt(
     [Required] int RecurrenceIntervalWeeks,
     DateOnly? EndDate,
     string? Comment,
-    int? ClientTimeZoneOffset,
     int UserId
 ) : ICommand<BookCourtResult>
 {
@@ -135,7 +134,6 @@ public record BookRecurringCourt(
                 }),
                 IntersectingBookings = intersectingBookings,
                 PlayMode = queryResult.PlayMode,
-                ClientTimeZoneOffset = request.ClientTimeZoneOffset,
                 BookingGracePeriodInMinutes = queryResult.Club.BookingGracePeriodInMinutes,
                 ActiveSeasonId = activeSeason.Id,
                 CourtBlockingTitles = await context.GetCourtBlockingTitles(request.CourtId, firstInterval, cancellationToken),

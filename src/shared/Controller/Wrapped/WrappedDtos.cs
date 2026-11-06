@@ -95,7 +95,7 @@ public class WrappedCourtDto
 public class WrappedRegularSlotDto
 {
     public required DayOfWeek DayOfWeek { get; init; }
-    /// <summary>Local time of day. A <see cref="TimeSpan"/>, because the client converts <c>TimeOnly</c> to UTC.</summary>
+    /// <summary>Local time of day. A <see cref="TimeSpan"/> for historical reasons (the client once converted <c>TimeOnly</c> to UTC).</summary>
     public required TimeSpan StartTime { get; init; }
     public required string CourtName { get; init; }
     public required int Matches { get; init; }

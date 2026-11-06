@@ -188,7 +188,6 @@ public class BookingDomainServiceTests
             Participants = participants ?? [],
             IntersectingBookings = intersectingBookings ?? [],
             PlayMode = club.PlayModes[0],
-            ClientTimeZoneOffset = null,
             BookingGracePeriodInMinutes = null,
             ActiveSeasonId = 1,
             CourtBlockingTitles = courtBlockingTitles ?? [],

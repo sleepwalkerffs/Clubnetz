@@ -41,8 +41,7 @@ public class PlayRequestHandlerTests : TestBase
             playersNeeded,
             [.. invitees],
             "Anybody?",
-            expiresAt,
-            null);
+            expiresAt);
     }
 
     // ---------- create ----------

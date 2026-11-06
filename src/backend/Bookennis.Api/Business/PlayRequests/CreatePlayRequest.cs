@@ -25,8 +25,7 @@ public record CreatePlayRequest(
     int? PlayersNeeded,
     List<int> InviteeMemberIds,
     string? Comment,
-    DateTimeOffset? ExpiresAt,
-    int? ClientTimeZoneOffset) : ICommand<int>
+    DateTimeOffset? ExpiresAt) : ICommand<int>
 {
     public class Handler(AppDbContext context, IBookingDomainService bookingService, IPlayRequestPushNotifier notifier) : IRequestHandler<CreatePlayRequest, int>
     {
@@ -67,7 +66,7 @@ public record CreatePlayRequest(
             var builder = await BookingContextBuilder.Load(
                 context, request.PlayModeId, playRequest.CourtIds, [requesterId], request.UserId, [request.Interval], cancellationToken);
             await PlayRequestBooking.BookFirstFreeCourt(
-                builder, bookingService, playRequest.CourtIds, request.Interval, request.TimeZoneInfoId, request.ClientTimeZoneOffset,
+                builder, bookingService, playRequest.CourtIds, request.Interval, request.TimeZoneInfoId,
                 playersNeeded, validateAsIfFull: true, cancellationToken);
 
             context.Add(playRequest);

@@ -42,8 +42,7 @@ public class PlayRequestsController(IMediator mediator, IUserAccessor userAccess
                 model.PlayersNeeded,
                 model.InviteeMemberIds,
                 model.Comment,
-                model.ExpiresAt,
-                HttpContext.GetRequestTimeZoneOffset()),
+                model.ExpiresAt),
             cancellationToken);
 
     /// <summary>Accepts the request. The answer says whether this filled the last spot and booked the court.</summary>
@@ -51,7 +50,7 @@ public class PlayRequestsController(IMediator mediator, IUserAccessor userAccess
     public async Task<PlayRequestAcceptResult> AcceptPlayRequest(int clubId, int playRequestId, CancellationToken cancellationToken)
     {
         await authorizationService.AuthorizeAsync(User, new PlayRequestAuthorizationModel(playRequestId), AuthorizationPolicies.TakesPartInPlayRequest).EnsureSucceeded();
-        var result = await mediator.Send(new AcceptPlayRequest(clubId, userAccessor.GetUserId(), playRequestId, HttpContext.GetRequestTimeZoneOffset()), cancellationToken);
+        var result = await mediator.Send(new AcceptPlayRequest(clubId, userAccessor.GetUserId(), playRequestId), cancellationToken);
         return new PlayRequestAcceptResult(result.IsFilled, result.BookingId);
     }
 

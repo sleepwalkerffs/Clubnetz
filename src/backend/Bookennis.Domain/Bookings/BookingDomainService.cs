@@ -65,15 +65,19 @@ public class BookingDomainService : IBookingDomainService
         if (offsetInterval.From >= offsetInterval.To)
             throw new PreconditionException(ErrorCode.InvalidTime, "Cannot play this amount of time");
 
-        if (TimeOnly.FromDateTime(offsetInterval.From.UtcDateTime) < context.OpeningHours.From || TimeOnly.FromDateTime(offsetInterval.To.UtcDateTime) > context.OpeningHours.To)
+        // Opening hours and prime time are wall-clock times of the club, so the booking is compared in the club's local time
+        var localFrom = ClubTimeZone.ToLocal(offsetInterval.From);
+        var localTo = ClubTimeZone.ToLocal(offsetInterval.To);
+
+        if (TimeOnly.FromDateTime(localFrom) < context.OpeningHours.From || TimeOnly.FromDateTime(localTo) > context.OpeningHours.To)
         {
             throw new PreconditionException(ErrorCode.OutsideClubOpeningHours,
-                [$"{context.OpeningHours.From.AddHours(context.ClientTimeZoneOffset ?? 0)}", $"{context.OpeningHours.To.AddHours(context.ClientTimeZoneOffset ?? 0)}"],
-                $"Cannot play outside the club opening hours from {context.OpeningHours.From} to {context.OpeningHours.To} (UTC)");
+                [$"{context.OpeningHours.From}", $"{context.OpeningHours.To}"],
+                $"Cannot play outside the club opening hours from {context.OpeningHours.From} to {context.OpeningHours.To}");
         }
 
-        var isWithinPrimeTime = context.PrimeTimeSettings.IsPrimeTimeActiveOn(offsetInterval.From.DayOfWeek)
-            && offsetInterval.TryToTimeOnly(out var timeOnlybookingInterval)
+        var isWithinPrimeTime = context.PrimeTimeSettings.IsPrimeTimeActiveOn(localFrom.DayOfWeek)
+            && TimeOnlyIntervalExtensions.TryCreateTimeOnlyInterval(TimeOnly.FromDateTime(localFrom), TimeOnly.FromDateTime(localTo), out var timeOnlybookingInterval)
             && context.PrimeTimeSettings.PrimeTimeHours.Intersects(timeOnlybookingInterval);
 
         if (isWithinPrimeTime
@@ -142,7 +146,6 @@ public class BookingDomainService : IBookingDomainService
         public required List<PlayerContext> Participants { get; init; }
         public required List<Booking> IntersectingBookings { get; init; }
         public required PlayMode PlayMode { get; init; }
-        public required int? ClientTimeZoneOffset { get; init; }
         public required int? BookingGracePeriodInMinutes { get; init; }
         public required int? ActiveSeasonId { get; init; }
         public bool SkipPastBookingValidation { get; init; }

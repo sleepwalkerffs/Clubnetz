@@ -91,7 +91,7 @@ public class BookingFamilyRightsTests : TestBase
         var playModeId = Query(ctx => ctx.TestData().Club.PlayModes[0].Id);
 
         var act = () => SendAsync(new BookCourts([new BookingSlotModel(TestDataSeed.Court1Id, interval.From, interval.To)], TimeZoneInfo.Utc.Id, playModeId,
-            [seed.StrangerMemberId], Comment: null, DryRun: true, ClientTimeZoneOffset: null, seed.ParentUserId));
+            [seed.StrangerMemberId], Comment: null, DryRun: true, seed.ParentUserId));
 
         (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(BookCourt.ErrorCode.UserNotAllowedToBook));
     }
@@ -99,7 +99,7 @@ public class BookingFamilyRightsTests : TestBase
     private Task<BookCourtResult> Book(int userId, params int[] players)
     {
         var playModeId = Query(ctx => ctx.TestData().Club.PlayModes[0].Id);
-        return SendAsync(new BookCourt(TestDataSeed.Court1Id, interval, TimeZoneInfo.Utc.Id, playModeId, [.. players], null, null, userId));
+        return SendAsync(new BookCourt(TestDataSeed.Court1Id, interval, TimeZoneInfo.Utc.Id, playModeId, [.. players], null, userId));
     }
 
     private sealed record Seed(int ParentUserId, int ParentMemberId, int ChildUserId, int ChildMemberId, int OtherChildMemberId, int StrangerMemberId);

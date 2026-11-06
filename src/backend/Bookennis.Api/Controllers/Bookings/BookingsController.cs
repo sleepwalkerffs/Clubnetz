@@ -26,7 +26,6 @@ public class BookingsController(IMediator mediator, IAuthorizationService servic
                        model.PlayModeId,
                        model.Players,
                        model.Comment,
-                       HttpContext.GetRequestTimeZoneOffset(),
                        HttpContext.User.GetId()),
                    cancellationToken);
     }
@@ -48,7 +47,6 @@ public class BookingsController(IMediator mediator, IAuthorizationService servic
                 model.Players,
                 model.Comment,
                 model.DryRun,
-                HttpContext.GetRequestTimeZoneOffset(),
                 HttpContext.User.GetId(),
                 model.ExpectedBookingIdsToRemove),
             cancellationToken);
@@ -86,7 +84,6 @@ public class BookingsController(IMediator mediator, IAuthorizationService servic
                 model.PlayModeId,
                 model.Players,
                 model.Comment,
-                HttpContext.GetRequestTimeZoneOffset(),
                 HttpContext.User.GetId()),
             cancellationToken);
     }
@@ -105,7 +102,6 @@ public class BookingsController(IMediator mediator, IAuthorizationService servic
                 model.RecurrenceIntervalWeeks,
                 model.EndDate,
                 model.Comment,
-                HttpContext.GetRequestTimeZoneOffset(),
                 HttpContext.User.GetId()),
             cancellationToken);
     }
@@ -127,7 +123,6 @@ public class BookingsController(IMediator mediator, IAuthorizationService servic
                 model.RecurrenceIntervalWeeks,
                 model.EndDate,
                 model.Comment,
-                HttpContext.GetRequestTimeZoneOffset(),
                 HttpContext.User.GetId()),
             cancellationToken);
     }

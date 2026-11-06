@@ -77,7 +77,6 @@ public class BookRecurringCourtTests : TestBase
             RecurrenceIntervalWeeks: 1,
             EndDate: endDate,
             Comment: "Weekly game",
-            ClientTimeZoneOffset: null,
             userId));
 
         // Assert series created
@@ -123,7 +122,7 @@ public class BookRecurringCourtTests : TestBase
 
         var act = () => SendAsync(new BookRecurringCourt(
             courtId, interval, TimeZoneInfo.Utc.Id, playModeId, [memberId],
-            RecurrenceIntervalWeeks: 1, EndDate: null, Comment: null, ClientTimeZoneOffset: null, userId));
+            RecurrenceIntervalWeeks: 1, EndDate: null, Comment: null, userId));
 
         await act.Should().ThrowAsync<PreconditionException>()
             .WithMessage("*does not allow recurring*");
@@ -135,7 +134,7 @@ public class BookRecurringCourtTests : TestBase
         var act = () => SendAsync(new BookRecurringCourt(
             1, new DateTimeOffsetInterval(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1)),
             TimeZoneInfo.Utc.Id, 1, [1],
-            RecurrenceIntervalWeeks: 0, EndDate: null, Comment: null, ClientTimeZoneOffset: null, 1));
+            RecurrenceIntervalWeeks: 0, EndDate: null, Comment: null, 1));
 
         await act.Should().ThrowAsync<PreconditionException>()
             .WithMessage("*at least 1*");
@@ -185,7 +184,6 @@ public class BookRecurringCourtTests : TestBase
             RecurrenceIntervalWeeks: 1,
             EndDate: firstDay.AddDays(21),
             Comment: null,
-            ClientTimeZoneOffset: null,
             userId));
 
         var bookings = await QueryAsync(ctx => ctx.Bookings.AsNoTracking().OrderBy(b => b.Interval.From).Select(b => b.Interval).ToListAsync());

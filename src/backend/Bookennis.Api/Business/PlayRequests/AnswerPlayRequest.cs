@@ -20,7 +20,7 @@ public record AcceptPlayRequestResult(bool IsFilled, int? BookingId);
 /// the request, through the normal booking rules. If the booking fails (court taken, quota used up, ...) the error is returned, nothing is
 /// saved and the request stays open as it was.
 /// </summary>
-public record AcceptPlayRequest(int ClubId, int UserId, int PlayRequestId, int? ClientTimeZoneOffset = null) : ICommand<AcceptPlayRequestResult>
+public record AcceptPlayRequest(int ClubId, int UserId, int PlayRequestId) : ICommand<AcceptPlayRequestResult>
 {
     public class Handler(AppDbContext context, IBookingDomainService bookingService, IPlayRequestPushNotifier notifier) : IRequestHandler<AcceptPlayRequest, AcceptPlayRequestResult>
     {
@@ -52,7 +52,7 @@ public record AcceptPlayRequest(int ClubId, int UserId, int PlayRequestId, int? 
                 var partial = await BookingContextBuilder.Load(
                     context, playRequest.PlayModeId, playRequest.CourtIds, playRequest.PlayerMemberIds(), request.UserId, [interval], cancellationToken);
                 await PlayRequestBooking.BookFirstFreeCourt(
-                    partial, bookingService, playRequest.CourtIds, interval, playRequest.TimeZoneInfoId, request.ClientTimeZoneOffset,
+                    partial, bookingService, playRequest.CourtIds, interval, playRequest.TimeZoneInfoId,
                     playRequest.PlayersNeeded, validateAsIfFull: true, cancellationToken);
 
                 await context.SaveChangesAsync(cancellationToken);
@@ -64,7 +64,7 @@ public record AcceptPlayRequest(int ClubId, int UserId, int PlayRequestId, int? 
                 context, playRequest.PlayModeId, playRequest.CourtIds, playRequest.PlayerMemberIds(), request.UserId, [interval], cancellationToken);
 
             var booking = context.Add(await PlayRequestBooking.BookFirstFreeCourt(
-                builder, bookingService, playRequest.CourtIds, interval, playRequest.TimeZoneInfoId, request.ClientTimeZoneOffset,
+                builder, bookingService, playRequest.CourtIds, interval, playRequest.TimeZoneInfoId,
                 playRequest.PlayersNeeded, validateAsIfFull: false, cancellationToken)).Entity;
             await context.SaveChangesAsync(cancellationToken);
 

@@ -13,7 +13,7 @@ namespace Bookennis.Domain.Tests.Bookings;
 /// <summary>The booking of a bought slot (<see cref="BookingDomainService.Context.IsPurchase"/>).</summary>
 public class BookingDomainServicePurchaseTests
 {
-    /// <summary>A day without prime time (Sunday) and a weekday at 18:30 UTC, inside the default prime time 18-20 (Mon-Fri).</summary>
+    /// <summary>A day without prime time (Sunday) and a weekday at 18:30 club time, inside the default prime time 18-20 (Mon-Fri).</summary>
     private static readonly DateTimeOffsetInterval Sunday = Next(DayOfWeek.Sunday, 10);
     private static readonly DateTimeOffsetInterval WeekdayPrimeTime = Next(DayOfWeek.Wednesday, 18);
 
@@ -94,13 +94,59 @@ public class BookingDomainServicePurchaseTests
         act.Should().Throw<PreconditionException>().Which.ErrorCode.Should().Be(nameof(BookingDomainService.ErrorCode.OutsideClubOpeningHours));
     }
 
-    private static DateTimeOffsetInterval Next(DayOfWeek day, int hourUtc)
+    [Theory]
+    [InlineData(1)] // winter time, UTC+1
+    [InlineData(7)] // summer time, UTC+2
+    public void Purchase_OpeningHoursAreWallClockTimesOfTheClub_InSummerAndWinterTime(int month)
     {
-        var date = DateTime.UtcNow.Date.AddDays(1);
+        var date = FirstOfNextYear(month, DayOfWeek.Sunday);
+
+        var atOpening = () => new BookingDomainService().BookCourt(Context(isPurchase: true), At(date, 7, 0), "UTC", null);
+        var beforeOpening = () => new BookingDomainService().BookCourt(Context(isPurchase: true), At(date, 6, 30), "UTC", null);
+        var untilClosing = () => new BookingDomainService().BookCourt(Context(isPurchase: true), At(date, 21, 0), "UTC", null);
+
+        atOpening.Should().NotThrow();
+        untilClosing.Should().NotThrow();
+        beforeOpening.Should().Throw<PreconditionException>().Which.ErrorCode.Should().Be(nameof(BookingDomainService.ErrorCode.OutsideClubOpeningHours));
+    }
+
+    [Theory]
+    [InlineData(1)] // winter time, UTC+1
+    [InlineData(7)] // summer time, UTC+2
+    public void Purchase_PrimeTimeIsWallClockTimeOfTheClub_InSummerAndWinterTime(int month)
+    {
+        var date = FirstOfNextYear(month, DayOfWeek.Wednesday);
+
+        var inPrimeTime = () => new BookingDomainService().BookCourt(Context(isPurchase: true), At(date, 18, 0), "UTC", null);
+        var beforePrimeTime = () => new BookingDomainService().BookCourt(Context(isPurchase: true), At(date, 17, 0), "UTC", null);
+
+        inPrimeTime.Should().Throw<PreconditionException>().Which.ErrorCode.Should().Be(nameof(BookingDomainService.ErrorCode.CannotBuyWithinPrimeTime));
+        beforePrimeTime.Should().NotThrow();
+    }
+
+    private static DateTimeOffsetInterval Next(DayOfWeek day, int hour)
+    {
+        var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
         while (date.DayOfWeek != day)
             date = date.AddDays(1);
 
-        var from = new DateTimeOffset(date.AddHours(hourUtc).AddMinutes(30), TimeSpan.Zero);
+        return At(date, hour, 30);
+    }
+
+    private static DateOnly FirstOfNextYear(int month, DayOfWeek day)
+    {
+        var date = new DateOnly(DateTime.UtcNow.Year + 1, month, 1);
+        while (date.DayOfWeek != day)
+            date = date.AddDays(1);
+
+        return date;
+    }
+
+    /// <summary>One hour from a wall-clock time of the club on <paramref name="date"/>.</summary>
+    private static DateTimeOffsetInterval At(DateOnly date, int hour, int minute)
+    {
+        var local = date.ToDateTime(new TimeOnly(hour, minute));
+        var from = new DateTimeOffset(local, ClubTimeZone.Instance.GetUtcOffset(local));
         return new DateTimeOffsetInterval(from, from.AddHours(1));
     }
 
@@ -153,7 +199,6 @@ public class BookingDomainServicePurchaseTests
             ],
             IntersectingBookings = intersecting ?? [],
             PlayMode = club.PlayModes[0],
-            ClientTimeZoneOffset = null,
             BookingGracePeriodInMinutes = null,
             ActiveSeasonId = activeSeasonId,
             CourtBlockingTitles = blockings ?? [],

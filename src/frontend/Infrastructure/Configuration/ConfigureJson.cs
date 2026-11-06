@@ -10,7 +10,6 @@ public static class ConfigureJson
     {
         options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         options.Converters.Add(new DateTimeOffsetJsonConverter());
-        options.Converters.Add(new TimeOnlyJsonConverter());
         options.Converters.Add(new JsonStringEnumConverter());
         return options;
     }

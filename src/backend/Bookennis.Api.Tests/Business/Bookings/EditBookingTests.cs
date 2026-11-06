@@ -58,7 +58,6 @@ public class EditBookingTests : TestBase
             playMode.Id,
             [member1.Id],
             Comment: "updated",
-            ClientTimeZoneOffset: null,
             member1.UserId));
 
         bookingService.Received(1).EditBooking(
@@ -108,7 +107,6 @@ public class EditBookingTests : TestBase
             playMode.Id,
             [member1.Id],
             Comment: null,
-            ClientTimeZoneOffset: null,
             member1.UserId));
 
         await act.Should().ThrowAsync<PreconditionException>();
@@ -154,7 +152,6 @@ public class EditBookingTests : TestBase
             playMode.Id,
             [member1.Id],
             Comment: null,
-            ClientTimeZoneOffset: null,
             member1.UserId));
 
         capturedContext.Should().NotBeNull();
@@ -179,7 +176,7 @@ public class EditBookingTests : TestBase
             .Do(x => capturedContext = x.Arg<BookingDomainService.Context>());
 
         await SendAsync(new EditBooking(bookingId, TestDataSeed.Court2Id, Business.CourtBlockings.CourtBlockingSeed.At(day, 11, 12), TimeZoneInfo.Utc.Id, playModeId,
-            [TestDataSeed.Member1Id], Comment: null, ClientTimeZoneOffset: null, TestDataSeed.UserId));
+            [TestDataSeed.Member1Id], Comment: null, TestDataSeed.UserId));
 
         var player = capturedContext!.Participants.Single();
         player.UpcomingBookingsCount.Should().Be(0);
