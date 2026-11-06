@@ -138,7 +138,7 @@ public class BookingFamilyRightsTests : TestBase
         var playModeId = Query(ctx => ctx.TestData().Club.PlayModes[0].Id);
 
         var result = await SendAsync(new BookCourts([new BookingSlotModel(TestDataSeed.Court1Id, interval.From, interval.To)], TimeZoneInfo.Utc.Id, playModeId,
-            [seed.StrangerMemberId], Comment: null, DryRun: true, ClientTimeZoneOffset: null, staffUserId));
+            [seed.StrangerMemberId], Comment: null, DryRun: true, staffUserId));
 
         result.Should().NotBeNull();
     }
@@ -162,7 +162,7 @@ public class BookingFamilyRightsTests : TestBase
         });
 
         BookRecurringCourt Recurring(int userId, int player)
-            => new(TestDataSeed.Court1Id, interval, TimeZoneInfo.Utc.Id, playModeId, [player], 1, null, null, null, userId);
+            => new(TestDataSeed.Court1Id, interval, TimeZoneInfo.Utc.Id, playModeId, [player], 1, null, null, userId);
 
         // The old check let anybody in some family book a series for strangers
         var act = () => SendAsync(Recurring(seed.ParentUserId, seed.StrangerMemberId));
