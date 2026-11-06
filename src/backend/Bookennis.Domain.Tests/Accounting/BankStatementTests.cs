@@ -150,6 +150,24 @@ public class BankStatementTests
     }
 
     [Fact]
+    public void Csv_OfVolksbankHausbanking_TakesThePartnerNotTheOwnAccount()
+    {
+        // The header of the Volksbank export (hausbanking), the lines invented
+        const string csv = "IBAN;Auszugsnummer;Buchungsdatum;Valutadatum;Umsatzzeit;Zahlungsreferenz;Waehrung;Betrag;Buchungstext;Umsatztext;Name des Partners;"
+                           + "Name des ultimate Partners;Name des ultimate Auftraggebers;Creditor ID;Mandat ID;Kontoverbindung des Partners;Partner BIC;Auftraggeberreferenz;"
+                           + "Verwendungszweck;Kategorie;Notiz;Original Auftragsbetrag\n"
+                           + "AT611904300234573201;12;30.09.2026;30.09.2026;30.09.2026 10:11:12;1234567;EUR;575,00;SEPA-Gutschrift;Anna Muster RE2026-0001;Anna Muster;;;;;"
+                           + "AT483200000012345864;VBOEATWWXXX;;RE2026-0001;;;\n";
+
+        var line = Read(csv).Statement!.Lines.Single();
+
+        line.AmountCents.Should().Be(57_500);
+        line.CounterpartyName.Should().Be("Anna Muster");
+        line.CounterpartyIban.Should().Be("AT483200000012345864");
+        line.Reference.Should().Contain("RE2026-0001");
+    }
+
+    [Fact]
     public void Csv_WithDebitCreditMarkerOrColumns()
     {
         const string marker = "Buchungstag;Umsatz;S/H;Buchungstext\n02.05.2026;120,00;H;Beitrag\n03.05.2026;30,00;S;Lizenz\n";

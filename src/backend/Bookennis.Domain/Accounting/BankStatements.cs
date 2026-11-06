@@ -425,11 +425,16 @@ public static class BankStatementReader
         private static readonly string[] MarkerHeaders = ["sollhaben", "sh", "kennzeichen", "debitcredit", "dc"];
         private static readonly string[] NameHeaders =
         [
-            "partnername", "empfängerauftraggeber", "auftraggeberempfänger", "auftraggeberzahlungsempfänger", "zahlungsempfängerauftraggeber",
+            "namedespartners", "partnername", "empfängerauftraggeber", "auftraggeberempfänger", "auftraggeberzahlungsempfänger", "zahlungsempfängerauftraggeber",
             "namezahlungsbeteiligter", "begünstigterzahlungspflichtiger", "empfänger", "auftraggeber", "zahlungspartner", "name", "partner",
             "gegenkontoname", "beguenstigterzahlungspflichtiger", "empfaengerauftraggeber", "counterparty", "payee", "nameauftraggeberempfänger",
         ];
-        private static readonly string[] IbanHeaders = ["partneriban", "iban", "ibanzahlungsbeteiligter", "gegenkontoiban", "ibanauftraggeberempfänger", "kontonummeriban", "gegenkonto", "counterpartyiban"];
+        // A plain "IBAN" comes last: in the Volksbank export it is the own account, the partner's is "Kontoverbindung des Partners"
+        private static readonly string[] IbanHeaders =
+        [
+            "kontoverbindungdespartners", "partneriban", "ibanzahlungsbeteiligter", "gegenkontoiban", "ibanauftraggeberempfänger", "counterpartyiban",
+            "kontonummeriban", "gegenkonto", "iban",
+        ];
         private static readonly string[] ReferenceHeaders =
         [
             "verwendungszweck", "zahlungsreferenz", "buchungstext", "umsatztext", "buchungsinfo", "text", "reference", "description", "beschreibung",
