@@ -1,6 +1,7 @@
 using Bookennis.Api.Business.Bookings;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Bookings;
+using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Families;
 using Bookennis.Domain.Members;
@@ -95,6 +96,92 @@ public class BookingFamilyRightsTests : TestBase
 
         (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(BookCourt.ErrorCode.UserNotAllowedToBook));
     }
+
+    [Theory]
+    [InlineData(MemberRole.Admin)]
+    [InlineData(MemberRole.SportsDirector)]
+    [InlineData(MemberRole.YouthSportsDirector)]
+    [InlineData(MemberRole.Trainer)]
+    public async Task Staff_CanBookForTwoStrangers(MemberRole role)
+    {
+        var seed = await SeedFamilies();
+        var staffUserId = await AddStaff(role);
+
+        var result = await Book(staffUserId, seed.StrangerMemberId, seed.OtherChildMemberId);
+
+        result.Id.Should().BePositive();
+        // Only the two players are validated and booked, the staff member is not one of them
+        GetInstance<IBookingDomainService>().Received(1).BookCourt(
+            Arg.Is<BookingDomainService.Context>(c => c.Participants.Select(p => p.Member.Id).Order().SequenceEqual(new[] { seed.StrangerMemberId, seed.OtherChildMemberId }.Order())),
+            Arg.Any<DateTimeOffsetInterval>(), Arg.Any<string>(), Arg.Any<string?>());
+    }
+
+    [Theory]
+    [InlineData(MemberRole.Maintainer)]
+    [InlineData(MemberRole.Treasurer)]
+    [InlineData(MemberRole.User)]
+    public async Task OtherRoles_CannotBookForStrangers(MemberRole role)
+    {
+        var seed = await SeedFamilies();
+        var userId = await AddStaff(role);
+
+        var act = () => Book(userId, seed.StrangerMemberId, seed.OtherChildMemberId);
+
+        (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(BookCourt.ErrorCode.UserNotAllowedToBook));
+    }
+
+    [Fact]
+    public async Task Staff_CanBookForStrangersInThePlanner()
+    {
+        var seed = await SeedFamilies();
+        var staffUserId = await AddStaff(MemberRole.SportsDirector);
+        var playModeId = Query(ctx => ctx.TestData().Club.PlayModes[0].Id);
+
+        var result = await SendAsync(new BookCourts([new BookingSlotModel(TestDataSeed.Court1Id, interval.From, interval.To)], TimeZoneInfo.Utc.Id, playModeId,
+            [seed.StrangerMemberId], Comment: null, DryRun: true, ClientTimeZoneOffset: null, staffUserId));
+
+        result.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Staff_CanBookRecurringForStrangers_AndAFamilyMemberCannot()
+    {
+        var seed = await SeedFamilies();
+        var staffUserId = await AddStaff(MemberRole.SportsDirector);
+        var playModeId = await QueryAsync(async ctx =>
+        {
+            var playMode = ctx.TestData().Club.PlayModes[0];
+            playMode.Update(playMode.AllowedRoles, playMode.Color, playMode.FixedPlayerCount,
+                playMode.IsChargingBookingSubscription, playMode.Name, playMode.FixedDuration,
+                playMode.CanOverbook, playMode.CommentAllowed, playMode.MaxBookingsPerSeason, allowRecurring: true);
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            ctx.Add(new Season(ctx.TestData().Club.Id, new DateOnlyInterval(today.AddDays(-30), today.AddDays(60))));
+            await ctx.SaveChangesAsync();
+            return playMode.Id;
+        });
+
+        BookRecurringCourt Recurring(int userId, int player)
+            => new(TestDataSeed.Court1Id, interval, TimeZoneInfo.Utc.Id, playModeId, [player], 1, null, null, null, userId);
+
+        // The old check let anybody in some family book a series for strangers
+        var act = () => SendAsync(Recurring(seed.ParentUserId, seed.StrangerMemberId));
+        (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(BookRecurringCourt.ErrorCode.UserNotAllowedToBook));
+
+        var result = await SendAsync(Recurring(staffUserId, seed.StrangerMemberId));
+        result.Id.Should().BePositive();
+    }
+
+    private async Task<int> AddStaff(MemberRole role)
+        => await QueryAsync(async ctx =>
+        {
+            var user = new User($"staff{role}@test.com", $"staff{role}@test.com", "Staff", role.ToString(), new DateOnly(1980, 1, 1), Gender.Female);
+            ctx.Add(user);
+            await ctx.SaveChangesAsync();
+            ctx.Add(new ClubMember(user.Id, ctx.TestData().Club.Id, [MemberRole.User, role]));
+            await ctx.SaveChangesAsync();
+            return user.Id;
+        });
 
     private Task<BookCourtResult> Book(int userId, params int[] players)
     {

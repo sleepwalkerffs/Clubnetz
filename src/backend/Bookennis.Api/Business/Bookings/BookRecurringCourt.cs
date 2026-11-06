@@ -97,7 +97,8 @@ public record BookRecurringCourt(
 
             // Validate first occurrence fully (load participants etc.)
             var firstInterval = request.Interval;
-            var localParticipants = await LoadParticipants(request, queryResult.Club, firstInterval, cancellationToken);
+            var mayBookForAnyMember = await BookingRights.MayBookForAnyMember(context, queryResult.Club.Id, request.UserId, cancellationToken);
+            var localParticipants = await LoadParticipants(request, queryResult.Club, firstInterval, mayBookForAnyMember, cancellationToken);
 
             if (localParticipants.Count != request.Players.Count)
                 throw new EntityNotFoundException("Player does not exist");
@@ -202,7 +203,7 @@ public record BookRecurringCourt(
             return new BookCourtResult { Id = createdBookings.First().Id };
         }
 
-        private async Task<List<ParticipantInfo>> LoadParticipants(BookRecurringCourt request, Domain.Clubs.Club club, DateTimeOffsetInterval interval, CancellationToken cancellationToken)
+        private async Task<List<ParticipantInfo>> LoadParticipants(BookRecurringCourt request, Domain.Clubs.Club club, DateTimeOffsetInterval interval, bool mayBookForAnyMember, CancellationToken cancellationToken)
         {
             return await (
                 from member in context.Set<Member>()
@@ -242,10 +243,12 @@ public record BookRecurringCourt(
                     select bookingPlayer.Id
                 ).Count()
 
-                let isAllowedUser = user.Id == request.UserId
-                    || (from familyMember in context.FamilyMembers join m in context.ClubMembers on familyMember.MemberId equals m.Id select m.UserId).Any(userId =>
-                        userId == request.UserId
-                    )
+                // Same rule as BookingContextBuilder: staff, the user themself, or a child of a family the user is a parent of
+                let isAllowedUser = mayBookForAnyMember
+                    || user.Id == request.UserId
+                    || context.Families.Any(family =>
+                        family.Children.Any(child => child.MemberId == member.Id)
+                        && family.Parents.Any(parent => context.ClubMembers.Any(parentMember => parentMember.Id == parent.MemberId && parentMember.UserId == request.UserId)))
 
                 where request.Players.Contains(member.Id)
                 select new ParticipantInfo
