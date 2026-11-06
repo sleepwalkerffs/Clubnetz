@@ -12,6 +12,7 @@ using AccountingProposalStatus = Bookennis.Domain.Accounting.AccountingProposalS
 using BankRuleDirection = Bookennis.Domain.Accounting.BankRuleDirection;
 using BankStatementFormat = Bookennis.Domain.Accounting.BankStatementFormat;
 using BankTransactionStatus = Bookennis.Domain.Accounting.BankTransactionStatus;
+using InvoiceStatus = Bookennis.Domain.Accounting.InvoiceStatus;
 
 namespace Bookennis.Api.Business.Accounting;
 
@@ -203,7 +204,14 @@ public record MatchBankTransaction(int ClubId, int UserId, int BankTransactionId
             line.EnsureOpen();
 
             AccountingEntry entry;
-            if (request.Model.ProposalId is { } proposalId)
+            if (request.Model.InvoiceId is { } invoiceId)
+            {
+                // The invoice is paid on the account and day of the line
+                var invoice = await context.Invoices.Include(i => i.Lines).SingleRequiredAsync(i => i.Id == invoiceId && i.ClubId == request.ClubId, cancellationToken);
+                var memberId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken);
+                entry = await InvoicePayment.Pay(context, invoice, line.MoneyAccountId, line.BookingDate, memberId, request.Now, cancellationToken);
+            }
+            else if (request.Model.ProposalId is { } proposalId)
             {
                 var proposal = await context.AccountingProposals.SingleRequiredAsync(p => p.Id == proposalId && p.ClubId == request.ClubId, cancellationToken);
                 proposal.EnsureOpen();
@@ -380,13 +388,16 @@ internal sealed class BankMatchFinder
     private readonly List<AccountingProposal> proposals;
     private readonly IReadOnlyDictionary<int, AccountingCategoryKind> kinds;
     private readonly List<BankRule> rules;
+    private readonly List<Invoice> invoices;
 
-    private BankMatchFinder(List<(AccountingEntry, Dictionary<int, long>)> entries, List<AccountingProposal> proposals, IReadOnlyDictionary<int, AccountingCategoryKind> kinds, List<BankRule> rules)
+    private BankMatchFinder(List<(AccountingEntry, Dictionary<int, long>)> entries, List<AccountingProposal> proposals, IReadOnlyDictionary<int, AccountingCategoryKind> kinds, List<BankRule> rules,
+        List<Invoice> invoices)
     {
         this.entries = entries;
         this.proposals = proposals;
         this.kinds = kinds;
         this.rules = rules;
+        this.invoices = invoices;
     }
 
     public static async Task<BankMatchFinder> Load(AppDbContext context, int clubId, IReadOnlyCollection<BankTransaction> lines, CancellationToken cancellationToken)
@@ -394,7 +405,7 @@ internal sealed class BankMatchFinder
         var kinds = await context.CategoryKinds(clubId, cancellationToken);
         var rules = await context.BankRules.AsNoTracking().Where(r => r.ClubId == clubId).OrderBy(r => r.Id).ToListAsync(cancellationToken);
         if (lines.Count == 0)
-            return new BankMatchFinder([], [], kinds, rules);
+            return new BankMatchFinder([], [], kinds, rules, []);
 
         var accounts = lines.Select(l => l.MoneyAccountId).Distinct().ToList();
         var from = lines.Min(l => l.BookingDate).AddDays(-GetBankTransactions.MatchDays);
@@ -411,9 +422,14 @@ internal sealed class BankMatchFinder
                         && (accounts.Contains(p.MoneyAccountId) || (p.ToMoneyAccountId != null && accounts.Contains(p.ToMoneyAccountId.Value))))
             .ToListAsync(cancellationToken);
 
+        // Open invoices are paid whenever the money comes: no window, only issued before the line
+        var invoices = await context.Invoices.AsNoTracking()
+            .Where(i => i.ClubId == clubId && i.Status == InvoiceStatus.Issued && i.InvoiceDate <= to)
+            .ToListAsync(cancellationToken);
+
         return new BankMatchFinder(
             entries.Select(e => (e, accounts.ToDictionary(a => a, a => e.EffectOn(a, id => kinds[id])))).ToList(),
-            proposals, kinds, rules);
+            proposals, kinds, rules, invoices);
     }
 
     public List<BankMatchDto> Matches(BankTransaction line)
@@ -427,10 +443,19 @@ internal sealed class BankMatchFinder
             .Where(p => near(p.Date) && EffectOn(p, line.MoneyAccountId) == line.AmountCents)
             .OrderBy(p => Math.Abs(p.Date.DayNumber - line.BookingDate.DayNumber))
             .Select(p => new BankMatchDto { Kind = BankMatchKind.Proposal, Id = p.Id, Date = p.Date, Text = p.Text });
-        return fromEntries.Concat(fromProposals).Take(5).ToList();
+        // An invoice whose number is in the reference comes first
+        var reference = Normalize(line.Reference);
+        var fromInvoices = invoices
+            .Where(i => i.TotalCents == line.AmountCents && i.InvoiceDate <= line.BookingDate.AddDays(GetBankTransactions.MatchDays))
+            .OrderByDescending(i => i.Number is { } number && reference.Contains(Normalize(number), StringComparison.Ordinal))
+            .ThenBy(i => i.DueDate)
+            .Select(i => new BankMatchDto { Kind = BankMatchKind.Invoice, Id = i.Id, Date = i.InvoiceDate, Text = $"{i.Number} {i.RecipientName}" });
+        return fromInvoices.Take(2).Concat(fromEntries).Concat(fromProposals).Take(5).ToList();
     }
 
     public BankRule? Rule(BankTransaction line) => rules.FirstOrDefault(r => r.Matches(line));
+
+    private static string Normalize(string value) => string.Concat(value.Where(char.IsLetterOrDigit)).ToUpperInvariant();
 
     private long EffectOn(AccountingProposal proposal, int moneyAccountId)
     {

@@ -99,3 +99,9 @@ public record ClubhouseTabPaidEmailVariables(MemberVariables Member, ClubhouseTa
 public record ClubhouseTabNeedsAttentionEmailVariables(MemberVariables Member, ClubhouseTabVariables Tab, string Reason, string Guest) : ClubEmailVariables(Member);
 
 public record CourtPurchaseCompensatedEmailVariables(MemberVariables Member, CourtPurchaseVariables Purchase, string Reason, string Credits) : ClubEmailVariables(Member);
+
+/// <summary>An invoice of the club. <c>Amount</c> and the dates are formatted in the language of the email.</summary>
+public record InvoiceVariables(string Number, string Amount, string Date, string DueDate, string? Subject, string Iban, int Reminders);
+
+/// <summary>To the recipient of an invoice (a member or somebody outside the club: <c>Member</c> carries the name as written on the invoice), with the PDF.</summary>
+public record InvoiceEmailVariables(MemberVariables Member, InvoiceVariables Invoice) : ClubEmailVariables(Member);

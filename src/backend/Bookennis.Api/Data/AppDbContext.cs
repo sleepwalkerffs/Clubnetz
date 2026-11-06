@@ -108,6 +108,8 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
     public DbSet<BankRule> BankRules => Set<BankRule>();
     public DbSet<BankCsvLayout> BankCsvLayouts => Set<BankCsvLayout>();
+    public DbSet<InvoiceSettings> InvoiceSettings => Set<InvoiceSettings>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

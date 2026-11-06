@@ -108,8 +108,19 @@ public static class ClubEmailCatalog
                 language == Language.German
                     ? "Die Rechnung war schon bezahlt, als die Online-Zahlung ankam. Bitte erstatte eine der beiden Zahlungen."
                     : "The tab was already paid when the online payment arrived. Please refund one of the two payments.",
-                "Erika Muster"))
+                "Erika Muster")),
+        new(ClubEmailType.Invoice, typeof(InvoiceEmailVariables),
+            language => new InvoiceEmailVariables(SampleMember, SampleInvoice(language, 0))),
+        new(ClubEmailType.InvoiceReminder, typeof(InvoiceEmailVariables),
+            language => new InvoiceEmailVariables(SampleMember, SampleInvoice(language, 1)))
     ];
+
+    private static InvoiceVariables SampleInvoice(Language language, int reminders)
+    {
+        var culture = language.ToCultureInfo();
+        return new InvoiceVariables("RE2026-0007", 450m.ToString("C", culture), new DateOnly(2026, 5, 4).ToString("d", culture), new DateOnly(2026, 5, 18).ToString("d", culture),
+            language == Language.German ? "Bandenwerbung Saison 2026" : "Advertising board season 2026", "AT61 1904 3002 3457 3201", reminders);
+    }
 
     public static ClubEmailDefinition Get(ClubEmailType type)
         => All.SingleOrDefault(d => d.Type == type) ?? throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown club email type.");

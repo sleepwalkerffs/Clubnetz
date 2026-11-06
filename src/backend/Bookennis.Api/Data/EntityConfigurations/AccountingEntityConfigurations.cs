@@ -279,3 +279,65 @@ public class BankCsvLayoutEntityConfiguration : IEntityTypeConfiguration<BankCsv
         builder.HasIndex(x => x.MoneyAccountId).IsUnique();
     }
 }
+
+public class InvoiceSettingsEntityConfiguration : IEntityTypeConfiguration<InvoiceSettings>
+{
+    public void Configure(EntityTypeBuilder<InvoiceSettings> builder)
+    {
+        builder.ConfigureTenantRelation();
+        builder.HasOne<MoneyAccount>().WithMany().HasForeignKey(x => x.MoneyAccountId).OnDelete(DeleteBehavior.NoAction);
+        builder.Property(x => x.Address).HasMaxLength(InvoiceSettings.MaxAddressLength);
+        builder.Property(x => x.ZvrNumber).HasMaxLength(InvoiceSettings.MaxZvrLength);
+        builder.Property(x => x.Contact).HasMaxLength(InvoiceSettings.MaxContactLength);
+        builder.Property(x => x.Bic).HasMaxLength(InvoiceSettings.MaxBicLength);
+        builder.Property(x => x.NumberPrefix).HasMaxLength(InvoiceSettings.MaxPrefixLength);
+        builder.Property(x => x.Footer).HasMaxLength(InvoiceSettings.MaxFooterLength);
+        builder.HasIndex(x => x.ClubId).IsUnique();
+    }
+}
+
+public class InvoiceEntityConfiguration : IEntityTypeConfiguration<Invoice>
+{
+    public void Configure(EntityTypeBuilder<Invoice> builder)
+    {
+        builder.ConfigureTenantRelation();
+        builder.HasOne<AccountingEntry>().WithMany().HasForeignKey(x => x.EntryId).OnDelete(DeleteBehavior.NoAction);
+
+        // The name and address stay on the invoice when the member leaves
+        builder.HasOne<Member>().WithMany().HasForeignKey(x => x.RecipientMemberId).OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasMany(x => x.Lines)
+               .WithOne()
+               .HasForeignKey(x => x.InvoiceId)
+               .OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(x => x.Lines).UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Property(x => x.Number).HasMaxLength(Invoice.MaxNumberLength);
+        builder.Property(x => x.RecipientName).HasMaxLength(Invoice.MaxNameLength);
+        builder.Property(x => x.RecipientAddress).HasMaxLength(Invoice.MaxAddressLength);
+        builder.Property(x => x.RecipientEmail).HasMaxLength(Invoice.MaxEmailLength);
+        builder.Property(x => x.SentTo).HasMaxLength(Invoice.MaxEmailLength);
+        builder.Property(x => x.Subject).HasMaxLength(Invoice.MaxSubjectLength);
+        builder.Property(x => x.Notes).HasMaxLength(Invoice.MaxNotesLength);
+        builder.Property(x => x.ServicePeriod).HasMaxLength(Invoice.MaxServicePeriodLength);
+        builder.Property(x => x.CancelReason).HasMaxLength(Invoice.MaxCancelReasonLength);
+        builder.Ignore(x => x.IsOpen);
+
+        // A number is given once per year, also when the invoice is cancelled later
+        builder.HasIndex(x => new { x.ClubId, x.NumberYear, x.NumberSequence }).IsUnique().HasFilter("\"NumberSequence\" IS NOT NULL");
+        builder.HasIndex(x => new { x.ClubId, x.Status });
+        builder.HasIndex(x => x.EntryId).IsUnique().HasFilter("\"EntryId\" IS NOT NULL");
+    }
+}
+
+public class InvoiceLineEntityConfiguration : IEntityTypeConfiguration<InvoiceLine>
+{
+    public void Configure(EntityTypeBuilder<InvoiceLine> builder)
+    {
+        builder.ToTable("InvoiceLines");
+        builder.HasOne<AccountingCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<CostCenter>().WithMany().HasForeignKey(x => x.CostCenterId).OnDelete(DeleteBehavior.NoAction);
+        builder.Property(x => x.Text).HasMaxLength(InvoiceLine.MaxTextLength);
+        builder.Property(x => x.Quantity).HasPrecision(9, 2);
+    }
+}

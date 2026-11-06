@@ -9,6 +9,7 @@
     <PackageReference Include="AngleSharp" />
     <PackageReference Include="ClosedXML" />
     <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="QRCoder" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
     <PackageReference Include="EntityFrameworkCore.Projectables" />
@@ -100,6 +101,8 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\EmailTemplates\*.md" WithCulture="false" />
+    <!-- The font of the invoice PDF (Lato, SIL Open Font License, see Resources/Fonts/OFL.txt): the servers have no fonts of their own -->
+    <EmbeddedResource Include="Resources\Fonts\*.ttf" WithCulture="false" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Resources\Localization\View.Emails.BookingDeleted.resx">

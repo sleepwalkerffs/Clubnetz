@@ -16,6 +16,8 @@ public record DeleteAdminClub(int ClubId) : ICommand
 
             // The books first: entries keep their categories and accounts from being deleted, also by the cascade of the club
             await context.BankTransactions.IgnoreQueryFilters().Where(t => t.ClubId == request.ClubId).ExecuteDeleteAsync(cancellationToken);
+            await context.Invoices.IgnoreQueryFilters().Where(i => i.ClubId == request.ClubId).ExecuteDeleteAsync(cancellationToken);
+            await context.InvoiceSettings.IgnoreQueryFilters().Where(s => s.ClubId == request.ClubId).ExecuteDeleteAsync(cancellationToken);
             await context.BankStatementImports.IgnoreQueryFilters().Where(i => i.ClubId == request.ClubId).ExecuteDeleteAsync(cancellationToken);
             await context.BankRules.IgnoreQueryFilters().Where(r => r.ClubId == request.ClubId).ExecuteDeleteAsync(cancellationToken);
             await context.BankCsvLayouts.IgnoreQueryFilters().Where(l => l.ClubId == request.ClubId).ExecuteDeleteAsync(cancellationToken);

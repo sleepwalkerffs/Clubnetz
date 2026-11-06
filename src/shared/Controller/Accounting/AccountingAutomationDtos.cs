@@ -226,6 +226,9 @@ public enum BankMatchKind
 {
     Entry = 0,
     Proposal = 1,
+
+    /// <summary>An open invoice of this amount (paid then).</summary>
+    Invoice = 2,
 }
 
 public record BankMatchDto
@@ -233,7 +236,7 @@ public record BankMatchDto
     public required BankMatchKind Kind { get; init; }
     public required int Id { get; init; }
 
-    /// <summary>The entry number (entries only).</summary>
+    /// <summary>The entry number (entries), or the invoice number in <see cref="Text"/>.</summary>
     public int? Number { get; init; }
 
     public required DateOnly Date { get; init; }
@@ -251,6 +254,9 @@ public record MatchBankTransactionModel
 {
     public int? EntryId { get; init; }
     public int? ProposalId { get; init; }
+
+    /// <summary>An open invoice: it is paid with an income entry on the account and day of the line.</summary>
+    public int? InvoiceId { get; init; }
 }
 
 public record BookBankTransactionsByRulesResult

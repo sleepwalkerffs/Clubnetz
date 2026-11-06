@@ -24,6 +24,8 @@ public static class ClubEmailTypeEmoji
         ClubEmailType.CourtPurchaseNeedsAttention => "🧾",
         ClubEmailType.CourtPurchaseCompensated => "🎟️",
         ClubEmailType.ClubhouseTabPaid => "🍺",
+        ClubEmailType.Invoice => "🧾",
+        ClubEmailType.InvoiceReminder => "⏰",
         ClubEmailType.ClubhouseTabNeedsAttention => "🧾",
         _ => "✉️"
     };

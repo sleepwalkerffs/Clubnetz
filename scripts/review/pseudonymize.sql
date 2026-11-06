@@ -170,6 +170,17 @@ update "BankTransactions" set
     "BankReference" = null;
 update "BankStatementImports" set "FileName" = 'auszug-' || "Id" || '.xml';
 update "BankRules" set "MatchText" = 'Regel ' || "Id", "MatchIban" = null, "Text" = null;
+-- Invoices go to people and sponsors: names, addresses, emails and texts. The contact line of the club may be a private phone.
+update "Invoices" set
+    "RecipientName" = 'Empfänger ' || "Id",
+    "RecipientAddress" = case when "RecipientAddress" is null then null else 'Musterstraße 1' || chr(10) || '6800 Feldkirch' end,
+    "RecipientEmail" = case when "RecipientEmail" is null then null else 'rechnung.' || "Id" || '@example.test' end,
+    "SentTo" = case when "SentTo" is null then null else 'rechnung.' || "Id" || '@example.test' end,
+    "Subject" = case when "Subject" is null then null else 'Rechnung ' || "Id" end,
+    "Notes" = null,
+    "CancelReason" = null;
+update "InvoiceLines" set "Text" = 'Leistung ' || "Id";
+update "InvoiceSettings" set "Contact" = null;
 
 -- Email templates may carry names, phone numbers and bank details. The app falls back to its built-in texts.
 delete from "ClubEmailTemplates";
