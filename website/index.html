@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Clubnetz – free, open-source club management and court booking for tennis clubs</title>
-    <meta name="description" content="Clubnetz is a free, open-source web app for tennis clubs. Members book courts from their phone and pay their fee online, the board manages members, seasons, fees, court sales, events and news. Self-hostable." />
+    <meta name="description" content="Clubnetz is a free, open-source web app for tennis clubs. Members book courts from their phone and pay their fee online, the board manages members, seasons, fees, court sales, events, news, the clubhouse and the books. Self-hostable." />
     <link rel="canonical" href="https://clubnetz.app/" />
     <link rel="alternate" hreflang="en" href="https://clubnetz.app/" />
     <link rel="alternate" hreflang="de" href="https://clubnetz.app/de/" />
@@ -47,6 +47,11 @@
             "Statistics, leaderboards and badges",
             "Subscription planner for shared winter courts",
             "Planner to move and batch-book bookings over several days",
+            "Finding players: ask members to play, the court is booked when the last spot is filled",
+            "Clubhouse tabs for the clubhouse host, paid in cash, by card or online with SumUp",
+            "Accounting: fiscal years, entries, receipts, reports, annual report and auditor role",
+            "Automatic entries and bank statement import (camt.053, MT940, CSV)",
+            "Invoices as PDF with payment QR code and reminders",
             "Season Wrapped: a story-style season review for every member",
             "Push and email notifications",
             "API with API keys for own scripts and integrations",
@@ -96,6 +101,16 @@
             },
             {
                 "@type": "Question",
+                "name": "Can Clubnetz do the club's accounting?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes. The treasurer keeps the books in Clubnetz: fiscal years, income and expenses by category and tax sphere, receipts, reports and the annual report. Membership fees, court sales and Stripe payouts are suggested as entries, bank statements are imported and matched, and invoices go out as a PDF with a payment QR code. The auditors get a role of their own to check the year." }
+            },
+            {
+                "@type": "Question",
+                "name": "Does Clubnetz help in the clubhouse?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes. The clubhouse host keeps the tabs of members and guests in the app instead of on a paper list and records how each tab was paid. Members can pay their tab online with SumUp. The money goes to the host, Clubnetz only keeps the list." }
+            },
+            {
+                "@type": "Question",
                 "name": "Is there an API?",
                 "acceptedAnswer": { "@type": "Answer", "text": "Yes. Club admins create API keys in the app and use them to read and change the data of their club from their own scripts and tools, for example to show free courts on the club website or to export the member list." }
             }
@@ -130,7 +145,7 @@
             <div class="wrap hero__grid">
                 <div>
                     <h1>Club management and court booking for tennis clubs</h1>
-                    <p class="hero__lead">Clubnetz is a free, open-source web app. Members book a court in a few taps on their phone and pay their membership fee online. The board manages members, seasons, fees, court sales, events and news in one place.</p>
+                    <p class="hero__lead">Clubnetz is a free, open-source web app. Members book a court in a few taps on their phone and pay their membership fee online. The board manages members, seasons, fees, court sales, events, news, the clubhouse and the books in one place.</p>
                     <div class="hero__actions">
                         <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20for%20our%20club">Get your club on Clubnetz</a>
                         <a class="btn btn--ghost" href="https://github.com/sleepwalkerffs/Clubnetz">View the code on GitHub</a>
@@ -164,7 +179,7 @@
                 <div class="section-head">
                     <p class="eyebrow">A look inside</p>
                     <h2>This is what your club gets</h2>
-                    <p>Real screens of a club with more than 600 members. Only the names are invented.</p>
+                    <p>Real screens of a club with more than 600 members. The names are invented, and so are the figures in the books and the clubhouse.</p>
                 </div>
 
                 <div class="tour">
@@ -189,6 +204,24 @@
                     <article class="tour__row">
                         <div class="tour__text">
                             <p class="tour__new">New</p>
+                            <h3>Find players without the group chat</h3>
+                            <p>Ask a few members, or one of your saved groups, to play at an exact time. Everyone answers with one tap, and when the last spot is filled, Clubnetz books the first free court of your choice.</p>
+                            <ul class="checks">
+                                <li>Nothing is blocked while you wait for answers</li>
+                                <li>Booking rules, quotas and play modes are checked as for any booking</li>
+                                <li>Groups to reuse, like the Thursday crew or your team</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/en/play-requests.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Looking for players: a singles request from another member to answer, and your own doubles request" />
+                            <img class="shot__phone" src="/screenshots/en/phone-play-requests.webp" width="780" height="1688" loading="lazy"
+                                 alt="A doubles request on the phone: three of four players, who is in and who has not answered yet" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
                             <h3>Membership fees without the spreadsheet</h3>
                             <p>The club enters its price list once per season. Members choose their plan, for themselves or the whole family, and pay online. The treasurer sees at a glance who has paid and who has not.</p>
                             <ul class="checks">
@@ -207,7 +240,6 @@
 
                     <article class="tour__row">
                         <div class="tour__text">
-                            <p class="tour__new">New</p>
                             <h3>Sell free court time to non-members</h3>
                             <p>Players without a season membership sign up for free, tap a free slot, see the price and pay online. The court is booked for them right away, and the treasurer sees every sale in one list.</p>
                             <ul class="checks">
@@ -221,6 +253,44 @@
                                  alt="The treasurer's court sales: bookings sold, amount paid online, credits used and the list of purchases" />
                             <img class="shot__phone" src="/screenshots/en/phone-court-buy.webp" width="780" height="1688" loading="lazy"
                                  alt="A player without membership buys an hour on court 1 on the phone and pays it online" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <p class="tour__new">New</p>
+                            <h3>The club's books, almost by themselves</h3>
+                            <p>Income and expenses by category, tax sphere and cost center, next to the year before. Membership fees, court sales and Stripe payouts arrive as suggested entries, and imported bank statements are matched line by line.</p>
+                            <ul class="checks">
+                                <li>Receipts photographed with the phone and attached to the entry</li>
+                                <li>Bank statements from camt.053, MT940 or CSV, with your own rules</li>
+                                <li>Invoices with a payment QR code, an annual report to print and a role for the auditors</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/en/accounting.webp" width="2560" height="1600" loading="lazy"
+                                 alt="The club's income and expenses by tax sphere and category, next to the year before" />
+                            <img class="shot__phone" src="/screenshots/en/phone-accounting.webp" width="780" height="1688" loading="lazy"
+                                 alt="Suggested entries on the phone: membership fees and court purchases paid online, ready to book" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <p class="tour__new">New</p>
+                            <h3>The clubhouse tab, without the paper list</h3>
+                            <p>The clubhouse host sees the open tabs, today's players and the regulars at a glance and books a round with a few taps. Guests pay at the end, in cash, by card or in the app.</p>
+                            <ul class="checks">
+                                <li>Works on a phone or a tablet behind the bar</li>
+                                <li>Members see their tab and pay it online with SumUp</li>
+                                <li>The money goes to the host, Clubnetz only keeps the list</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/en/clubhouse.webp" width="2560" height="1600" loading="lazy"
+                                 alt="A member's clubhouse tab: the menu of drinks and food, what is on the tab and the button to pay" />
+                            <img class="shot__phone" src="/screenshots/en/phone-clubhouse.webp" width="780" height="1688" loading="lazy"
+                                 alt="The clubhouse host's start screen on the phone with the open tabs of members and guests" />
                         </figure>
                     </article>
 
@@ -298,9 +368,19 @@
                         <p>Reserve the same slot every week or every few weeks. Change or cancel one date, or all following ones.</p>
                     </li>
                     <li class="card">
+                        <div class="card__icon" aria-hidden="true">🤝</div>
+                        <h3>Finding players</h3>
+                        <p>Ask a few members or a saved group to play. When the last spot is filled, the court is booked.</p>
+                    </li>
+                    <li class="card">
                         <div class="card__icon" aria-hidden="true">💳</div>
                         <h3>Membership</h3>
                         <p>Choose a plan for yourself or the whole family and pay the fee online by card or SEPA direct debit.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🍺</div>
+                        <h3>Clubhouse tab</h3>
+                        <p>See what's on your tab at the clubhouse and pay it in the app.</p>
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">👨‍👩‍👧</div>
@@ -375,9 +455,24 @@
                         <p>Sell free court time to non-members at your own prices. They pay online or with a credit the club gives them.</p>
                     </li>
                     <li class="card">
+                        <div class="card__icon" aria-hidden="true">📒</div>
+                        <h3>Accounting</h3>
+                        <p>Fiscal years, income and expenses by category and cost center, receipts from the phone, reports and the annual report. Fees, court sales and bank statements turn into entries almost by themselves.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🧾</div>
+                        <h3>Invoices</h3>
+                        <p>Invoices to members, sponsors or other clubs as a PDF with a payment QR code, sent by email, with reminders.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🍻</div>
+                        <h3>Clubhouse</h3>
+                        <p>Digital tabs for the clubhouse host: a round booked in seconds, paid in cash, by card or in the app.</p>
+                    </li>
+                    <li class="card">
                         <div class="card__icon" aria-hidden="true">🧭</div>
                         <h3>Planner</h3>
-                        <p>Plan tournaments on a timeline over several days: drag bookings to another court or time and book many slots at once.</p>
+                        <p>Plan tournaments on a timeline over several days: drag bookings to another court or time and book many slots at once. Trainers and the board can book for any member without playing themselves.</p>
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">📣</div>
@@ -455,6 +550,7 @@ docker build -t clubnetz .</code></pre>
                         <li>Export members to a spreadsheet or your accounting tool</li>
                         <li>Read-only keys for displays and exports</li>
                         <li>Each key belongs to one club and can be revoked at any time</li>
+                        <li>Payments, prices and the books are never reachable with a key</li>
                     </ul>
                     <p style="margin-top: 22px"><a class="btn btn--solid" href="/docs/api/">Read the API documentation</a></p>
                 </div>
@@ -502,6 +598,14 @@ curl -H "Authorization: Bearer cnz_..." \
                     <details>
                         <summary>Can players without a membership book a court?</summary>
                         <p>Yes, if the club wants to. The club sets prices per court, weekday and time. Players who are not enrolled in the season tap a free slot and pay online, or use a credit the club gave them. Members of the season keep booking for free.</p>
+                    </details>
+                    <details>
+                        <summary>Can Clubnetz do the club's accounting?</summary>
+                        <p>Yes. The treasurer keeps the books in Clubnetz: fiscal years, income and expenses by category and tax sphere, receipts, reports and the annual report. Membership fees, court sales and Stripe payouts are suggested as entries, bank statements are imported and matched, and invoices go out as a PDF with a payment QR code. The auditors get a role of their own to check the year.</p>
+                    </details>
+                    <details>
+                        <summary>Does Clubnetz help in the clubhouse?</summary>
+                        <p>Yes. The clubhouse host keeps the tabs of members and guests in the app instead of on a paper list and records how each tab was paid. Members can pay their tab online with SumUp. The money goes to the host, Clubnetz only keeps the list.</p>
                     </details>
                     <details>
                         <summary>Is there an API?</summary>

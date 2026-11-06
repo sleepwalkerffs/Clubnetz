@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Clubnetz – kostenlose Open-Source-Vereinsverwaltung und Platzbuchung für Tennisvereine</title>
-    <meta name="description" content="Clubnetz ist eine kostenlose Open-Source-Web-App für Tennisvereine. Mitglieder buchen Plätze am Handy und zahlen den Mitgliedsbeitrag online, der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Platzverkauf, Termine und Neuigkeiten. Auch zum Selbsthosten." />
+    <meta name="description" content="Clubnetz ist eine kostenlose Open-Source-Web-App für Tennisvereine. Mitglieder buchen Plätze am Handy und zahlen den Mitgliedsbeitrag online, der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Platzverkauf, Termine, Neuigkeiten, das Clubhaus und die Buchhaltung. Auch zum Selbsthosten." />
     <link rel="canonical" href="https://clubnetz.app/de/" />
     <link rel="alternate" hreflang="en" href="https://clubnetz.app/" />
     <link rel="alternate" hreflang="de" href="https://clubnetz.app/de/" />
@@ -47,6 +47,11 @@
             "Statistiken, Ranglisten und Abzeichen",
             "Abo-Planer für gemeinsame Winterabos",
             "Planer zum Verschieben und Sammelbuchen über mehrere Tage",
+            "Spielersuche: Mitglieder zum Spielen fragen, der Platz wird gebucht, sobald alle zugesagt haben",
+            "Clubhaus-Rechnungen für den Wirt, bezahlt bar, mit Karte oder online mit SumUp",
+            "Buchhaltung: Rechnungsjahre, Buchungen, Belege, Auswertungen, Jahresabschluss und Rechnungsprüfer",
+            "Automatische Buchungen und Import von Kontoauszügen (camt.053, MT940, CSV)",
+            "Rechnungen als PDF mit Zahlungs-QR-Code und Zahlungserinnerungen",
             "Saisonrückblick als Story für jedes Mitglied",
             "Benachrichtigungen per Push und E-Mail",
             "API mit API-Schlüsseln für eigene Skripte und Anbindungen",
@@ -96,6 +101,16 @@
             },
             {
                 "@type": "Question",
+                "name": "Kann Clubnetz die Vereinsbuchhaltung?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Ja. Der Kassier führt die Bücher in Clubnetz: Rechnungsjahre, Einnahmen und Ausgaben nach Kategorie und steuerlichem Bereich, Belege, Auswertungen und den Jahresabschluss. Mitgliedsbeiträge, Platzverkauf und Stripe-Auszahlungen werden als Buchungen vorgeschlagen, Kontoauszüge importiert und zugeordnet, und Rechnungen gehen als PDF mit Zahlungs-QR-Code hinaus. Die Rechnungsprüfer bekommen eine eigene Rolle, um das Jahr zu prüfen." }
+            },
+            {
+                "@type": "Question",
+                "name": "Hilft Clubnetz auch im Clubhaus?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Ja. Der Wirt führt die Rechnungen von Mitgliedern und Gästen in der App statt auf einer Strichliste und hält fest, wie jede Rechnung bezahlt wurde. Mitglieder können ihre Rechnung online mit SumUp bezahlen. Das Geld geht an den Wirt, Clubnetz führt nur die Liste." }
+            },
+            {
+                "@type": "Question",
                 "name": "Gibt es eine API?",
                 "acceptedAnswer": { "@type": "Answer", "text": "Ja. Vereins-Admins erstellen in der App API-Schlüssel und können damit die Daten ihres Vereins aus eigenen Skripten und Werkzeugen lesen und ändern, zum Beispiel um freie Plätze auf der Vereinswebsite zu zeigen oder die Mitgliederliste zu exportieren." }
             }
@@ -130,7 +145,7 @@
             <div class="wrap hero__grid">
                 <div>
                     <h1>Vereinsverwaltung und Platzbuchung für Tennisvereine</h1>
-                    <p class="hero__lead">Clubnetz ist eine kostenlose Open-Source-Web-App. Mitglieder buchen einen Platz mit wenigen Klicks am Handy und zahlen ihren Mitgliedsbeitrag online. Der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Platzverkauf, Termine und Neuigkeiten an einem Ort.</p>
+                    <p class="hero__lead">Clubnetz ist eine kostenlose Open-Source-Web-App. Mitglieder buchen einen Platz mit wenigen Klicks am Handy und zahlen ihren Mitgliedsbeitrag online. Der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Platzverkauf, Termine, Neuigkeiten, das Clubhaus und die Buchhaltung an einem Ort.</p>
                     <div class="hero__actions">
                         <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20f%C3%BCr%20unseren%20Verein">Clubnetz für euren Verein</a>
                         <a class="btn btn--ghost" href="https://github.com/sleepwalkerffs/Clubnetz">Quellcode auf GitHub</a>
@@ -164,7 +179,7 @@
                 <div class="section-head">
                     <p class="eyebrow">Ein Blick hinein</p>
                     <h2>Das bekommt euer Verein</h2>
-                    <p>Echte Ansichten eines Vereins mit über 600 Mitgliedern. Nur die Namen sind erfunden.</p>
+                    <p>Echte Ansichten eines Vereins mit über 600 Mitgliedern. Die Namen sind erfunden, ebenso die Zahlen in der Buchhaltung und im Clubhaus.</p>
                 </div>
 
                 <div class="tour">
@@ -189,6 +204,24 @@
                     <article class="tour__row">
                         <div class="tour__text">
                             <p class="tour__new">Neu</p>
+                            <h3>Mitspieler finden ohne Gruppenchat</h3>
+                            <p>Fragt ein paar Mitglieder oder eine eurer gespeicherten Gruppen für eine genaue Uhrzeit. Alle antworten mit einem Tipp, und sobald der letzte Platz vergeben ist, bucht Clubnetz den ersten freien Platz eurer Wahl.</p>
+                            <ul class="checks">
+                                <li>Solange ihr auf Antworten wartet, wird nichts blockiert</li>
+                                <li>Buchungsregeln, Kontingente und Spielarten werden wie bei jeder Buchung geprüft</li>
+                                <li>Gruppen zum Wiederverwenden, etwa die Donnerstagsrunde oder die Mannschaft</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/de/play-requests.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Spielersuche: eine Einzel-Anfrage eines anderen Mitglieds zum Beantworten und die eigene Doppel-Anfrage" />
+                            <img class="shot__phone" src="/screenshots/de/phone-play-requests.webp" width="780" height="1688" loading="lazy"
+                                 alt="Eine Doppel-Anfrage am Handy: drei von vier Spielern, wer dabei ist und wer noch nicht geantwortet hat" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
                             <h3>Mitgliedsbeiträge ohne Excel-Liste</h3>
                             <p>Der Verein trägt seine Tarife einmal pro Saison ein. Mitglieder wählen ihren Tarif, für sich oder die ganze Familie, und zahlen online. Der Kassier sieht auf einen Blick, wer bezahlt hat und wer nicht.</p>
                             <ul class="checks">
@@ -207,7 +240,6 @@
 
                     <article class="tour__row">
                         <div class="tour__text">
-                            <p class="tour__new">Neu</p>
                             <h3>Freie Platzzeiten an Nichtmitglieder verkaufen</h3>
                             <p>Wer keine Saison-Mitgliedschaft hat, registriert sich kostenlos, tippt auf einen freien Platz, sieht den Preis und zahlt online. Der Platz ist sofort gebucht, und der Kassier sieht alle Verkäufe in einer Liste.</p>
                             <ul class="checks">
@@ -221,6 +253,44 @@
                                  alt="Der Platzverkauf des Kassiers: verkaufte Buchungen, online bezahlter Betrag, eingelöste Guthaben und die Liste der Käufe" />
                             <img class="shot__phone" src="/screenshots/de/phone-court-buy.webp" width="780" height="1688" loading="lazy"
                                  alt="Ein Spieler ohne Mitgliedschaft kauft am Handy eine Stunde auf Platz 1 und bezahlt sie online" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <p class="tour__new">Neu</p>
+                            <h3>Die Vereinsbuchhaltung, fast von selbst</h3>
+                            <p>Einnahmen und Ausgaben nach Kategorie, steuerlichem Bereich und Kostenstelle, neben dem Vorjahr. Mitgliedsbeiträge, Platzverkauf und Stripe-Auszahlungen kommen als Buchungsvorschläge, importierte Kontoauszüge werden Zeile für Zeile zugeordnet.</p>
+                            <ul class="checks">
+                                <li>Belege mit dem Handy fotografieren und der Buchung anhängen</li>
+                                <li>Kontoauszüge als camt.053, MT940 oder CSV, mit eigenen Regeln</li>
+                                <li>Rechnungen mit Zahlungs-QR-Code, ein Jahresabschluss zum Drucken und eine Rolle für die Rechnungsprüfer</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/de/accounting.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Einnahmen und Ausgaben des Vereins nach steuerlichem Bereich und Kategorie, neben dem Vorjahr" />
+                            <img class="shot__phone" src="/screenshots/de/phone-accounting.webp" width="780" height="1688" loading="lazy"
+                                 alt="Buchungsvorschläge am Handy: online bezahlte Mitgliedsbeiträge und Platzkäufe, bereit zum Buchen" />
+                        </figure>
+                    </article>
+
+                    <article class="tour__row">
+                        <div class="tour__text">
+                            <p class="tour__new">Neu</p>
+                            <h3>Die Clubhaus-Rechnung ohne Strichliste</h3>
+                            <p>Der Wirt sieht offene Rechnungen, wer heute spielt und die Stammgäste auf einen Blick und bucht eine Runde mit wenigen Tipps. Bezahlt wird am Schluss, bar, mit Karte oder in der App.</p>
+                            <ul class="checks">
+                                <li>Am Handy oder am Tablet hinter der Theke</li>
+                                <li>Mitglieder sehen ihre Rechnung und bezahlen sie online mit SumUp</li>
+                                <li>Das Geld geht an den Wirt, Clubnetz führt nur die Liste</li>
+                            </ul>
+                        </div>
+                        <figure class="shot">
+                            <img class="shot__desktop" src="/screenshots/de/clubhouse.webp" width="2560" height="1600" loading="lazy"
+                                 alt="Die Clubhaus-Rechnung eines Mitglieds: die Karte mit Getränken und Essen, was auf der Rechnung steht und der Knopf zum Bezahlen" />
+                            <img class="shot__phone" src="/screenshots/de/phone-clubhouse.webp" width="780" height="1688" loading="lazy"
+                                 alt="Die Startseite des Wirts am Handy mit den offenen Rechnungen von Mitgliedern und Gästen" />
                         </figure>
                     </article>
 
@@ -298,9 +368,19 @@
                         <p>Denselben Termin jede Woche oder alle paar Wochen reservieren. Einzelne Termine oder alle folgenden lassen sich ändern und absagen.</p>
                     </li>
                     <li class="card">
+                        <div class="card__icon" aria-hidden="true">🤝</div>
+                        <h3>Spielersuche</h3>
+                        <p>Ein paar Mitglieder oder eine gespeicherte Gruppe zum Spielen fragen. Sobald alle Plätze vergeben sind, ist der Platz gebucht.</p>
+                    </li>
+                    <li class="card">
                         <div class="card__icon" aria-hidden="true">💳</div>
                         <h3>Mitgliedschaft</h3>
                         <p>Einen Tarif für sich oder die ganze Familie wählen und den Beitrag online mit Karte oder SEPA-Lastschrift bezahlen.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🍺</div>
+                        <h3>Clubhaus-Rechnung</h3>
+                        <p>Sehen, was im Clubhaus auf der eigenen Rechnung steht, und sie in der App bezahlen.</p>
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">👨‍👩‍👧</div>
@@ -375,9 +455,24 @@
                         <p>Verkauft freie Platzzeiten zu euren eigenen Preisen an Nichtmitglieder. Sie zahlen online oder mit einem Guthaben, das der Verein vergibt.</p>
                     </li>
                     <li class="card">
+                        <div class="card__icon" aria-hidden="true">📒</div>
+                        <h3>Buchhaltung</h3>
+                        <p>Rechnungsjahre, Einnahmen und Ausgaben nach Kategorie und Kostenstelle, Belege vom Handy, Auswertungen und der Jahresabschluss. Beiträge, Platzverkauf und Kontoauszüge werden fast von selbst zu Buchungen.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🧾</div>
+                        <h3>Rechnungen</h3>
+                        <p>Rechnungen an Mitglieder, Sponsoren oder andere Vereine als PDF mit Zahlungs-QR-Code, per E-Mail versendet, mit Zahlungserinnerungen.</p>
+                    </li>
+                    <li class="card">
+                        <div class="card__icon" aria-hidden="true">🍻</div>
+                        <h3>Clubhaus</h3>
+                        <p>Die Strichliste des Wirts, digital: eine Runde in Sekunden gebucht, bezahlt bar, mit Karte oder in der App.</p>
+                    </li>
+                    <li class="card">
                         <div class="card__icon" aria-hidden="true">🧭</div>
                         <h3>Planer</h3>
-                        <p>Turniere auf einer Zeitleiste über mehrere Tage planen: Buchungen auf andere Plätze oder Zeiten ziehen und viele Termine auf einmal buchen.</p>
+                        <p>Turniere auf einer Zeitleiste über mehrere Tage planen: Buchungen auf andere Plätze oder Zeiten ziehen und viele Termine auf einmal buchen. Trainer und Vorstand können für jedes Mitglied buchen, ohne selbst mitzuspielen.</p>
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">📣</div>
@@ -455,6 +550,7 @@ docker build -t clubnetz .</code></pre>
                         <li>Mitglieder in eine Tabelle oder die Buchhaltung exportieren</li>
                         <li>Schlüssel nur zum Lesen für Anzeigen und Exporte</li>
                         <li>Jeder Schlüssel gehört zu einem Verein und lässt sich jederzeit widerrufen</li>
+                        <li>Zahlungen, Preise und die Buchhaltung sind mit einem Schlüssel nie erreichbar</li>
                     </ul>
                     <p style="margin-top: 22px"><a class="btn btn--solid" href="/de/docs/api/">Zur API-Dokumentation</a></p>
                 </div>
@@ -502,6 +598,14 @@ curl -H "Authorization: Bearer cnz_..." \
                     <details>
                         <summary>Können Spieler ohne Mitgliedschaft einen Platz buchen?</summary>
                         <p>Ja, wenn der Verein das möchte. Der Verein legt Preise pro Platz, Wochentag und Uhrzeit fest. Wer nicht für die Saison angemeldet ist, tippt auf einen freien Platz und zahlt online oder mit einem Guthaben vom Verein. Mitglieder der Saison buchen weiterhin kostenlos.</p>
+                    </details>
+                    <details>
+                        <summary>Kann Clubnetz die Vereinsbuchhaltung?</summary>
+                        <p>Ja. Der Kassier führt die Bücher in Clubnetz: Rechnungsjahre, Einnahmen und Ausgaben nach Kategorie und steuerlichem Bereich, Belege, Auswertungen und den Jahresabschluss. Mitgliedsbeiträge, Platzverkauf und Stripe-Auszahlungen werden als Buchungen vorgeschlagen, Kontoauszüge importiert und zugeordnet, und Rechnungen gehen als PDF mit Zahlungs-QR-Code hinaus. Die Rechnungsprüfer bekommen eine eigene Rolle, um das Jahr zu prüfen.</p>
+                    </details>
+                    <details>
+                        <summary>Hilft Clubnetz auch im Clubhaus?</summary>
+                        <p>Ja. Der Wirt führt die Rechnungen von Mitgliedern und Gästen in der App statt auf einer Strichliste und hält fest, wie jede Rechnung bezahlt wurde. Mitglieder können ihre Rechnung online mit SumUp bezahlen. Das Geld geht an den Wirt, Clubnetz führt nur die Liste.</p>
                     </details>
                     <details>
                         <summary>Gibt es eine API?</summary>
