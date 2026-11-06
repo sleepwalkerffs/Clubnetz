@@ -292,10 +292,17 @@ public class InvoiceAttachmentResolver(AppDbContext context) : IEmailAttachmentR
 
 internal static class InvoicePayment
 {
-    /// <summary>Books the payment of <paramref name="invoice"/> as an income entry and marks it paid. The caller holds the accounting lock.</summary>
+    /// <summary>
+    /// Books the payment of <paramref name="invoice"/> as an income entry and marks it paid. The invoice is the receipt of that income:
+    /// its PDF (as it was sent, without the "paid" stamp) is attached to the entry. The caller holds the accounting lock.
+    /// </summary>
     public static async Task<AccountingEntry> Pay(AppDbContext context, Invoice invoice, int moneyAccountId, DateOnly date, int? memberId, DateTimeOffset now, CancellationToken cancellationToken)
     {
         invoice.EnsureOpen();
+        var receipt = new AccountingReceipt(invoice.ClubId, InvoiceMapper.FileName(invoice), InvoicePdf.Render(await InvoiceMapper.PdfData(context, invoice, cancellationToken)), memberId, now);
+        context.Add(receipt);
+        await context.SaveChangesAsync(cancellationToken);
+
         var model = new SaveAccountingEntryModel
         {
             Date = date,
@@ -309,6 +316,7 @@ internal static class InvoicePayment
                 .ToList(),
             CounterpartyMemberId = invoice.RecipientMemberId,
             CounterpartyName = invoice.RecipientName,
+            ReceiptIds = [receipt.Id],
         };
         if (model.Text!.Length > AccountingEntry.MaxTextLength)
             model = model with { Text = model.Text[..AccountingEntry.MaxTextLength] };

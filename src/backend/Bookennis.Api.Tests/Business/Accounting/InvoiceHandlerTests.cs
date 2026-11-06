@@ -139,6 +139,8 @@ public class InvoiceHandlerTests(TestFixture fixture) : TestBase(fixture)
         var entry = await SendAsync(new GetAccountingEntry(ClubId, paid.EntryId!.Value));
         entry.Text.Should().Be("Rechnung RE2026-0001 Bandenwerbung 2026");
         entry.CounterpartyName.Should().Be("Autohaus Muster GmbH");
+        entry.Receipts.Should().ContainSingle("the invoice is the receipt of the income").Which.FileName.Should().Be("Rechnung-RE2026-0001.pdf");
+        (await SendAsync(new GetAccountingReceiptInbox(ClubId))).Should().BeEmpty();
         entry.Lines.Select(l => (l.CategoryId, l.CostCenterId, l.AmountCents)).Should().BeEquivalentTo([(books.Sponsoring, (int?)null, 40_000), (books.Courts, (int?)books.CostCenter, 5_000)]);
 
         await Rejected(() => SendAsync(new PayInvoice(ClubId, TreasurerUserId, invoice.Id, new PayInvoiceModel { MoneyAccountId = books.Bank, Date = new DateOnly(2026, 5, 10) }, Now)), AccountingErrorCode.AccountingInvoiceNotOpen);
