@@ -215,6 +215,21 @@ public class Invoice : TenantDomainEntity, IAggregateRoot
     }
 
     /// <summary>Gives the draft its number (the next of the year of its date, found by the caller under the accounting lock).</summary>
+    /// <summary>
+    /// A draft whose date is past moves to <paramref name="today"/> when it is issued, and its due date by as many days: the date of an
+    /// invoice is the day it became final (and its number belongs to that year). A date in the future stays.
+    /// </summary>
+    public void MoveDatesForIssue(DateOnly today)
+    {
+        EnsureDraft();
+        if (InvoiceDate >= today)
+            return;
+
+        var term = DueDate.DayNumber - InvoiceDate.DayNumber;
+        InvoiceDate = today;
+        DueDate = today.AddDays(term);
+    }
+
     public void Issue(InvoiceSettings settings, int sequence, DateTimeOffset now)
     {
         EnsureDraft();

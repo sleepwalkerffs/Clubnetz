@@ -69,6 +69,19 @@ public class InvoiceTests
     }
 
     [Fact]
+    public void Draft_OfAPastDay_MovesToTheIssueDay_WithItsTerm()
+    {
+        var past = new Invoice(ClubId, Data() with { InvoiceDate = new DateOnly(2026, 11, 20), DueDate = new DateOnly(2026, 12, 4) }, german: true);
+        var future = new Invoice(ClubId, Data() with { InvoiceDate = new DateOnly(2027, 2, 1), DueDate = new DateOnly(2027, 2, 15) }, german: true);
+
+        past.MoveDatesForIssue(new DateOnly(2027, 1, 10));
+        future.MoveDatesForIssue(new DateOnly(2027, 1, 10));
+
+        (past.InvoiceDate, past.DueDate).Should().Be((new DateOnly(2027, 1, 10), new DateOnly(2027, 1, 24)));
+        (future.InvoiceDate, future.DueDate).Should().Be((new DateOnly(2027, 2, 1), new DateOnly(2027, 2, 15)));
+    }
+
+    [Fact]
     public void Draft_IsNotSentOrReminded()
     {
         var invoice = new Invoice(ClubId, Data(), german: false);

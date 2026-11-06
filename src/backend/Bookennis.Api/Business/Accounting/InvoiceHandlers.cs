@@ -167,7 +167,7 @@ public record IssueInvoice(int ClubId, int InvoiceId, DateTimeOffset Now) : ICom
             await context.LockAccounting(request.ClubId, cancellationToken);
             var settings = await InvoiceMapper.GetSettings(context, request.ClubId, cancellationToken);
             var invoice = await context.Invoices.Include(i => i.Lines).SingleRequiredAsync(i => i.Id == request.InvoiceId && i.ClubId == request.ClubId, cancellationToken);
-            invoice.EnsureDraft();
+            invoice.MoveDatesForIssue(AccountingQueries.Today(request.Now));
 
             var year = invoice.InvoiceDate.Year;
             var last = await context.Invoices.Where(i => i.ClubId == request.ClubId && i.NumberYear == year).MaxAsync(i => i.NumberSequence, cancellationToken);

@@ -93,7 +93,9 @@ public class InvoiceHandlerTests(TestFixture fixture) : TestBase(fixture)
         first.TotalCents.Should().Be(45_000);
         await SendAsync(new DeleteInvoice(ClubId, deleted.Id));
 
-        (await Issue(second.Id)).Number.Should().Be("RE2026-0001");
+        var issued = await Issue(second.Id);
+        issued.Number.Should().Be("RE2026-0001");
+        issued.InvoiceDate.Should().Be(new DateOnly(2026, 5, 4), "a draft of today keeps its date");
         (await Issue(nextYear.Id)).Number.Should().Be("RE2027-0001");
         await SendAsync(new CancelInvoice(ClubId, second.Id, "Falscher Betrag", Now));
         (await Issue(first.Id)).Number.Should().Be("RE2026-0002", "the cancelled invoice keeps 0001");
