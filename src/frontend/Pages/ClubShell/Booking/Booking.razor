@@ -182,6 +182,7 @@ else
                  CanBuy="@CanBuyOnSelectedDate"
                  OnBuySlot="@OpenBuyDialog"
                  IsBookingOnlyForChildren="@(ClubProfileStore.BookingOptions?.IsBookingOnlyForChildren ?? false)"
+                 CanBookForAnyMember="@Bookennis.Client.Pages.ClubShell.Planner.PlannerHelpers.MayBookForAnyMember(ClubProfileStore.Roles, ClubProfileStore.IsSupportMode)"
                  EligibleChildMemberIds="@(ClubProfileStore.BookingOptions?.EligibleChildMemberIds ?? [])"
                  MemberChildren="@MemberChildren"
                  PlayModes="@AllowedPlaymodes"

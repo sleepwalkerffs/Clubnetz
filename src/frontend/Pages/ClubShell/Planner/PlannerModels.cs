@@ -29,6 +29,21 @@ public static class PlannerHelpers
         MemberRole.Trainer,
     ];
 
+    /// <summary>
+    /// The roles that may book for any member of the club without playing (same list as <c>BookingRights</c> on the server).
+    /// Only a convenience for the dialogs, the server decides.
+    /// </summary>
+    public static readonly MemberRole[] BookForAnyMemberRoles =
+    [
+        MemberRole.Admin,
+        MemberRole.SportsDirector,
+        MemberRole.YouthSportsDirector,
+        MemberRole.Trainer,
+    ];
+
+    public static bool MayBookForAnyMember(IEnumerable<MemberRole> roles, bool isSupportMode)
+        => isSupportMode || roles.Any(BookForAnyMemberRoles.Contains);
+
     public static readonly int[] DayOptions = [3, 7, 14];
 
     /// <summary>Width of a 30 minute slot in pixels for the zoom levels.</summary>

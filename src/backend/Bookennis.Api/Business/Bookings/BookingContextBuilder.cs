@@ -98,7 +98,8 @@ internal sealed class BookingContextBuilder
         if (courts.Count != distinctCourtIds.Count)
             throw new EntityNotFoundException(typeof(Court));
 
-        var participants = await LoadParticipants(context, club, playModeId, players, userId, excludedBookingId, cancellationToken);
+        var mayBookForAnyMember = await BookingRights.MayBookForAnyMember(context, club.Id, userId, cancellationToken);
+        var participants = await LoadParticipants(context, club, playModeId, players, userId, mayBookForAnyMember, excludedBookingId, cancellationToken);
 
         if (participants.Count != players.Count)
             throw new EntityNotFoundException("Player does not exist");
@@ -197,7 +198,7 @@ internal sealed class BookingContextBuilder
             && DateOnly.FromDateTime(interval.From.UtcDateTime) >= ActiveSeason.Period.From
             && DateOnly.FromDateTime(interval.To.UtcDateTime) <= ActiveSeason.Period.To;
 
-    private static async Task<List<ParticipantInfo>> LoadParticipants(AppDbContext context, Club currentClub, int playModeId, List<int> players, int userId, int excludedBookingId, CancellationToken cancellationToken)
+    private static async Task<List<ParticipantInfo>> LoadParticipants(AppDbContext context, Club currentClub, int playModeId, List<int> players, int userId, bool mayBookForAnyMember, int excludedBookingId, CancellationToken cancellationToken)
     {
         var childAgeThreshold = currentClub.PrimeTimeSettings.ChildAgeThreshold;
         var clubId = currentClub.Id;
@@ -228,8 +229,9 @@ internal sealed class BookingContextBuilder
                 select bookingPlayer.Id
             ).Count()
 
-            // The user plays themself or the player is a child of a family the user is a parent of
-            let isAllowedUser = user.Id == userId
+            // Staff may book for any member; otherwise the user plays themself or the player is a child of a family the user is a parent of
+            let isAllowedUser = mayBookForAnyMember
+                || user.Id == userId
                 || context.Families.Any(family =>
                     family.Children.Any(child => child.MemberId == member.Id)
                     && family.Parents.Any(parent => context.ClubMembers.Any(parentMember => parentMember.Id == parent.MemberId && parentMember.UserId == userId)))

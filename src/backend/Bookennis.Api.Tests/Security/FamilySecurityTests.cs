@@ -238,4 +238,51 @@ public class FamilySecurityTests(ApiSecurityFixture app)
 
         (await app.Fingerprint(app.ClubA)).Should().Be(before);
     }
+
+    [Fact]
+    public async Task Staff_CanBookForAnyMemberOfTheOwnClubOnly()
+    {
+        var before = await app.Fingerprint(app.ClubA);
+        var day = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(26).ToString("yyyy-MM-dd");
+        var bookings = $"/api/Clubs/{app.ClubA.Id}/Bookings";
+
+        string Batch(int playModeId, params int[] players) => $$"""
+            {"slots":[{"courtId":{{app.ClubA.CourtId}},"from":"{{day}}T12:00:00Z","to":"{{day}}T13:00:00Z"}],"timeZoneInfoId":"UTC","playModeId":{{playModeId}},"players":[{{string.Join(",", players)}}],"comment":null,"dryRun":true}
+            """;
+        string Single(params int[] players) => $$"""
+            {"courtId":{{app.ClubA.CourtId}},"from":"{{day}}T10:00:00Z","to":"{{day}}T11:00:00Z","timeZoneInfoId":"UTC","playModeId":{{app.ClubA.PlayModeId}},"players":[{{string.Join(",", players)}}]}
+            """;
+        var strangers = new[] { Foreign.ParentMemberId, Foreign.ChildMemberId };
+
+        // A staff member passes the check for two members they have nothing to do with (the dry run answers per slot) ...
+        var staff = await Send(HttpMethod.Post, $"{bookings}/Batch", app.SportsDirectorOfA, Batch(app.ClubA.PlayModeId, strangers));
+        staff.Status.Should().Be(HttpStatusCode.OK);
+        staff.Body.Should().NotContain("UserNotAllowedToBook");
+
+        // ... a plain member does not ...
+        var plain = await Send(HttpMethod.Post, $"{bookings}/Batch", app.MemberOfA, Batch(app.ClubA.PlayModeId, strangers));
+        plain.Status.Should().Be(HttpStatusCode.PreconditionFailed);
+        plain.Body.Should().Contain("UserNotAllowedToBook");
+
+        // ... and a staff role without the role of the play mode is refused before any booking rule
+        foreach (var (url, body) in new[]
+                 {
+                     ($"{bookings}/Batch", Batch(app.ClubA.PlayModeId, strangers)),
+                     ($"{bookings}/BookCourt", Single(strangers)),
+                 })
+        {
+            var response = await Send(HttpMethod.Post, url, app.SportsDirectorWithoutModeRoleOfA, body);
+            response.Status.Should().Be(HttpStatusCode.Forbidden, url);
+        }
+
+        // Staff of club B are no staff of club A: through the address of club A they are refused, through their own club the members of club A do not exist
+        var viaClubA = await Send(HttpMethod.Post, $"{bookings}/Batch", app.ClubB.Admin, Batch(app.ClubA.PlayModeId, strangers));
+        ((int)viaClubA.Status).Should().BeOneOf([403, 404]);
+
+        var viaClubB = await Send(HttpMethod.Post, $"/api/Clubs/{app.ClubB.Id}/Bookings/Batch", app.ClubB.Admin, Batch(app.ClubB.PlayModeId, strangers));
+        ((int)viaClubB.Status).Should().BeOneOf([403, 404]);
+        viaClubB.Body.Should().NotContain("Otherchild");
+
+        (await app.Fingerprint(app.ClubA)).Should().Be(before);
+    }
 }
