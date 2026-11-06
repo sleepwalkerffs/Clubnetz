@@ -429,9 +429,9 @@ internal sealed class BankMatchFinder
                         && (accounts.Contains(p.MoneyAccountId) || (p.ToMoneyAccountId != null && accounts.Contains(p.ToMoneyAccountId.Value))))
             .ToListAsync(cancellationToken);
 
-        // Open invoices are paid whenever the money comes: no window, only issued before the line
+        // Open invoices are paid whenever the money comes (also before the invoice, when its number is in the reference)
         var invoices = await context.Invoices.AsNoTracking()
-            .Where(i => i.ClubId == clubId && i.Status == InvoiceStatus.Issued && i.InvoiceDate <= to)
+            .Where(i => i.ClubId == clubId && i.Status == InvoiceStatus.Issued)
             .ToListAsync(cancellationToken);
 
         return new BankMatchFinder(
@@ -450,11 +450,13 @@ internal sealed class BankMatchFinder
             .Where(p => near(p.Date) && EffectOn(p, line.MoneyAccountId) == line.AmountCents)
             .OrderBy(p => Math.Abs(p.Date.DayNumber - line.BookingDate.DayNumber))
             .Select(p => new BankMatchDto { Kind = BankMatchKind.Proposal, Id = p.Id, Date = p.Date, Text = p.Text });
-        // An invoice whose number is in the reference comes first
+        // An invoice of the amount: issued before the line, or at any time when its number is in the reference (paid in advance,
+        // or the invoice written after the money came). The one with the number comes first.
         var reference = Normalize(line.Reference);
+        bool Named(Invoice invoice) => invoice.Number is { } number && reference.Contains(Normalize(number), StringComparison.Ordinal);
         var fromInvoices = invoices
-            .Where(i => i.TotalCents == line.AmountCents && i.InvoiceDate <= line.BookingDate.AddDays(GetBankTransactions.MatchDays))
-            .OrderByDescending(i => i.Number is { } number && reference.Contains(Normalize(number), StringComparison.Ordinal))
+            .Where(i => i.TotalCents == line.AmountCents && (Named(i) || i.InvoiceDate <= line.BookingDate.AddDays(GetBankTransactions.MatchDays)))
+            .OrderByDescending(Named)
             .ThenBy(i => i.DueDate)
             .Select(i => new BankMatchDto { Kind = BankMatchKind.Invoice, Id = i.Id, Date = i.InvoiceDate, Text = $"{i.Number} {i.RecipientName}" });
         return fromInvoices.Take(2).Concat(fromEntries).Concat(fromProposals).Take(5).ToList();

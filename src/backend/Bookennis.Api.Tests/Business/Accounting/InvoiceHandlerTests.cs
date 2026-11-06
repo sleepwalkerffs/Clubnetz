@@ -224,6 +224,27 @@ public class InvoiceHandlerTests(TestFixture fixture) : TestBase(fixture)
     }
 
     [Fact]
+    public async Task BankLine_BeforeTheInvoice_MatchesWhenItNamesTheNumber()
+    {
+        var books = await SetUp();
+        var invoice = await Issue((await SendAsync(new CreateInvoice(ClubId, Model(books, new DateOnly(2026, 11, 6), 2), Now))).Id);
+        var camt = $"""
+            <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08"><BkToCstmrStmt><Stmt><Acct><Id><IBAN>{Iban}</IBAN></Id></Acct>
+              <Ntry><Amt Ccy="EUR">450.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><BookgDt><Dt>2026-09-30</Dt></BookgDt>
+                <NtryDtls><TxDtls><RmtInf><Ustrd>SEPA-Gutschrift RE2026-0001</Ustrd></RmtInf></TxDtls></NtryDtls></Ntry>
+              <Ntry><Amt Ccy="EUR">450.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><BookgDt><Dt>2026-09-29</Dt></BookgDt>
+                <NtryDtls><TxDtls><RmtInf><Ustrd>Something else</Ustrd></RmtInf></TxDtls></NtryDtls></Ntry>
+            </Stmt></BkToCstmrStmt></Document>
+            """;
+        await SendAsync(new ImportBankStatement(ClubId, TreasurerUserId, books.Bank, "sep.xml", Encoding.UTF8.GetBytes(camt), null, Now));
+
+        var lines = (await SendAsync(new GetBankTransactions(ClubId, books.Bank, Bookennis.Domain.Accounting.BankTransactionStatus.Open))).Transactions;
+
+        lines.Single(l => l.Reference.Contains("RE2026-0001")).Matches.Should().ContainSingle(m => m.Kind == BankMatchKind.Invoice && m.Id == invoice.Id);
+        lines.Single(l => l.Reference == "Something else").Matches.Should().NotContain(m => m.Kind == BankMatchKind.Invoice, "an earlier payment without the number is something else");
+    }
+
+    [Fact]
     public async Task InvoiceAccount_KeepsItsIban()
     {
         var books = await SetUp();
