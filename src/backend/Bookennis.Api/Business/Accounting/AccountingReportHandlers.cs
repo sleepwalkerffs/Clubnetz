@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using AccountingCategoryKind = Bookennis.Domain.Accounting.AccountingCategoryKind;
 using AccountingEntryKind = Bookennis.Domain.Accounting.AccountingEntryKind;
 using AccountingEntryStatus = Bookennis.Domain.Accounting.AccountingEntryStatus;
+using AccountingProposalStatus = Bookennis.Domain.Accounting.AccountingProposalStatus;
+using BankTransactionStatus = Bookennis.Domain.Accounting.BankTransactionStatus;
 using TaxSphere = Bookennis.Domain.Accounting.TaxSphere;
 
 namespace Bookennis.Api.Business.Accounting;
@@ -37,6 +39,10 @@ public record GetAccountingSummary(int ClubId, int FiscalYearId) : IQuery<Accoun
                 CancelledCount = await entries.CountAsync(e => e.Status == AccountingEntryStatus.Cancelled, cancellationToken),
                 EntriesWithoutReceipt = await entries.CountAsync(e => e.Status == AccountingEntryStatus.Active && e.Kind == AccountingEntryKind.Booking && !withReceipt.Contains(e.Id), cancellationToken),
                 ReceiptsInInbox = await context.AccountingReceipts.CountAsync(r => r.ClubId == request.ClubId && r.EntryId == null, cancellationToken),
+                OpenProposals = await context.AccountingProposals.CountAsync(p => p.ClubId == request.ClubId && p.Status == AccountingProposalStatus.Open
+                                                                                  && p.Date >= year.StartDate && p.Date <= year.EndDate, cancellationToken),
+                OpenBankLines = await context.BankTransactions.CountAsync(t => t.ClubId == request.ClubId && t.Status == BankTransactionStatus.Open
+                                                                               && t.BookingDate >= year.StartDate && t.BookingDate <= year.EndDate, cancellationToken),
             };
         }
     }

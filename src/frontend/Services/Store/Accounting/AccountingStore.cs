@@ -67,6 +67,8 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }
     }, nameof(LoadSummary));
 
+    public Task<HttpResult<AccountingSummaryDto>> GetSummary(int fiscalYearId) => httpClient.GetSummary(fiscalYearId);
+
     public Task LoadEntries(AccountingEntryFilter filter) => RunInLoadingContextAsync(async cancellationToken =>
     {
         Filter = filter;

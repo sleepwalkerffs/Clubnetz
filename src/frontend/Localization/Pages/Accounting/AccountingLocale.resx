@@ -1201,4 +1201,19 @@
   <data name="Invoice_Number" xml:space="preserve">
     <value>Number</value>
   </data>
+  <data name="Years_OpenTitle" xml:space="preserve">
+    <value>Still open in {0}:</value>
+  </data>
+  <data name="Years_OpenProposals" xml:space="preserve">
+    <value>Suggested entries not booked: {0}</value>
+  </data>
+  <data name="Years_OpenBankLines" xml:space="preserve">
+    <value>Bank lines not matched: {0}</value>
+  </data>
+  <data name="Years_OpenWithoutReceipt" xml:space="preserve">
+    <value>Entries without a receipt: {0}</value>
+  </data>
+  <data name="Years_OpenInbox" xml:space="preserve">
+    <value>Receipts still in the inbox: {0}</value>
+  </data>
 </root>

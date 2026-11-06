@@ -31,6 +31,9 @@ public interface IAccountingStore : ISemaphoreStore
     Task Load();
     Task SelectYear(int fiscalYearId);
     Task LoadSummary();
+
+    /// <summary>The summary of any fiscal year, not kept in the store (e.g. to check what is open before closing it).</summary>
+    Task<HttpResult<AccountingSummaryDto>> GetSummary(int fiscalYearId);
     Task LoadEntries(AccountingEntryFilter filter);
     Task LoadInbox();
     Task LoadReports();

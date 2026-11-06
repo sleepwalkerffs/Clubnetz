@@ -1,3 +1,4 @@
+@using System.Net
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Utils
@@ -182,7 +183,7 @@
 
     private async Task Close(FiscalYearDto year)
     {
-        if (await DialogService.ShowMessageBox(string.Format(L["Years_CloseTitle"], year.Label), L["Years_CloseConfirm"], yesText: L["Years_Close"], cancelText: SharedLocale["Cancel"]) != true)
+        if (await DialogService.ShowMessageBox(string.Format(L["Years_CloseTitle"], year.Label), await CloseMessage(year), yesText: L["Years_Close"], cancelText: SharedLocale["Cancel"]) != true)
             return;
 
         var result = await Store.CloseFiscalYear(year.Id);
@@ -190,6 +191,28 @@
             Snackbar.Add(string.Format(L["Years_Closed"], year.Label), Severity.Success);
         else
             Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    /// <summary>What closing does, and a warning with what is still open in the year: closing is allowed, but should not happen by mistake.</summary>
+    private async Task<MarkupString> CloseMessage(FiscalYearDto year)
+    {
+        var confirm = $"<p>{WebUtility.HtmlEncode(L["Years_CloseConfirm"])}</p>";
+        if (await Store.GetSummary(year.Id) is not { Success: true, Dto: { } summary })
+            return new MarkupString(confirm);
+
+        var open = new (int Count, string Key)[]
+        {
+            (summary.OpenProposals, "Years_OpenProposals"),
+            (summary.OpenBankLines, "Years_OpenBankLines"),
+            (summary.EntriesWithoutReceipt, "Years_OpenWithoutReceipt"),
+            (summary.ReceiptsInInbox, "Years_OpenInbox"),
+        }.Where(o => o.Count > 0).ToList();
+        if (open.Count == 0)
+            return new MarkupString(confirm);
+
+        var items = string.Concat(open.Select(o => $"<li>{WebUtility.HtmlEncode(string.Format(L[o.Key], o.Count))}</li>"));
+        return new MarkupString($"<p style=\"color: var(--mud-palette-warning); font-weight: 700\">⚠️ {WebUtility.HtmlEncode(string.Format(L["Years_OpenTitle"], year.Label))}</p>"
+                                + $"<ul style=\"margin: 4px 0 12px 20px\">{items}</ul>{confirm}");
     }
 
     private async Task Reopen(FiscalYearDto year)
