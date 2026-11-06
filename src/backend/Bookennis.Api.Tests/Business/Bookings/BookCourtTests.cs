@@ -26,7 +26,10 @@ public class BookCourtTests : TestBase
     {
         // Arrange
 
-        var now = DateTimeOffset.UtcNow;
+        // Start one hour before the current hour: the 1-minute intersecting booking is then always over, so it is
+        // never counted as upcoming (it was, when the test ran in the first minute of an hour). The booking that
+        // follows the interval still ends in the future.
+        var now = DateTimeOffset.UtcNow.AddHours(-1);
         var from = new DateTimeOffset(now.Year, now.Month, now.Day, now.Hour, 0, 0, TimeSpan.Zero);
         var to = from.AddMinutes(90);
         var bookingInterval = new DateTimeOffsetInterval(from, to);
@@ -41,7 +44,7 @@ public class BookCourtTests : TestBase
             var court = ctx.TestData().Court1;
 
             ctx.Add(new Booking(club.Id, court.Id, playMode.Id, new DateTimeOffsetInterval(from.AddMinutes(-90), from), TimeZoneInfo.Local.Id, [member1.Id, member2.Id]));
-            ctx.Add(new Booking(club.Id, court.Id, playMode.Id, new DateTimeOffsetInterval(to, from.AddMinutes(90)), TimeZoneInfo.Local.Id, [member1.Id, member2.Id]));
+            ctx.Add(new Booking(club.Id, court.Id, playMode.Id, new DateTimeOffsetInterval(to, to.AddMinutes(90)),TimeZoneInfo.Local.Id, [member1.Id, member2.Id]));
             var intersecting = ctx.Add(new Booking(club.Id, court.Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddMinutes(1)), TimeZoneInfo.Local.Id, [member1.Id, member2.Id])).Entity;
             await ctx.SaveChangesAsync();
 
