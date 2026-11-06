@@ -522,6 +522,7 @@
             { dialog => dialog.PlayModes, AllowedPlayModes },
             { dialog => dialog.Players, ClubStore.ClubPlayers.Where(p => !p.IsGuest).ToList() },
             { dialog => dialog.MemberId, MemberId },
+            { dialog => dialog.CanBookForAnyMember, PlannerHelpers.MayBookForAnyMember(ClubProfileStore.Roles, ClubProfileStore.IsSupportMode) },
             { dialog => dialog.MemberChildren, MemberChildren },
             { dialog => dialog.Courts, Courts },
         };

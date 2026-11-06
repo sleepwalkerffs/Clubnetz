@@ -97,6 +97,12 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
     /// <summary>A treasurer of club A who is no admin: looks after the membership fees, but must not connect the club with Stripe.</summary>
     public SeededUser TreasurerOfA { get; private set; } = null!;
 
+    /// <summary>A sports director of club A (also a plain member, so the play mode allows them): may book for any member of the club, nothing else.</summary>
+    public SeededUser SportsDirectorOfA { get; private set; } = null!;
+
+    /// <summary>A sports director of club A without the role the play mode of the club allows: may not book at all.</summary>
+    public SeededUser SportsDirectorWithoutModeRoleOfA { get; private set; } = null!;
+
     /// <summary>The clubhouse host ("Wirt") of club A: no other role, not enrolled. Keeps the tabs of the guests, nothing else.</summary>
     public SeededUser HostOfA { get; private set; } = null!;
 
@@ -136,7 +142,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await Seed();
 
         // Signing in is limited per client address and the sweeps also hit the sign-in endpoints, so the tests sign in once up front
-        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, ClubA.Member, ClubB.Member, MemberOfA, OtherMemberOfA, TreasurerOfA, EnrolledMemberOfA, HostOfA })
+        foreach (var user in new[] { ClubA.Admin, ClubB.Admin, ClubA.Member, ClubB.Member, MemberOfA, OtherMemberOfA, TreasurerOfA, SportsDirectorOfA, SportsDirectorWithoutModeRoleOfA, EnrolledMemberOfA, HostOfA })
             cookies[user.UserId] = await SignIn(user);
     }
 
@@ -280,6 +286,8 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
     private async Task<string> SignIn(SeededUser user)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/Account/Login");
+        // Every seeded user signs in from an address of their own, so the sign-in limit per address (10 a minute) does not grow with the number of users
+        request.Headers.Add("X-Forwarded-For", $"10.77.{user.UserId / 250 % 250}.{user.UserId % 250 + 1}");
         request.Content = new StringContent($$"""{"email":"{{user.Email}}","password":"{{Password}}","rememberMe":false}""", Encoding.UTF8, "application/json");
         using var response = await Client.SendAsync(request);
         response.StatusCode.Should().Be(HttpStatusCode.OK, "the seeded user must be able to sign in");
@@ -316,6 +324,8 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         await context.SaveChangesAsync();
         EventOfEnrolledMemberOfA = activeEvent.Id;
         TreasurerOfA = await AddUser(context, ClubA, "treasurer-a", Marker, [MemberRole.User, MemberRole.Treasurer]);
+        SportsDirectorOfA = await AddUser(context, ClubA, "sports-director-a", Marker, [MemberRole.User, MemberRole.SportsDirector]);
+        SportsDirectorWithoutModeRoleOfA = await AddUser(context, ClubA, "sports-director-no-mode-a", Marker, [MemberRole.SportsDirector]);
 
         var activeRequestStart = new DateTimeOffset(DateOnly.FromDateTime(DateTime.UtcNow).AddDays(11).ToDateTime(new TimeOnly(16, 0)), TimeSpan.Zero);
         var requestOfActiveInvitees = PlayRequest.Create(ClubA.Id, ClubA.Admin.MemberId, new PlayRequest.RequestData(

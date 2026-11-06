@@ -230,6 +230,10 @@
     [Parameter]
     public bool IsBookingOnlyForChildren { get; set; }
 
+    /// <summary>Staff may book for any member without playing (see <c>BookCourt</c>).</summary>
+    [Parameter]
+    public bool CanBookForAnyMember { get; set; }
+
     [Parameter]
     public List<int> EligibleChildMemberIds { get; set; } = [];
 
@@ -384,6 +388,7 @@
         parameters.Add(dialog => dialog.StopHourOfTheDay, openingHourEnd);
         parameters.Add(dialog => dialog.IsBookingOnlyForChildren, IsBookingOnlyForChildren);
         parameters.Add(dialog => dialog.EligibleChildMemberIds, EligibleChildMemberIds);
+        parameters.Add(dialog => dialog.CanBookForAnyMember, CanBookForAnyMember);
         if (time is not null)
             parameters.Add(dialog => dialog.Time, time);
         if (court is not null)

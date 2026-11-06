@@ -36,7 +36,7 @@
         @if (ShowPlayerSelection)
         {
             <PlayerSelection @ref="playerSelection" AvailablePlayers="@Players" MaxPlayers="@selectedPlayMode.FixedPlayerCount"
-                             FixedPlayer="@FixedPlayer" FixedPlayerAlternative="@FixedPlayerAlternatives" OnSelectionChanged="ScheduleCheck" />
+                             FixedPlayer="@FixedPlayer" FixedPlayerAlternative="@FixedPlayerAlternatives" InitialPlayers="@InitialPlayers" OnSelectionChanged="ScheduleCheck" />
         }
 
         @if (selectedPlayMode.CommentAllowed)
@@ -132,6 +132,8 @@
     [Parameter, EditorRequired] public List<PlayerResult> MemberChildren { get; set; } = [];
     [Parameter, EditorRequired] public List<CourtResult> Courts { get; set; } = [];
     [Parameter, EditorRequired] public int MemberId { get; set; }
+    /// <summary>Staff may book for any member without playing: the players are picked freely, the booker is only the default.</summary>
+    [Parameter] public bool CanBookForAnyMember { get; set; }
 
     [Inject]
     private IBookingStore BookingStore { get; set; } = null!;
@@ -156,10 +158,13 @@
     private CancellationTokenSource? debounce;
 
     // Same as the booking dialog: the booker is fixed and can be switched to a child
-    private PlayerResult? FixedPlayer => Players.SingleOrDefault(player => player.MemberId == MemberId);
+    private PlayerResult? FixedPlayer => CanBookForAnyMember ? null : Players.SingleOrDefault(player => player.MemberId == MemberId);
     private List<PlayerResult> FixedPlayerAlternatives => FixedPlayer is null ? [] : [.. MemberChildren, FixedPlayer];
 
-    private bool ShowPlayerSelection => selectedPlayMode.FixedPlayerCount.HasValue;
+    // Staff start with themself in the list and may remove themself
+    private List<PlayerResult> InitialPlayers => CanBookForAnyMember ? [.. Players.Where(player => player.MemberId == MemberId)] : [];
+
+    private bool ShowPlayerSelection => selectedPlayMode.FixedPlayerCount.HasValue || CanBookForAnyMember;
 
     private List<int> SelectedPlayers => ShowPlayerSelection && playerSelection is not null
         ? playerSelection.SelectedPlayers.ConvertAll(player => player.MemberId)
@@ -167,7 +172,8 @@
 
     private int InvalidCount => Enumerable.Range(0, Slots.Count).Count(i => SlotError(i) is not null);
 
-    private bool CanSubmit => !submitting && !checking && checkResult is not null && checkError is null && InvalidCount == 0 && Slots.Count > 0;
+    private bool CanSubmit => !submitting && !checking && checkResult is not null && checkError is null && InvalidCount == 0 && Slots.Count > 0
+        && SelectedPlayers.Count > 0;
 
     private string SubmitCaption => Locale.Count("CreateBookings", Slots.Count);
 
