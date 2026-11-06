@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Page_Title" xml:space="preserve"><value>Looking for players</value></data>
+  <data name="Page_Subtitle" xml:space="preserve"><value>Ask your people to play. Whoever says yes books the court - it follows all booking rules, and nothing is blocked until then.</value></data>
+  <data name="Hero_Asked" xml:space="preserve"><value>Waiting for you: {0}</value></data>
+  <data name="Hero_Mine" xml:space="preserve"><value>Your open requests: {0}</value></data>
+  <data name="Btn_New" xml:space="preserve"><value>New request</value></data>
+  <data name="Btn_Groups" xml:space="preserve"><value>My groups</value></data>
+  <data name="Section_ForMe" xml:space="preserve"><value>Asked of me</value></data>
+  <data name="Section_ForMe_Hint" xml:space="preserve"><value>Members who want to play with you</value></data>
+  <data name="Section_Mine" xml:space="preserve"><value>My requests</value></data>
+  <data name="Section_Mine_Hint" xml:space="preserve"><value>Only you and the players you asked see them</value></data>
+  <data name="Empty_ForMe" xml:space="preserve"><value>Nobody is looking for you right now.</value></data>
+  <data name="Empty_Mine" xml:space="preserve"><value>You have no requests. Ask your people to play!</value></data>
+  <data name="Card_AskedBy" xml:space="preserve"><value>{0} is looking for players</value></data>
+  <data name="Card_YourRequest" xml:space="preserve"><value>Your request</value></data>
+  <data name="Card_Players" xml:space="preserve"><value>{0} of {1} players</value></data>
+  <data name="Card_Courts" xml:space="preserve"><value>Courts: {0}</value></data>
+  <data name="Card_ExpiresAt" xml:space="preserve"><value>Open until {0}</value></data>
+  <data name="Card_Playing" xml:space="preserve"><value>Playing: {0}</value></data>
+  <data name="Card_Asked" xml:space="preserve"><value>Asked</value></data>
+  <data name="State_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="State_Filled" xml:space="preserve"><value>Court booked</value></data>
+  <data name="State_Cancelled" xml:space="preserve"><value>Withdrawn</value></data>
+  <data name="State_Expired" xml:space="preserve"><value>Expired</value></data>
+  <data name="Answer_Invited" xml:space="preserve"><value>Open</value></data>
+  <data name="Answer_Accepted" xml:space="preserve"><value>In</value></data>
+  <data name="Answer_Declined" xml:space="preserve"><value>Out</value></data>
+  <data name="Mine_Accepted" xml:space="preserve"><value>You said yes. The court is booked as soon as everybody is in.</value></data>
+  <data name="Mine_Declined" xml:space="preserve"><value>You said no.</value></data>
+  <data name="Btn_Accept" xml:space="preserve"><value>I'm in</value></data>
+  <data name="Btn_AcceptAgain" xml:space="preserve"><value>Join after all</value></data>
+  <data name="Btn_Decline" xml:space="preserve"><value>No thanks</value></data>
+  <data name="Btn_TakeBack" xml:space="preserve"><value>I can't make it</value></data>
+  <data name="Btn_Cancel" xml:space="preserve"><value>Withdraw request</value></data>
+  <data name="Btn_ShowBooking" xml:space="preserve"><value>Show booking</value></data>
+  <data name="Accepted_Booked" xml:space="preserve"><value>You're in! The court is booked.</value></data>
+  <data name="Accepted_Waiting" xml:space="preserve"><value>You're in. The court is booked as soon as everybody has said yes.</value></data>
+  <data name="Declined_Done" xml:space="preserve"><value>Answer saved.</value></data>
+  <data name="Cancelled_Done" xml:space="preserve"><value>Request withdrawn. The players who were asked are told.</value></data>
+  <data name="Cancel_Title" xml:space="preserve"><value>Withdraw request?</value></data>
+  <data name="Cancel_Text" xml:space="preserve"><value>The players who were asked will be told that it is off.</value></data>
+  <data name="Cancel_Yes" xml:space="preserve"><value>Withdraw</value></data>
+  <data name="Cancel_No" xml:space="preserve"><value>Keep</value></data>
+  <data name="Create_Title" xml:space="preserve"><value>New request</value></data>
+  <data name="Create_Submit" xml:space="preserve"><value>Send request</value></data>
+  <data name="Create_Done" xml:space="preserve"><value>Request sent.</value></data>
+  <data name="Create_NoPlayMode" xml:space="preserve"><value>There is no play mode you may book.</value></data>
+  <data name="Field_Date" xml:space="preserve"><value>Day</value></data>
+  <data name="Field_Time" xml:space="preserve"><value>Start</value></data>
+  <data name="Field_PlayMode" xml:space="preserve"><value>Play mode</value></data>
+  <data name="Field_Duration" xml:space="preserve"><value>Duration</value></data>
+  <data name="Field_Courts" xml:space="preserve"><value>Courts</value></data>
+  <data name="Field_Courts_Hint" xml:space="preserve"><value>The first free court of these is booked.</value></data>
+  <data name="Field_Players" xml:space="preserve"><value>Players in total</value></data>
+  <data name="Players_Singles" xml:space="preserve"><value>2 (singles)</value></data>
+  <data name="Players_Doubles" xml:space="preserve"><value>4 (doubles)</value></data>
+  <data name="Group_Label" xml:space="preserve"><value>Start from a group</value></data>
+  <data name="Group_Hint" xml:space="preserve"><value>Changes here only apply to this request, not to the saved group.</value></data>
+  <data name="Invitees_Label" xml:space="preserve"><value>Who may accept</value></data>
+  <data name="Invitees_Count" xml:space="preserve"><value>{0} selected</value></data>
+  <data name="Invitees_Hint" xml:space="preserve"><value>Only active members can be asked. The first ones to say yes play.</value></data>
+  <data name="Field_Comment" xml:space="preserve"><value>Message (optional)</value></data>
+  <data name="Expire_Switch" xml:space="preserve"><value>Close the request earlier</value></data>
+  <data name="Expire_Hint" xml:space="preserve"><value>Without this the request stays open until play starts.</value></data>
+  <data name="Expire_Date" xml:space="preserve"><value>Closes on</value></data>
+  <data name="Expire_Time" xml:space="preserve"><value>Closes at</value></data>
+  <data name="SaveGroup_Switch" xml:space="preserve"><value>Save these players as a new group</value></data>
+  <data name="SaveGroup_Name" xml:space="preserve"><value>Group name</value></data>
+  <data name="Err_Past" xml:space="preserve"><value>The start has to be in the future.</value></data>
+  <data name="Err_Expiry" xml:space="preserve"><value>The request has to close in the future and before the start.</value></data>
+  <data name="Summary_Line" xml:space="preserve"><value>{0} · {1} · {2}</value></data>
+  <data name="Groups_Title" xml:space="preserve"><value>My groups</value></data>
+  <data name="Groups_Hint" xml:space="preserve"><value>Groups are only visible to you. Pick one when you ask for players and change it for that request as you like.</value></data>
+  <data name="Groups_Empty" xml:space="preserve"><value>No groups yet.</value></data>
+  <data name="Groups_Players" xml:space="preserve"><value>{0} players</value></data>
+  <data name="Groups_New" xml:space="preserve"><value>New group</value></data>
+  <data name="Groups_Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Groups_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Groups_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Groups_Members" xml:space="preserve"><value>Players</value></data>
+  <data name="Groups_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Groups_Saved" xml:space="preserve"><value>Group saved.</value></data>
+  <data name="Groups_Deleted" xml:space="preserve"><value>Group deleted.</value></data>
+  <data name="Groups_DeleteTitle" xml:space="preserve"><value>Delete group?</value></data>
+  <data name="Groups_DeleteText" xml:space="preserve"><value>The group "{0}" is deleted. Requests that were already sent are not changed.</value></data>
+  <data name="Groups_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Groups_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Card_Title" xml:space="preserve"><value>Looking for players</value></data>
+  <data name="Card_ForMe" xml:space="preserve"><value>Waiting for your answer: {0}</value></data>
+  <data name="Card_Mine" xml:space="preserve"><value>Your open requests: {0}</value></data>
+  <data name="Card_Next" xml:space="preserve"><value>Next: {0} · {1}</value></data>
+  <data name="Card_Open" xml:space="preserve"><value>Show</value></data>
+</root>

@@ -1,0 +1,145 @@
+@using Bookennis.Client.Components.Family
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Utils
+@using Bookennis.Client.Localization.Pages.PlayRequests
+@using Bookennis.Client.Services.Store.PlayRequests
+@using Bookennis.Shared.Controller.Families
+@using Bookennis.Shared.Controller.PlayRequests
+
+@implements IDisposable
+
+@* The personal, reusable lists of players: only their owner sees them. *@
+<MudDialog>
+    <DialogContent>
+        @if (editing)
+        {
+            <div class="groups-dialog">
+                <MudTextField @bind-Value="name" Variant="Variant.Outlined" Label="@L["Groups_Name"]" MaxLength="60" Immediate="true" />
+                <div>
+                    <div class="groups-dialog__label">@L["Groups_Members"] <span class="groups-dialog__count">@string.Format(L["Invitees_Count"], memberIds.Count)</span></div>
+                    <MemberPickList Items="@candidateItems" Values="@memberIds" ValuesChanged="values => memberIds = values" Multi="true" Label="@L["Groups_Members"]" />
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="groups-dialog">
+                <div class="groups-dialog__hint">@L["Groups_Hint"]</div>
+
+                @if (Store.Groups.Count == 0)
+                {
+                    <div class="groups-dialog__empty">@L["Groups_Empty"]</div>
+                }
+
+                @foreach (var group in Store.Groups)
+                {
+                    <div class="groups-dialog__group">
+                        <div class="groups-dialog__text">
+                            <div class="groups-dialog__name">@group.Name</div>
+                            <div class="groups-dialog__members">
+                                @string.Format(L["Groups_Players"], group.Members.Count) · @string.Join(", ", group.Members.Select(m => $"{m.FirstName} {m.LastName}"))
+                            </div>
+                        </div>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@L["Groups_Edit"]" OnClick="() => Edit(group)" Disabled="@Store.IsSaving" />
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small" Color="Color.Error" aria-label="@L["Groups_Delete"]"
+                                       OnClick="() => Delete(group)" Disabled="@Store.IsSaving" />
+                    </div>
+                }
+
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="New" Class="groups-dialog__new">@L["Groups_New"]</MudButton>
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (editing)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save" Disabled="@(!CanSave)">@L["Groups_Save"]</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="Back" Disabled="@Store.IsSaving">@L["Groups_Back"]</MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="() => MudDialog.Close()">@L["Groups_Close"]</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Inject] private IPlayRequestsStore Store { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<PlayRequestsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private bool editing;
+    private int? editedGroupId;
+    private string? name;
+    private IReadOnlyCollection<int> memberIds = [];
+    private List<FamilyMemberDto> candidateItems = [];
+
+    private bool CanSave => !Store.IsSaving && !string.IsNullOrWhiteSpace(name) && memberIds.Count > 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnGroupsChanged += OnChanged;
+        await Task.WhenAll(Store.LoadGroups(), Store.LoadCandidates());
+        candidateItems = Store.Candidates.ConvertAll(c => new FamilyMemberDto { MemberId = c.MemberId, FirstName = c.FirstName, LastName = c.LastName });
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private void New()
+    {
+        editedGroupId = null;
+        name = null;
+        memberIds = [];
+        editing = true;
+    }
+
+    private void Edit(PlayerGroupDto group)
+    {
+        editedGroupId = group.Id;
+        name = group.Name;
+        // Players who are not active any more can't be asked: they are not offered, so saving drops them
+        memberIds = group.Members.Select(m => m.MemberId).Where(id => candidateItems.Any(c => c.MemberId == id)).ToList();
+        editing = true;
+    }
+
+    private void Back() => editing = false;
+
+    private async Task Save()
+    {
+        var model = new SavePlayerGroupModel { Name = name!.Trim(), MemberIds = memberIds.ToList() };
+        var result = editedGroupId is { } id ? await Store.UpdateGroup(id, model) : await Store.CreateGroup(model);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(L["Groups_Saved"], Severity.Success);
+        await Store.LoadGroups();
+        editing = false;
+    }
+
+    private async Task Delete(PlayerGroupDto group)
+    {
+        var confirmed = await DialogService.ShowMessageBox(L["Groups_DeleteTitle"], string.Format(L["Groups_DeleteText"], group.Name),
+            yesText: L["Groups_Delete"], cancelText: L["Groups_Back"]);
+        if (confirmed != true)
+            return;
+
+        var result = await Store.DeleteGroup(group.Id);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(L["Groups_Deleted"], Severity.Success);
+        await Store.LoadGroups();
+    }
+
+    public void Dispose() => Store.OnGroupsChanged -= OnChanged;
+}

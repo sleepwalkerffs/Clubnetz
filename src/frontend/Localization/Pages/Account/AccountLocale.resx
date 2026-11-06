@@ -672,6 +672,12 @@
   <data name="Notif_Hint_BadgeAwarded" xml:space="preserve">
     <value>You or your child earned a badge.</value>
   </data>
+  <data name="Notif_Type_PlayRequest" xml:space="preserve">
+    <value>Looking for players</value>
+  </data>
+  <data name="Notif_Hint_PlayRequest" xml:space="preserve">
+    <value>A member asks you to play. Push only, you also see it in the app.</value>
+  </data>
   <data name="GuestLinkReplaced_Title" xml:space="preserve">
     <value>Guest links were replaced</value>
   </data>

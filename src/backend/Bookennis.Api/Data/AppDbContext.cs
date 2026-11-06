@@ -4,6 +4,7 @@ using Bookennis.Domain.Bookings;
 using Bookennis.Domain.ClubAnnouncements;
 using Bookennis.Domain.Clubhouse;
 using Bookennis.Domain.ClubEvents;
+using Bookennis.Domain.PlayRequests;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Clubs.ApiKeys;
 using Bookennis.Domain.Clubs.EmailTemplates;
@@ -88,6 +89,10 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<ClubhouseTabLine> ClubhouseTabLines => Set<ClubhouseTabLine>();
     public DbSet<ClubhouseTabPayment> ClubhouseTabPayments => Set<ClubhouseTabPayment>();
     public DbSet<ClubhouseSumUpAccount> ClubhouseSumUpAccounts => Set<ClubhouseSumUpAccount>();
+    public DbSet<PlayRequest> PlayRequests => Set<PlayRequest>();
+    public DbSet<PlayRequestInvitee> PlayRequestInvitees => Set<PlayRequestInvitee>();
+    public DbSet<PlayerGroup> PlayerGroups => Set<PlayerGroup>();
+    public DbSet<PlayerGroupMember> PlayerGroupMembers => Set<PlayerGroupMember>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

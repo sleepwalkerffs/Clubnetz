@@ -1,0 +1,36 @@
+.play-requests-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.play-requests-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.play-requests-toolbar ::deep .mud-button-root {
+    text-transform: none;
+    font-weight: 700;
+}
+
+.play-requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.play-requests-empty {
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: var(--mud-palette-text-secondary);
+    border: 2px dashed var(--mud-palette-lines-inputs);
+}
+
+@media (max-width: 599px) {
+    .play-requests-toolbar ::deep .mud-button-root {
+        flex: 1 1 auto;
+    }
+}

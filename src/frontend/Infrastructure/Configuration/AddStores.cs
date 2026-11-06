@@ -11,6 +11,7 @@ using Bookennis.Client.Services.Store.Family;
 using Bookennis.Client.Services.Store.Clubhouse;
 using Bookennis.Client.Services.Store.CourtSales;
 using Bookennis.Client.Services.Store.Members;
+using Bookennis.Client.Services.Store.PlayRequests;
 using Bookennis.Client.Services.Store.Profile;
 using Bookennis.Client.Services.Store.Notifications;
 using Bookennis.Client.Services.Store.Legal;
@@ -46,6 +47,7 @@ public static class AddStores
         builder.Services.AddSingleton<IBadgesStore, BadgesStore>();
         builder.Services.AddSingleton<ISubscriptionPlansStore, SubscriptionPlansStore>();
         builder.Services.AddSingleton<IClubEventsStore, ClubEventsStore>();
+        builder.Services.AddSingleton<IPlayRequestsStore, PlayRequestsStore>();
         builder.Services.AddSingleton<ICourtBlockingsStore, CourtBlockingsStore>();
         builder.Services.AddSingleton<IClubAnnouncementsStore, ClubAnnouncementsStore>();
         builder.Services.AddSingleton<IClubEmailTemplatesStore, ClubEmailTemplatesStore>();

@@ -252,6 +252,9 @@
   <data name="CourtSales" xml:space="preserve">
     <value>Court sales</value>
   </data>
+  <data name="PlayRequests" xml:space="preserve">
+    <value>Looking for players</value>
+  </data>
   <data name="Section_Clubhouse" xml:space="preserve">
     <value>Clubhouse</value>
   </data>

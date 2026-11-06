@@ -13,5 +13,8 @@ public enum NotificationType
     ClubEventReminder = 4,
     ClubEventRegistrationDeadline = 5,
     ClubAnnouncement = 6,
-    BadgeAwarded = 7
+    BadgeAwarded = 7,
+
+    /// <summary>Somebody looks for players (push only, there is no email for it).</summary>
+    PlayRequest = 8
 }

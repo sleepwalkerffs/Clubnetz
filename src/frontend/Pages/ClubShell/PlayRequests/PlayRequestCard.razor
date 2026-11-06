@@ -1,0 +1,187 @@
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Utils
+@using Bookennis.Client.Localization.Pages.PlayRequests
+@using Bookennis.Client.Services.Store.PlayRequests
+@using Bookennis.Shared.Controller.PlayRequests
+
+@* One request: who asks, when, where, who is in. The caller answers it, or - when it is theirs - sees the answers and can withdraw it. *@
+<div class="request-card @(IsClosed ? "request-card--closed" : null) @(Request.IsMine ? "request-card--mine" : null)">
+    <div class="request-card__head">
+        <div class="request-card__date">
+            <span class="request-card__day">@PlayRequestHelpers.Day(Request)</span>
+            <span class="request-card__time">@PlayRequestHelpers.Times(Request)</span>
+        </div>
+        <div class="request-card__title">
+            <div class="request-card__who">
+                @(Request.IsMine
+                    ? L["Card_YourRequest"]
+                    : string.Format(L["Card_AskedBy"], PlayRequestHelpers.FullName(Request.RequesterFirstName, Request.RequesterLastName)))
+            </div>
+            <div class="request-card__meta">
+                🎾 @Request.PlayModeName
+                @if (Request.Courts.Count > 0)
+                {
+                    <span> · @string.Format(L["Card_Courts"], string.Join(", ", Request.Courts.Select(c => c.Name)))</span>
+                }
+            </div>
+        </div>
+        <MudChip T="string" Size="Size.Small" Color="@StateColor" Variant="Variant.Outlined" Class="request-card__state">@L[$"State_{Request.State}"]</MudChip>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Request.Comment))
+    {
+        <div class="request-card__comment">“@Request.Comment”</div>
+    }
+
+    <div class="request-card__progress">
+        <MudProgressLinear Value="@PlayRequestHelpers.Joined(Request)" Max="@Request.PlayersNeeded" Color="@(Request.State == PlayRequestState.Filled ? Color.Success : Color.Primary)" Size="Size.Small" Rounded="true" />
+        <span>@string.Format(L["Card_Players"], PlayRequestHelpers.Joined(Request), Request.PlayersNeeded)</span>
+    </div>
+
+    @if (Request.IsMine)
+    {
+        @if (Request.Invitees.Count > 0)
+        {
+            <div class="request-card__chips" aria-label="@L["Card_Asked"]">
+                @foreach (var invitee in Request.Invitees)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@AnswerColor(invitee.Answer)"
+                             Class="@(invitee.Answer == PlayRequestAnswer.Declined ? "request-card__chip--declined" : null)">
+                        @PlayRequestHelpers.FullName(invitee.FirstName, invitee.LastName) · @L[$"Answer_{invitee.Answer}"]
+                    </MudChip>
+                }
+            </div>
+        }
+    }
+    else if (Request.Invitees.Count > 0)
+    {
+        <div class="request-card__meta">@string.Format(L["Card_Playing"], string.Join(", ", Request.Invitees.Select(i => PlayRequestHelpers.FullName(i.FirstName, i.LastName)).Prepend(PlayRequestHelpers.FullName(Request.RequesterFirstName, Request.RequesterLastName))))</div>
+    }
+
+    @if (Request.State == PlayRequestState.Open && Request.ExpiresAt < Request.StartsAt)
+    {
+        <div class="request-card__meta">⏳ @string.Format(L["Card_ExpiresAt"], PlayRequestHelpers.DayAndTime(Request.ExpiresAt, Request.TimeZoneInfoId))</div>
+    }
+
+    @if (!Request.IsMine && Request.State == PlayRequestState.Open)
+    {
+        @if (Request.MyAnswer == PlayRequestAnswer.Accepted)
+        {
+            <div class="request-card__note">✅ @L["Mine_Accepted"]</div>
+        }
+        else if (Request.MyAnswer == PlayRequestAnswer.Declined)
+        {
+            <div class="request-card__note">@L["Mine_Declined"]</div>
+        }
+    }
+
+    <div class="request-card__actions">
+        @if (Request.State == PlayRequestState.Open && !Request.IsMine)
+        {
+            @if (Request.MyAnswer != PlayRequestAnswer.Accepted)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Check" Disabled="@Store.IsSaving" OnClick="Accept">
+                    @L[Request.MyAnswer == PlayRequestAnswer.Declined ? "Btn_AcceptAgain" : "Btn_Accept"]
+                </MudButton>
+            }
+
+            @if (Request.MyAnswer == PlayRequestAnswer.Invited)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Disabled="@Store.IsSaving" OnClick="Decline">@L["Btn_Decline"]</MudButton>
+            }
+            else if (Request.MyAnswer == PlayRequestAnswer.Accepted)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Disabled="@Store.IsSaving" OnClick="Decline">@L["Btn_TakeBack"]</MudButton>
+            }
+        }
+
+        @if (Request.State == PlayRequestState.Open && Request.IsMine)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="@Store.IsSaving" OnClick="Cancel">@L["Btn_Cancel"]</MudButton>
+        }
+
+        @if (Request.State == PlayRequestState.Filled && Request.BookingId is { } bookingId)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.EventAvailable" Href="@($"/clubs/{ClubId}/booking/{bookingId}")">
+                @L["Btn_ShowBooking"]
+            </MudButton>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public PlayRequestDto Request { get; set; } = null!;
+    [Parameter, EditorRequired] public int ClubId { get; set; }
+
+    /// <summary>Called after an answer or a withdrawal was saved, so the page loads the requests again.</summary>
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    [Inject] private IPlayRequestsStore Store { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<PlayRequestsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private bool IsClosed => Request.State != PlayRequestState.Open && Request.State != PlayRequestState.Filled;
+
+    private Color StateColor => Request.State switch
+    {
+        PlayRequestState.Open => Color.Primary,
+        PlayRequestState.Filled => Color.Success,
+        _ => Color.Default,
+    };
+
+    private static Color AnswerColor(PlayRequestAnswer answer) => answer switch
+    {
+        PlayRequestAnswer.Accepted => Color.Success,
+        PlayRequestAnswer.Declined => Color.Default,
+        _ => Color.Primary,
+    };
+
+    private async Task Accept()
+    {
+        var result = await Store.Accept(Request.Id);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            // The request may have been filled or withdrawn in the meantime
+            await OnChanged.InvokeAsync();
+            return;
+        }
+
+        Snackbar.Add(L[result.Dto.IsFilled ? "Accepted_Booked" : "Accepted_Waiting"], Severity.Success);
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task Decline()
+    {
+        var result = await Store.Decline(Request.Id);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            await OnChanged.InvokeAsync();
+            return;
+        }
+
+        Snackbar.Add(L["Declined_Done"], Severity.Info);
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task Cancel()
+    {
+        var confirmed = await DialogService.ShowMessageBox(L["Cancel_Title"], L["Cancel_Text"], yesText: L["Cancel_Yes"], cancelText: L["Cancel_No"]);
+        if (confirmed != true)
+            return;
+
+        var result = await Store.Cancel(Request.Id);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            await OnChanged.InvokeAsync();
+            return;
+        }
+
+        Snackbar.Add(L["Cancelled_Done"], Severity.Success);
+        await OnChanged.InvokeAsync();
+    }
+}

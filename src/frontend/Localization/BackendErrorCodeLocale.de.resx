@@ -759,4 +759,64 @@
   <data name="Error_Unexpected" xml:space="preserve">
     <value>Etwas ist schiefgelaufen. Bitte versuche es noch einmal.</value>
   </data>
+  <data name="PlayRequestNoCourts" xml:space="preserve">
+    <value>Wähle mindestens einen Platz.</value>
+  </data>
+  <data name="PlayRequestInvalidStart" xml:space="preserve">
+    <value>Die Anfrage muss in der Zukunft beginnen.</value>
+  </data>
+  <data name="PlayRequestInvalidExpiry" xml:space="preserve">
+    <value>Die Anfrage muss in der Zukunft enden, aber nicht nach der Startzeit.</value>
+  </data>
+  <data name="PlayRequestNoInvitees" xml:space="preserve">
+    <value>Frage mindestens so viele Spieler, wie noch fehlen.</value>
+  </data>
+  <data name="PlayRequestTooManyInvitees" xml:space="preserve">
+    <value>Du hast zu viele Spieler gefragt.</value>
+  </data>
+  <data name="PlayRequestInvalidPlayerCount" xml:space="preserve">
+    <value>Eine Anfrage braucht zwischen 2 und 8 Spieler.</value>
+  </data>
+  <data name="PlayRequestCommentTooLong" xml:space="preserve">
+    <value>Der Kommentar ist zu lang.</value>
+  </data>
+  <data name="PlayRequestNotOpen" xml:space="preserve">
+    <value>Diese Anfrage ist nicht mehr offen.</value>
+  </data>
+  <data name="PlayRequestExpired" xml:space="preserve">
+    <value>Diese Anfrage ist abgelaufen.</value>
+  </data>
+  <data name="PlayRequestNotInvited" xml:space="preserve">
+    <value>Du wurdest nicht zum Spielen gefragt.</value>
+  </data>
+  <data name="PlayRequestAlreadyAccepted" xml:space="preserve">
+    <value>Du hast diese Anfrage schon angenommen.</value>
+  </data>
+  <data name="PlayRequestNotRequester" xml:space="preserve">
+    <value>Nur wer die Anfrage gestellt hat, kann sie zurückziehen.</value>
+  </data>
+  <data name="PlayRequestOwnRequest" xml:space="preserve">
+    <value>Du kannst deine eigene Anfrage nicht beantworten.</value>
+  </data>
+  <data name="PlayRequestMemberNotActive" xml:space="preserve">
+    <value>Nur aktive Mitglieder des Vereins können zusammen spielen.</value>
+  </data>
+  <data name="PlayRequestPlayModeNotAllowed" xml:space="preserve">
+    <value>Du darfst diesen Spielmodus nicht buchen.</value>
+  </data>
+  <data name="PlayerGroupNameRequired" xml:space="preserve">
+    <value>Eine Gruppe braucht einen Namen.</value>
+  </data>
+  <data name="PlayerGroupNameTooLong" xml:space="preserve">
+    <value>Der Name der Gruppe ist zu lang.</value>
+  </data>
+  <data name="PlayerGroupTooManyMembers" xml:space="preserve">
+    <value>Es sind zu viele Spieler in der Gruppe.</value>
+  </data>
+  <data name="PlayerGroupTooMany" xml:space="preserve">
+    <value>Du hast zu viele Gruppen. Lösche zuerst eine.</value>
+  </data>
+  <data name="PlayerGroupEmpty" xml:space="preserve">
+    <value>Eine Gruppe braucht mindestens einen Spieler.</value>
+  </data>
 </root>

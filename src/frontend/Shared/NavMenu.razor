@@ -124,6 +124,8 @@
             clubItems.Add(new($"{club}/news", Icons.Material.Filled.Campaign, Locale["News"]));
             clubItems.Add(new($"{club}/calendar", Icons.Material.Filled.CalendarMonth, Locale["Calendar"]));
             if (isActive && !isSupport)
+                clubItems.Add(new($"{club}/play-requests", Icons.Material.Filled.PersonSearch, Locale["PlayRequests"]));
+            if (isActive && !isSupport)
                 clubItems.Add(new($"{club}/leaderboard", Icons.Material.Filled.EmojiEvents, Locale["Leaderboard"]));
             yield return new(null, clubItems);
 

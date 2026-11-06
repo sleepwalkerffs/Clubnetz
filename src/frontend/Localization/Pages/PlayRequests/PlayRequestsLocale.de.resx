@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Page_Title" xml:space="preserve"><value>Spielersuche</value></data>
+  <data name="Page_Subtitle" xml:space="preserve"><value>Frag deine Leute, ob sie spielen wollen. Wer zusagt, bucht den Platz - es gelten alle Buchungsregeln, und bis dahin wird nichts blockiert.</value></data>
+  <data name="Hero_Asked" xml:space="preserve"><value>Warten auf dich: {0}</value></data>
+  <data name="Hero_Mine" xml:space="preserve"><value>Deine offenen Anfragen: {0}</value></data>
+  <data name="Btn_New" xml:space="preserve"><value>Neue Anfrage</value></data>
+  <data name="Btn_Groups" xml:space="preserve"><value>Meine Gruppen</value></data>
+  <data name="Section_ForMe" xml:space="preserve"><value>An mich</value></data>
+  <data name="Section_ForMe_Hint" xml:space="preserve"><value>Mitglieder, die mit dir spielen möchten</value></data>
+  <data name="Section_Mine" xml:space="preserve"><value>Meine Anfragen</value></data>
+  <data name="Section_Mine_Hint" xml:space="preserve"><value>Nur du und die Gefragten sehen sie</value></data>
+  <data name="Empty_ForMe" xml:space="preserve"><value>Gerade sucht niemand dich.</value></data>
+  <data name="Empty_Mine" xml:space="preserve"><value>Du hast keine Anfragen. Frag deine Leute, ob sie spielen wollen!</value></data>
+  <data name="Card_AskedBy" xml:space="preserve"><value>{0} sucht Mitspieler</value></data>
+  <data name="Card_YourRequest" xml:space="preserve"><value>Deine Anfrage</value></data>
+  <data name="Card_Players" xml:space="preserve"><value>{0} von {1} Spielern</value></data>
+  <data name="Card_Courts" xml:space="preserve"><value>Plätze: {0}</value></data>
+  <data name="Card_ExpiresAt" xml:space="preserve"><value>Offen bis {0}</value></data>
+  <data name="Card_Playing" xml:space="preserve"><value>Dabei: {0}</value></data>
+  <data name="Card_Asked" xml:space="preserve"><value>Gefragt</value></data>
+  <data name="State_Open" xml:space="preserve"><value>Offen</value></data>
+  <data name="State_Filled" xml:space="preserve"><value>Platz gebucht</value></data>
+  <data name="State_Cancelled" xml:space="preserve"><value>Zurückgezogen</value></data>
+  <data name="State_Expired" xml:space="preserve"><value>Abgelaufen</value></data>
+  <data name="Answer_Invited" xml:space="preserve"><value>Offen</value></data>
+  <data name="Answer_Accepted" xml:space="preserve"><value>Dabei</value></data>
+  <data name="Answer_Declined" xml:space="preserve"><value>Nicht dabei</value></data>
+  <data name="Mine_Accepted" xml:space="preserve"><value>Du hast zugesagt. Der Platz wird gebucht, sobald alle dabei sind.</value></data>
+  <data name="Mine_Declined" xml:space="preserve"><value>Du hast abgesagt.</value></data>
+  <data name="Btn_Accept" xml:space="preserve"><value>Ich bin dabei</value></data>
+  <data name="Btn_AcceptAgain" xml:space="preserve"><value>Doch dabei</value></data>
+  <data name="Btn_Decline" xml:space="preserve"><value>Nein danke</value></data>
+  <data name="Btn_TakeBack" xml:space="preserve"><value>Ich kann doch nicht</value></data>
+  <data name="Btn_Cancel" xml:space="preserve"><value>Anfrage zurückziehen</value></data>
+  <data name="Btn_ShowBooking" xml:space="preserve"><value>Buchung ansehen</value></data>
+  <data name="Accepted_Booked" xml:space="preserve"><value>Du bist dabei! Der Platz ist gebucht.</value></data>
+  <data name="Accepted_Waiting" xml:space="preserve"><value>Du bist dabei. Der Platz wird gebucht, sobald alle zugesagt haben.</value></data>
+  <data name="Declined_Done" xml:space="preserve"><value>Antwort gespeichert.</value></data>
+  <data name="Cancelled_Done" xml:space="preserve"><value>Anfrage zurückgezogen. Die Gefragten werden informiert.</value></data>
+  <data name="Cancel_Title" xml:space="preserve"><value>Anfrage zurückziehen?</value></data>
+  <data name="Cancel_Text" xml:space="preserve"><value>Die Gefragten erfahren, dass nichts daraus wird.</value></data>
+  <data name="Cancel_Yes" xml:space="preserve"><value>Zurückziehen</value></data>
+  <data name="Cancel_No" xml:space="preserve"><value>Behalten</value></data>
+  <data name="Create_Title" xml:space="preserve"><value>Neue Anfrage</value></data>
+  <data name="Create_Submit" xml:space="preserve"><value>Anfrage senden</value></data>
+  <data name="Create_Done" xml:space="preserve"><value>Anfrage gesendet.</value></data>
+  <data name="Create_NoPlayMode" xml:space="preserve"><value>Es gibt keinen Spielmodus, den du buchen darfst.</value></data>
+  <data name="Field_Date" xml:space="preserve"><value>Tag</value></data>
+  <data name="Field_Time" xml:space="preserve"><value>Beginn</value></data>
+  <data name="Field_PlayMode" xml:space="preserve"><value>Spielmodus</value></data>
+  <data name="Field_Duration" xml:space="preserve"><value>Dauer</value></data>
+  <data name="Field_Courts" xml:space="preserve"><value>Plätze</value></data>
+  <data name="Field_Courts_Hint" xml:space="preserve"><value>Gebucht wird der erste freie Platz davon.</value></data>
+  <data name="Field_Players" xml:space="preserve"><value>Spieler insgesamt</value></data>
+  <data name="Players_Singles" xml:space="preserve"><value>2 (Einzel)</value></data>
+  <data name="Players_Doubles" xml:space="preserve"><value>4 (Doppel)</value></data>
+  <data name="Group_Label" xml:space="preserve"><value>Mit einer Gruppe beginnen</value></data>
+  <data name="Group_Hint" xml:space="preserve"><value>Änderungen gelten nur für diese Anfrage, nicht für die gespeicherte Gruppe.</value></data>
+  <data name="Invitees_Label" xml:space="preserve"><value>Wer zusagen darf</value></data>
+  <data name="Invitees_Count" xml:space="preserve"><value>{0} ausgewählt</value></data>
+  <data name="Invitees_Hint" xml:space="preserve"><value>Nur aktive Mitglieder können gefragt werden. Wer zuerst zusagt, spielt.</value></data>
+  <data name="Field_Comment" xml:space="preserve"><value>Nachricht (optional)</value></data>
+  <data name="Expire_Switch" xml:space="preserve"><value>Anfrage früher schließen</value></data>
+  <data name="Expire_Hint" xml:space="preserve"><value>Ohne Angabe bleibt die Anfrage bis zum Spielbeginn offen.</value></data>
+  <data name="Expire_Date" xml:space="preserve"><value>Schließt am</value></data>
+  <data name="Expire_Time" xml:space="preserve"><value>Schließt um</value></data>
+  <data name="SaveGroup_Switch" xml:space="preserve"><value>Diese Spieler als neue Gruppe speichern</value></data>
+  <data name="SaveGroup_Name" xml:space="preserve"><value>Gruppenname</value></data>
+  <data name="Err_Past" xml:space="preserve"><value>Der Beginn muss in der Zukunft liegen.</value></data>
+  <data name="Err_Expiry" xml:space="preserve"><value>Die Anfrage muss in der Zukunft und vor dem Beginn schließen.</value></data>
+  <data name="Summary_Line" xml:space="preserve"><value>{0} · {1} · {2}</value></data>
+  <data name="Groups_Title" xml:space="preserve"><value>Meine Gruppen</value></data>
+  <data name="Groups_Hint" xml:space="preserve"><value>Gruppen sieht nur du. Wähle eine bei der Spielersuche und passe sie für die Anfrage an.</value></data>
+  <data name="Groups_Empty" xml:space="preserve"><value>Noch keine Gruppen.</value></data>
+  <data name="Groups_Players" xml:space="preserve"><value>{0} Spieler</value></data>
+  <data name="Groups_New" xml:space="preserve"><value>Neue Gruppe</value></data>
+  <data name="Groups_Edit" xml:space="preserve"><value>Bearbeiten</value></data>
+  <data name="Groups_Delete" xml:space="preserve"><value>Löschen</value></data>
+  <data name="Groups_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Groups_Members" xml:space="preserve"><value>Spieler</value></data>
+  <data name="Groups_Save" xml:space="preserve"><value>Speichern</value></data>
+  <data name="Groups_Saved" xml:space="preserve"><value>Gruppe gespeichert.</value></data>
+  <data name="Groups_Deleted" xml:space="preserve"><value>Gruppe gelöscht.</value></data>
+  <data name="Groups_DeleteTitle" xml:space="preserve"><value>Gruppe löschen?</value></data>
+  <data name="Groups_DeleteText" xml:space="preserve"><value>Die Gruppe „{0}“ wird gelöscht. Bereits gesendete Anfragen bleiben unverändert.</value></data>
+  <data name="Groups_Back" xml:space="preserve"><value>Zurück</value></data>
+  <data name="Groups_Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="Card_Title" xml:space="preserve"><value>Spielersuche</value></data>
+  <data name="Card_ForMe" xml:space="preserve"><value>Warten auf deine Antwort: {0}</value></data>
+  <data name="Card_Mine" xml:space="preserve"><value>Deine offenen Anfragen: {0}</value></data>
+  <data name="Card_Next" xml:space="preserve"><value>Als Nächstes: {0} · {1}</value></data>
+  <data name="Card_Open" xml:space="preserve"><value>Ansehen</value></data>
+</root>
