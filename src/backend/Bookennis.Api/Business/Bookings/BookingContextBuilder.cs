@@ -133,7 +133,6 @@ internal sealed class BookingContextBuilder
     public async Task<BookingDomainService.Context> BuildContext(
         int courtId,
         DateTimeOffsetInterval interval,
-        int? clientTimeZoneOffset,
         IReadOnlyCollection<DateTimeOffsetInterval> pendingBookings,
         CancellationToken cancellationToken)
     {
@@ -181,7 +180,6 @@ internal sealed class BookingContextBuilder
             }),
             IntersectingBookings = intersectingBookings,
             PlayMode = PlayMode,
-            ClientTimeZoneOffset = clientTimeZoneOffset,
             BookingGracePeriodInMinutes = Club.BookingGracePeriodInMinutes,
             ActiveSeasonId = ActiveSeason?.Id,
             CourtBlockingTitles = courtBlockingTitles,

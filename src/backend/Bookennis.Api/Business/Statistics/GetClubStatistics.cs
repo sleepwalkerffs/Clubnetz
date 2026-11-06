@@ -103,12 +103,8 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
             // Play modes that count as match (booking subscription, badges, leaderboard)
             var matchPlayModeIds = club.PlayModes.Where(pm => pm.IsChargingBookingSubscription).Select(pm => pm.Id).ToHashSet();
 
-            // Opening hours and prime time are stored in UTC, bookings are evaluated in local time
-            int LocalHour(TimeOnly utcTime, bool isEnd)
-            {
-                var hour = localTime.ToLocal(new DateTimeOffset(today.ToDateTime(utcTime), TimeSpan.Zero), clubTimeZoneId).Hour;
-                return isEnd && hour == 0 ? 24 : hour;
-            }
+            // Opening hours and prime time are wall-clock times of the club, like the local times the bookings are evaluated in
+            static int LocalHour(TimeOnly localTime, bool isEnd) => isEnd && localTime.Hour == 0 ? 24 : localTime.Hour;
 
             var primeTime = club.PrimeTimeSettings;
             var calculator = new OccupancyCalculator(

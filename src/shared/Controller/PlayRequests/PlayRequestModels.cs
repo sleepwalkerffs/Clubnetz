@@ -84,8 +84,6 @@ public record CreatePlayRequestModel
 
     /// <summary>The request ends earlier than its start time.</summary>
     public DateTimeOffset? ExpiresAt { get; init; }
-
-    public int? ClientTimeZoneOffset { get; init; }
 }
 
 /// <summary>A member who can be asked: an active member of the club (name only).</summary>

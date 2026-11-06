@@ -16,7 +16,7 @@ public record CourtBlockingDto
     public required DateOnly StartDate { get; init; }
     public required DateOnly EndDate { get; init; }
 
-    /// <summary>Local start time of day; <c>null</c> for all day. See <see cref="SaveCourtBlockingModel"/> for why it is no <see cref="TimeOnly"/>.</summary>
+    /// <summary>Local start time of day; <c>null</c> for all day. See <see cref="SaveCourtBlockingModel"/>.</summary>
     public required TimeSpan? StartTime { get; init; }
 
     public required TimeSpan? EndTime { get; init; }

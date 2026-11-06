@@ -13,7 +13,6 @@ public record BookCourt(
     [Required] int PlayModeId,
     [Required] List<int> Players,
     string? Comment,
-    int? ClientTimeZoneOffset,
     int UserId
 ) : ICommand<BookCourtResult>
 {
@@ -35,7 +34,7 @@ public record BookCourt(
                 [request.Interval],
                 cancellationToken);
 
-            var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, request.ClientTimeZoneOffset, [], cancellationToken);
+            var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, [], cancellationToken);
 
             var booking = context.Add(bookingService.BookCourt(bookingContext, request.Interval, request.TimeZoneInfoId, request.Comment)).Entity;
             await context.SaveChangesAsync(cancellationToken);

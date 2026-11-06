@@ -154,7 +154,7 @@ public class EditRecurringBookingTests : TestBase
     }
 
     private EditRecurringBooking Command(int bookingId, DateTimeOffsetInterval interval, List<int> players, int userId, int courtId = TestDataSeed.Court1Id, RecurringEditScope scope = RecurringEditScope.Single)
-        => new(bookingId, courtId, interval, TimeZoneInfo.Utc.Id, TestPlayModeId, players, scope, null, null, null, null, userId);
+        => new(bookingId, courtId, interval, TimeZoneInfo.Utc.Id, TestPlayModeId, players, scope, null, null, null, userId);
 
     /// <summary>A weekly series from <see cref="Day"/> 10-11 with three occurrences.</summary>
     private Task<(Booking First, List<Booking> Later)> SeedSeries(List<int> players)

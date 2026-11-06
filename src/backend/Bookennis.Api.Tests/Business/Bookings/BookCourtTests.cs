@@ -60,7 +60,6 @@ public class BookCourtTests : TestBase
                                                    playMode.Id,
                                                    [member1.Id],
                                                    Comment: "newBooking",
-                                                   ClientTimeZoneOffset: null,
                                                    member1.UserId));
 
         // Assert
@@ -80,7 +79,6 @@ public class BookCourtTests : TestBase
             context.PlayMode.Id.Should().Be(playMode.Id);
             context.BookingMemberRole.Should().Contain(member1.UserRoles);
 
-            context.ClientTimeZoneOffset.Should().BeNull();
             context.Court.Id.Should().Be(court.Id);
             context.IntersectingBookings.Select(i => i.Id).Should().BeEquivalentTo(new List<int> { intersectingBooking.Id });
 
@@ -126,7 +124,7 @@ public class BookCourtTests : TestBase
         IReadOnlyList<string>? courtBlockingTitles = null;
         SetAndValidateBookingService(courtId, playModeId, bookingInterval, context => courtBlockingTitles = context.CourtBlockingTitles);
 
-        await SendAsync(new BookCourt(courtId, bookingInterval, TimeZoneInfo.Utc.Id, playModeId, [memberId], Comment: null, ClientTimeZoneOffset: null, userId));
+        await SendAsync(new BookCourt(courtId, bookingInterval, TimeZoneInfo.Utc.Id, playModeId, [memberId], Comment: null, userId));
 
         courtBlockingTitles.Should().Equal(CourtBlockingSeed.Title);
     }

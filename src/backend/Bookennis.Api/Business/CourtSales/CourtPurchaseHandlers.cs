@@ -185,7 +185,7 @@ public record GetCourtPurchaseQuote(int ClubId, int UserId, int CourtId, DateTim
 /// settings) is created right away so the slot is held, after the rules of every booking were checked. A credit or a free rule pays
 /// at once; otherwise the buyer is sent to a Stripe payment page that closes after 30 minutes, when the hold is released.
 /// </summary>
-public record StartCourtPurchase(int ClubId, int UserId, int CourtId, DateTimeOffsetInterval Interval, int? ClientTimeZoneOffset = null) : ICommand<StartCourtPurchaseResult>
+public record StartCourtPurchase(int ClubId, int UserId, int CourtId, DateTimeOffsetInterval Interval) : ICommand<StartCourtPurchaseResult>
 {
     /// <summary>Stripe closes a payment page 30 minutes after it was created at the earliest; one more minute for the time until Stripe gets the request.</summary>
     public static readonly TimeSpan HoldDuration = TimeSpan.FromMinutes(31);
@@ -242,7 +242,7 @@ public record StartCourtPurchase(int ClubId, int UserId, int CourtId, DateTimeOf
 
             // The rules of every booking: opening hours, court inactive or blocked, overlaps, grace period, prime time for bought slots
             var builder = await BookingContextBuilder.Load(context, settings.PlayModeId!.Value, [request.CourtId], [memberId], request.UserId, [interval], cancellationToken);
-            var bookingContext = await builder.BuildContext(request.CourtId, interval, request.ClientTimeZoneOffset, [], cancellationToken) with { IsPurchase = true };
+            var bookingContext = await builder.BuildContext(request.CourtId, interval, [], cancellationToken) with { IsPurchase = true };
             var booking = context.Bookings.Add(bookingService.BookCourt(bookingContext, interval, settings.TimeZoneId, null)).Entity;
 
             var purchase = new CourtPurchase(request.ClubId, memberId, request.CourtId, booking.Id, interval, price.Quote, price.CreditUsed, price.AmountDueCents);

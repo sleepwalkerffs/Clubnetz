@@ -33,7 +33,6 @@ internal static class PlayRequestBooking
         IReadOnlyList<int> courtIds,
         DateTimeOffsetInterval interval,
         string timeZoneInfoId,
-        int? clientTimeZoneOffset,
         int playersNeeded,
         bool validateAsIfFull,
         CancellationToken cancellationToken)
@@ -41,7 +40,7 @@ internal static class PlayRequestBooking
         PreconditionException? lastError = null;
         foreach (var courtId in courtIds)
         {
-            var context = await builder.BuildContext(courtId, interval, clientTimeZoneOffset, [], cancellationToken);
+            var context = await builder.BuildContext(courtId, interval, [], cancellationToken);
             if (validateAsIfFull && context.Participants.Count < playersNeeded)
                 context = context with { Participants = [.. context.Participants, .. Enumerable.Repeat(context.Participants[^1], playersNeeded - context.Participants.Count)] };
 

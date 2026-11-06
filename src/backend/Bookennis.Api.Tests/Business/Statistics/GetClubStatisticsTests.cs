@@ -325,7 +325,7 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
         var endDate = DateOnly.FromDateTime(from.DateTime).AddDays(21); // 4 weekly occurrences
 
         await SendAsync(new BookRecurringCourt(courtId, new DateTimeOffsetInterval(from, from.AddHours(1)), TimeZoneInfo.Utc.Id, playModeId,
-            [memberId], RecurrenceIntervalWeeks: 1, EndDate: endDate, Comment: null, ClientTimeZoneOffset: null, userId));
+            [memberId], RecurrenceIntervalWeeks: 1, EndDate: endDate, Comment: null, userId));
 
         var occurrenceCount = await QueryAsync(ctx => ctx.Bookings.CountAsync(b => b.RecurringBookingSeriesId != null));
         occurrenceCount.Should().Be(4);
@@ -698,7 +698,7 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
     private static DateTimeOffsetInterval OneHour(DateTimeOffset from) => new(from, from.AddHours(1));
 
     [Fact]
-    public async Task GetClubStatistics_OpeningHoursStoredInUtc_AreShownInLocalTimeOfTheClub()
+    public async Task GetClubStatistics_OpeningHours_AreWallClockTimesOfTheClub()
     {
         var clubId = Query(ctx => ctx.TestData().Club.Id);
         var court1Id = Query(ctx => ctx.TestData().Court1.Id);
@@ -717,14 +717,14 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
 
         var result = await SendAsync(new GetClubStatistics(clubId, new DateOnly(2025, 6, 2)));
 
-        // Opening hours 07-22 UTC and prime time 18-20 UTC are 09-24 and 20-22 in Vienna
-        result.OpeningHourFrom.Should().Be(9);
-        result.OpeningHourTo.Should().Be(24);
-        result.PrimeTime!.FromHour.Should().Be(20);
-        result.PrimeTime.ToHour.Should().Be(22);
+        // Opening hours 07-22 and prime time 18-20 are local times of the club, also in summer time
+        result.OpeningHourFrom.Should().Be(7);
+        result.OpeningHourTo.Should().Be(22);
+        result.PrimeTime!.FromHour.Should().Be(18);
+        result.PrimeTime.ToHour.Should().Be(20);
 
         var court1 = result.SeasonStatistics.Single().Occupancy.CourtHeatmaps.First(h => h.CourtName == "Court 1");
-        court1.Hours.First().Hour.Should().Be(9);
+        court1.Hours.First().Hour.Should().Be(7);
         court1.Hours.Single(h => h.Hour == 18).OccupancyPercentage.Should().Be(100.0);
     }
 

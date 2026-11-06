@@ -24,7 +24,6 @@ public record EditRecurringBooking(
     int? RecurrenceIntervalWeeks,
     DateOnly? EndDate,
     string? Comment,
-    int? ClientTimeZoneOffset,
     int UserId
 ) : ICommand
 {
@@ -69,7 +68,7 @@ public record EditRecurringBooking(
                 cancellationToken,
                 editedBookingId: booking.Id);
 
-            var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, request.ClientTimeZoneOffset, [], cancellationToken)
+            var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, [], cancellationToken)
                 with { SkipPastBookingValidation = hasElevatedRole };
 
             bookingService.EditBooking(bookingContext, booking, request.Interval, request.TimeZoneInfoId, request.Comment);
@@ -120,7 +119,7 @@ public record EditRecurringBooking(
                 cancellationToken,
                 editedBookingId: booking.Id);
 
-            var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, request.ClientTimeZoneOffset, [], cancellationToken)
+            var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, [], cancellationToken)
                 with { SkipPastBookingValidation = hasElevatedRole };
 
             bookingService.EditBooking(bookingContext, booking, request.Interval, request.TimeZoneInfoId, request.Comment);

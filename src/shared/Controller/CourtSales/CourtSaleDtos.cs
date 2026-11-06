@@ -127,7 +127,7 @@ public record UpdateCourtSaleSettingsModel
 
 /// <summary>
 /// A price per hour on some weekdays between two local times of <see cref="CourtSaleSettingsDto.TimeZoneId"/>.
-/// The times are <see cref="TimeSpan"/>s on purpose: the client converts <c>TimeOnly</c> to UTC, but these are local times.
+/// The times are <see cref="TimeSpan"/>s for historical reasons (the client once converted <c>TimeOnly</c> to UTC); they are local times.
 /// </summary>
 public record CourtPriceRuleDto
 {

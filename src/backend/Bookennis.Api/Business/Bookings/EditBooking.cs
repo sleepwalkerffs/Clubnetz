@@ -16,7 +16,6 @@ public record EditBooking(
     [Required] int PlayModeId,
     [Required] List<int> Players,
     string? Comment,
-    int? ClientTimeZoneOffset,
     int UserId
 ) : ICommand
 {
@@ -49,7 +48,7 @@ public record EditBooking(
                 cancellationToken,
                 editedBookingId: existingBooking.Id);
 
-            var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, request.ClientTimeZoneOffset, [], cancellationToken)
+            var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, [], cancellationToken)
                 with { SkipPastBookingValidation = hasElevatedRole };
 
             bookingService.EditBooking(bookingContext, existingBooking, request.Interval, request.TimeZoneInfoId, request.Comment);

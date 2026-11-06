@@ -31,8 +31,6 @@ namespace Bookennis.Client.Infrastructure.Configuration;
 
 public static class AddHttpClients
 {
-    private static void AddDefaultHeaders(this HttpClient client) => client.DefaultRequestHeaders.Add("X-Timezone-Offset", $"{TimeZoneInfo.Local.GetUtcOffset(DateTime.Now).Hours}");
-
     /// <summary>A client for a controller of the current club: <c>api/Clubs/{clubId}/{controller}/</c>.</summary>
     private static void AddClubHttpClient<TClient, TImplementation>(this IServiceCollection services, string controller)
         where TClient : class
@@ -42,7 +40,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/{controller}/");
                 }
             )
@@ -57,7 +54,6 @@ public static class AddHttpClients
             (serviceProvider, client) =>
             {
                 var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                client.AddDefaultHeaders();
                 client.BaseAddress = new Uri(apiUrl! + "Account/");
             }
         );
@@ -67,7 +63,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + "Profile/");
                 }
             )
@@ -78,7 +73,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl!);
                 }
             )
@@ -89,7 +83,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + "Push/");
                 }
             );
@@ -99,7 +92,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl!);
                 }
             );
@@ -109,7 +101,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/ClubProfile/");
                 }
             )
@@ -121,7 +112,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/Bookings/");
                 }
             )
@@ -133,7 +123,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/");
                 }
             )
@@ -145,7 +134,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/Members/");
                 }
             )
@@ -157,7 +145,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/Families/");
                 }
             )
@@ -169,7 +156,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + "Admin/");
                 }
             )
@@ -180,7 +166,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/Statistics/");
                 }
             )
@@ -192,7 +177,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/Wrapped/");
                 }
             )
@@ -204,7 +188,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/PlayRequests/");
                 }
             )
@@ -216,7 +199,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/PlayerGroups/");
                 }
             )
@@ -228,7 +210,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/ClubEvents/");
                 }
             )
@@ -240,7 +221,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/CourtBlockings/");
                 }
             )
@@ -259,7 +239,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/ClubApiKeys/");
                 }
             )
@@ -271,7 +250,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/ClubAnnouncements/");
                 }
             )
@@ -283,7 +261,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/SubscriptionPlans/");
                 }
             )
@@ -295,7 +272,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/ClubEmailTemplates/");
                 }
             )
@@ -307,7 +283,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/Leaderboards/");
                 }
             )
@@ -319,7 +294,6 @@ public static class AddHttpClients
                 (serviceProvider, client) =>
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
-                    client.AddDefaultHeaders();
                     client.BaseAddress = new Uri(apiUrl! + $"Clubs/{TenantDelegatingHandler.TenantPlaceholder}/");
                 }
             )
