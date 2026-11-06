@@ -1,0 +1,218 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+
+@* Which payments Clubnetz turns into entries: per source off, as suggestions to review, or booked right away; and the money accounts
+   the payments go to. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@Store.IsSaving" Title="@L["Automation_Title"]">
+    @if (!loaded)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <div class="automation-form">
+            <div class="automation-form__hint">@L["Automation_Hint"]</div>
+
+            @foreach (var source in sources)
+            {
+                var current = source;
+                var on = current.Mode != AccountingAutomationMode.Off;
+                <div class="automation-source @(on ? "automation-source--on" : null)">
+                    <div class="automation-source__head">
+                        <span class="automation-source__emoji" aria-hidden="true">@Emoji(current.Source)</span>
+                        <span class="automation-source__text">
+                            <span class="automation-source__title">@L[$"Source_{current.Source}"]</span>
+                            <span class="automation-source__desc">@L[$"SourceHint_{current.Source}"]</span>
+                        </span>
+                    </div>
+                    <MudToggleGroup T="AccountingAutomationMode" @bind-Value="current.Mode" Color="Color.Primary" Size="Size.Small" Dense="true" FixedContent="true" Class="automation-source__modes">
+                        @foreach (var mode in Enum.GetValues<AccountingAutomationMode>())
+                        {
+                            <MudToggleItem Value="@mode" Text="@L[$"Mode_{mode}"]" />
+                        }
+                    </MudToggleGroup>
+                    @if (on)
+                    {
+                        <div class="automation-source__fields">
+                            <MudSelect T="int?" @bind-Value="current.CategoryId" Label="@L[current.Source == AccountingSource.Stripe ? "Automation_FeeCategory" : "Category"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                                @foreach (var category in Categories(current.Source))
+                                {
+                                    <MudSelectItem T="int?" Value="@category.Id">@AccountingHelpers.CategoryName(category)</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudDatePicker Date="@current.Since" DateChanged="d => current.Since = d" Label="@L["Automation_Since"]" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                           HelperText="@L["Automation_SinceHint"]" />
+                        </div>
+                        @if (current.Mode == AccountingAutomationMode.Book)
+                        {
+                            <div class="automation-source__note">@L["Mode_BookHint"]</div>
+                        }
+                    }
+                </div>
+            }
+
+            <div class="automation-form__subtitle">@L["Automation_Accounts"]</div>
+            <div class="automation-form__accounts">
+                @if (stripeConnected || online is not null)
+                {
+                    <AccountSelect Label="@L["Automation_Online"]" Hint="@L["Automation_OnlineHint"]" Accounts="@Accounts()" @bind-Value="online" Required="@NeedsOnline" />
+                }
+                <AccountSelect Label="@L["Automation_Bank"]" Accounts="@Accounts()" @bind-Value="bank" Required="@NeedsBank" />
+                <AccountSelect Label="@L["Automation_Cash"]" Accounts="@Accounts()" @bind-Value="cash" Required="@NeedsCash" />
+                @if (IsOn(AccountingSource.Clubhouse) || card is not null)
+                {
+                    <AccountSelect Label="@L["Automation_Card"]" Hint="@L["Automation_CardHint"]" Accounts="@Accounts()" @bind-Value="card" Required="@IsOn(AccountingSource.Clubhouse)" />
+                }
+            </div>
+            @if (!stripeConnected && online is null)
+            {
+                <div class="automation-form__hint">@L["Automation_NoStripe"]</div>
+            }
+            @if (Missing is { } missing)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true">@missing</MudAlert>
+            }
+        </div>
+    }
+</BaseDialog>
+
+@code {
+    private sealed class SourceInput
+    {
+        public AccountingSource Source { get; init; }
+        public AccountingAutomationMode Mode { get; set; }
+        public DateTime? Since { get; set; }
+        public int? CategoryId { get; set; }
+    }
+
+    [Inject] private IAccountingStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private bool loaded;
+    private bool stripeConnected;
+    private List<SourceInput> sources = [];
+    private int? online;
+    private int? bank;
+    private int? cash;
+    private int? card;
+
+    private bool IsOn(AccountingSource source) => sources.Any(s => s.Source == source && s.Mode != AccountingAutomationMode.Off);
+    private bool NeedsOnline => IsOn(AccountingSource.CourtSales) || IsOn(AccountingSource.Stripe) || (stripeConnected && IsOn(AccountingSource.MembershipFees));
+    private bool NeedsBank => IsOn(AccountingSource.MembershipFees) || IsOn(AccountingSource.Stripe);
+    private bool NeedsCash => IsOn(AccountingSource.MembershipFees) || IsOn(AccountingSource.Clubhouse);
+
+    /// <summary>What is still missing for the sources that are on (the server says the same with an error).</summary>
+    private string? Missing
+    {
+        get
+        {
+            if (sources.Any(s => s.Mode != AccountingAutomationMode.Off && s.CategoryId is null))
+                return L["Automation_MissingCategory"];
+            if (NeedsOnline && online is null || NeedsBank && bank is null || NeedsCash && cash is null || IsOn(AccountingSource.Clubhouse) && card is null)
+                return L["Automation_MissingAccount"];
+            return null;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Store.LoadAutomation();
+        var automation = Store.Automation;
+        var basics = Store.Basics;
+        stripeConnected = automation?.StripeConnected == true;
+        online = automation?.OnlineMoneyAccountId ?? basics?.MoneyAccounts.FirstOrDefault(a => a.Kind == MoneyAccountKind.PaymentProvider && !a.IsArchived)?.Id;
+        bank = automation?.BankMoneyAccountId ?? basics?.MoneyAccounts.FirstOrDefault(a => a.Kind == MoneyAccountKind.Bank && !a.IsArchived)?.Id;
+        cash = automation?.CashMoneyAccountId ?? basics?.MoneyAccounts.FirstOrDefault(a => a.Kind == MoneyAccountKind.Cash && !a.IsArchived)?.Id;
+        card = automation?.CardMoneyAccountId;
+
+        sources = Enum.GetValues<AccountingSource>().Select(source =>
+        {
+            var setting = automation?.Sources.FirstOrDefault(s => s.Source == source);
+            return new SourceInput
+            {
+                Source = source,
+                Mode = setting?.Mode ?? AccountingAutomationMode.Off,
+                Since = (setting?.Since ?? DateOnly.FromDateTime(DateTime.Today)).ToDateTime(TimeOnly.MinValue),
+                CategoryId = setting?.CategoryId ?? DefaultCategory(source),
+            };
+        }).ToList();
+        loaded = true;
+    }
+
+    /// <summary>The category of the Austrian template that fits the source (the treasurer may pick another one).</summary>
+    private int? DefaultCategory(AccountingSource source)
+    {
+        var number = source switch
+        {
+            AccountingSource.MembershipFees => "4000",
+            AccountingSource.CourtSales => "4100",
+            AccountingSource.Clubhouse => "4300",
+            _ => "5710",
+        };
+        return Categories(source).FirstOrDefault(c => c.Number == number)?.Id;
+    }
+
+    private IEnumerable<AccountingCategoryDto> Categories(AccountingSource source)
+    {
+        var kind = source == AccountingSource.Stripe ? AccountingCategoryKind.Expense : AccountingCategoryKind.Income;
+        return (Store.Basics?.Categories ?? []).Where(c => c.Kind == kind && !c.IsArchived);
+    }
+
+    private List<MoneyAccountDto> Accounts() => (Store.Basics?.MoneyAccounts ?? []).Where(a => !a.IsArchived || a.Id == online || a.Id == bank || a.Id == cash || a.Id == card).ToList();
+
+    private static string Emoji(AccountingSource source) => source switch
+    {
+        AccountingSource.MembershipFees => "🎫",
+        AccountingSource.CourtSales => "🎾",
+        AccountingSource.Clubhouse => "🍺",
+        _ => "💳",
+    };
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (Missing is not null)
+            return null;
+
+        var result = await Store.SaveAutomation(new SaveAccountingAutomationModel
+        {
+            OnlineMoneyAccountId = online,
+            BankMoneyAccountId = bank,
+            CashMoneyAccountId = cash,
+            CardMoneyAccountId = card,
+            Sources = sources.Select(s => new AccountingSourceSettingDto
+            {
+                Source = s.Source,
+                Mode = s.Mode,
+                Since = s.Since is { } since ? DateOnly.FromDateTime(since) : null,
+                CategoryId = s.CategoryId,
+            }).ToList(),
+        });
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Saved"], Severity.Success);
+        if (sources.Any(s => s.Mode != AccountingAutomationMode.Off))
+            await Store.SyncProposals();
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

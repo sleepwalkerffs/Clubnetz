@@ -612,6 +612,123 @@
     }
 }
 
+/* ---------- reconcile: suggestions and bank lines ---------- */
+
+.acc-page ::deep .acc-recon-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+/* Named areas: the text block shares .acc-entry__main (grid-area: main on phones) with the list of entries */
+.acc-page ::deep .acc-recon {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    grid-template-areas: "icon main end";
+    align-items: center;
+    gap: 4px 12px;
+    padding: 10px 14px;
+}
+
+.acc-page ::deep .acc-recon + .acc-recon {
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.acc-page ::deep .acc-recon__icon {
+    grid-area: icon;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.acc-page ::deep .acc-recon .acc-entry__main {
+    grid-area: main;
+}
+
+.acc-page ::deep .acc-recon__end {
+    grid-area: end;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.acc-page ::deep .acc-recon__actions {
+    display: flex;
+    gap: 0;
+}
+
+.acc-page ::deep .acc-recon__reference {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 420px;
+}
+
+.acc-page ::deep .acc-recon__matches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.acc-page ::deep .acc-recon__matches .mud-chip {
+    margin: 0;
+    max-width: 100%;
+}
+
+.acc-page ::deep .acc-imports {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.acc-page ::deep .acc-import {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+}
+
+.acc-page ::deep .acc-import__name {
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.acc-page ::deep .acc-import__check {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+@media (max-width: 600px) {
+    .acc-page ::deep .acc-recon {
+        grid-template-columns: 24px minmax(0, 1fr);
+        grid-template-areas: "icon main" ". end";
+    }
+
+    .acc-page ::deep .acc-recon__end {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .acc-page ::deep .acc-recon__reference {
+        max-width: 100%;
+    }
+}
+
 /* ---------- printing: the annual report ---------- */
 
 @media print {

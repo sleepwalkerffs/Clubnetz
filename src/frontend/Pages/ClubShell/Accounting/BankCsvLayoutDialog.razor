@@ -1,0 +1,159 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Shared.Controller.Accounting
+
+@* The columns of a CSV export Clubnetz doesn't know yet (every bank exports its own): the treasurer says once which column holds the
+   date, the amount, the name and the text; Clubnetz keeps it for the money account. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@L["Csv_Import"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]" CanSubmit="@CanSubmit" Loading="false" Title="@L["Csv_Title"]">
+    <div class="csv-form">
+        <div class="csv-form__hint">@L["Csv_Hint"]</div>
+
+        <div class="csv-form__preview">
+            <table>
+                <tbody>
+                    @for (var r = 0; r < Preview.Count; r++)
+                    {
+                        var row = r;
+                        <tr class="@(row < skipRows ? "csv-form__skipped" : null)">
+                            <th>@(row + 1)</th>
+                            @for (var c = 0; c < Width; c++)
+                            {
+                                var column = c;
+                                <td class="@CellClass(column)">@(column < Preview[row].Count ? Preview[row][column] : "")</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <MudNumericField T="int" @bind-Value="skipRows" Label="@L["Csv_SkipRows"]" HelperText="@L["Csv_SkipRowsHint"]" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="@Preview.Count" />
+
+        <div class="csv-form__grid">
+            <ColumnSelect Label="@L["Csv_BookingDate"]" Names="@Names" @bind-Value="bookingDate" Required="true" />
+            <ColumnSelect Label="@L["Csv_ValueDate"]" Names="@Names" @bind-Value="valueDate" />
+            <MudSwitch T="bool" @bind-Value="splitAmount" Color="Color.Primary" Label="@L["Csv_SplitAmount"]" />
+            @if (splitAmount)
+            {
+                <ColumnSelect Label="@L["Csv_Credit"]" Names="@Names" @bind-Value="credit" />
+                <ColumnSelect Label="@L["Csv_Debit"]" Names="@Names" @bind-Value="debit" />
+            }
+            else
+            {
+                <ColumnSelect Label="@L["Csv_Amount"]" Names="@Names" @bind-Value="amount" Required="true" />
+                <ColumnSelect Label="@L["Csv_Marker"]" Hint="@L["Csv_MarkerHint"]" Names="@Names" @bind-Value="marker" />
+            }
+            <ColumnSelect Label="@L["Csv_Name"]" Names="@Names" @bind-Value="name" />
+            <ColumnSelect Label="@L["Csv_Iban"]" Names="@Names" @bind-Value="iban" />
+        </div>
+
+        <MudSelect T="int" Label="@L["Csv_Reference"]" HelperText="@L["Csv_ReferenceHint"]" MultiSelection="true" @bind-SelectedValues="references" Variant="Variant.Outlined" Margin="Margin.Dense"
+                   ToStringFunc="@(c => c >= 0 && c < Names.Count ? Names[c] : "")">
+            @for (var c = 0; c < Width; c++)
+            {
+                var column = c;
+                <MudSelectItem T="int" Value="@column">@Names[column]</MudSelectItem>
+            }
+        </MudSelect>
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter, EditorRequired] public List<List<string>> Preview { get; set; } = [];
+
+    /// <summary>What the server recognized: the mapping starts with it.</summary>
+    [Parameter] public CsvColumnsDto? Columns { get; set; }
+
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private int skipRows;
+    private int? bookingDate;
+    private int? valueDate;
+    private bool splitAmount;
+    private int? amount;
+    private int? debit;
+    private int? credit;
+    private int? marker;
+    private int? name;
+    private int? iban;
+    private IEnumerable<int> references = [];
+
+    private int Width => Preview.Count == 0 ? 0 : Preview.Max(r => r.Count);
+
+    /// <summary>"B · Betrag": the letter of the column and what the last skipped row (the header) says.</summary>
+    private List<string> Names => Enumerable.Range(0, Width).Select(c =>
+    {
+        var letter = c < 26 ? ((char)('A' + c)).ToString() : (c + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var header = skipRows > 0 && skipRows - 1 < Preview.Count && c < Preview[skipRows - 1].Count ? Preview[skipRows - 1][c] : "";
+        var sample = skipRows < Preview.Count && c < Preview[skipRows].Count ? Preview[skipRows][c] : "";
+        var text = header.Length > 0 ? header : sample;
+        return text.Length > 0 ? $"{letter} · {(text.Length > 30 ? text[..30] + "…" : text)}" : letter;
+    }).ToList();
+
+    private bool CanSubmit => bookingDate is not null && (splitAmount ? debit is not null || credit is not null : amount is not null);
+
+    protected override void OnInitialized()
+    {
+        if (Columns is { } columns)
+        {
+            skipRows = columns.SkipRows;
+            bookingDate = columns.SkipRows > 0 || columns.Amount is not null ? columns.BookingDate : null;
+            valueDate = columns.ValueDate;
+            amount = columns.Amount;
+            debit = columns.Debit;
+            credit = columns.Credit;
+            splitAmount = columns.Amount is null && (columns.Debit is not null || columns.Credit is not null);
+            marker = columns.DebitCreditMarker;
+            name = columns.CounterpartyName;
+            iban = columns.CounterpartyIban;
+            references = columns.Reference;
+        }
+
+        // Most exports have one header row
+        if (Columns?.SkipRows is null or 0 && Preview.Count > 1 && bookingDate is null)
+            skipRows = 1;
+    }
+
+    private string? CellClass(int column)
+    {
+        if (column == bookingDate)
+            return "csv-form__col csv-form__col--date";
+        if (column == amount || column == debit || column == credit)
+            return "csv-form__col csv-form__col--amount";
+        if (column == name || references.Contains(column))
+            return "csv-form__col csv-form__col--text";
+        return null;
+    }
+
+    private Task<DialogResult?> Submit()
+    {
+        if (!CanSubmit)
+            return Task.FromResult<DialogResult?>(null);
+
+        return Task.FromResult<DialogResult?>(DialogResult.Ok(new CsvColumnsDto
+        {
+            SkipRows = skipRows,
+            Delimiter = Columns?.Delimiter ?? ";",
+            BookingDate = bookingDate!.Value,
+            ValueDate = valueDate,
+            Amount = splitAmount ? null : amount,
+            Debit = splitAmount ? debit : null,
+            Credit = splitAmount ? credit : null,
+            DebitCreditMarker = splitAmount ? null : marker,
+            CounterpartyName = name,
+            CounterpartyIban = iban,
+            Reference = references.ToList(),
+        }));
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

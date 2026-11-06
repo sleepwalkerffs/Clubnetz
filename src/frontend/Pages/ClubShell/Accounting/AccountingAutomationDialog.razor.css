@@ -1,0 +1,77 @@
+.automation-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.automation-form__hint {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.automation-form__subtitle {
+    margin-top: 4px;
+    font-weight: 800;
+}
+
+.automation-form__accounts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.automation-source {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-background-gray);
+}
+
+.automation-source--on {
+    border-color: var(--mud-palette-primary);
+}
+
+.automation-source__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.automation-source__emoji {
+    font-size: 1.4rem;
+}
+
+.automation-source__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.automation-source__title {
+    font-weight: 800;
+}
+
+.automation-source__desc,
+.automation-source__note {
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.automation-source__fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 12px;
+}
+
+::deep .automation-source__modes {
+    width: 100%;
+}
+
+@media (max-width: 600px) {
+    .automation-source__fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

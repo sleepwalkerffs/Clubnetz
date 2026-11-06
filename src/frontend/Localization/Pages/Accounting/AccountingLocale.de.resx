@@ -630,4 +630,304 @@
   <data name="CostCenters_NamePlaceholder" xml:space="preserve">
     <value>z. B. Jugend, Herren 1, Platzsanierung</value>
   </data>
+  <data name="Tab_Reconcile" xml:space="preserve">
+    <value>Abgleich</value>
+  </data>
+  <data name="Overview_Proposals" xml:space="preserve">
+    <value>{0} Buchungsvorschläge warten auf dich</value>
+  </data>
+  <data name="Overview_ProposalsOne" xml:space="preserve">
+    <value>1 Buchungsvorschlag wartet auf dich</value>
+  </data>
+  <data name="Proposals_Title" xml:space="preserve">
+    <value>Buchungsvorschläge</value>
+  </data>
+  <data name="Proposals_Subtitle" xml:space="preserve">
+    <value>Was laut Clubnetz bezahlt wurde: Mitgliedsbeiträge, Platzverkauf, Clubhaus, Stripe</value>
+  </data>
+  <data name="Proposals_Sync" xml:space="preserve">
+    <value>Jetzt holen</value>
+  </data>
+  <data name="Proposals_Synced" xml:space="preserve">
+    <value>{0} neue Vorschläge, {1} gebucht</value>
+  </data>
+  <data name="Proposals_StripeFailed" xml:space="preserve">
+    <value>Stripe war nicht erreichbar: Gebühren und Auszahlungen kommen beim nächsten Mal.</value>
+  </data>
+  <data name="Proposals_Empty" xml:space="preserve">
+    <value>Nichts zu prüfen: alles Bezahlte ist gebucht.</value>
+  </data>
+  <data name="Proposals_Off" xml:space="preserve">
+    <value>Clubnetz kann Mitgliedsbeiträge, Platzverkauf, Clubhaus und Stripe selbst buchen. Schalte es unter „Automatische Buchungen“ ein.</value>
+  </data>
+  <data name="Proposals_Book" xml:space="preserve">
+    <value>So buchen</value>
+  </data>
+  <data name="Proposals_Edit" xml:space="preserve">
+    <value>Ändern und buchen</value>
+  </data>
+  <data name="Proposals_Dismiss" xml:space="preserve">
+    <value>Keine Buchung (nicht mehr vorschlagen)</value>
+  </data>
+  <data name="Automation_Open" xml:space="preserve">
+    <value>Automatische Buchungen</value>
+  </data>
+  <data name="Automation_Title" xml:space="preserve">
+    <value>Automatische Buchungen</value>
+  </data>
+  <data name="Automation_Hint" xml:space="preserve">
+    <value>Zahlungen, die Clubnetz kennt, werden zu Buchungen: als Vorschlag, den du zuerst prüfst, oder gleich gebucht. Jede Zahlung nur einmal.</value>
+  </data>
+  <data name="Automation_FeeCategory" xml:space="preserve">
+    <value>Kategorie der Gebühren</value>
+  </data>
+  <data name="Automation_Since" xml:space="preserve">
+    <value>Ab</value>
+  </data>
+  <data name="Automation_SinceHint" xml:space="preserve">
+    <value>Frühere Zahlungen bleiben weg (von Hand gebucht)</value>
+  </data>
+  <data name="Automation_Accounts" xml:space="preserve">
+    <value>Wohin das Geld geht</value>
+  </data>
+  <data name="Automation_Online" xml:space="preserve">
+    <value>Online bezahlt (Stripe-Guthaben)</value>
+  </data>
+  <data name="Automation_OnlineHint" xml:space="preserve">
+    <value>Ein Geldkonto der Art „Zahlungsanbieter“</value>
+  </data>
+  <data name="Automation_Bank" xml:space="preserve">
+    <value>Überweisungen und Stripe-Auszahlungen</value>
+  </data>
+  <data name="Automation_Cash" xml:space="preserve">
+    <value>Bar</value>
+  </data>
+  <data name="Automation_Card" xml:space="preserve">
+    <value>Kartenzahlungen im Clubhaus</value>
+  </data>
+  <data name="Automation_CardHint" xml:space="preserve">
+    <value>Das Kartenterminal oder SumUp-Konto des Vereins</value>
+  </data>
+  <data name="Automation_NoStripe" xml:space="preserve">
+    <value>Der Verein nimmt noch keine Onlinezahlungen: Mitgliedsbeiträge gehen auf die Bank oder in die Kassa.</value>
+  </data>
+  <data name="Automation_MissingCategory" xml:space="preserve">
+    <value>Wähl für jede eingeschaltete Quelle eine Kategorie.</value>
+  </data>
+  <data name="Automation_MissingAccount" xml:space="preserve">
+    <value>Wähl die rot markierten Geldkonten.</value>
+  </data>
+  <data name="Source_MembershipFees" xml:space="preserve">
+    <value>Mitgliedsbeiträge</value>
+  </data>
+  <data name="Source_CourtSales" xml:space="preserve">
+    <value>Platzverkauf</value>
+  </data>
+  <data name="Source_Clubhouse" xml:space="preserve">
+    <value>Clubhaus</value>
+  </data>
+  <data name="Source_Stripe" xml:space="preserve">
+    <value>Stripe-Gebühren und Auszahlungen</value>
+  </data>
+  <data name="SourceHint_MembershipFees" xml:space="preserve">
+    <value>Bezahlte Bestellungen: online, per Überweisung oder bar; Rückerstattungen von Onlinezahlungen</value>
+  </data>
+  <data name="SourceHint_CourtSales" xml:space="preserve">
+    <value>Online bezahlte Platzbuchungen, Rückerstattungen</value>
+  </data>
+  <data name="SourceHint_Clubhouse" xml:space="preserve">
+    <value>Für Vereine mit eigener Kantine: die bezahlten Deckel jedes Tages, je Zahlungsart</value>
+  </data>
+  <data name="SourceHint_Stripe" xml:space="preserve">
+    <value>Die Gebühren jedes Tages und jede Auszahlung auf die Bank</value>
+  </data>
+  <data name="Mode_Off" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="Mode_Review" xml:space="preserve">
+    <value>Vorschlagen</value>
+  </data>
+  <data name="Mode_Book" xml:space="preserve">
+    <value>Buchen</value>
+  </data>
+  <data name="Mode_BookHint" xml:space="preserve">
+    <value>Wird gleich gebucht. Was nicht geht (z. B. kein offenes Rechnungsjahr), wartet als Vorschlag.</value>
+  </data>
+  <data name="Bank_Title" xml:space="preserve">
+    <value>Kontoauszüge</value>
+  </data>
+  <data name="Bank_Subtitle" xml:space="preserve">
+    <value>camt.053, MT940 oder CSV aus dem Onlinebanking importieren und jede Zeile ihrer Buchung zuordnen</value>
+  </data>
+  <data name="Bank_Rules" xml:space="preserve">
+    <value>Regeln ({0})</value>
+  </data>
+  <data name="Bank_Show" xml:space="preserve">
+    <value>Anzeigen</value>
+  </data>
+  <data name="Bank_Status_Open" xml:space="preserve">
+    <value>Offen</value>
+  </data>
+  <data name="Bank_Status_Booked" xml:space="preserve">
+    <value>Zugeordnet</value>
+  </data>
+  <data name="Bank_Status_Ignored" xml:space="preserve">
+    <value>Ignoriert</value>
+  </data>
+  <data name="Bank_Import" xml:space="preserve">
+    <value>Auszug importieren</value>
+  </data>
+  <data name="Bank_ChooseAccount" xml:space="preserve">
+    <value>Wähl zuerst das Bankkonto.</value>
+  </data>
+  <data name="Bank_NoAccount" xml:space="preserve">
+    <value>Leg unter Einrichtung ein Bankkonto an, um Auszüge zu importieren.</value>
+  </data>
+  <data name="Bank_Empty" xml:space="preserve">
+    <value>Alle Zeilen sind zugeordnet</value>
+  </data>
+  <data name="Bank_EmptyOther" xml:space="preserve">
+    <value>Keine Zeilen</value>
+  </data>
+  <data name="Bank_EmptyHint" xml:space="preserve">
+    <value>Exportier den Auszug des Monats aus dem Onlinebanking (am besten camt.053, sonst MT940 oder CSV) und importier ihn hier.</value>
+  </data>
+  <data name="Bank_Imported" xml:space="preserve">
+    <value>{0} Zeilen importiert, {1} waren schon da</value>
+  </data>
+  <data name="Bank_Suggestion" xml:space="preserve">
+    <value>Vorschlag</value>
+  </data>
+  <data name="Bank_Matched" xml:space="preserve">
+    <value>Zugeordnet</value>
+  </data>
+  <data name="Bank_BookedAs" xml:space="preserve">
+    <value>Buchung #{0}</value>
+  </data>
+  <data name="Bank_Book" xml:space="preserve">
+    <value>Als neue Buchung erfassen</value>
+  </data>
+  <data name="Bank_NewRule" xml:space="preserve">
+    <value>Regel für solche Zeilen</value>
+  </data>
+  <data name="Bank_Ignore" xml:space="preserve">
+    <value>Ignorieren (braucht keine Buchung)</value>
+  </data>
+  <data name="Bank_Reopen" xml:space="preserve">
+    <value>Zurück zu den offenen Zeilen</value>
+  </data>
+  <data name="Bank_BookByRules" xml:space="preserve">
+    <value>{0} mit Regeln buchen</value>
+  </data>
+  <data name="Bank_BookedByRules" xml:space="preserve">
+    <value>{0} Zeilen gebucht</value>
+  </data>
+  <data name="Bank_Imports" xml:space="preserve">
+    <value>Importierte Auszüge</value>
+  </data>
+  <data name="Bank_ImportCounts" xml:space="preserve">
+    <value>{0} neu, {1} bekannt</value>
+  </data>
+  <data name="Bank_BalanceOn" xml:space="preserve">
+    <value>Kontostand {0}</value>
+  </data>
+  <data name="Bank_BalanceFits" xml:space="preserve">
+    <value>Stimmt mit den Büchern überein</value>
+  </data>
+  <data name="Bank_BalanceDiffers" xml:space="preserve">
+    <value>Weicht um {0} von den Büchern ab</value>
+  </data>
+  <data name="Csv_Title" xml:space="preserve">
+    <value>Spalten der CSV-Datei</value>
+  </data>
+  <data name="Csv_Hint" xml:space="preserve">
+    <value>Clubnetz kennt diesen Export noch nicht. Sag einmal, welche Spalte was enthält: das bleibt für dieses Konto gespeichert.</value>
+  </data>
+  <data name="Csv_Import" xml:space="preserve">
+    <value>Importieren</value>
+  </data>
+  <data name="Csv_SkipRows" xml:space="preserve">
+    <value>Zeilen vor der ersten Buchung</value>
+  </data>
+  <data name="Csv_SkipRowsHint" xml:space="preserve">
+    <value>Überschrift und Kontozeilen (grau angezeigt)</value>
+  </data>
+  <data name="Csv_BookingDate" xml:space="preserve">
+    <value>Buchungsdatum</value>
+  </data>
+  <data name="Csv_ValueDate" xml:space="preserve">
+    <value>Valutadatum</value>
+  </data>
+  <data name="Csv_SplitAmount" xml:space="preserve">
+    <value>Soll und Haben in zwei Spalten</value>
+  </data>
+  <data name="Csv_Amount" xml:space="preserve">
+    <value>Betrag</value>
+  </data>
+  <data name="Csv_Credit" xml:space="preserve">
+    <value>Haben (Eingang)</value>
+  </data>
+  <data name="Csv_Debit" xml:space="preserve">
+    <value>Soll (Ausgang)</value>
+  </data>
+  <data name="Csv_Marker" xml:space="preserve">
+    <value>Soll/Haben-Kennzeichen</value>
+  </data>
+  <data name="Csv_MarkerHint" xml:space="preserve">
+    <value>Nur wenn der Betrag kein Minus hat (S/H, D/C)</value>
+  </data>
+  <data name="Csv_Name" xml:space="preserve">
+    <value>Name des Zahlungspartners</value>
+  </data>
+  <data name="Csv_Iban" xml:space="preserve">
+    <value>IBAN des Zahlungspartners</value>
+  </data>
+  <data name="Csv_Reference" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Csv_ReferenceHint" xml:space="preserve">
+    <value>Verwendungszweck, Zahlungsreferenz, Buchungstext: mehrere Spalten werden verbunden</value>
+  </data>
+  <data name="Rules_Title" xml:space="preserve">
+    <value>Bankregeln</value>
+  </data>
+  <data name="Rules_Hint" xml:space="preserve">
+    <value>Eine Zeile, auf die eine Regel passt, bekommt ihre Kategorie mit einem Klick, z. B. „ÖTV“ → Verbandsbeiträge.</value>
+  </data>
+  <data name="Rules_Add" xml:space="preserve">
+    <value>Regel anlegen</value>
+  </data>
+  <data name="Rules_Empty" xml:space="preserve">
+    <value>Noch keine Regeln.</value>
+  </data>
+  <data name="Rules_MatchText" xml:space="preserve">
+    <value>Name oder Text enthält</value>
+  </data>
+  <data name="Rules_MatchIban" xml:space="preserve">
+    <value>IBAN des Zahlungspartners</value>
+  </data>
+  <data name="Rules_Direction" xml:space="preserve">
+    <value>Geld</value>
+  </data>
+  <data name="Rules_Direction_Any" xml:space="preserve">
+    <value>Ein und aus</value>
+  </data>
+  <data name="Rules_Direction_Incoming" xml:space="preserve">
+    <value>Kommt herein</value>
+  </data>
+  <data name="Rules_Direction_Outgoing" xml:space="preserve">
+    <value>Geht hinaus</value>
+  </data>
+  <data name="Rules_Account" xml:space="preserve">
+    <value>Nur für</value>
+  </data>
+  <data name="Rules_AccountHint" xml:space="preserve">
+    <value>Leer = jedes Bankkonto</value>
+  </data>
+  <data name="Rules_Text" xml:space="preserve">
+    <value>Text der Buchung</value>
+  </data>
+  <data name="Rules_TextHint" xml:space="preserve">
+    <value>Leer = Name und Text der Bankzeile</value>
+  </data>
 </root>

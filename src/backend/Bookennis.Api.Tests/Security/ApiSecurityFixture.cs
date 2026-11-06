@@ -512,6 +512,23 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         seeded.AccountingEntryId = entry.Id;
         seeded.AccountingReceiptId = receipt.Id;
         seeded.AccountingInboxReceiptId = inboxReceipt.Id;
+
+        // Automatic entries and the bank: an open suggestion, an imported bank line and a rule, with the text of the club
+        var proposal = new AccountingProposal(club.Id, AccountingSource.MembershipFees, $"security:{club.Id}",
+            new AccountingProposal.ProposalData(today, $"Proposal {text}", AccountingEntryKind.Booking, moneyAccount.Id, null, category.Id, 5_000, seeded.Member.MemberId, $"Payer {text}"), now);
+        var statementLine = new BankStatementLine(today, null, 4_200, $"Sender {text}", null, $"Reference {text}", null);
+        var import = new BankStatementImport(club.Id, moneyAccount.Id, $"statement-{text}.xml", BankStatementFormat.Camt053,
+            new BankStatement(null, null, 14_200, today, [statementLine]), 1, 0, seeded.Admin.MemberId, now);
+        var bankRule = new BankRule(club.Id, new BankRule.RuleData($"Rule {text}", null, BankRuleDirection.Any, category.Id, costCenter.Id, null, null));
+        context.AddRange(proposal, import, bankRule);
+        await context.SaveChangesAsync();
+        var bankLine = new BankTransaction(club.Id, moneyAccount.Id, import.Id, statementLine, BankTransaction.FingerprintOf(statementLine, 0));
+        context.Add(bankLine);
+        await context.SaveChangesAsync();
+
+        seeded.AccountingProposalId = proposal.Id;
+        seeded.BankTransactionId = bankLine.Id;
+        seeded.BankRuleId = bankRule.Id;
         return seeded;
     }
 
@@ -664,6 +681,15 @@ public sealed class SeededClub
 
     /// <summary>A receipt in the inbox (no entry): the only one that can be deleted.</summary>
     public int AccountingInboxReceiptId { get; set; }
+
+    /// <summary>An open suggestion <c>Proposal {text}</c> (membership fee of <see cref="Member"/>).</summary>
+    public int AccountingProposalId { get; set; }
+
+    /// <summary>An open bank line <c>Reference {text}</c> of the bank account.</summary>
+    public int BankTransactionId { get; set; }
+
+    /// <summary>A bank rule looking for <c>Rule {text}</c>.</summary>
+    public int BankRuleId { get; set; }
     public List<int> UserIds { get; } = [];
 }
 

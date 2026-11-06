@@ -122,4 +122,75 @@ public class AccountingHttpClient(HttpClient httpClient, JsonSerializerOptions j
 
     public async Task<HttpResult<FileDownload>> GetReceiptFile(int receiptId, CancellationToken cancellationToken = default)
         => await (await httpClient.GetAsync($"receipts/{receiptId}/file", cancellationToken)).AsFileHttpResult(jsonOptions, cancellationToken);
+
+    // ---------- automatic entries ----------
+
+    public async Task<HttpResult<AccountingAutomationDto>> GetAutomation(CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync("automation", cancellationToken)).AsHttpResult<AccountingAutomationDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<AccountingAutomationDto>> SaveAutomation(SaveAccountingAutomationModel model, CancellationToken cancellationToken = default)
+        => await (await httpClient.PutAsJsonAsync("automation", model, jsonOptions, cancellationToken)).AsHttpResult<AccountingAutomationDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<List<AccountingProposalDto>>> GetProposals(CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync("proposals", cancellationToken)).AsHttpResult<List<AccountingProposalDto>>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<SyncAccountingProposalsResult>> SyncProposals(CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsync("proposals/sync", null, cancellationToken)).AsHttpResult<SyncAccountingProposalsResult>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<AccountingEntryDetailDto>> BookProposal(int proposalId, BookAccountingProposalModel model, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsJsonAsync($"proposals/{proposalId}/book", model, jsonOptions, cancellationToken)).AsHttpResult<AccountingEntryDetailDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult> DismissProposal(int proposalId, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsync($"proposals/{proposalId}/dismiss", null, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
+
+    // ---------- bank ----------
+
+    public async Task<HttpResult<BankImportResultDto>> ImportBankStatement(int moneyAccountId, Stream content, string fileName, CsvColumnsDto? layout, CancellationToken cancellationToken = default)
+    {
+        using var form = new MultipartFormDataContent();
+        var streamContent = new StreamContent(content);
+        streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        form.Add(streamContent, "file", fileName);
+        form.Add(new StringContent(moneyAccountId.ToString(CultureInfo.InvariantCulture)), "moneyAccountId");
+        if (layout is not null)
+            form.Add(new StringContent(JsonSerializer.Serialize(layout, jsonOptions)), "layout");
+        return await (await httpClient.PostAsync("bank-statements", form, cancellationToken)).AsHttpResult<BankImportResultDto>(jsonOptions, cancellationToken);
+    }
+
+    public async Task<HttpResult<List<BankStatementImportDto>>> GetBankStatementImports(int? moneyAccountId, CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync(moneyAccountId is { } id ? $"bank-statements?moneyAccountId={id.ToString(CultureInfo.InvariantCulture)}" : "bank-statements", cancellationToken))
+            .AsHttpResult<List<BankStatementImportDto>>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<GetBankTransactionsResult>> GetBankTransactions(int? moneyAccountId, BankTransactionStatus status, CancellationToken cancellationToken = default)
+    {
+        var url = $"bank-transactions?status={status}" + (moneyAccountId is { } id ? $"&moneyAccountId={id.ToString(CultureInfo.InvariantCulture)}" : "");
+        return await (await httpClient.GetAsync(url, cancellationToken)).AsHttpResult<GetBankTransactionsResult>(jsonOptions, cancellationToken);
+    }
+
+    public async Task<HttpResult> MatchBankTransaction(int bankTransactionId, MatchBankTransactionModel model, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsJsonAsync($"bank-transactions/{bankTransactionId}/match", model, jsonOptions, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<AccountingEntryDetailDto>> BookBankTransaction(int bankTransactionId, SaveAccountingEntryModel model, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsJsonAsync($"bank-transactions/{bankTransactionId}/book", model, jsonOptions, cancellationToken)).AsHttpResult<AccountingEntryDetailDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<BookBankTransactionsByRulesResult>> BookBankTransactionsByRules(int? moneyAccountId, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsync(moneyAccountId is { } id ? $"bank-transactions/book-by-rules?moneyAccountId={id.ToString(CultureInfo.InvariantCulture)}" : "bank-transactions/book-by-rules", null, cancellationToken))
+            .AsHttpResult<BookBankTransactionsByRulesResult>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult> IgnoreBankTransaction(int bankTransactionId, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsync($"bank-transactions/{bankTransactionId}/ignore", null, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult> ReopenBankTransaction(int bankTransactionId, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsync($"bank-transactions/{bankTransactionId}/reopen", null, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<List<BankRuleDto>>> GetBankRules(CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync("bank-rules", cancellationToken)).AsHttpResult<List<BankRuleDto>>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<BankRuleDto>> SaveBankRule(int? bankRuleId, SaveBankRuleModel model, CancellationToken cancellationToken = default)
+        => await (bankRuleId is { } id
+            ? await httpClient.PutAsJsonAsync($"bank-rules/{id}", model, jsonOptions, cancellationToken)
+            : await httpClient.PostAsJsonAsync("bank-rules", model, jsonOptions, cancellationToken)).AsHttpResult<BankRuleDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult> DeleteBankRule(int bankRuleId, CancellationToken cancellationToken = default)
+        => await (await httpClient.DeleteAsync($"bank-rules/{bankRuleId}", cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
 }

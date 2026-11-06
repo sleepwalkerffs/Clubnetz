@@ -200,6 +200,23 @@ public class StripeGateway(AppSettings appSettings) : IStripeGateway
         return new StripeEventInfo(stripeEvent.Id, stripeEvent.Type, stripeEvent.Account, objectId);
     }
 
+    public async Task<IReadOnlyList<StripeBalanceTransaction>> ListBalanceTransactions(string accountId, DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken)
+    {
+        var options = new BalanceTransactionListOptions
+        {
+            Created = new DateRangeOptions { GreaterThanOrEqual = from.UtcDateTime, LessThan = to.UtcDateTime },
+            Limit = 100,
+        };
+        var transactions = new List<StripeBalanceTransaction>();
+        await foreach (var transaction in new BalanceTransactionService(Client).ListAutoPagingAsync(options, ForAccount(accountId), cancellationToken))
+        {
+            transactions.Add(new StripeBalanceTransaction(transaction.Id, transaction.Type, transaction.Amount, transaction.Fee, transaction.Currency,
+                new DateTimeOffset(DateTime.SpecifyKind(transaction.Created, DateTimeKind.Utc)), transaction.SourceId));
+        }
+
+        return transactions.OrderBy(t => t.Created).ToList();
+    }
+
     private static RequestOptions ForAccount(string accountId) => new() { StripeAccount = accountId };
 
     private static StripeCheckoutSession ToSession(Session session) => new(

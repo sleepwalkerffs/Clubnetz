@@ -33,6 +33,12 @@ public class AccountingSecurityTests(ApiSecurityFixture app)
         $"entries/{club.AccountingEntryId}",
         "receipts",
         $"receipts/{club.AccountingReceiptId}/file",
+        "automation",
+        "proposals",
+        "bank-statements",
+        $"bank-statements?moneyAccountId={club.MoneyAccountId}",
+        "bank-transactions",
+        "bank-rules",
     ];
 
     /// <summary>Everything that changes the books, only for treasurers and admins.</summary>
@@ -57,6 +63,19 @@ public class AccountingSecurityTests(ApiSecurityFixture app)
         (HttpMethod.Put, $"entries/{club.AccountingEntryId}", $$"""{"date":"{{DateTime.UtcNow:yyyy-MM-dd}}","text":"Stolen","kind":"Booking","moneyAccountId":{{club.MoneyAccountId}},"lines":[{"categoryId":{{club.AccountingCategoryId}},"amountCents":1}]}"""),
         (HttpMethod.Post, $"entries/{club.AccountingEntryId}/cancel", """{"reason":"Stolen"}"""),
         (HttpMethod.Delete, $"receipts/{club.AccountingInboxReceiptId}", null),
+        (HttpMethod.Put, "automation", $$"""{"bankMoneyAccountId":{{club.MoneyAccountId}},"sources":[]}"""),
+        (HttpMethod.Post, "proposals/sync", null),
+        (HttpMethod.Post, $"proposals/{club.AccountingProposalId}/book", "{}"),
+        (HttpMethod.Post, $"proposals/{club.AccountingProposalId}/dismiss", null),
+        (HttpMethod.Post, "bank-statements", null),
+        (HttpMethod.Post, $"bank-transactions/{club.BankTransactionId}/match", $$"""{"entryId":{{club.AccountingEntryId}}}"""),
+        (HttpMethod.Post, $"bank-transactions/{club.BankTransactionId}/book", $$"""{"date":"{{DateTime.UtcNow:yyyy-MM-dd}}","text":"Stolen","kind":"Booking","moneyAccountId":{{club.MoneyAccountId}},"lines":[{"categoryId":{{club.AccountingCategoryId}},"amountCents":4200}]}"""),
+        (HttpMethod.Post, $"bank-transactions/book-by-rules?moneyAccountId={club.MoneyAccountId}", null),
+        (HttpMethod.Post, $"bank-transactions/{club.BankTransactionId}/ignore", null),
+        (HttpMethod.Post, $"bank-transactions/{club.BankTransactionId}/reopen", null),
+        (HttpMethod.Post, "bank-rules", $$"""{"matchText":"Stolen","categoryId":{{club.AccountingCategoryId}}}"""),
+        (HttpMethod.Put, $"bank-rules/{club.BankRuleId}", $$"""{"matchText":"Stolen","categoryId":{{club.AccountingCategoryId}}}"""),
+        (HttpMethod.Delete, $"bank-rules/{club.BankRuleId}", null),
     ];
 
     private static string AuditBody => """{"status":"Audited","comment":"Fine"}""";
@@ -155,9 +174,9 @@ public class AccountingSecurityTests(ApiSecurityFixture app)
                 (await Send(method, $"{AccountingOf(app.ClubA)}/{path}", attacker, body)).Status.Should().Be(HttpStatusCode.Forbidden, $"{method} {path}");
 
             // Through the routes of club B with ids of club A: not found
-            foreach (var path in Reads(app.ClubA).Where(p => p.Contains('/')))
+            foreach (var path in Reads(app.ClubA).Where(p => p.Any(char.IsDigit)))
                 (await Send(HttpMethod.Get, $"{AccountingOf(app.ClubB)}/{path}", attacker)).Status.Should().Be(HttpStatusCode.NotFound, path);
-            foreach (var (method, path, body) in Writes(app.ClubA).Where(w => w.Path.Contains('/')))
+            foreach (var (method, path, body) in Writes(app.ClubA).Where(w => w.Path.Any(char.IsDigit)))
                 (await Send(method, $"{AccountingOf(app.ClubB)}/{path}", attacker, body)).Status.Should().Be(HttpStatusCode.NotFound, $"{method} {path}");
 
             // An entry of club B onto the bank account and the category of club A, with a receipt and a payer of club A
@@ -176,7 +195,7 @@ public class AccountingSecurityTests(ApiSecurityFixture app)
                 .Status.Should().Be(HttpStatusCode.NotFound);
 
             // What club B lists: nothing of club A (not checked: the members of club B, the admin of club A who plays in B is one of them, under the name of club A)
-            foreach (var path in new[] { "", "receipts", $"fiscal-years/{app.ClubB.FiscalYearId}/entries" })
+            foreach (var path in new[] { "", "receipts", $"fiscal-years/{app.ClubB.FiscalYearId}/entries", "proposals", "bank-transactions", "bank-rules", "bank-statements" })
                 (await Send(HttpMethod.Get, $"{AccountingOf(app.ClubB)}/{path}", attacker)).Body.Should().NotContain(ApiSecurityFixture.Marker, path);
         }
 

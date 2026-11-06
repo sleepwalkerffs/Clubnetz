@@ -159,6 +159,17 @@ update "FiscalYears" set "AuditComment" = null where "AuditComment" is not null;
 -- Clubs name accounts and cost centers after people ("Sparbuch Max Muster", "Training Huber").
 update "MoneyAccounts" set "Iban" = null, "Name" = 'Konto ' || "Id";
 update "CostCenters" set "Name" = 'Kostenstelle ' || "Id";
+-- Suggested entries and bank statements carry who paid, their IBANs and what they wrote; rules look for names.
+update "AccountingProposals" set
+    "Text" = 'Vorschlag ' || "Id",
+    "CounterpartyName" = case when "CounterpartyName" is null then null else 'Person ' || "Id" end;
+update "BankTransactions" set
+    "CounterpartyName" = case when "CounterpartyName" is null then null else 'Partner ' || "Id" end,
+    "CounterpartyIban" = null,
+    "Reference" = 'Umsatz ' || "Id",
+    "BankReference" = null;
+update "BankStatementImports" set "FileName" = 'auszug-' || "Id" || '.xml';
+update "BankRules" set "MatchText" = 'Regel ' || "Id", "MatchIban" = null, "Text" = null;
 
 -- Email templates may carry names, phone numbers and bank details. The app falls back to its built-in texts.
 delete from "ClubEmailTemplates";

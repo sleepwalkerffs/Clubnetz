@@ -1,6 +1,8 @@
+using System.Text.Json;
 using Bookennis.Domain.Accounting;
 using Bookennis.Domain.Members;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Bookennis.Api.Data.EntityConfigurations;
@@ -11,6 +13,12 @@ public class AccountingSettingsEntityConfiguration : IEntityTypeConfiguration<Ac
     {
         builder.ConfigureTenantRelation();
         builder.HasIndex(x => x.ClubId).IsUnique();
+
+        // The money accounts of the automatic entries
+        builder.HasOne<MoneyAccount>().WithMany().HasForeignKey(x => x.OnlineMoneyAccountId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<MoneyAccount>().WithMany().HasForeignKey(x => x.BankMoneyAccountId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<MoneyAccount>().WithMany().HasForeignKey(x => x.CashMoneyAccountId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<MoneyAccount>().WithMany().HasForeignKey(x => x.CardMoneyAccountId).OnDelete(DeleteBehavior.NoAction);
     }
 }
 
@@ -165,5 +173,109 @@ public class AccountingReceiptContentEntityConfiguration : IEntityTypeConfigurat
     {
         builder.ToTable("AccountingReceiptContents");
         builder.HasKey(x => x.AccountingReceiptId);
+    }
+}
+
+public class AccountingSourceSettingEntityConfiguration : IEntityTypeConfiguration<AccountingSourceSetting>
+{
+    public void Configure(EntityTypeBuilder<AccountingSourceSetting> builder)
+    {
+        builder.ConfigureTenantRelation();
+        builder.HasOne<AccountingCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.NoAction);
+        builder.Ignore(x => x.IsOn);
+        builder.HasIndex(x => new { x.ClubId, x.Source }).IsUnique();
+    }
+}
+
+public class AccountingProposalEntityConfiguration : IEntityTypeConfiguration<AccountingProposal>
+{
+    public void Configure(EntityTypeBuilder<AccountingProposal> builder)
+    {
+        builder.ConfigureTenantRelation();
+        builder.HasOne<MoneyAccount>().WithMany().HasForeignKey(x => x.MoneyAccountId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<MoneyAccount>().WithMany().HasForeignKey(x => x.ToMoneyAccountId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<AccountingCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<AccountingEntry>().WithMany().HasForeignKey(x => x.EntryId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<Member>().WithMany().HasForeignKey(x => x.CounterpartyMemberId).OnDelete(DeleteBehavior.SetNull);
+
+        builder.Property(x => x.SourceKey).HasMaxLength(AccountingProposal.MaxSourceKeyLength);
+        builder.Property(x => x.Text).HasMaxLength(AccountingEntry.MaxTextLength);
+        builder.Property(x => x.CounterpartyName).HasMaxLength(AccountingEntry.MaxCounterpartyLength);
+        builder.Property(x => x.Problem).HasMaxLength(AccountingProposal.MaxProblemLength);
+        builder.Ignore(x => x.IsOpen);
+
+        // A payment is suggested once
+        builder.HasIndex(x => new { x.ClubId, x.SourceKey }).IsUnique();
+        builder.HasIndex(x => new { x.ClubId, x.Status });
+    }
+}
+
+public class BankStatementImportEntityConfiguration : IEntityTypeConfiguration<BankStatementImport>
+{
+    public void Configure(EntityTypeBuilder<BankStatementImport> builder)
+    {
+        builder.ConfigureTenantRelation();
+        builder.HasOne<MoneyAccount>().WithMany().HasForeignKey(x => x.MoneyAccountId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<Member>().WithMany().HasForeignKey(x => x.ImportedByMemberId).OnDelete(DeleteBehavior.SetNull);
+        builder.Property(x => x.FileName).HasMaxLength(BankStatementImport.MaxFileNameLength);
+        builder.HasIndex(x => new { x.ClubId, x.MoneyAccountId, x.ImportedAt });
+    }
+}
+
+public class BankTransactionEntityConfiguration : IEntityTypeConfiguration<BankTransaction>
+{
+    public void Configure(EntityTypeBuilder<BankTransaction> builder)
+    {
+        builder.ConfigureTenantRelation();
+        builder.HasOne<MoneyAccount>().WithMany().HasForeignKey(x => x.MoneyAccountId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<BankStatementImport>().WithMany().HasForeignKey(x => x.ImportId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<AccountingEntry>().WithMany().HasForeignKey(x => x.EntryId).OnDelete(DeleteBehavior.NoAction);
+
+        builder.Property(x => x.CounterpartyName).HasMaxLength(BankTransaction.MaxNameLength);
+        builder.Property(x => x.CounterpartyIban).HasMaxLength(34);
+        builder.Property(x => x.Reference).HasMaxLength(BankTransaction.MaxReferenceLength);
+        builder.Property(x => x.BankReference).HasMaxLength(BankTransaction.MaxBankReferenceLength);
+        builder.Property(x => x.Fingerprint).HasMaxLength(BankTransaction.MaxFingerprintLength);
+        builder.Ignore(x => x.IsOpen);
+
+        // A line is imported once per money account, an entry books at most one line
+        builder.HasIndex(x => new { x.MoneyAccountId, x.Fingerprint }).IsUnique();
+        builder.HasIndex(x => x.EntryId).IsUnique().HasFilter("\"EntryId\" IS NOT NULL");
+        builder.HasIndex(x => new { x.ClubId, x.Status, x.BookingDate });
+    }
+}
+
+public class BankRuleEntityConfiguration : IEntityTypeConfiguration<BankRule>
+{
+    public void Configure(EntityTypeBuilder<BankRule> builder)
+    {
+        builder.ConfigureTenantRelation();
+        builder.HasOne<AccountingCategory>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<CostCenter>().WithMany().HasForeignKey(x => x.CostCenterId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne<MoneyAccount>().WithMany().HasForeignKey(x => x.MoneyAccountId).OnDelete(DeleteBehavior.NoAction);
+        builder.Property(x => x.MatchText).HasMaxLength(BankRule.MaxMatchTextLength);
+        builder.Property(x => x.MatchIban).HasMaxLength(34);
+        builder.Property(x => x.Text).HasMaxLength(AccountingEntry.MaxTextLength);
+    }
+}
+
+public class BankCsvLayoutEntityConfiguration : IEntityTypeConfiguration<BankCsvLayout>
+{
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    public void Configure(EntityTypeBuilder<BankCsvLayout> builder)
+    {
+        builder.ConfigureTenantRelation();
+        builder.HasOne<MoneyAccount>().WithMany().HasForeignKey(x => x.MoneyAccountId).OnDelete(DeleteBehavior.NoAction);
+        builder.Property(x => x.Columns)
+               .HasColumnType("jsonb")
+               .HasConversion(
+                   columns => JsonSerializer.Serialize(columns, JsonOptions),
+                   json => JsonSerializer.Deserialize<CsvColumns>(json, JsonOptions) ?? new CsvColumns(),
+                   new ValueComparer<CsvColumns>(
+                       (a, b) => JsonSerializer.Serialize(a, JsonOptions) == JsonSerializer.Serialize(b, JsonOptions),
+                       c => JsonSerializer.Serialize(c, JsonOptions).GetHashCode(StringComparison.Ordinal),
+                       c => c));
+        builder.HasIndex(x => x.MoneyAccountId).IsUnique();
     }
 }

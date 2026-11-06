@@ -1,0 +1,63 @@
+.csv-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.csv-form__hint {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.csv-form__preview {
+    max-height: 240px;
+    overflow: auto;
+    border-radius: 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.csv-form__preview table {
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.csv-form__preview th,
+.csv-form__preview td {
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.csv-form__preview th {
+    color: var(--mud-palette-text-secondary);
+    position: sticky;
+    left: 0;
+    background: var(--mud-palette-surface);
+}
+
+.csv-form__skipped td {
+    color: var(--mud-palette-text-disabled);
+    font-style: italic;
+}
+
+.csv-form__col--date {
+    background: rgba(37, 99, 235, 0.12);
+}
+
+.csv-form__col--amount {
+    background: rgba(5, 150, 105, 0.14);
+}
+
+.csv-form__col--text {
+    background: rgba(124, 58, 237, 0.10);
+}
+
+.csv-form__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+    align-items: center;
+}

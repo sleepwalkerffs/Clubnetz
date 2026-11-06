@@ -195,6 +195,187 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
 
     public Task<HttpResult<FileDownload>> GetReceiptFile(int receiptId) => httpClient.GetReceiptFile(receiptId);
 
+    // ---------- automatic entries ----------
+
+    public AccountingAutomationDto? Automation { get; private set; }
+    public List<AccountingProposalDto> Proposals { get; private set; } = [];
+
+    public Task LoadAutomation() => RunInLoadingContextAsync(async cancellationToken =>
+    {
+        var response = await httpClient.GetAutomation(cancellationToken);
+        if (response is { Success: true, Dto: not null })
+        {
+            Automation = response.Dto;
+            OnAccountingChanged?.Invoke();
+        }
+    }, nameof(LoadAutomation));
+
+    public async Task<HttpResult<AccountingAutomationDto>> SaveAutomation(SaveAccountingAutomationModel model)
+        => (HttpResult<AccountingAutomationDto>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.SaveAutomation(model, cancellationToken);
+            if (result is { Success: true, Dto: not null })
+            {
+                Automation = result.Dto;
+                OnAccountingChanged?.Invoke();
+            }
+
+            return result;
+        }, nameof(SaveAutomation));
+
+    public Task LoadProposals() => RunInLoadingContextAsync(async cancellationToken =>
+    {
+        var response = await httpClient.GetProposals(cancellationToken);
+        if (response is { Success: true, Dto: not null })
+        {
+            Proposals = response.Dto;
+            OnAccountingChanged?.Invoke();
+        }
+    }, nameof(LoadProposals));
+
+    public async Task<HttpResult<SyncAccountingProposalsResult>> SyncProposals()
+        => (HttpResult<SyncAccountingProposalsResult>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.SyncProposals(cancellationToken);
+            if (result.Success)
+                await AfterReconciled();
+
+            return result;
+        }, nameof(SyncProposals));
+
+    public async Task<HttpResult<AccountingEntryDetailDto>> BookProposal(int proposalId, SaveAccountingEntryModel? changed)
+        => (HttpResult<AccountingEntryDetailDto>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.BookProposal(proposalId, new BookAccountingProposalModel { Entry = changed }, cancellationToken);
+            if (result.Success)
+                await AfterReconciled();
+
+            return result;
+        }, nameof(BookProposal));
+
+    public Task<HttpResult> DismissProposal(int proposalId)
+        => RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.DismissProposal(proposalId, cancellationToken);
+            if (result.Success)
+                await Task.WhenAll(LoadProposals(), ReloadBank());
+
+            return result;
+        }, nameof(DismissProposal));
+
+    // ---------- bank ----------
+
+    public GetBankTransactionsResult? BankTransactions { get; private set; }
+    public int? BankAccountId { get; private set; }
+    public BankTransactionStatus BankStatus { get; private set; }
+    public List<BankStatementImportDto> BankImports { get; private set; } = [];
+    public List<BankRuleDto> BankRules { get; private set; } = [];
+
+    public Task LoadBank(int? moneyAccountId, BankTransactionStatus status) => RunInLoadingContextAsync(async cancellationToken =>
+    {
+        BankAccountId = moneyAccountId;
+        BankStatus = status;
+        var transactions = httpClient.GetBankTransactions(moneyAccountId, status, cancellationToken);
+        var imports = httpClient.GetBankStatementImports(moneyAccountId, cancellationToken);
+        var rules = httpClient.GetBankRules(cancellationToken);
+        if (await transactions is { Success: true, Dto: not null } t && BankAccountId == moneyAccountId && BankStatus == status)
+            BankTransactions = t.Dto;
+        if (await imports is { Success: true, Dto: not null } i)
+            BankImports = i.Dto;
+        if (await rules is { Success: true, Dto: not null } r)
+            BankRules = r.Dto;
+        OnAccountingChanged?.Invoke();
+    }, nameof(LoadBank));
+
+    public async Task<HttpResult<BankImportResultDto>> ImportBankStatement(int moneyAccountId, Stream content, string fileName, CsvColumnsDto? layout)
+        => (HttpResult<BankImportResultDto>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.ImportBankStatement(moneyAccountId, content, fileName, layout, cancellationToken);
+            if (result is { Success: true, Dto.NeedsCsvLayout: false })
+                await ReloadBank();
+
+            return result;
+        }, nameof(ImportBankStatement));
+
+    public Task<HttpResult> MatchBankTransaction(int bankTransactionId, MatchBankTransactionModel model)
+        => RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.MatchBankTransaction(bankTransactionId, model, cancellationToken);
+            if (result.Success)
+                await AfterReconciled();
+
+            return result;
+        }, nameof(MatchBankTransaction));
+
+    public async Task<HttpResult<AccountingEntryDetailDto>> BookBankTransaction(int bankTransactionId, SaveAccountingEntryModel model)
+        => (HttpResult<AccountingEntryDetailDto>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.BookBankTransaction(bankTransactionId, model, cancellationToken);
+            if (result.Success)
+                await AfterReconciled();
+
+            return result;
+        }, nameof(BookBankTransaction));
+
+    public async Task<HttpResult<BookBankTransactionsByRulesResult>> BookBankTransactionsByRules()
+        => (HttpResult<BookBankTransactionsByRulesResult>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.BookBankTransactionsByRules(BankAccountId, cancellationToken);
+            if (result.Success)
+                await AfterReconciled();
+
+            return result;
+        }, nameof(BookBankTransactionsByRules));
+
+    public Task<HttpResult> IgnoreBankTransaction(int bankTransactionId)
+        => RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.IgnoreBankTransaction(bankTransactionId, cancellationToken);
+            if (result.Success)
+                await ReloadBank();
+
+            return result;
+        }, nameof(IgnoreBankTransaction));
+
+    public Task<HttpResult> ReopenBankTransaction(int bankTransactionId)
+        => RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.ReopenBankTransaction(bankTransactionId, cancellationToken);
+            if (result.Success)
+                await ReloadBank();
+
+            return result;
+        }, nameof(ReopenBankTransaction));
+
+    public async Task<HttpResult<BankRuleDto>> SaveBankRule(int? bankRuleId, SaveBankRuleModel model)
+        => (HttpResult<BankRuleDto>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.SaveBankRule(bankRuleId, model, cancellationToken);
+            if (result.Success)
+                await ReloadBank();
+
+            return result;
+        }, nameof(SaveBankRule));
+
+    public Task<HttpResult> DeleteBankRule(int bankRuleId)
+        => RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.DeleteBankRule(bankRuleId, cancellationToken);
+            if (result.Success)
+                await ReloadBank();
+
+            return result;
+        }, nameof(DeleteBankRule));
+
+    private Task ReloadBank() => BankTransactions is null && BankImports.Count == 0 ? Task.CompletedTask : LoadBank(BankAccountId, BankStatus);
+
+    /// <summary>Entries were booked from suggestions or bank lines: everything that shows them.</summary>
+    private async Task AfterReconciled()
+    {
+        await Task.WhenAll(LoadProposals(), ReloadBank());
+        await AfterEntryChanged();
+    }
+
     private void SetBasics(AccountingDto basics)
     {
         Basics = basics;

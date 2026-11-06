@@ -99,4 +99,31 @@ public enum AccountingErrorCode
 
     /// <summary>A category used in a closed fiscal year keeps its tax sphere: the reports of that year must not change. Details: the name.</summary>
     AccountingCategorySphereInUse = 31,
+
+    /// <summary>A source of automatic entries that is on needs its category and the money accounts its payments go to.</summary>
+    AccountingAutomationIncomplete = 32,
+
+    /// <summary>The suggestion was booked or dismissed already.</summary>
+    AccountingProposalNotOpen = 33,
+
+    /// <summary>The file is no bank statement that can be read (camt.053, MT940 or CSV), or larger than 5 MB.</summary>
+    AccountingBankFileInvalid = 34,
+
+    /// <summary>The bank line was matched or ignored already.</summary>
+    AccountingBankTransactionNotOpen = 35,
+
+    /// <summary>The entry does not put the amount of the bank line on its money account. Details: the amount of the line.</summary>
+    AccountingBankTransactionAmountMismatch = 36,
+
+    /// <summary>A bank rule needs a text or an IBAN to look for.</summary>
+    AccountingBankRuleInvalid = 37,
+
+    /// <summary>The CSV columns don't fit the file: no line could be read with them.</summary>
+    AccountingBankCsvLayoutInvalid = 38,
+
+    /// <summary>The entry is matched with a bank line already.</summary>
+    AccountingEntryAlreadyMatched = 39,
+
+    /// <summary>The statement is about another bank account. Details: the IBAN of the file.</summary>
+    AccountingBankFileOtherAccount = 40,
 }

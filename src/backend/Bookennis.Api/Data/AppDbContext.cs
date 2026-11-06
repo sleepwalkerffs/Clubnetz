@@ -102,6 +102,12 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<AccountingEntry> AccountingEntries => Set<AccountingEntry>();
     public DbSet<AccountingEntryLine> AccountingEntryLines => Set<AccountingEntryLine>();
     public DbSet<AccountingReceipt> AccountingReceipts => Set<AccountingReceipt>();
+    public DbSet<AccountingSourceSetting> AccountingSourceSettings => Set<AccountingSourceSetting>();
+    public DbSet<AccountingProposal> AccountingProposals => Set<AccountingProposal>();
+    public DbSet<BankStatementImport> BankStatementImports => Set<BankStatementImport>();
+    public DbSet<BankTransaction> BankTransactions => Set<BankTransaction>();
+    public DbSet<BankRule> BankRules => Set<BankRule>();
+    public DbSet<BankCsvLayout> BankCsvLayouts => Set<BankCsvLayout>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

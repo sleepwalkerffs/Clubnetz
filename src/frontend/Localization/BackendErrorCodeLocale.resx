@@ -915,4 +915,31 @@
   <data name="AccountingCategorySphereInUse" xml:space="preserve">
     <value>"{0}" is used in a closed fiscal year, so its tax sphere stays: otherwise the reports of that year would change.</value>
   </data>
+  <data name="AccountingAutomationIncomplete" xml:space="preserve">
+    <value>A source that is on needs its category and the money accounts its payments go to.</value>
+  </data>
+  <data name="AccountingProposalNotOpen" xml:space="preserve">
+    <value>The suggestion was booked or dismissed already.</value>
+  </data>
+  <data name="AccountingBankFileInvalid" xml:space="preserve">
+    <value>This file can't be read as a bank statement (camt.053, MT940 or CSV, up to 5 MB).</value>
+  </data>
+  <data name="AccountingBankTransactionNotOpen" xml:space="preserve">
+    <value>The bank line was matched or ignored already.</value>
+  </data>
+  <data name="AccountingBankTransactionAmountMismatch" xml:space="preserve">
+    <value>The entry must book exactly € {0} on this account.</value>
+  </data>
+  <data name="AccountingBankRuleInvalid" xml:space="preserve">
+    <value>A rule needs a text or an IBAN to look for.</value>
+  </data>
+  <data name="AccountingBankCsvLayoutInvalid" xml:space="preserve">
+    <value>No line could be read with these columns. Check the date and amount column.</value>
+  </data>
+  <data name="AccountingEntryAlreadyMatched" xml:space="preserve">
+    <value>Entry #{0} is matched with another bank line.</value>
+  </data>
+  <data name="AccountingBankFileOtherAccount" xml:space="preserve">
+    <value>The statement is about the account {0}, not this one.</value>
+  </data>
 </root>

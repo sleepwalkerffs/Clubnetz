@@ -99,6 +99,9 @@ public sealed record ApiEndpoint(string Method, RoutePattern Pattern, string Con
             "costcenterid" => ids.CostCenterId,
             "entryid" => ids.AccountingEntryId,
             "receiptid" => ids.AccountingReceiptId,
+            "proposalid" => ids.AccountingProposalId,
+            "banktransactionid" => ids.BankTransactionId,
+            "bankruleid" => ids.BankRuleId,
             "id" => ids.BookingId,
             _ => (int?)null,
         };
