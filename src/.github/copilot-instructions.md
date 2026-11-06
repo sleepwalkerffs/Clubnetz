@@ -644,7 +644,7 @@ Club admins connect their own scripts and tools to their club with an API key (`
 - `ApiSecurityFixture` starts **the real app** (`Program.cs`, Production environment, `WebApplicationFactory`) against its own copy of the test database and seeds two clubs. `ClubApiKeySecurityTests` attack it over HTTP. They run with `dotnet test`, so also in CI.
 - **The sweeps read every endpoint from the running app** (`ApiEndpoint.All`), nothing is listed by hand: a new endpoint is attacked automatically. They check that a key is only accepted on the routes of its club, that every kind of rejected key (unknown, expired, revoked, other club, creator no longer admin) gets 401 everywhere, that a read-only key gets 403 on every write, and that a key of club A never reads or changes anything of club B.
 - Leaks are detected with a canary: every text of club B contains `ApiSecurityFixture.Canary`, which must never appear in an answer to club A. Changes are detected with `Fingerprint` (a hash over all rows with the club's `ClubId`). A probe middleware reports who a request really ran as (`ApiResponse.RanAsKey`), so the tests don't have to guess from status codes.
-- `ControllersOpenToKeys` in the test is the reviewed list of controllers a key can reach. **A new club controller fails the test until it is added there on purpose**; `ClubApiKeys`, `PaymentAccount`, `CourtSales`, `Clubhouse`, `PlayRequests` and `PlayerGroups` must never be in it.
+- `ControllersOpenToKeys` in the test is the reviewed list of controllers a key can reach. **A new club controller fails the test until it is added there on purpose**; `ClubApiKeys`, `PaymentAccount`, `CourtSales`, `Clubhouse`, `PlayRequests`, `PlayerGroups` and `Accounting` must never be in it.
 - When you add a tenant entity that a club endpoint returns or changes by id, seed one in `ApiSecurityFixture.AddClub` (with the canary text) and add its route parameter to `ApiEndpoint.Value`, otherwise the sweeps call that endpoint with an id that does not exist.
 - **`IgnoreQueryFilters()` switches the tenant filter off for the whole query, not only for the set it is called on.** A query that uses it for players of other clubs must filter its root entity by the club explicitly (`booking.ClubId == currentClub.Id`). The sweeps found exactly this in `GetBookings`, `GetBooking`, `GetUpcomingBookings`, `GetMemberBookingHistory` and `GetMember`.
 - Handler tests (`TestBase`) can't test tenant isolation: the tenant set with `SetTenantId` does not reach the handler's `AppDbContext`, so the tenant filter is off there. Test isolation between clubs in the security tests.
@@ -662,7 +662,7 @@ Club admins connect their own scripts and tools to their club with an API key (`
 ## Navigation & Club Switcher
 
 - `Shared/NavMenu.razor` builds its links in `Sections` (one place for all role rules): the club section without a title (My Club, Book, News, Calendar, Leaderboard), "Personal" (membership, own statistics, subscription planner), then the management sections "Members & fees", "Courts & play" and "Club setup", and "Account" at the bottom. A link is only listed in the section of its topic, whatever role sees it; empty sections are hidden. Support mode shows the management sections as for an admin. Section texts are `Section_*` in `NavigationLocale(.de).resx`.
-- Who sees what must match the backend policies: Clubhouse (ClubhouseHost, Admin), Members (Admin, Maintainer), Court sales / Membership plans / Membership fees (Admin, Treasurer), Court blockings (Admin, Maintainer, SportsDirector), Badges (Admin, SportsDirector, YouthSportsDirector), Club statistics (Admin, Maintainer), Club setup (Admin).
+- Who sees what must match the backend policies: Clubhouse (ClubhouseHost, Admin), Members (Admin, Maintainer), Court sales / Membership plans / Membership fees (Admin, Treasurer), Finances (Admin, Treasurer, Auditor), Court blockings (Admin, Maintainer, SportsDirector), Badges (Admin, SportsDirector, YouthSportsDirector), Club statistics (Admin, Maintainer), Club setup (Admin).
 - Members who are not active (`IClubProfileStore.IsActiveMember`, see Members, Former Guests & Active Members) don't get Leaderboard, own statistics, Season Wrapped and the subscription planner.
 - Pages have no title heading in the content (no `PageHeader`): the nav shows where the user is, the browser tab gets the `<PageTitle>`.
 - `Components/Shared/ClubSwitcher.razor` (top of the drawer) shows the open club with the own roles and lists the clubs of the user (`IProfileStore.Clubs`, from `GetUserProfileResult.Clubs` with name and roles). Switching is `NavigationManager.SwitchToClub` (full page load, the stores still hold the data of the other club). "Join another club" opens `SelectClubDialog` (searchable cards, without the clubs the user is already a member of), which `App.razor` also shows to a user without a club. `ClubAvatar` draws the club initials on a color derived from the club id.
@@ -754,6 +754,39 @@ A club enters its price list as membership plans per season. Members choose a pl
 ### Not built yet
 
 Add-ons (e.g. a locker fee), booking rules per plan (a "light" membership is a price only), automatic renewal, pro-rated prices, refunds from within Clubnetz, receipts as PDF, reminders for unpaid fees.
+
+## Accounting (Finances)
+
+### Overview
+
+The treasurer keeps the club's books in Clubnetz (phase 1 of issue #30: the ledger; bank import, automatic entries from payments, invoices, SEPA and importers come later). Target: Austrian clubs (Vereinsgesetz § 21: income/expense statement plus overview of assets, audited by two auditors). Simple on screen, but every entry has a money account and categories, so a balance sheet can be added without migrating.
+
+### Domain (`Bookennis.Domain/Accounting`)
+
+- `AccountingSettings` (unique per club, no row = not set up): `FiscalYearStartMonth` (fixed once set up). `POST setup` also creates the first `FiscalYear`, a bank account, a cash box and the categories of `AccountingTemplate` (Austrian tennis club, German or English by the request language).
+- `FiscalYear`: `StartDate`/`EndDate` (12 months), `Label` ("2026" or "2025/26"), `Status` `Open`/`Closed`, `NextEntryNumber` (numbers are never reused), `OpeningBalances` (`FiscalYearOpeningBalance` per money account), `OpeningBalancesCarried`, audit (`AuditStatus`, `AuditedAt`, `AuditedByMemberId`, `AuditComment`). Closing needs the year before closed (`AccountingPreviousYearOpen`); the handler carries the closing balances into the next year (created if missing) with `CarryOver`, after which its opening balances can't be set by hand. Reopening needs the next year open and drops the audit. The next year can be created at most a year ahead.
+- `MoneyAccount` (`Bank` with optional IBAN checked by `IbanNumber`, `Cash`, `PaymentProvider`), `AccountingCategory` (`Kind` income/expense, optional `Number`, `TaxSphere` per §§ 34 ff. BAO: non-profit area, asset management, auxiliary operation, commercial operation; the kind can't change once used), `CostCenter`. All three share `AccountingMasterData`: unique name per club (categories per kind), **archived instead of deleted once used** (`AccountingInUse`); an archived one stays on old entries but is refused for new ones (`AccountingArchived`), except on an entry that already used it.
+- `AccountingEntry` (aggregate root): `FiscalYearId`, `Number`, `Date` (must stay in its year), `Text`, `Kind` `Booking` (lines `AccountingEntryLine`: category, cost center, `AmountCents` in the direction of the category, negative = refund) or `Transfer` (`MoneyAccountId` → `ToMoneyAccountId`, `TransferAmountCents`, no lines), `CounterpartyMemberId?` (set null when the member leaves) + `CounterpartyName` (kept). **Never deleted**: `Cancel` keeps number and receipts and leaves it out of every sum. Every create/change/cancel adds an `AccountingEntryChange` with a JSON snapshot (`EntrySnapshot`, incl. the receipt ids). Nothing in a closed year can change.
+- `AccountingReceipt`: PDF/JPEG/PNG/WebP up to 10 MB (content type from the extension, file in `AccountingReceiptContent`), `EntryId?` (`null` = inbox). Filed under the entry number. Only inbox receipts can be deleted; saving an entry attaches the receipts it lists and puts the others back into the inbox.
+- FKs from entries to years, accounts, categories and cost centers are NO ACTION. `DeleteAdminClub` deletes receipts, entries and years of the club first, because Postgres checks those FKs before the cascade of the club reaches the lines.
+
+### Rules of the handlers (`Business/Accounting`)
+
+- Everything that numbers entries, changes balances or closes years takes `LockAccounting(clubId)` (advisory lock per club) first.
+- Reports are computed in memory from the active entries of a year (`AccountingBalances`): `GetAccountingSummary` (overview of assets per money account), `GetIncomeStatement` (by tax sphere and category, with the year before), `GetCostCenterReport`, `GetAccountSheet` (cash book with running balance), `ExportAccounting` (ClosedXML, `Export.Accounting(.de).resx`: journal, statement, money accounts).
+- `RecordFiscalYearAudit` needs a member with the role `Auditor` who is not also `Treasurer` (`AccountingAuditorRequired`, `AccountingAuditorIsTreasurer`); support mode can't audit.
+- `ExportPersonalData` lists the entries that name the user as counterparty; `scripts/review/pseudonymize.sql` replaces texts and names and deletes receipts and the history.
+
+### API / Authorization (`AccountingController`, `api/Clubs/{clubId}/Accounting`)
+
+- **Cookie only, never an API key** (money; not in `ControllersOpenToKeys`). `AccountingReader` = Treasurer, Admin, Auditor (all GETs incl. receipts and export), `AccountingManager` = Treasurer, Admin (every change, `members` search), `AccountingAuditor` = Auditor (`fiscal-years/{id}/audit`).
+- `MemberRole.Auditor` (9, "Rechnungsprüfer") is no staff role in `ActiveMembership`: it gives no booking rights and shows no other members.
+- `AccountingSecurityTests` attack it over HTTP (keys, members, host, sports director, auditor writing, treasurer auditing, the treasurer of another club with ids of club A); `ApiSecurityFixture` seeds a year, account, category, cost center, entry and receipts per club and the `AuditorOfA`.
+
+### FE
+
+- `Pages/ClubShell/Accounting/Accounting.razor` (`/clubs/{id}/finances`, nav section "Finances" for Treasurer, Admin, Auditor): `AccountingSetUp` until set up, then tabs `AccountingOverview`, `AccountingEntries`, `AccountingReceipts` (upload from the phone into the inbox, "Book" opens the entry dialog with the receipt), `AccountingReports` (print = annual report, Excel) and `AccountingSettings` (years, accounts, categories, cost centers). The parts inherit `AccountingComponentBase` (render on store changes, reload when the selected year changes). Dialogs: `AccountingEntryDialog`, `AccountingEntryDetailDialog`, `AccountingMasterDataDialog`, `AccountingOpeningBalancesDialog`, `AccountingAuditDialog`, `AccountingReceiptImageDialog` (images; PDFs are downloaded). Store `IAccountingStore`, texts `AccountingLocale(.de).resx`, helpers `AccountingHelpers`.
+- `wwwroot/css/app.css` hides the app bar and the drawer when printing; `.no-print`/`.print-only` mark what the annual report leaves out or adds.
 
 ## Privacy (GDPR) & Legal Pages
 

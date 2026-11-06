@@ -1,4 +1,5 @@
 using Bookennis.Api.Infrastructure.Tenant;
+using Bookennis.Domain.Accounting;
 using Bookennis.Domain.Base;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.ClubAnnouncements;
@@ -93,6 +94,14 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<PlayRequestInvitee> PlayRequestInvitees => Set<PlayRequestInvitee>();
     public DbSet<PlayerGroup> PlayerGroups => Set<PlayerGroup>();
     public DbSet<PlayerGroupMember> PlayerGroupMembers => Set<PlayerGroupMember>();
+    public DbSet<AccountingSettings> AccountingSettings => Set<AccountingSettings>();
+    public DbSet<FiscalYear> FiscalYears => Set<FiscalYear>();
+    public DbSet<MoneyAccount> MoneyAccounts => Set<MoneyAccount>();
+    public DbSet<AccountingCategory> AccountingCategories => Set<AccountingCategory>();
+    public DbSet<CostCenter> CostCenters => Set<CostCenter>();
+    public DbSet<AccountingEntry> AccountingEntries => Set<AccountingEntry>();
+    public DbSet<AccountingEntryLine> AccountingEntryLines => Set<AccountingEntryLine>();
+    public DbSet<AccountingReceipt> AccountingReceipts => Set<AccountingReceipt>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

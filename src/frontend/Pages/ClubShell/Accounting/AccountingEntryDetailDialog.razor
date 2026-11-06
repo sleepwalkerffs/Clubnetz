@@ -1,0 +1,215 @@
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+@using Microsoft.JSInterop
+
+@* An entry with its lines, receipts and history. Treasurers change or cancel it here while its year is open. *@
+
+<MudDialog>
+    <DialogContent>
+        @if (entry is null)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+        else
+        {
+            var basics = Store.Basics;
+            var cancelled = entry.Status == AccountingEntryStatus.Cancelled;
+
+            <div class="entry-detail">
+                <div class="entry-detail__head">
+                    <div>
+                        <div class="entry-detail__number">#@entry.Number · @AccountingHelpers.Date(entry.Date)</div>
+                        <div class="entry-detail__text @(cancelled ? "entry-detail__text--cancelled" : null)">@entry.Text</div>
+                        @if (entry.CounterpartyName is { } counterparty)
+                        {
+                            <div class="entry-detail__meta">👤 @counterparty</div>
+                        }
+                    </div>
+                    <div class="entry-detail__amount">
+                        @if (entry.Kind == AccountingEntryKind.Transfer)
+                        {
+                            <span class="acc-amount">@AccountingHelpers.Amount(entry.AmountCents)</span>
+                        }
+                        else
+                        {
+                            <span class="@AccountingHelpers.AmountClass(entry.AmountCents)">@AccountingHelpers.SignedAmount(entry.AmountCents)</span>
+                        }
+                    </div>
+                </div>
+
+                @if (cancelled)
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true">
+                        @string.Format(L["Entry_CancelledOn"], entry.CancelledAt is { } at ? AccountingHelpers.DateTime(at) : "")
+                        @if (entry.CancelReason is { } reason)
+                        {
+                            <span> – @reason</span>
+                        }
+                    </MudAlert>
+                }
+
+                <div class="entry-detail__rows">
+                    @if (entry.Kind == AccountingEntryKind.Transfer)
+                    {
+                        <div class="entry-detail__row">
+                            <span>🔁 @L["EntryType_Transfer"]</span>
+                            <span>@AccountingHelpers.AccountName(basics, entry.MoneyAccountId) → @AccountingHelpers.AccountName(basics, entry.ToMoneyAccountId)</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="entry-detail__row">
+                            <span>@L["MoneyAccount"]</span>
+                            <span>@AccountingHelpers.AccountName(basics, entry.MoneyAccountId)</span>
+                        </div>
+                        @foreach (var line in entry.Lines)
+                        {
+                            <div class="entry-detail__row">
+                                <span>
+                                    @AccountingHelpers.CategoryName(basics, line.CategoryId)
+                                    @if (line.CostCenterId is not null)
+                                    {
+                                        <span class="acc-chip">@AccountingHelpers.CostCenterName(basics, line.CostCenterId)</span>
+                                    }
+                                </span>
+                                <span class="acc-amount">@AccountingHelpers.Amount(line.AmountCents)</span>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="entry-detail__section">
+                    <div class="entry-detail__title">🧾 @L["Entry_Receipts"]</div>
+                    @if (entry.Receipts.Count == 0)
+                    {
+                        <div class="entry-detail__meta">@L[entry.Kind == AccountingEntryKind.Transfer ? "Entry_NoReceiptTransfer" : "Entry_NoReceipt"]</div>
+                    }
+                    <div class="entry-detail__receipts">
+                        @foreach (var receipt in entry.Receipts)
+                        {
+                            var current = receipt;
+                            <MudChip T="string" Icon="@(current.ContentType == "application/pdf" ? Icons.Material.Filled.PictureAsPdf : Icons.Material.Filled.Image)"
+                                     OnClick="() => Show(current)" Size="Size.Small">@current.FileName</MudChip>
+                        }
+                    </div>
+                </div>
+
+                <MudExpansionPanels Elevation="0" Outlined="true" Dense="true">
+                    <MudExpansionPanel Text="@string.Format(L["Entry_History"], entry.History.Count)">
+                        <ol class="entry-history">
+                            @foreach (var change in entry.History)
+                            {
+                                <li>
+                                    <div class="entry-history__head">
+                                        <b>@L[$"Change_{change.Kind}"]</b> · @AccountingHelpers.DateTime(change.At) · @(change.ByName ?? L["Change_BySupport"])
+                                    </div>
+                                    <div class="entry-detail__meta">
+                                        @AccountingHelpers.ShortDate(change.Date) · @change.Text ·
+                                        @if (change.EntryKind == AccountingEntryKind.Transfer)
+                                        {
+                                            @AccountingHelpers.Amount(change.TransferAmountCents ?? 0)
+                                        }
+                                        else
+                                        {
+                                            @string.Join(", ", change.Lines.Select(l => $"{AccountingHelpers.CategoryName(basics, l.CategoryId)} {AccountingHelpers.Amount(l.AmountCents)}"))
+                                        }
+                                        @if (change.ReceiptIds.Count > 0)
+                                        {
+                                            <span> · 🧾 @change.ReceiptIds.Count</span>
+                                        }
+                                        @if (change.CancelReason is { } reason)
+                                        {
+                                            <span> · @reason</span>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+
+                @if (cancelling)
+                {
+                    <div class="entry-detail__cancel">
+                        <MudTextField T="string" @bind-Value="cancelReason" Label="@L["Entry_CancelReason"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200" />
+                        <div class="entry-detail__meta">@L["Entry_CancelHint"]</div>
+                    </div>
+                }
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (CanChange)
+        {
+            @if (cancelling)
+            {
+                <MudButton Variant="Variant.Text" OnClick="() => cancelling = false">@L["Back"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="CancelEntry" Disabled="@Store.IsSaving">@L["Entry_Cancel"]</MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block" OnClick="() => cancelling = true">@L["Entry_Cancel"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="Edit">@SharedLocale["Edit"]</MudButton>
+            }
+        }
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="() => MudDialog.Close()">@SharedLocale["Close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter, EditorRequired] public int EntryId { get; set; }
+
+    [Inject] private IAccountingStore Store { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private AccountingEntryDetailDto? entry;
+    private bool cancelling;
+    private string? cancelReason;
+
+    private bool CanChange => entry is { Status: AccountingEntryStatus.Active } current && Store.Basics?.CanManage == true
+                              && Store.Basics.FiscalYears.FirstOrDefault(y => y.Id == current.FiscalYearId)?.Status == FiscalYearStatus.Open;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await Store.GetEntry(EntryId);
+        if (result is { Success: true, Dto: not null })
+            entry = result.Dto;
+        else
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            MudDialog.Cancel();
+        }
+    }
+
+    private Task Show(AccountingReceiptDto receipt) => AccountingDialogs.ShowReceipt(Store, DialogService, JsRuntime, Snackbar, BackendLocale, receipt);
+
+    private async Task Edit()
+    {
+        MudDialog.Close();
+        await AccountingDialogs.OpenEntry(DialogService, L, entry, []);
+    }
+
+    private async Task CancelEntry()
+    {
+        var result = await Store.CancelEntry(EntryId, string.IsNullOrWhiteSpace(cancelReason) ? null : cancelReason.Trim());
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        entry = result.Dto;
+        cancelling = false;
+        Snackbar.Add(string.Format(L["Entry_CancelledDone"], result.Dto.Number), Severity.Success);
+    }
+}

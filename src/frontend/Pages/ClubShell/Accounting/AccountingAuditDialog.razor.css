@@ -1,0 +1,10 @@
+.audit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.audit-form__hint {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}

@@ -1,0 +1,630 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Page_Title" xml:space="preserve">
+    <value>Accounting</value>
+  </data>
+  <data name="Page_Subtitle" xml:space="preserve">
+    <value>The club's books: income, expenses, receipts and the annual report</value>
+  </data>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Only treasurers, admins and auditors of the club see the accounting.</value>
+  </data>
+  <data name="ReadOnly" xml:space="preserve">
+    <value>Read only</value>
+  </data>
+  <data name="FiscalYear" xml:space="preserve">
+    <value>Fiscal year</value>
+  </data>
+  <data name="Year_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Year_Closed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="Audit_Audited" xml:space="preserve">
+    <value>Audited</value>
+  </data>
+  <data name="Audit_AuditedWithRemarks" xml:space="preserve">
+    <value>Audited with remarks</value>
+  </data>
+  <data name="Audit_NotAudited" xml:space="preserve">
+    <value>Not audited yet</value>
+  </data>
+  <data name="Tab_Overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="Tab_Entries" xml:space="preserve">
+    <value>Entries</value>
+  </data>
+  <data name="Tab_Receipts" xml:space="preserve">
+    <value>Receipts</value>
+  </data>
+  <data name="Tab_Reports" xml:space="preserve">
+    <value>Reports</value>
+  </data>
+  <data name="Tab_Settings" xml:space="preserve">
+    <value>Setup</value>
+  </data>
+  <data name="SetUp_Title" xml:space="preserve">
+    <value>Start the club's accounting</value>
+  </data>
+  <data name="SetUp_Subtitle" xml:space="preserve">
+    <value>Income/expense statement and overview of assets, as the Vereinsgesetz asks for</value>
+  </data>
+  <data name="SetUp_NotYet" xml:space="preserve">
+    <value>The treasurer has not set up the accounting yet.</value>
+  </data>
+  <data name="SetUp_Point_Years" xml:space="preserve">
+    <value>Entries are numbered per fiscal year, a closed year is locked and checked by the auditors.</value>
+  </data>
+  <data name="SetUp_Point_Accounts" xml:space="preserve">
+    <value>You start with a bank account and a cash box, add more (savings, Stripe) any time.</value>
+  </data>
+  <data name="SetUp_Point_Categories" xml:space="preserve">
+    <value>The usual categories of an Austrian tennis club are ready, with their tax sphere.</value>
+  </data>
+  <data name="SetUp_Point_Change" xml:space="preserve">
+    <value>Rename, add or archive categories whenever you like.</value>
+  </data>
+  <data name="SetUp_StartMonth" xml:space="preserve">
+    <value>Fiscal year starts in</value>
+  </data>
+  <data name="SetUp_StartMonthHint" xml:space="preserve">
+    <value>January if your fiscal year is the calendar year</value>
+  </data>
+  <data name="SetUp_FirstYear" xml:space="preserve">
+    <value>First fiscal year in Clubnetz</value>
+  </data>
+  <data name="SetUp_FirstYearHint" xml:space="preserve">
+    <value>{0} – {1}</value>
+  </data>
+  <data name="SetUp_Start" xml:space="preserve">
+    <value>Set up the accounting</value>
+  </data>
+  <data name="SetUp_Done" xml:space="preserve">
+    <value>The accounting is set up. Enter the opening balances under Setup.</value>
+  </data>
+  <data name="Overview_Income" xml:space="preserve">
+    <value>Income</value>
+  </data>
+  <data name="Overview_Expense" xml:space="preserve">
+    <value>Expenses</value>
+  </data>
+  <data name="Overview_Surplus" xml:space="preserve">
+    <value>Surplus</value>
+  </data>
+  <data name="Overview_Deficit" xml:space="preserve">
+    <value>Deficit</value>
+  </data>
+  <data name="Overview_Assets" xml:space="preserve">
+    <value>Money of the club</value>
+  </data>
+  <data name="Overview_AssetsHint" xml:space="preserve">
+    <value>Start of the year: {0}</value>
+  </data>
+  <data name="Overview_Inbox" xml:space="preserve">
+    <value>{0} receipts are waiting to be booked</value>
+  </data>
+  <data name="Overview_InboxOne" xml:space="preserve">
+    <value>1 receipt is waiting to be booked</value>
+  </data>
+  <data name="Overview_WithoutReceipt" xml:space="preserve">
+    <value>{0} entries have no receipt yet</value>
+  </data>
+  <data name="Overview_WithoutReceiptOne" xml:space="preserve">
+    <value>1 entry has no receipt yet</value>
+  </data>
+  <data name="Overview_AuditRemarks" xml:space="preserve">
+    <value>Remarks of the audit by {0}: {1}</value>
+  </data>
+  <data name="Overview_Accounts" xml:space="preserve">
+    <value>Money accounts</value>
+  </data>
+  <data name="Overview_AccountsHint" xml:space="preserve">
+    <value>{0} entries this fiscal year</value>
+  </data>
+  <data name="Overview_Transfers" xml:space="preserve">
+    <value>Transfers</value>
+  </data>
+  <data name="Opening" xml:space="preserve">
+    <value>Opening balance</value>
+  </data>
+  <data name="Closing" xml:space="preserve">
+    <value>Closing balance</value>
+  </data>
+  <data name="Balance" xml:space="preserve">
+    <value>Balance</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Entries_Search" xml:space="preserve">
+    <value>Search text, name or number</value>
+  </data>
+  <data name="Entries_ShowCancelled" xml:space="preserve">
+    <value>Cancelled too</value>
+  </data>
+  <data name="Entries_Add" xml:space="preserve">
+    <value>New entry</value>
+  </data>
+  <data name="Entries_YearClosed" xml:space="preserve">
+    <value>{0} is closed: its entries can't be changed any more.</value>
+  </data>
+  <data name="Entries_None" xml:space="preserve">
+    <value>No entries yet</value>
+  </data>
+  <data name="Entries_NoneHint" xml:space="preserve">
+    <value>Book the first income or expense with "New entry".</value>
+  </data>
+  <data name="Entries_NoneFound" xml:space="preserve">
+    <value>Nothing found</value>
+  </data>
+  <data name="Entries_NoneFoundHint" xml:space="preserve">
+    <value>Try another search or remove a filter.</value>
+  </data>
+  <data name="Entries_Count" xml:space="preserve">
+    <value>{0} entries</value>
+  </data>
+  <data name="MoneyAccount" xml:space="preserve">
+    <value>Money account</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="CostCenter" xml:space="preserve">
+    <value>Cost center</value>
+  </data>
+  <data name="Amount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Number" xml:space="preserve">
+    <value>No.</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SortOrder" xml:space="preserve">
+    <value>Order</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>Saved</value>
+  </data>
+  <data name="Deleted" xml:space="preserve">
+    <value>Deleted</value>
+  </data>
+  <data name="Archived" xml:space="preserve">
+    <value>Archived</value>
+  </data>
+  <data name="Archive" xml:space="preserve">
+    <value>Archived</value>
+  </data>
+  <data name="ArchiveHint" xml:space="preserve">
+    <value>Archived ones stay on the entries that use them, but are no longer offered for new entries.</value>
+  </data>
+  <data name="EntryType_Income" xml:space="preserve">
+    <value>Income</value>
+  </data>
+  <data name="EntryType_Expense" xml:space="preserve">
+    <value>Expense</value>
+  </data>
+  <data name="EntryType_Transfer" xml:space="preserve">
+    <value>Transfer</value>
+  </data>
+  <data name="Entry_AddTitle" xml:space="preserve">
+    <value>New entry</value>
+  </data>
+  <data name="Entry_EditTitle" xml:space="preserve">
+    <value>Change entry</value>
+  </data>
+  <data name="Entry_DetailTitle" xml:space="preserve">
+    <value>Entry</value>
+  </data>
+  <data name="Entry_TextPlaceholder" xml:space="preserve">
+    <value>e.g. Court sand, membership fee Huber</value>
+  </data>
+  <data name="Entry_StaysInYear" xml:space="preserve">
+    <value>Stays in fiscal year {0}</value>
+  </data>
+  <data name="Entry_AccountIn" xml:space="preserve">
+    <value>Paid into</value>
+  </data>
+  <data name="Entry_AccountOut" xml:space="preserve">
+    <value>Paid from</value>
+  </data>
+  <data name="Transfer_From" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="Transfer_To" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="Entry_Split" xml:space="preserve">
+    <value>Split</value>
+  </data>
+  <data name="Entry_RemoveLine" xml:space="preserve">
+    <value>Remove line</value>
+  </data>
+  <data name="Entry_Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Entry_RefundHint" xml:space="preserve">
+    <value>A refund is a negative amount in the category it was booked in.</value>
+  </data>
+  <data name="Entry_Member" xml:space="preserve">
+    <value>Member</value>
+  </data>
+  <data name="Entry_MemberHint" xml:space="preserve">
+    <value>Optional: the member who paid or was paid</value>
+  </data>
+  <data name="Entry_Counterparty" xml:space="preserve">
+    <value>Paid by / to</value>
+  </data>
+  <data name="Entry_CounterpartyPlaceholder" xml:space="preserve">
+    <value>e.g. Lagerhaus, ÖTV</value>
+  </data>
+  <data name="Entry_Receipts" xml:space="preserve">
+    <value>Receipts</value>
+  </data>
+  <data name="Entry_NoReceipt" xml:space="preserve">
+    <value>No receipt</value>
+  </data>
+  <data name="Entry_NoReceiptHint" xml:space="preserve">
+    <value>Attach a photo or PDF of the invoice: the auditors check every entry against its receipt.</value>
+  </data>
+  <data name="Entry_NoReceiptTransfer" xml:space="preserve">
+    <value>A transfer needs no receipt (a bank statement can still be attached).</value>
+  </data>
+  <data name="Entry_FromInbox" xml:space="preserve">
+    <value>Attach from the inbox ({0})</value>
+  </data>
+  <data name="Entry_Added" xml:space="preserve">
+    <value>Entry #{0} booked</value>
+  </data>
+  <data name="Entry_Saved" xml:space="preserve">
+    <value>Entry #{0} saved</value>
+  </data>
+  <data name="Entry_Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Entry_CancelledOn" xml:space="preserve">
+    <value>Cancelled on {0}</value>
+  </data>
+  <data name="Entry_Cancel" xml:space="preserve">
+    <value>Cancel entry</value>
+  </data>
+  <data name="Entry_CancelReason" xml:space="preserve">
+    <value>Reason (optional)</value>
+  </data>
+  <data name="Entry_CancelHint" xml:space="preserve">
+    <value>The entry keeps its number and its receipts, but no longer counts. It can't be undone.</value>
+  </data>
+  <data name="Entry_CancelledDone" xml:space="preserve">
+    <value>Entry #{0} cancelled</value>
+  </data>
+  <data name="Entry_History" xml:space="preserve">
+    <value>History ({0})</value>
+  </data>
+  <data name="Change_Created" xml:space="preserve">
+    <value>Booked</value>
+  </data>
+  <data name="Change_Changed" xml:space="preserve">
+    <value>Changed</value>
+  </data>
+  <data name="Change_Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Change_BySupport" xml:space="preserve">
+    <value>Clubnetz support</value>
+  </data>
+  <data name="Receipts_UploadTitle" xml:space="preserve">
+    <value>Upload receipts</value>
+  </data>
+  <data name="Receipts_UploadHint" xml:space="preserve">
+    <value>Take a photo with your phone or choose PDFs and images (max. 10 MB each). Book them later.</value>
+  </data>
+  <data name="Receipts_Upload" xml:space="preserve">
+    <value>Add receipt</value>
+  </data>
+  <data name="Receipts_Uploaded" xml:space="preserve">
+    <value>{0} receipts uploaded</value>
+  </data>
+  <data name="Receipts_UploadedOne" xml:space="preserve">
+    <value>Receipt uploaded</value>
+  </data>
+  <data name="Receipts_TooLarge" xml:space="preserve">
+    <value>{0} is larger than 10 MB.</value>
+  </data>
+  <data name="Receipts_Empty" xml:space="preserve">
+    <value>No receipts waiting</value>
+  </data>
+  <data name="Receipts_EmptyHint" xml:space="preserve">
+    <value>Every uploaded receipt is attached to an entry.</value>
+  </data>
+  <data name="Receipts_Book" xml:space="preserve">
+    <value>Book</value>
+  </data>
+  <data name="Receipts_DeleteTitle" xml:space="preserve">
+    <value>Delete receipt?</value>
+  </data>
+  <data name="Receipts_DeleteConfirm" xml:space="preserve">
+    <value>{0} is deleted for good.</value>
+  </data>
+  <data name="Report_IncomeStatement" xml:space="preserve">
+    <value>Income and expenses</value>
+  </data>
+  <data name="Report_IncomeStatementHint" xml:space="preserve">
+    <value>Einnahmen-Ausgaben-Rechnung by tax sphere, next to the year before</value>
+  </data>
+  <data name="Report_MoneyAccounts" xml:space="preserve">
+    <value>Overview of assets</value>
+  </data>
+  <data name="Report_MoneyAccountsHint" xml:space="preserve">
+    <value>Vermögensübersicht: the money accounts at the start and the end of the year</value>
+  </data>
+  <data name="Report_CostCenters" xml:space="preserve">
+    <value>Cost centers</value>
+  </data>
+  <data name="Report_CostCentersHint" xml:space="preserve">
+    <value>What each part of the club earned and spent</value>
+  </data>
+  <data name="Report_NoCostCenter" xml:space="preserve">
+    <value>Without cost center</value>
+  </data>
+  <data name="Report_Sheet" xml:space="preserve">
+    <value>Cash book / account sheet</value>
+  </data>
+  <data name="Report_SheetHint" xml:space="preserve">
+    <value>Every entry of a money account with the running balance</value>
+  </data>
+  <data name="Report_Empty" xml:space="preserve">
+    <value>Nothing booked in this fiscal year yet.</value>
+  </data>
+  <data name="Report_SphereResult" xml:space="preserve">
+    <value>Result of the area</value>
+  </data>
+  <data name="Report_TotalIncome" xml:space="preserve">
+    <value>Total income</value>
+  </data>
+  <data name="Report_TotalExpense" xml:space="preserve">
+    <value>Total expenses</value>
+  </data>
+  <data name="Report_Result" xml:space="preserve">
+    <value>Surplus / deficit</value>
+  </data>
+  <data name="Report_Print" xml:space="preserve">
+    <value>Print annual report</value>
+  </data>
+  <data name="Report_Export" xml:space="preserve">
+    <value>Excel</value>
+  </data>
+  <data name="Report_PrintTitle" xml:space="preserve">
+    <value>Annual report {0}</value>
+  </data>
+  <data name="Report_PrintOpen" xml:space="preserve">
+    <value>fiscal year still open</value>
+  </data>
+  <data name="Report_PrintClosed" xml:space="preserve">
+    <value>fiscal year closed</value>
+  </data>
+  <data name="Report_PrintAudited" xml:space="preserve">
+    <value>audited by {0} on {1}</value>
+  </data>
+  <data name="Sphere_NonProfit" xml:space="preserve">
+    <value>Non-profit area</value>
+  </data>
+  <data name="Sphere_AssetManagement" xml:space="preserve">
+    <value>Asset management</value>
+  </data>
+  <data name="Sphere_AuxiliaryOperation" xml:space="preserve">
+    <value>Auxiliary operation (canteen, parties)</value>
+  </data>
+  <data name="Sphere_CommercialOperation" xml:space="preserve">
+    <value>Commercial operation (advertising, sponsoring)</value>
+  </data>
+  <data name="SphereHint_NonProfit" xml:space="preserve">
+    <value>Membership fees, donations, subsidies and the sport itself</value>
+  </data>
+  <data name="SphereHint_AssetManagement" xml:space="preserve">
+    <value>Interest and rent the club receives</value>
+  </data>
+  <data name="SphereHint_AuxiliaryOperation" xml:space="preserve">
+    <value>Canteen, small club parties, court hire to guests</value>
+  </data>
+  <data name="SphereHint_CommercialOperation" xml:space="preserve">
+    <value>Advertising, sponsoring with something in return, large events</value>
+  </data>
+  <data name="Years_Title" xml:space="preserve">
+    <value>Fiscal years</value>
+  </data>
+  <data name="Years_Subtitle" xml:space="preserve">
+    <value>Close a year when its books are complete: the closing balances become the opening balances of the next year.</value>
+  </data>
+  <data name="Years_Add" xml:space="preserve">
+    <value>Next fiscal year</value>
+  </data>
+  <data name="Years_Added" xml:space="preserve">
+    <value>Fiscal year {0} created</value>
+  </data>
+  <data name="Years_ClosedBy" xml:space="preserve">
+    <value>closed by {0} on {1}</value>
+  </data>
+  <data name="Years_Balances" xml:space="preserve">
+    <value>Opening balances</value>
+  </data>
+  <data name="Years_ShowBalances" xml:space="preserve">
+    <value>Opening balances</value>
+  </data>
+  <data name="Years_Close" xml:space="preserve">
+    <value>Close year</value>
+  </data>
+  <data name="Years_CloseTitle" xml:space="preserve">
+    <value>Close {0}?</value>
+  </data>
+  <data name="Years_CloseConfirm" xml:space="preserve">
+    <value>Its entries are locked and the closing balances are carried over into the next fiscal year. The auditors can then record their audit. You can open it again as long as the next year is open.</value>
+  </data>
+  <data name="Years_Closed" xml:space="preserve">
+    <value>{0} is closed</value>
+  </data>
+  <data name="Years_Reopen" xml:space="preserve">
+    <value>Open again</value>
+  </data>
+  <data name="Years_ReopenTitle" xml:space="preserve">
+    <value>Open {0} again?</value>
+  </data>
+  <data name="Years_ReopenConfirm" xml:space="preserve">
+    <value>Entries can be changed again and the audit no longer counts. Close it again when you are done.</value>
+  </data>
+  <data name="Years_Reopened" xml:space="preserve">
+    <value>{0} is open again</value>
+  </data>
+  <data name="Years_Audit" xml:space="preserve">
+    <value>Record audit</value>
+  </data>
+  <data name="Balances_Title" xml:space="preserve">
+    <value>Opening balances {0}</value>
+  </data>
+  <data name="Balances_Hint" xml:space="preserve">
+    <value>What was on each money account at the start of the year (e.g. from your last annual report).</value>
+  </data>
+  <data name="Balances_Carried" xml:space="preserve">
+    <value>Carried over from the closing balances of the year before. Change that year to change them.</value>
+  </data>
+  <data name="Audit_Title" xml:space="preserve">
+    <value>Audit {0}</value>
+  </data>
+  <data name="Audit_Hint" xml:space="preserve">
+    <value>As an auditor you confirm that the books and the receipts of this closed fiscal year are complete and correct. Your remarks are shown to the board and on the annual report.</value>
+  </data>
+  <data name="Audit_Comment" xml:space="preserve">
+    <value>Remarks</value>
+  </data>
+  <data name="Audit_CommentPlaceholder" xml:space="preserve">
+    <value>e.g. All receipts checked, cash box counted on 15 January</value>
+  </data>
+  <data name="Audit_Save" xml:space="preserve">
+    <value>Save audit</value>
+  </data>
+  <data name="Audit_Saved" xml:space="preserve">
+    <value>Audit saved</value>
+  </data>
+  <data name="Accounts_Title" xml:space="preserve">
+    <value>Money accounts</value>
+  </data>
+  <data name="Accounts_Subtitle" xml:space="preserve">
+    <value>Where the club's money is: bank accounts, cash boxes, the balance at Stripe</value>
+  </data>
+  <data name="Accounts_Add" xml:space="preserve">
+    <value>Add money account</value>
+  </data>
+  <data name="Accounts_Edit" xml:space="preserve">
+    <value>Change money account</value>
+  </data>
+  <data name="Accounts_Kind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="Accounts_NamePlaceholder" xml:space="preserve">
+    <value>e.g. Raiffeisen current account</value>
+  </data>
+  <data name="AccountKind_Bank" xml:space="preserve">
+    <value>Bank account</value>
+  </data>
+  <data name="AccountKind_Cash" xml:space="preserve">
+    <value>Cash box</value>
+  </data>
+  <data name="AccountKind_PaymentProvider" xml:space="preserve">
+    <value>Payment provider (Stripe)</value>
+  </data>
+  <data name="Categories_Title" xml:space="preserve">
+    <value>Categories</value>
+  </data>
+  <data name="Categories_Subtitle" xml:space="preserve">
+    <value>What money comes in and goes out for, with its tax sphere</value>
+  </data>
+  <data name="Categories_Add" xml:space="preserve">
+    <value>Add category</value>
+  </data>
+  <data name="Categories_Edit" xml:space="preserve">
+    <value>Change category</value>
+  </data>
+  <data name="Categories_Kind" xml:space="preserve">
+    <value>Income or expense</value>
+  </data>
+  <data name="Categories_KindUsed" xml:space="preserve">
+    <value>Used by entries: it stays income or expense.</value>
+  </data>
+  <data name="Categories_Sphere" xml:space="preserve">
+    <value>Tax sphere</value>
+  </data>
+  <data name="CategoryKind_Income" xml:space="preserve">
+    <value>Income</value>
+  </data>
+  <data name="CategoryKind_Expense" xml:space="preserve">
+    <value>Expenses</value>
+  </data>
+  <data name="CostCenters_Title" xml:space="preserve">
+    <value>Cost centers</value>
+  </data>
+  <data name="CostCenters_Subtitle" xml:space="preserve">
+    <value>Optional: see what youth, teams or a project cost and earn</value>
+  </data>
+  <data name="CostCenters_Add" xml:space="preserve">
+    <value>Add cost center</value>
+  </data>
+  <data name="CostCenters_Edit" xml:space="preserve">
+    <value>Change cost center</value>
+  </data>
+  <data name="CostCenters_None" xml:space="preserve">
+    <value>No cost centers yet.</value>
+  </data>
+  <data name="CostCenters_NamePlaceholder" xml:space="preserve">
+    <value>e.g. Youth, Herren 1, court renovation</value>
+  </data>
+</root>

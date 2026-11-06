@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FileName" xml:space="preserve">
+    <value>Accounting</value>
+  </data>
+  <data name="SheetJournal" xml:space="preserve">
+    <value>Journal</value>
+  </data>
+  <data name="SheetIncomeStatement" xml:space="preserve">
+    <value>Income and expenses</value>
+  </data>
+  <data name="SheetMoneyAccounts" xml:space="preserve">
+    <value>Money accounts</value>
+  </data>
+  <data name="Number" xml:space="preserve">
+    <value>No.</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Counterparty" xml:space="preserve">
+    <value>Paid by / to</value>
+  </data>
+  <data name="MoneyAccount" xml:space="preserve">
+    <value>Money account</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="CategoryNumber" xml:space="preserve">
+    <value>Category no.</value>
+  </data>
+  <data name="CostCenter" xml:space="preserve">
+    <value>Cost center</value>
+  </data>
+  <data name="Income" xml:space="preserve">
+    <value>Income</value>
+  </data>
+  <data name="Expense" xml:space="preserve">
+    <value>Expense</value>
+  </data>
+  <data name="TransferAmount" xml:space="preserve">
+    <value>Transfer</value>
+  </data>
+  <data name="Receipts" xml:space="preserve">
+    <value>Receipts</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Transfer" xml:space="preserve">
+    <value>Transfer</value>
+  </data>
+  <data name="PreviousYear" xml:space="preserve">
+    <value>Year before</value>
+  </data>
+  <data name="Sphere_NonProfit" xml:space="preserve">
+    <value>Non-profit area</value>
+  </data>
+  <data name="Sphere_AssetManagement" xml:space="preserve">
+    <value>Asset management</value>
+  </data>
+  <data name="Sphere_AuxiliaryOperation" xml:space="preserve">
+    <value>Auxiliary operation (canteen, parties)</value>
+  </data>
+  <data name="Sphere_CommercialOperation" xml:space="preserve">
+    <value>Commercial operation (advertising, sponsoring)</value>
+  </data>
+  <data name="SphereResult" xml:space="preserve">
+    <value>Result of the area</value>
+  </data>
+  <data name="TotalIncome" xml:space="preserve">
+    <value>Total income</value>
+  </data>
+  <data name="TotalExpense" xml:space="preserve">
+    <value>Total expenses</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>Surplus / deficit</value>
+  </data>
+  <data name="Iban" xml:space="preserve">
+    <value>IBAN</value>
+  </data>
+  <data name="Opening" xml:space="preserve">
+    <value>Opening balance</value>
+  </data>
+  <data name="TransfersIn" xml:space="preserve">
+    <value>Transfers in</value>
+  </data>
+  <data name="TransfersOut" xml:space="preserve">
+    <value>Transfers out</value>
+  </data>
+  <data name="Closing" xml:space="preserve">
+    <value>Closing balance</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+</root>

@@ -1,0 +1,251 @@
+using Bookennis.Client.Services.HttpClients;
+using Bookennis.Client.Services.HttpClients.Accounting;
+using Bookennis.Client.Services.Store.Base;
+using Bookennis.Shared.Controller.Accounting;
+
+namespace Bookennis.Client.Services.Store.Accounting;
+
+public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore, IAccountingStore
+{
+    private int? selectedYearId;
+
+    public event Action? OnAccountingChanged;
+
+    public AccountingDto? Basics { get; private set; }
+    public FiscalYearDto? SelectedYear => Basics?.FiscalYears.FirstOrDefault(y => y.Id == selectedYearId);
+    public AccountingSummaryDto? Summary { get; private set; }
+    public GetAccountingEntriesResult? Entries { get; private set; }
+    public AccountingEntryFilter Filter { get; private set; } = new();
+    public List<AccountingReceiptDto> Inbox { get; private set; } = [];
+    public IncomeStatementDto? IncomeStatement { get; private set; }
+    public CostCenterReportDto? CostCenterReport { get; private set; }
+    public AccountSheetDto? AccountSheet { get; private set; }
+
+    public Task Load() => RunInLoadingContextAsync(async cancellationToken =>
+    {
+        var response = await httpClient.Get(cancellationToken);
+        if (response is { Success: true, Dto: not null })
+            SetBasics(response.Dto);
+    }, nameof(Load));
+
+    public async Task SelectYear(int fiscalYearId)
+    {
+        if (selectedYearId == fiscalYearId)
+            return;
+
+        selectedYearId = fiscalYearId;
+        Summary = null;
+        Entries = null;
+        IncomeStatement = null;
+        CostCenterReport = null;
+        AccountSheet = null;
+        OnAccountingChanged?.Invoke();
+        await LoadSummary();
+    }
+
+    public Task LoadSummary() => RunInLoadingContextAsync(async cancellationToken =>
+    {
+        if (selectedYearId is not { } yearId)
+            return;
+
+        var response = await httpClient.GetSummary(yearId, cancellationToken);
+        if (response is { Success: true, Dto: not null } && response.Dto.FiscalYearId == selectedYearId)
+        {
+            Summary = response.Dto;
+            OnAccountingChanged?.Invoke();
+        }
+    }, nameof(LoadSummary));
+
+    public Task LoadEntries(AccountingEntryFilter filter) => RunInLoadingContextAsync(async cancellationToken =>
+    {
+        Filter = filter;
+        if (selectedYearId is not { } yearId)
+            return;
+
+        var response = await httpClient.GetEntries(yearId, filter, cancellationToken);
+        if (response is { Success: true, Dto: not null })
+        {
+            Entries = response.Dto;
+            OnAccountingChanged?.Invoke();
+        }
+    }, nameof(LoadEntries));
+
+    public Task LoadInbox() => RunInLoadingContextAsync(async cancellationToken =>
+    {
+        var response = await httpClient.GetInbox(cancellationToken);
+        if (response is { Success: true, Dto: not null })
+        {
+            Inbox = response.Dto;
+            OnAccountingChanged?.Invoke();
+        }
+    }, nameof(LoadInbox));
+
+    public Task LoadReports() => RunInLoadingContextAsync(async cancellationToken =>
+    {
+        if (selectedYearId is not { } yearId)
+            return;
+
+        var statement = httpClient.GetIncomeStatement(yearId, cancellationToken);
+        var costCenters = httpClient.GetCostCenterReport(yearId, cancellationToken);
+        if (await statement is { Success: true, Dto: not null } s)
+            IncomeStatement = s.Dto;
+        if (await costCenters is { Success: true, Dto: not null } c)
+            CostCenterReport = c.Dto;
+        OnAccountingChanged?.Invoke();
+    }, nameof(LoadReports));
+
+    public Task LoadAccountSheet(int moneyAccountId) => RunInLoadingContextAsync(async cancellationToken =>
+    {
+        if (selectedYearId is not { } yearId)
+            return;
+
+        var response = await httpClient.GetAccountSheet(yearId, moneyAccountId, cancellationToken);
+        if (response is { Success: true, Dto: not null })
+        {
+            AccountSheet = response.Dto;
+            OnAccountingChanged?.Invoke();
+        }
+    }, nameof(LoadAccountSheet));
+
+    public async Task<HttpResult<AccountingDto>> SetUp(SetUpAccountingModel model)
+        => (HttpResult<AccountingDto>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.SetUp(model, cancellationToken);
+            if (result is { Success: true, Dto: not null })
+            {
+                SetBasics(result.Dto);
+                await LoadSummary();
+            }
+
+            return result;
+        }, nameof(SetUp));
+
+    public Task<HttpResult<FiscalYearDto>> CreateFiscalYear() => SaveYear(token => httpClient.CreateFiscalYear(token), nameof(CreateFiscalYear));
+
+    public Task<HttpResult<FiscalYearDto>> SetOpeningBalances(int fiscalYearId, SetOpeningBalancesModel model)
+        => SaveYear(token => httpClient.SetOpeningBalances(fiscalYearId, model, token), nameof(SetOpeningBalances));
+
+    public Task<HttpResult<FiscalYearDto>> CloseFiscalYear(int fiscalYearId) => SaveYear(token => httpClient.CloseFiscalYear(fiscalYearId, token), nameof(CloseFiscalYear));
+
+    public Task<HttpResult<FiscalYearDto>> ReopenFiscalYear(int fiscalYearId) => SaveYear(token => httpClient.ReopenFiscalYear(fiscalYearId, token), nameof(ReopenFiscalYear));
+
+    public Task<HttpResult<FiscalYearDto>> RecordAudit(int fiscalYearId, RecordAuditModel model) => SaveYear(token => httpClient.RecordAudit(fiscalYearId, model, token), nameof(RecordAudit));
+
+    public async Task<HttpResult<FileDownload>> Export(int fiscalYearId)
+        => (HttpResult<FileDownload>)await RunInSavingContextAsync(async cancellationToken => await httpClient.Export(fiscalYearId, cancellationToken), nameof(Export));
+
+    public Task<HttpResult<MoneyAccountDto>> SaveMoneyAccount(int? moneyAccountId, SaveMoneyAccountModel model)
+        => SaveAndReload(token => httpClient.SaveMoneyAccount(moneyAccountId, model, token), nameof(SaveMoneyAccount));
+
+    public Task<HttpResult> DeleteMoneyAccount(int moneyAccountId) => DeleteAndReload(token => httpClient.DeleteMoneyAccount(moneyAccountId, token), nameof(DeleteMoneyAccount));
+
+    public Task<HttpResult<AccountingCategoryDto>> SaveCategory(int? categoryId, SaveAccountingCategoryModel model)
+        => SaveAndReload(token => httpClient.SaveCategory(categoryId, model, token), nameof(SaveCategory));
+
+    public Task<HttpResult> DeleteCategory(int categoryId) => DeleteAndReload(token => httpClient.DeleteCategory(categoryId, token), nameof(DeleteCategory));
+
+    public Task<HttpResult<CostCenterDto>> SaveCostCenter(int? costCenterId, SaveCostCenterModel model)
+        => SaveAndReload(token => httpClient.SaveCostCenter(costCenterId, model, token), nameof(SaveCostCenter));
+
+    public Task<HttpResult> DeleteCostCenter(int costCenterId) => DeleteAndReload(token => httpClient.DeleteCostCenter(costCenterId, token), nameof(DeleteCostCenter));
+
+    public Task<HttpResult<AccountingEntryDetailDto>> GetEntry(int entryId) => httpClient.GetEntry(entryId);
+
+    public async Task<HttpResult<AccountingEntryDetailDto>> SaveEntry(int? entryId, SaveAccountingEntryModel model)
+        => (HttpResult<AccountingEntryDetailDto>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.SaveEntry(entryId, model, cancellationToken);
+            if (result.Success)
+                await AfterEntryChanged();
+
+            return result;
+        }, nameof(SaveEntry));
+
+    public async Task<HttpResult<AccountingEntryDetailDto>> CancelEntry(int entryId, string? reason)
+        => (HttpResult<AccountingEntryDetailDto>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.CancelEntry(entryId, new CancelAccountingEntryModel { Reason = reason }, cancellationToken);
+            if (result.Success)
+                await AfterEntryChanged();
+
+            return result;
+        }, nameof(CancelEntry));
+
+    public Task<HttpResult<List<AccountingMemberDto>>> GetMembers(string? search, CancellationToken cancellationToken = default) => httpClient.GetMembers(search, cancellationToken);
+
+    public async Task<HttpResult<AccountingReceiptDto>> UploadReceipt(Stream content, string fileName)
+        => (HttpResult<AccountingReceiptDto>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.UploadReceipt(content, fileName, cancellationToken);
+            if (result.Success)
+                await LoadInbox();
+
+            return result;
+        }, nameof(UploadReceipt));
+
+    public Task<HttpResult> DeleteReceipt(int receiptId)
+        => RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await httpClient.DeleteReceipt(receiptId, cancellationToken);
+            if (result.Success)
+                await LoadInbox();
+
+            return result;
+        }, nameof(DeleteReceipt));
+
+    public Task<HttpResult<FileDownload>> GetReceiptFile(int receiptId) => httpClient.GetReceiptFile(receiptId);
+
+    private void SetBasics(AccountingDto basics)
+    {
+        Basics = basics;
+        if (selectedYearId is null || basics.FiscalYears.All(y => y.Id != selectedYearId))
+        {
+            // The newest open year, else the newest one
+            selectedYearId = (basics.FiscalYears.FirstOrDefault(y => y.Status == FiscalYearStatus.Open && y.StartDate <= DateOnly.FromDateTime(DateTime.Today))
+                              ?? basics.FiscalYears.LastOrDefault(y => y.Status == FiscalYearStatus.Open)
+                              ?? basics.FiscalYears.FirstOrDefault())?.Id;
+        }
+
+        OnAccountingChanged?.Invoke();
+    }
+
+    private async Task AfterEntryChanged()
+    {
+        await Task.WhenAll(LoadSummary(), LoadInbox(), Entries is null ? Task.CompletedTask : LoadEntries(Filter));
+        // Categories and accounts become "used"
+        await Load();
+    }
+
+    private async Task<HttpResult<FiscalYearDto>> SaveYear(Func<CancellationToken, Task<HttpResult<FiscalYearDto>>> call, string name)
+        => (HttpResult<FiscalYearDto>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await call(cancellationToken);
+            if (result.Success)
+            {
+                await Load();
+                await LoadSummary();
+            }
+
+            return result;
+        }, name);
+
+    private async Task<HttpResult<T>> SaveAndReload<T>(Func<CancellationToken, Task<HttpResult<T>>> call, string name)
+        => (HttpResult<T>)await RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await call(cancellationToken);
+            if (result.Success)
+                await Load();
+
+            return result;
+        }, name);
+
+    private Task<HttpResult> DeleteAndReload(Func<CancellationToken, Task<HttpResult>> call, string name)
+        => RunInSavingContextAsync(async cancellationToken =>
+        {
+            var result = await call(cancellationToken);
+            if (result.Success)
+                await Load();
+
+            return result;
+        }, name);
+}

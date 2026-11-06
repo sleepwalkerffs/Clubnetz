@@ -147,6 +147,17 @@ update "ClubEventQuestionOptions" set "Label" = 'Antwort ' || "Id";
 
 update "MembershipPlans" set "Description" = null where "Description" is not null;
 
+-- Accounting: texts of entries and the history name who paid; receipts are photos of invoices with names and addresses.
+update "AccountingEntries" set
+    "Text" = 'Buchung ' || "Number",
+    "CounterpartyName" = case when "CounterpartyName" is null then null else 'Person ' || "Id" end,
+    "CancelReason" = null;
+delete from "AccountingEntryChanges";
+delete from "AccountingReceiptContents";
+delete from "AccountingReceipts";
+update "FiscalYears" set "AuditComment" = null where "AuditComment" is not null;
+update "MoneyAccounts" set "Iban" = null where "Iban" is not null;
+
 -- Email templates may carry names, phone numbers and bank details. The app falls back to its built-in texts.
 delete from "ClubEmailTemplates";
 

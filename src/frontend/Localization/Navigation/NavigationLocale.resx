@@ -264,4 +264,10 @@
   <data name="Home" xml:space="preserve">
     <value>Home</value>
   </data>
+  <data name="Section_Finances" xml:space="preserve">
+    <value>Finances</value>
+  </data>
+  <data name="Finances" xml:space="preserve">
+    <value>Accounting</value>
+  </data>
 </root>

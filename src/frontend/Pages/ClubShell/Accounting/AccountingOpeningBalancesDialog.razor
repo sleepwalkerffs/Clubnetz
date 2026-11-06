@@ -1,0 +1,68 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+
+@* The opening balances of the first fiscal year in Clubnetz (what was on the accounts before). Later years get the closing balances
+   of the year before and only show them. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale[Year.OpeningBalancesCarried ? "Close" : "Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@Store.IsSaving" Title="@L["Balances_Title"]">
+    <div class="balances-form">
+        <div class="balances-form__hint">@L[Year.OpeningBalancesCarried ? "Balances_Carried" : "Balances_Hint"]</div>
+        @foreach (var account in Store.Basics?.MoneyAccounts.Where(a => !a.IsArchived || amounts.GetValueOrDefault(a.Id) != 0) ?? [])
+        {
+            var id = account.Id;
+            <MudNumericField T="decimal" Value="@amounts.GetValueOrDefault(id)" ValueChanged="v => amounts[id] = v" Label="@($"{AccountingHelpers.AccountIcon(account.Kind)} {account.Name}")"
+                             Variant="Variant.Outlined" Margin="Margin.Dense" Format="N2" Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true"
+                             ReadOnly="@Year.OpeningBalancesCarried" />
+        }
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter, EditorRequired] public FiscalYearDto Year { get; set; } = null!;
+
+    [Inject] private IAccountingStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private readonly Dictionary<int, decimal> amounts = new();
+
+    protected override void OnInitialized()
+    {
+        foreach (var balance in Year.OpeningBalances)
+            amounts[balance.MoneyAccountId] = AccountingHelpers.ToEuros(balance.AmountCents);
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (Year.OpeningBalancesCarried)
+            return DialogResult.Ok(true);
+
+        var result = await Store.SetOpeningBalances(Year.Id, new SetOpeningBalancesModel
+        {
+            Balances = amounts.Select(a => new OpeningBalanceModel { MoneyAccountId = a.Key, AmountCents = AccountingHelpers.ToCents(a.Value) }).ToList(),
+        });
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Saved"], Severity.Success);
+        return DialogResult.Ok(true);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

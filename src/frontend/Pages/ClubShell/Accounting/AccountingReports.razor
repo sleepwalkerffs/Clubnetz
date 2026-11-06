@@ -1,0 +1,337 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+@using Microsoft.JSInterop
+
+@inherits AccountingComponentBase
+
+@* The reports of a fiscal year: income/expense statement by tax sphere, the money accounts with their cash book, and the cost centers.
+   Printed, the statement and the money accounts are the annual report for the general meeting. *@
+
+@{
+    var basics = Store.Basics;
+    var year = Store.SelectedYear;
+}
+
+<div class="acc-toolbar no-print">
+    <ChoiceChips TItem="ReportView" Items="@Views" Value="@view" ValueChanged="OnViewChanged" TextFunc="@(v => L[$"Report_{v}"])" />
+    <div class="acc-toolbar__end">
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print" OnClick="Print">@L["Report_Print"]</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.TableView" OnClick="Export" Disabled="@Store.IsSaving">@L["Report_Export"]</MudButton>
+    </div>
+</div>
+
+<div class="acc-print-head print-only">
+    <div class="acc-print-head__club">@ClubProfileStore.SelectedClub?.ClubName</div>
+    <div class="acc-print-head__title">@string.Format(L["Report_PrintTitle"], year?.Label)</div>
+    @if (year is not null)
+    {
+        <div class="acc-print-head__meta">
+            @AccountingHelpers.Date(year.StartDate) – @AccountingHelpers.Date(year.EndDate) ·
+            @L[year.Status == FiscalYearStatus.Open ? "Report_PrintOpen" : "Report_PrintClosed"]
+            @if (year.AuditStatus != FiscalYearAuditStatus.NotAudited && year.AuditedAt is { } auditedAt)
+            {
+                <span> · @string.Format(L["Report_PrintAudited"], year.AuditedByName, AccountingHelpers.DateTime(auditedAt))</span>
+            }
+        </div>
+    }
+</div>
+
+@if (view == ReportView.IncomeStatement || printing)
+{
+    @if (Store.IncomeStatement is not { } statement)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        var hasPrevious = statement.PreviousFiscalYearId is not null;
+        var previousLabel = basics?.FiscalYears.FirstOrDefault(y => y.Id == statement.PreviousFiscalYearId)?.Label;
+
+        <SectionCard Emoji="📊" Title="@L["Report_IncomeStatement"]" Subtitle="@L["Report_IncomeStatementHint"]">
+            @if (statement.Spheres.Count == 0)
+            {
+                <div class="acc-note">@L["Report_Empty"]</div>
+            }
+            else
+            {
+                <table class="acc-table">
+                    <thead>
+                        <tr>
+                            <th>@L["Category"]</th>
+                            <th class="acc-table__num">@year?.Label</th>
+                            @if (hasPrevious)
+                            {
+                                <th class="acc-table__num acc-table__previous">@previousLabel</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sphere in statement.Spheres)
+                        {
+                            <tr class="acc-table__group">
+                                <td colspan="@(hasPrevious ? 3 : 2)">@L[$"Sphere_{sphere.TaxSphere}"]</td>
+                            </tr>
+                            @foreach (var line in sphere.Categories)
+                            {
+                                var sign = line.Kind == AccountingCategoryKind.Income ? 1 : -1;
+                                <tr>
+                                    <td>@AccountingHelpers.CategoryName(basics, line.CategoryId)</td>
+                                    <td class="acc-table__num @AccountingHelpers.AmountClass(sign * line.AmountCents)">@AccountingHelpers.SignedAmount(sign * line.AmountCents)</td>
+                                    @if (hasPrevious)
+                                    {
+                                        <td class="acc-table__num acc-table__previous">@AccountingHelpers.SignedAmount(sign * (line.PreviousAmountCents ?? 0))</td>
+                                    }
+                                </tr>
+                            }
+                            <tr class="acc-table__sum">
+                                <td>@L["Report_SphereResult"]</td>
+                                <td class="acc-table__num">@AccountingHelpers.SignedAmount(sphere.IncomeCents - sphere.ExpenseCents)</td>
+                                @if (hasPrevious)
+                                {
+                                    <td class="acc-table__num acc-table__previous">@AccountingHelpers.SignedAmount((sphere.PreviousIncomeCents ?? 0) - (sphere.PreviousExpenseCents ?? 0))</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td>@L["Report_TotalIncome"]</td>
+                            <td class="acc-table__num">@AccountingHelpers.Amount(statement.IncomeCents)</td>
+                            @if (hasPrevious)
+                            {
+                                <td class="acc-table__num acc-table__previous">@AccountingHelpers.Amount(statement.PreviousIncomeCents ?? 0)</td>
+                            }
+                        </tr>
+                        <tr>
+                            <td>@L["Report_TotalExpense"]</td>
+                            <td class="acc-table__num">@AccountingHelpers.Amount(statement.ExpenseCents)</td>
+                            @if (hasPrevious)
+                            {
+                                <td class="acc-table__num acc-table__previous">@AccountingHelpers.Amount(statement.PreviousExpenseCents ?? 0)</td>
+                            }
+                        </tr>
+                        <tr class="acc-table__result">
+                            <td>@L["Report_Result"]</td>
+                            <td class="acc-table__num">@AccountingHelpers.SignedAmount(statement.IncomeCents - statement.ExpenseCents)</td>
+                            @if (hasPrevious)
+                            {
+                                <td class="acc-table__num acc-table__previous">@AccountingHelpers.SignedAmount((statement.PreviousIncomeCents ?? 0) - (statement.PreviousExpenseCents ?? 0))</td>
+                            }
+                        </tr>
+                    </tfoot>
+                </table>
+            }
+        </SectionCard>
+    }
+}
+
+@if (view == ReportView.MoneyAccounts || printing)
+{
+    @if (Store.Summary is { } summary)
+    {
+        <SectionCard Emoji="🏦" Title="@L["Report_MoneyAccounts"]" Subtitle="@L["Report_MoneyAccountsHint"]">
+            <table class="acc-table">
+                <thead>
+                    <tr>
+                        <th>@L["MoneyAccount"]</th>
+                        <th class="acc-table__num">@L["Opening"]</th>
+                        <th class="acc-table__num acc-table__wide">@L["Overview_Income"]</th>
+                        <th class="acc-table__num acc-table__wide">@L["Overview_Expense"]</th>
+                        <th class="acc-table__num acc-table__wide">@L["Overview_Transfers"]</th>
+                        <th class="acc-table__num">@L["Closing"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var balance in summary.Accounts)
+                    {
+                        var account = basics?.MoneyAccounts.FirstOrDefault(a => a.Id == balance.MoneyAccountId);
+                        <tr>
+                            <td>
+                                @AccountingHelpers.AccountIcon(account?.Kind ?? MoneyAccountKind.Bank) @account?.Name
+                                @if (account?.Iban is { } iban)
+                                {
+                                    <div class="acc-note">@AccountingHelpers.Iban(iban)</div>
+                                }
+                            </td>
+                            <td class="acc-table__num">@AccountingHelpers.Amount(balance.OpeningCents)</td>
+                            <td class="acc-table__num acc-table__wide">@AccountingHelpers.Amount(balance.IncomeCents)</td>
+                            <td class="acc-table__num acc-table__wide">@AccountingHelpers.Amount(balance.ExpenseCents)</td>
+                            <td class="acc-table__num acc-table__wide">@AccountingHelpers.SignedAmount(balance.TransfersInCents - balance.TransfersOutCents)</td>
+                            <td class="acc-table__num"><b>@AccountingHelpers.Amount(balance.ClosingCents)</b></td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="acc-table__result">
+                        <td>@L["Total"]</td>
+                        <td class="acc-table__num">@AccountingHelpers.Amount(summary.OpeningCents)</td>
+                        <td class="acc-table__num acc-table__wide">@AccountingHelpers.Amount(summary.IncomeCents)</td>
+                        <td class="acc-table__num acc-table__wide">@AccountingHelpers.Amount(summary.ExpenseCents)</td>
+                        <td class="acc-table__num acc-table__wide"></td>
+                        <td class="acc-table__num">@AccountingHelpers.Amount(summary.ClosingCents)</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </SectionCard>
+    }
+
+    @if (!printing)
+    {
+        <SectionCard Emoji="📖" Title="@L["Report_Sheet"]" Subtitle="@L["Report_SheetHint"]">
+            <MudSelect T="int?" Value="@sheetAccountId" ValueChanged="OnSheetAccountChanged" Label="@L["MoneyAccount"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                @foreach (var account in basics?.MoneyAccounts ?? [])
+                {
+                    <MudSelectItem T="int?" Value="@account.Id">@AccountingHelpers.AccountIcon(account.Kind) @account.Name</MudSelectItem>
+                }
+            </MudSelect>
+            @if (sheetAccountId is not null && Store.AccountSheet is { } sheet && sheet.MoneyAccountId == sheetAccountId)
+            {
+                <table class="acc-table">
+                    <thead>
+                        <tr>
+                            <th>@L["Number"]</th>
+                            <th>@L["Date"]</th>
+                            <th>@L["Text"]</th>
+                            <th class="acc-table__num">@L["Amount"]</th>
+                            <th class="acc-table__num">@L["Balance"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="acc-table__group">
+                            <td colspan="4">@L["Opening"]</td>
+                            <td class="acc-table__num">@AccountingHelpers.Amount(sheet.OpeningCents)</td>
+                        </tr>
+                        @foreach (var row in sheet.Rows)
+                        {
+                            <tr>
+                                <td>#@row.Number</td>
+                                <td>@AccountingHelpers.ShortDate(row.Date)</td>
+                                <td>@row.Text @(row.CounterpartyName is { } name ? $"· {name}" : null)</td>
+                                <td class="acc-table__num @AccountingHelpers.AmountClass(row.AmountCents)">@AccountingHelpers.SignedAmount(row.AmountCents)</td>
+                                <td class="acc-table__num">@AccountingHelpers.Amount(row.BalanceCents)</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="acc-table__result">
+                            <td colspan="4">@L["Closing"]</td>
+                            <td class="acc-table__num">@AccountingHelpers.Amount(sheet.ClosingCents)</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            }
+        </SectionCard>
+    }
+}
+
+@if (view == ReportView.CostCenters && !printing)
+{
+    @if (Store.CostCenterReport is not { } report)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <SectionCard Emoji="🎯" Title="@L["Report_CostCenters"]" Subtitle="@L["Report_CostCentersHint"]">
+            @if (report.Rows.Count == 0)
+            {
+                <div class="acc-note">@L["Report_Empty"]</div>
+            }
+            <div class="acc-balances">
+                @foreach (var row in report.Rows)
+                {
+                    <div class="acc-balance">
+                        <div class="acc-balance__head">
+                            <span class="acc-balance__icon" aria-hidden="true">🎯</span>
+                            <span class="acc-balance__name">@(row.CostCenterId is null ? L["Report_NoCostCenter"] : AccountingHelpers.CostCenterName(basics, row.CostCenterId))</span>
+                            <span class="acc-balance__closing">@AccountingHelpers.SignedAmount(row.IncomeCents - row.ExpenseCents)</span>
+                        </div>
+                        <div class="acc-balance__rows">
+                            @foreach (var line in row.Categories)
+                            {
+                                var sign = line.Kind == AccountingCategoryKind.Income ? 1 : -1;
+                                <span>@AccountingHelpers.CategoryName(basics, line.CategoryId)</span>
+                                <span class="@AccountingHelpers.AmountClass(sign * line.AmountCents)">@AccountingHelpers.SignedAmount(sign * line.AmountCents)</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </SectionCard>
+    }
+}
+
+@code {
+    private enum ReportView
+    {
+        IncomeStatement,
+        MoneyAccounts,
+        CostCenters,
+    }
+
+    private static readonly ReportView[] Views = Enum.GetValues<ReportView>();
+
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private ReportView view = ReportView.IncomeStatement;
+    private int? sheetAccountId;
+    private bool printing;
+
+    protected override async Task OnYearChangedAsync()
+    {
+        await Task.WhenAll(Store.LoadReports(), Store.Summary is null ? Store.LoadSummary() : Task.CompletedTask);
+        if (sheetAccountId is { } accountId)
+            await Store.LoadAccountSheet(accountId);
+    }
+
+    private Task OnViewChanged(ReportView value)
+    {
+        view = value;
+        return Task.CompletedTask;
+    }
+
+    private async Task OnSheetAccountChanged(int? accountId)
+    {
+        sheetAccountId = accountId;
+        if (accountId is { } id)
+            await Store.LoadAccountSheet(id);
+    }
+
+    /// <summary>The annual report: the statement and the money accounts on paper (or as PDF from the print dialog).</summary>
+    private async Task Print()
+    {
+        printing = true;
+        StateHasChanged();
+        await Task.Yield();
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("print");
+        }
+        finally
+        {
+            printing = false;
+        }
+    }
+
+    private async Task Export()
+    {
+        if (Store.SelectedYear is not { } year)
+            return;
+
+        var result = await Store.Export(year.Id);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        using var streamReference = new DotNetStreamReference(new MemoryStream(result.Dto.Data));
+        await JsRuntime.InvokeVoidAsync("App.downloadFileFromStream", result.Dto.FileName, streamReference);
+    }
+}

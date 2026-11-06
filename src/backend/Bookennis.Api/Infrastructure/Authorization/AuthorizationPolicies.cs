@@ -52,6 +52,14 @@ public static class AuthorizationPolicies
     /// <summary>Resource: ClubhouseTabAuthorizationModel. The guest of the tab or a parent of their family, signed in (not with an API key): pays it in the app.</summary>
     public const string PaysClubhouseTab = nameof(PaysClubhouseTab);
 
+    // Accounting: signed in with a cookie, never with an API key (the club's money)
+    /// <summary>Treasurer, Admin or Auditor, signed in (not with an API key): reads the whole accounting, receipts and reports.</summary>
+    public const string AccountingReader = nameof(AccountingReader);
+    /// <summary>Treasurer or Admin, signed in (not with an API key): keeps the books.</summary>
+    public const string AccountingManager = nameof(AccountingManager);
+    /// <summary>Auditor (Rechnungsprüfer), signed in (not with an API key): records the audit of a fiscal year.</summary>
+    public const string AccountingAuditor = nameof(AccountingAuditor);
+
     // Play requests ("Spielersuche"): signed in with a cookie, never with an API key
     /// <summary>An active member of the club, signed in (not with an API key): makes play requests, answers them and keeps groups.</summary>
     public const string PlayRequestMember = nameof(PlayRequestMember);

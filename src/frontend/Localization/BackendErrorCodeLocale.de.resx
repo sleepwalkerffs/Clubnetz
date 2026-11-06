@@ -819,4 +819,97 @@
   <data name="PlayerGroupEmpty" xml:space="preserve">
     <value>Eine Gruppe braucht mindestens einen Spieler.</value>
   </data>
+  <data name="AccountingNotSetUp" xml:space="preserve">
+    <value>Die Buchhaltung des Vereins ist noch nicht eingerichtet.</value>
+  </data>
+  <data name="AccountingAlreadySetUp" xml:space="preserve">
+    <value>Die Buchhaltung ist schon eingerichtet.</value>
+  </data>
+  <data name="AccountingFiscalYearStartInvalid" xml:space="preserve">
+    <value>Wähl einen Monat und ein erstes Rechnungsjahr, das höchstens zehn Jahre zurück oder nächstes Jahr beginnt.</value>
+  </data>
+  <data name="AccountingNameInvalid" xml:space="preserve">
+    <value>Gib einen Namen mit höchstens {0} Zeichen ein.</value>
+  </data>
+  <data name="AccountingNameTaken" xml:space="preserve">
+    <value>„{0}“ gibt es schon.</value>
+  </data>
+  <data name="AccountingIbanInvalid" xml:space="preserve">
+    <value>Diese IBAN ist ungültig. Vergleich sie mit dem Kontoauszug.</value>
+  </data>
+  <data name="AccountingCategoryNumberInvalid" xml:space="preserve">
+    <value>Die Nummer darf höchstens {0} Zeichen haben.</value>
+  </data>
+  <data name="AccountingFiscalYearClosed" xml:space="preserve">
+    <value>Das Rechnungsjahr {0} ist abgeschlossen: darin kann nichts mehr geändert werden.</value>
+  </data>
+  <data name="AccountingFiscalYearMissing" xml:space="preserve">
+    <value>Für den {0} gibt es kein Rechnungsjahr. Leg zuerst unter Einrichtung das nächste Rechnungsjahr an.</value>
+  </data>
+  <data name="AccountingDateOutsideFiscalYear" xml:space="preserve">
+    <value>Das Datum muss im Rechnungsjahr {0} bleiben.</value>
+  </data>
+  <data name="AccountingTextInvalid" xml:space="preserve">
+    <value>Gib einen Text mit höchstens {0} Zeichen ein.</value>
+  </data>
+  <data name="AccountingAmountInvalid" xml:space="preserve">
+    <value>Gib einen Betrag ungleich 0 und höchstens € {0} ein.</value>
+  </data>
+  <data name="AccountingLinesInvalid" xml:space="preserve">
+    <value>Eine Einnahme oder Ausgabe braucht 1 bis {0} Zeilen.</value>
+  </data>
+  <data name="AccountingTransferInvalid" xml:space="preserve">
+    <value>Eine Umbuchung geht von einem Geldkonto auf ein anderes, mit einem Betrag über 0.</value>
+  </data>
+  <data name="AccountingArchived" xml:space="preserve">
+    <value>„{0}“ ist archiviert und kann für neue Buchungen nicht verwendet werden.</value>
+  </data>
+  <data name="AccountingEntryCancelled" xml:space="preserve">
+    <value>Die Buchung wurde storniert und kann nicht mehr geändert werden.</value>
+  </data>
+  <data name="AccountingCounterpartyInvalid" xml:space="preserve">
+    <value>Der Name darf höchstens {0} Zeichen haben.</value>
+  </data>
+  <data name="AccountingPreviousYearOpen" xml:space="preserve">
+    <value>Schließ zuerst das Rechnungsjahr {0} ab.</value>
+  </data>
+  <data name="AccountingNextYearClosed" xml:space="preserve">
+    <value>Das Rechnungsjahr {0} ist abgeschlossen: öffne zuerst dieses wieder.</value>
+  </data>
+  <data name="AccountingFiscalYearNotClosed" xml:space="preserve">
+    <value>Nur ein abgeschlossenes Rechnungsjahr kann geprüft oder wieder geöffnet werden.</value>
+  </data>
+  <data name="AccountingOpeningBalancesCarried" xml:space="preserve">
+    <value>Die Anfangsbestände kommen aus dem Vorjahr: ändere stattdessen das Vorjahr.</value>
+  </data>
+  <data name="AccountingInUse" xml:space="preserve">
+    <value>„{0}“ wird von Buchungen verwendet: archiviere es stattdessen.</value>
+  </data>
+  <data name="AccountingCategoryKindInUse" xml:space="preserve">
+    <value>„{0}“ wird von Buchungen verwendet: bleibt Einnahme oder Ausgabe.</value>
+  </data>
+  <data name="AccountingReceiptTooLarge" xml:space="preserve">
+    <value>Die Datei ist zu groß (max. {0} MB).</value>
+  </data>
+  <data name="AccountingReceiptTypeNotAllowed" xml:space="preserve">
+    <value>Nur diese Dateien können Belege sein: {0}.</value>
+  </data>
+  <data name="AccountingReceiptAlreadyBooked" xml:space="preserve">
+    <value>Der Beleg gehört zu Buchung #{0}.</value>
+  </data>
+  <data name="AccountingAuditorIsTreasurer" xml:space="preserve">
+    <value>Ein Kassier kann seine eigene Kassa nicht prüfen.</value>
+  </data>
+  <data name="AccountingAuditorRequired" xml:space="preserve">
+    <value>Nur ein Rechnungsprüfer des Vereins kann die Prüfung eintragen.</value>
+  </data>
+  <data name="AccountingFiscalYearTooFarAhead" xml:space="preserve">
+    <value>Das nächste Rechnungsjahr würde am {0} beginnen: es kann höchstens ein Jahr im Voraus angelegt werden.</value>
+  </data>
+  <data name="AccountingCommentInvalid" xml:space="preserve">
+    <value>Der Text darf höchstens {0} Zeichen haben.</value>
+  </data>
+  <data name="AccountingTooManyReceipts" xml:space="preserve">
+    <value>Eine Buchung kann höchstens {0} Belege haben.</value>
+  </data>
 </root>
