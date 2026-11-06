@@ -173,6 +173,12 @@
     gap: 8px 12px;
 }
 
+/* Text fields and selects come with different outer margins: without them all fields sit on one line. */
+.acc-page ::deep .acc-toolbar .mud-input-control {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
 .acc-page ::deep .acc-toolbar__search {
     flex: 2 1 220px;
 }

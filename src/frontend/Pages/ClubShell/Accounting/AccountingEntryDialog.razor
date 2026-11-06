@@ -56,27 +56,32 @@
                 @foreach (var line in lines)
                 {
                     var current = line;
-                    <div class="entry-line">
-                        <MudSelect T="int?" @bind-Value="current.CategoryId" Label="@L["Category"]" Variant="Variant.Outlined" Margin="Margin.Dense" Class="entry-line__category">
-                            @foreach (var category in Categories(basics, current.CategoryId))
-                            {
-                                <MudSelectItem T="int?" Value="@category.Id">@AccountingHelpers.CategoryName(category)</MudSelectItem>
-                            }
-                        </MudSelect>
-                        @if (basics?.CostCenters.Count > 0)
-                        {
-                            <MudSelect T="int?" @bind-Value="current.CostCenterId" Label="@L["CostCenter"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="entry-line__cost-center">
-                                @foreach (var costCenter in basics.CostCenters.Where(c => !c.IsArchived || c.Id == current.CostCenterId))
+                    <div class="entry-line @(basics?.CostCenters.Count > 0 ? "entry-line--cost-center" : null)">
+                        @* MudSelect puts its Class on an inner element: the grid needs a wrapper of its own *@
+                        <div class="entry-line__category">
+                            <MudSelect T="int?" @bind-Value="current.CategoryId" Label="@L["Category"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                                @foreach (var category in Categories(basics, current.CategoryId))
                                 {
-                                    <MudSelectItem T="int?" Value="@costCenter.Id">@costCenter.Name</MudSelectItem>
+                                    <MudSelectItem T="int?" Value="@category.Id">@AccountingHelpers.CategoryName(category)</MudSelectItem>
                                 }
                             </MudSelect>
+                        </div>
+                        @if (basics?.CostCenters.Count > 0)
+                        {
+                            <div class="entry-line__cost-center">
+                                <MudSelect T="int?" @bind-Value="current.CostCenterId" Label="@L["CostCenter"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                                    @foreach (var costCenter in basics.CostCenters.Where(c => !c.IsArchived || c.Id == current.CostCenterId))
+                                    {
+                                        <MudSelectItem T="int?" Value="@costCenter.Id">@costCenter.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </div>
                         }
                         <MudNumericField T="decimal" @bind-Value="current.Amount" Label="@L["Amount"]" Variant="Variant.Outlined" Margin="Margin.Dense" Format="N2"
                                          Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true" Class="entry-line__amount" />
                         @if (lines.Count > 1)
                         {
-                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => lines.Remove(current)" aria-label="@L["Entry_RemoveLine"]" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => lines.Remove(current)" aria-label="@L["Entry_RemoveLine"]" Class="entry-line__remove" />
                         }
                     </div>
                 }

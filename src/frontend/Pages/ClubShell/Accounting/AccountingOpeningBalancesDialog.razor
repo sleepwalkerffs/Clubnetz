@@ -17,7 +17,7 @@
             var id = account.Id;
             <MudNumericField T="decimal" Value="@amounts.GetValueOrDefault(id)" ValueChanged="v => amounts[id] = v" Label="@($"{AccountingHelpers.AccountIcon(account.Kind)} {account.Name}")"
                              Variant="Variant.Outlined" Margin="Margin.Dense" Format="N2" Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true"
-                             ReadOnly="@carried.Contains(id)" HelperText="@(carried.Contains(id) ? L["Balances_CarriedAccount"] : null)" />
+                             ReadOnly="@carried.Contains(id)" HelperText="@(carried.Contains(id) ? L["Balances_CarriedAccount"].Value : null)" />
         }
     </div>
 </BaseDialog>

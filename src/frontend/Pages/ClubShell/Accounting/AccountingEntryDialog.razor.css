@@ -25,11 +25,37 @@
     background: var(--mud-palette-background-gray);
 }
 
+/* Every part has its own area, so the columns line up from line to line, with or without cost centers and remove button. */
 .entry-line {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(110px, 1fr) auto;
+    grid-template-columns: minmax(0, 2fr) minmax(110px, 1fr) 32px;
+    grid-template-areas: "category amount remove";
     gap: 8px;
     align-items: center;
+}
+
+.entry-line--cost-center {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(110px, 1fr) 32px;
+    grid-template-areas: "category cost-center amount remove";
+}
+
+.entry-line__category {
+    grid-area: category;
+    min-width: 0;
+}
+
+.entry-line__cost-center {
+    grid-area: cost-center;
+    min-width: 0;
+}
+
+.entry-line ::deep .entry-line__amount {
+    grid-area: amount;
+}
+
+.entry-line ::deep .entry-line__remove {
+    grid-area: remove;
+    justify-self: center;
 }
 
 .entry-lines__footer {
@@ -87,12 +113,13 @@
 
 @media (max-width: 600px) {
     .entry-line {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
+        grid-template-areas: "category category remove" "amount amount amount";
         padding-bottom: 8px;
         border-bottom: 1px dashed var(--mud-palette-lines-default);
     }
 
-    .entry-line ::deep .entry-line__category {
-        grid-column: 1 / -1;
+    .entry-line--cost-center {
+        grid-template-areas: "category category remove" "cost-center amount amount";
     }
 }
