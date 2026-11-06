@@ -59,4 +59,38 @@ public interface IAccountingStore : ISemaphoreStore
     Task<HttpResult<AccountingReceiptDto>> UploadReceipt(Stream content, string fileName);
     Task<HttpResult> DeleteReceipt(int receiptId);
     Task<HttpResult<FileDownload>> GetReceiptFile(int receiptId);
+
+    // ---------- automatic entries and bank ----------
+
+    AccountingAutomationDto? Automation { get; }
+
+    /// <summary>The open suggestions.</summary>
+    List<AccountingProposalDto> Proposals { get; }
+
+    /// <summary>The bank lines of <see cref="BankAccountId"/> with <see cref="BankStatus"/>.</summary>
+    GetBankTransactionsResult? BankTransactions { get; }
+
+    int? BankAccountId { get; }
+    BankTransactionStatus BankStatus { get; }
+    List<BankStatementImportDto> BankImports { get; }
+    List<BankRuleDto> BankRules { get; }
+
+    Task LoadAutomation();
+    Task<HttpResult<AccountingAutomationDto>> SaveAutomation(SaveAccountingAutomationModel model);
+    Task LoadProposals();
+    Task<HttpResult<SyncAccountingProposalsResult>> SyncProposals();
+    Task<HttpResult<AccountingEntryDetailDto>> BookProposal(int proposalId, SaveAccountingEntryModel? changed);
+    Task<HttpResult> DismissProposal(int proposalId);
+
+    /// <summary>The bank lines, imports and rules of a money account (all with <c>null</c>).</summary>
+    Task LoadBank(int? moneyAccountId, BankTransactionStatus status);
+
+    Task<HttpResult<BankImportResultDto>> ImportBankStatement(int moneyAccountId, Stream content, string fileName, CsvColumnsDto? layout);
+    Task<HttpResult> MatchBankTransaction(int bankTransactionId, MatchBankTransactionModel model);
+    Task<HttpResult<AccountingEntryDetailDto>> BookBankTransaction(int bankTransactionId, SaveAccountingEntryModel model);
+    Task<HttpResult<BookBankTransactionsByRulesResult>> BookBankTransactionsByRules();
+    Task<HttpResult> IgnoreBankTransaction(int bankTransactionId);
+    Task<HttpResult> ReopenBankTransaction(int bankTransactionId);
+    Task<HttpResult<BankRuleDto>> SaveBankRule(int? bankRuleId, SaveBankRuleModel model);
+    Task<HttpResult> DeleteBankRule(int bankRuleId);
 }

@@ -40,4 +40,23 @@ public interface IAccountingHttpClient
     public Task<HttpResult<AccountingReceiptDto>> UploadReceipt(Stream content, string fileName, CancellationToken cancellationToken = default);
     public Task<HttpResult> DeleteReceipt(int receiptId, CancellationToken cancellationToken = default);
     public Task<HttpResult<FileDownload>> GetReceiptFile(int receiptId, CancellationToken cancellationToken = default);
+
+    public Task<HttpResult<AccountingAutomationDto>> GetAutomation(CancellationToken cancellationToken = default);
+    public Task<HttpResult<AccountingAutomationDto>> SaveAutomation(SaveAccountingAutomationModel model, CancellationToken cancellationToken = default);
+    public Task<HttpResult<List<AccountingProposalDto>>> GetProposals(CancellationToken cancellationToken = default);
+    public Task<HttpResult<SyncAccountingProposalsResult>> SyncProposals(CancellationToken cancellationToken = default);
+    public Task<HttpResult<AccountingEntryDetailDto>> BookProposal(int proposalId, BookAccountingProposalModel model, CancellationToken cancellationToken = default);
+    public Task<HttpResult> DismissProposal(int proposalId, CancellationToken cancellationToken = default);
+
+    public Task<HttpResult<BankImportResultDto>> ImportBankStatement(int moneyAccountId, Stream content, string fileName, CsvColumnsDto? layout, CancellationToken cancellationToken = default);
+    public Task<HttpResult<List<BankStatementImportDto>>> GetBankStatementImports(int? moneyAccountId, CancellationToken cancellationToken = default);
+    public Task<HttpResult<GetBankTransactionsResult>> GetBankTransactions(int? moneyAccountId, BankTransactionStatus status, CancellationToken cancellationToken = default);
+    public Task<HttpResult> MatchBankTransaction(int bankTransactionId, MatchBankTransactionModel model, CancellationToken cancellationToken = default);
+    public Task<HttpResult<AccountingEntryDetailDto>> BookBankTransaction(int bankTransactionId, SaveAccountingEntryModel model, CancellationToken cancellationToken = default);
+    public Task<HttpResult<BookBankTransactionsByRulesResult>> BookBankTransactionsByRules(int? moneyAccountId, CancellationToken cancellationToken = default);
+    public Task<HttpResult> IgnoreBankTransaction(int bankTransactionId, CancellationToken cancellationToken = default);
+    public Task<HttpResult> ReopenBankTransaction(int bankTransactionId, CancellationToken cancellationToken = default);
+    public Task<HttpResult<List<BankRuleDto>>> GetBankRules(CancellationToken cancellationToken = default);
+    public Task<HttpResult<BankRuleDto>> SaveBankRule(int? bankRuleId, SaveBankRuleModel model, CancellationToken cancellationToken = default);
+    public Task<HttpResult> DeleteBankRule(int bankRuleId, CancellationToken cancellationToken = default);
 }

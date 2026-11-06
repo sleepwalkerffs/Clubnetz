@@ -201,5 +201,121 @@ public class AccountingController(IMediator mediator, IUserAccessor userAccessor
         return File(result.Data, result.ContentType, result.FileName);
     }
 
+    private static readonly System.Text.Json.JsonSerializerOptions LayoutJson = new(System.Text.Json.JsonSerializerDefaults.Web);
+
+    // ---------- automatic entries ----------
+
+    [HttpGet("automation")]
+    [Authorize(AuthorizationPolicies.AccountingReader)]
+    public Task<AccountingAutomationDto> GetAccountingAutomation(int clubId, CancellationToken cancellationToken)
+        => mediator.Send(new GetAccountingAutomation(clubId), cancellationToken);
+
+    [HttpPut("automation")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<AccountingAutomationDto> UpdateAccountingAutomation(int clubId, [FromBody] SaveAccountingAutomationModel model, CancellationToken cancellationToken)
+        => mediator.Send(new UpdateAccountingAutomation(clubId, model, DateTimeOffset.UtcNow), cancellationToken);
+
+    /// <summary>The suggested entries of a status (open by default).</summary>
+    [HttpGet("proposals")]
+    [Authorize(AuthorizationPolicies.AccountingReader)]
+    public Task<List<AccountingProposalDto>> GetAccountingProposals(int clubId, [FromQuery] AccountingProposalStatus status, CancellationToken cancellationToken)
+        => mediator.Send(new GetAccountingProposals(clubId, (Domain.Accounting.AccountingProposalStatus)status), cancellationToken);
+
+    /// <summary>Collects what was paid since the last time (the job does it every hour).</summary>
+    [HttpPost("proposals/sync")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<SyncAccountingProposalsResult> SyncAccountingProposals(int clubId, CancellationToken cancellationToken)
+        => mediator.Send(new SyncAccountingProposals(clubId, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpPost("proposals/{proposalId:int}/book")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<AccountingEntryDetailDto> BookAccountingProposal(int clubId, int proposalId, [FromBody] BookAccountingProposalModel model, CancellationToken cancellationToken)
+        => mediator.Send(new BookAccountingProposal(clubId, userAccessor.GetUserId(), proposalId, model, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpPost("proposals/{proposalId:int}/dismiss")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task DismissAccountingProposal(int clubId, int proposalId, CancellationToken cancellationToken)
+        => mediator.Send(new DismissAccountingProposal(clubId, proposalId), cancellationToken);
+
+    // ---------- bank ----------
+
+    /// <summary>Imports a bank statement (camt.053, MT940, CSV) into a money account. <paramref name="layout"/>: the mapped CSV columns as JSON.</summary>
+    [HttpPost("bank-statements")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    [RequestSizeLimit(6 * 1024 * 1024)]
+    public async Task<BankImportResultDto> ImportBankStatement(int clubId, [FromForm] int moneyAccountId, IFormFile file, [FromForm] string? layout, CancellationToken cancellationToken)
+    {
+        if (file.Length > Domain.Accounting.BankStatementReader.MaxFileSize)
+            throw new Domain.Exceptions.PreconditionException(Domain.Accounting.AccountingErrorCode.AccountingBankFileInvalid, "The file is too large.");
+
+        using var stream = new MemoryStream();
+        await file.CopyToAsync(stream, cancellationToken);
+        CsvColumnsDto? columns;
+        try
+        {
+            columns = string.IsNullOrWhiteSpace(layout) ? null : System.Text.Json.JsonSerializer.Deserialize<CsvColumnsDto>(layout, LayoutJson);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            throw new Domain.Exceptions.PreconditionException(Domain.Accounting.AccountingErrorCode.AccountingBankCsvLayoutInvalid, "The columns are no valid JSON.");
+        }
+        return await mediator.Send(new ImportBankStatement(clubId, userAccessor.GetUserId(), moneyAccountId, file.FileName, stream.ToArray(), columns, DateTimeOffset.UtcNow), cancellationToken);
+    }
+
+    [HttpGet("bank-statements")]
+    [Authorize(AuthorizationPolicies.AccountingReader)]
+    public Task<List<BankStatementImportDto>> GetBankStatementImports(int clubId, [FromQuery] int? moneyAccountId, CancellationToken cancellationToken)
+        => mediator.Send(new GetBankStatementImports(clubId, moneyAccountId), cancellationToken);
+
+    [HttpGet("bank-transactions")]
+    [Authorize(AuthorizationPolicies.AccountingReader)]
+    public Task<GetBankTransactionsResult> GetBankTransactions(int clubId, [FromQuery] int? moneyAccountId, [FromQuery] BankTransactionStatus status, CancellationToken cancellationToken)
+        => mediator.Send(new GetBankTransactions(clubId, moneyAccountId, (Domain.Accounting.BankTransactionStatus)status), cancellationToken);
+
+    [HttpPost("bank-transactions/{bankTransactionId:int}/match")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task MatchBankTransaction(int clubId, int bankTransactionId, [FromBody] MatchBankTransactionModel model, CancellationToken cancellationToken)
+        => mediator.Send(new MatchBankTransaction(clubId, userAccessor.GetUserId(), bankTransactionId, model, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpPost("bank-transactions/{bankTransactionId:int}/book")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<AccountingEntryDetailDto> BookBankTransaction(int clubId, int bankTransactionId, [FromBody] SaveAccountingEntryModel model, CancellationToken cancellationToken)
+        => mediator.Send(new BookBankTransaction(clubId, userAccessor.GetUserId(), bankTransactionId, model, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpPost("bank-transactions/book-by-rules")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<BookBankTransactionsByRulesResult> BookBankTransactionsByRules(int clubId, [FromQuery] int? moneyAccountId, CancellationToken cancellationToken)
+        => mediator.Send(new BookBankTransactionsByRules(clubId, userAccessor.GetUserId(), moneyAccountId, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpPost("bank-transactions/{bankTransactionId:int}/ignore")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task IgnoreBankTransaction(int clubId, int bankTransactionId, CancellationToken cancellationToken)
+        => mediator.Send(new IgnoreBankTransaction(clubId, bankTransactionId), cancellationToken);
+
+    [HttpPost("bank-transactions/{bankTransactionId:int}/reopen")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task ReopenBankTransaction(int clubId, int bankTransactionId, CancellationToken cancellationToken)
+        => mediator.Send(new ReopenBankTransaction(clubId, bankTransactionId), cancellationToken);
+
+    [HttpGet("bank-rules")]
+    [Authorize(AuthorizationPolicies.AccountingReader)]
+    public Task<List<BankRuleDto>> GetBankRules(int clubId, CancellationToken cancellationToken)
+        => mediator.Send(new GetBankRules(clubId), cancellationToken);
+
+    [HttpPost("bank-rules")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<BankRuleDto> CreateBankRule(int clubId, [FromBody] SaveBankRuleModel model, CancellationToken cancellationToken)
+        => mediator.Send(new CreateBankRule(clubId, model), cancellationToken);
+
+    [HttpPut("bank-rules/{bankRuleId:int}")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<BankRuleDto> UpdateBankRule(int clubId, int bankRuleId, [FromBody] SaveBankRuleModel model, CancellationToken cancellationToken)
+        => mediator.Send(new UpdateBankRule(clubId, bankRuleId, model), cancellationToken);
+
+    [HttpDelete("bank-rules/{bankRuleId:int}")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task DeleteBankRule(int clubId, int bankRuleId, CancellationToken cancellationToken)
+        => mediator.Send(new DeleteBankRule(clubId, bankRuleId), cancellationToken);
+
     private async Task<bool> Passes(string policy) => (await authorizationService.AuthorizeAsync(User, policy)).Succeeded;
 }

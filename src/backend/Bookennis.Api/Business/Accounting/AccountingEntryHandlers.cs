@@ -87,23 +87,8 @@ public record CreateAccountingEntry(int ClubId, int UserId, SaveAccountingEntryM
             await context.LockAccounting(request.ClubId, cancellationToken);
             await context.GetAccountingSettings(request.ClubId, cancellationToken);
 
-            var date = request.Model.Date;
-            var year = await context.FiscalYears.SingleOrDefaultAsync(y => y.ClubId == request.ClubId && y.StartDate <= date && y.EndDate >= date, cancellationToken)
-                       ?? throw new PreconditionException(AccountingErrorCode.AccountingFiscalYearMissing, [date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)], "No fiscal year contains the date.");
             var memberId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken);
-            var data = await AccountingEntryInput.Check(context, request.ClubId, request.Model, null, cancellationToken);
-            var receipts = await AccountingEntryInput.Receipts(context, request.ClubId, request.Model.ReceiptIds ?? [], null, cancellationToken);
-
-            var entry = new AccountingEntry(year, data, receipts.Select(r => r.Id).ToList(), memberId, request.Now);
-            context.Add(entry);
-            await context.SaveChangesAsync(cancellationToken);
-
-            foreach (var receipt in receipts)
-                receipt.AttachTo(entry);
-            await context.SaveChangesAsync(cancellationToken);
-            await AccountingBalances.CarryForward(context, year, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
-
+            var entry = await AccountingEntryCreation.Create(context, request.ClubId, memberId, request.Model, request.Now, cancellationToken);
             return await AccountingEntryDetails.Load(context, request.ClubId, entry.Id, cancellationToken);
         }
     }
@@ -134,6 +119,7 @@ public record UpdateAccountingEntry(int ClubId, int UserId, int EntryId, SaveAcc
 
             entry.Update(year, data, receipts.Select(r => r.Id).ToList(), memberId, request.Now);
             await context.SaveChangesAsync(cancellationToken);
+            await BankMapper.ReopenLinesNoLongerBooked(context, entry, cancellationToken);
             await AccountingBalances.CarryForward(context, year, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
 
@@ -157,6 +143,7 @@ public record CancelAccountingEntry(int ClubId, int UserId, int EntryId, string?
 
             entry.Cancel(year, request.Reason, memberId, request.Now);
             await context.SaveChangesAsync(cancellationToken);
+            await BankMapper.ReopenLinesNoLongerBooked(context, entry, cancellationToken);
             await AccountingBalances.CarryForward(context, year, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
 
@@ -324,4 +311,45 @@ internal static class AccountingEntryDetails
             ReceiptIds = snapshot.ReceiptIds?.ToList() ?? [],
         };
     }
+}
+
+/// <summary>
+/// Books a new entry: in the fiscal year of its date, with the receipts it lists, and carries the balances into the years after.
+/// Used by the treasurer's entries, the suggestions of the automatic entries and the bank lines. The caller holds the accounting lock.
+/// </summary>
+internal static class AccountingEntryCreation
+{
+    public static async Task<AccountingEntry> Create(AppDbContext context, int clubId, int? memberId, SaveAccountingEntryModel model, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var date = model.Date;
+        var year = await context.FiscalYears.Include(y => y.OpeningBalances).SingleOrDefaultAsync(y => y.ClubId == clubId && y.StartDate <= date && y.EndDate >= date, cancellationToken)
+                   ?? throw new PreconditionException(AccountingErrorCode.AccountingFiscalYearMissing, [date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)], "No fiscal year contains the date.");
+        var data = await AccountingEntryInput.Check(context, clubId, model, null, cancellationToken);
+        var receipts = await AccountingEntryInput.Receipts(context, clubId, model.ReceiptIds ?? [], null, cancellationToken);
+
+        var entry = new AccountingEntry(year, data, receipts.Select(r => r.Id).ToList(), memberId, now);
+        context.Add(entry);
+        await context.SaveChangesAsync(cancellationToken);
+
+        foreach (var receipt in receipts)
+            receipt.AttachTo(entry);
+        await context.SaveChangesAsync(cancellationToken);
+        await AccountingBalances.CarryForward(context, year, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+        return entry;
+    }
+
+    /// <summary>The model of an entry as Clubnetz suggests it (a suggestion, a bank line with a rule).</summary>
+    public static SaveAccountingEntryModel ToModel(AccountingEntry.EntryData data) => new()
+    {
+        Date = data.Date,
+        Text = data.Text,
+        Kind = (global::Bookennis.Shared.Controller.Accounting.AccountingEntryKind)data.Kind,
+        MoneyAccountId = data.MoneyAccountId,
+        ToMoneyAccountId = data.ToMoneyAccountId,
+        TransferAmountCents = data.TransferAmountCents,
+        Lines = data.Lines.Select(l => new SaveAccountingEntryLineModel { CategoryId = l.CategoryId, CostCenterId = l.CostCenterId, AmountCents = l.AmountCents }).ToList(),
+        CounterpartyMemberId = data.CounterpartyMemberId,
+        CounterpartyName = data.CounterpartyName,
+    };
 }

@@ -1,0 +1,19 @@
+@* A column of a CSV file, picked by its letter and header (for the mapping of a bank export). *@
+
+<MudSelect T="int?" Value="@Value" ValueChanged="ValueChanged" Label="@Label" HelperText="@Hint" Variant="Variant.Outlined" Margin="Margin.Dense"
+           Clearable="@(!Required)" Required="@Required" Error="@(Required && Value is null)">
+    @for (var c = 0; c < Names.Count; c++)
+    {
+        var column = c;
+        <MudSelectItem T="int?" Value="@column">@Names[column]</MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter] public string? Hint { get; set; }
+    [Parameter, EditorRequired] public IReadOnlyList<string> Names { get; set; } = [];
+    [Parameter] public int? Value { get; set; }
+    [Parameter] public EventCallback<int?> ValueChanged { get; set; }
+    [Parameter] public bool Required { get; set; }
+}

@@ -915,4 +915,34 @@
   <data name="AccountingCategorySphereInUse" xml:space="preserve">
     <value>„{0}“ wird in einem abgeschlossenen Rechnungsjahr verwendet: der Steuerbereich bleibt, sonst ändern sich die Berichte dieses Jahres.</value>
   </data>
+  <data name="AccountingAutomationIncomplete" xml:space="preserve">
+    <value>Eine eingeschaltete Quelle braucht ihre Kategorie und die Geldkonten, auf die ihre Zahlungen gehen.</value>
+  </data>
+  <data name="AccountingProposalNotOpen" xml:space="preserve">
+    <value>Der Vorschlag wurde schon gebucht oder verworfen.</value>
+  </data>
+  <data name="AccountingBankFileInvalid" xml:space="preserve">
+    <value>Diese Datei kann nicht als Kontoauszug gelesen werden (camt.053, MT940 oder CSV, bis 5 MB).</value>
+  </data>
+  <data name="AccountingBankTransactionNotOpen" xml:space="preserve">
+    <value>Die Bankzeile wurde schon zugeordnet oder ignoriert.</value>
+  </data>
+  <data name="AccountingBankTransactionAmountMismatch" xml:space="preserve">
+    <value>Die Buchung muss genau € {0} auf diesem Konto buchen.</value>
+  </data>
+  <data name="AccountingBankRuleInvalid" xml:space="preserve">
+    <value>Eine Regel braucht einen Text oder eine IBAN, nach der sie sucht.</value>
+  </data>
+  <data name="AccountingBankCsvLayoutInvalid" xml:space="preserve">
+    <value>Mit diesen Spalten konnte keine Zeile gelesen werden. Prüf die Spalten für Datum und Betrag.</value>
+  </data>
+  <data name="AccountingEntryAlreadyMatched" xml:space="preserve">
+    <value>Buchung #{0} ist schon einer anderen Bankzeile zugeordnet.</value>
+  </data>
+  <data name="AccountingBankFileOtherAccount" xml:space="preserve">
+    <value>Der Auszug gehört zum Konto {0}, nicht zu diesem.</value>
+  </data>
+  <data name="AccountingBankFileSeveralAccounts" xml:space="preserve">
+    <value>Die Datei enthält Auszüge mehrerer Konten. Gib dem Geldkonto unter Einrichtung seine IBAN: dann werden nur seine Auszüge importiert.</value>
+  </data>
 </root>

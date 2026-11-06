@@ -171,6 +171,9 @@ recurringJobs.AddOrUpdate<CourtPurchaseHoldReleaseJob>(CourtPurchaseHoldReleaseJ
 // Closes the payment pages of clubhouse tabs that ran out (asks SumUp first) and catches payments whose webhook did not arrive
 recurringJobs.AddOrUpdate<ClubhouseTabPaymentJob>(ClubhouseTabPaymentJob.JobId, job => job.Run(), ClubhouseTabPaymentJob.Schedule);
 
+// The automatic entries of the clubs' accounting: what was paid becomes a suggestion (or an entry), club by club
+recurringJobs.AddOrUpdate<Bookennis.Api.Business.Accounting.AccountingAutomationJob>(Bookennis.Api.Business.Accounting.AccountingAutomationJob.JobId, job => job.Run(), Bookennis.Api.Business.Accounting.AccountingAutomationJob.Schedule);
+
 container.Verify();
 
 app.Run();

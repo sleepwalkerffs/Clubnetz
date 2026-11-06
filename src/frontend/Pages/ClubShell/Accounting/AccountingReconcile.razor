@@ -1,0 +1,476 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+
+@inherits AccountingComponentBase
+
+@* Reconcile (Abgleich): the entries Clubnetz suggests for payments it knows of, and the lines of the bank statements, matched with
+   the entries that book them. *@
+
+@{
+    var basics = Store.Basics;
+    var canManage = basics?.CanManage == true;
+    var bankAccounts = basics?.MoneyAccounts.Where(a => a.Kind == MoneyAccountKind.Bank && (!a.IsArchived || a.Id == Store.BankAccountId)).ToList() ?? [];
+    var lines = Store.BankTransactions?.Transactions ?? [];
+}
+
+<SectionCard Emoji="✨" Title="@L["Proposals_Title"]" Subtitle="@L["Proposals_Subtitle"]">
+    <ChildContent>
+        @* In the content, not the head of the card: two buttons there leave no room for the title on a phone *@
+        @if (canManage)
+        {
+            <div class="acc-recon-toolbar">
+                <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.Tune" OnClick="OpenAutomation">@L["Automation_Open"]</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Sync" OnClick="Sync" Disabled="@Store.IsSaving">@L["Proposals_Sync"]</MudButton>
+            </div>
+        }
+        @if (Store.Proposals.Count == 0)
+        {
+            <div class="acc-note">@L[AutomationIsOn ? "Proposals_Empty" : "Proposals_Off"]</div>
+        }
+        else
+        {
+            <div class="acc-entries">
+                @foreach (var proposal in Store.Proposals)
+                {
+                    var current = proposal;
+                    <div class="acc-recon">
+                        <span class="acc-recon__icon" aria-hidden="true">@SourceIcon(current.Source)</span>
+                        <div class="acc-entry__main">
+                            <span class="acc-entry__text">@current.Text</span>
+                            <span class="acc-entry__meta">
+                                <span>@AccountingHelpers.Date(current.Date)</span>
+                                <span>@AccountName(current.MoneyAccountId)@(current.ToMoneyAccountId is { } to ? $" → {AccountName(to)}" : null)</span>
+                                @if (current.CategoryId is { } categoryId)
+                                {
+                                    <span>@CategoryName(categoryId)</span>
+                                }
+                                @if (current.CounterpartyName is { } name)
+                                {
+                                    <span>@name</span>
+                                }
+                            </span>
+                            @if (current.Problem is { } problem)
+                            {
+                                <span class="acc-chip acc-chip--warn">⚠️ @ProblemText(problem)</span>
+                            }
+                        </div>
+                        <div class="acc-recon__end">
+                            <span class="@ProposalAmountClass(current)">@ProposalAmount(current)</span>
+                            @if (canManage)
+                            {
+                                <div class="acc-recon__actions">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" OnClick="() => BookProposal(current)" aria-label="@L["Proposals_Book"]" title="@L["Proposals_Book"]" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => EditProposal(current)" aria-label="@L["Proposals_Edit"]" title="@L["Proposals_Edit"]" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => Dismiss(current)" aria-label="@L["Proposals_Dismiss"]" title="@L["Proposals_Dismiss"]" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </ChildContent>
+</SectionCard>
+
+<SectionCard Emoji="🏦" Title="@L["Bank_Title"]" Subtitle="@L["Bank_Subtitle"]">
+    <ChildContent>
+        <div class="acc-toolbar">
+            <MudSelect T="int?" Value="@Store.BankAccountId" ValueChanged="OnAccountChanged" Label="@L["MoneyAccount"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="acc-toolbar__filter">
+                @foreach (var account in bankAccounts)
+                {
+                    <MudSelectItem T="int?" Value="@account.Id">@account.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="BankTransactionStatus" Value="@Store.BankStatus" ValueChanged="OnStatusChanged" Label="@L["Bank_Show"]" Variant="Variant.Outlined" Margin="Margin.Dense" Class="acc-toolbar__filter">
+                @foreach (var status in Enum.GetValues<BankTransactionStatus>())
+                {
+                    <MudSelectItem T="BankTransactionStatus" Value="@status">@L[$"Bank_Status_{status}"]</MudSelectItem>
+                }
+            </MudSelect>
+            @if (canManage)
+            {
+                <div class="acc-toolbar__end">
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Rule" OnClick="OpenRules">@string.Format(L["Bank_Rules"], Store.BankRules.Count)</MudButton>
+                    @if (Store.BankStatus == BankTransactionStatus.Open && lines.Any(l => l.RuleId is not null && l.Matches.Count == 0))
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoFixHigh" OnClick="BookByRules" Disabled="@Store.IsSaving">
+                            @string.Format(L["Bank_BookByRules"], lines.Count(l => l.RuleId is not null && l.Matches.Count == 0))
+                        </MudButton>
+                    }
+                    @* A label opens the file picker of the hidden input; without a money account there is nothing to import into *@
+                    <MudButton HtmlTag="label" for="bank-statement-upload" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile"
+                               Disabled="@(uploading || Store.BankAccountId is null)" title="@(Store.BankAccountId is null ? L["Bank_ChooseAccount"].Value : null)">
+                        @L["Bank_Import"]
+                    </MudButton>
+                    <InputFile id="bank-statement-upload" OnChange="Import" accept=".xml,.sta,.mt940,.txt,.csv,text/csv,text/xml,application/xml" style="display:none" />
+                </div>
+            }
+        </div>
+
+        @if (uploading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+
+        @if (bankAccounts.Count == 0)
+        {
+            <div class="acc-note">@L["Bank_NoAccount"]</div>
+        }
+        else if (lines.Count == 0)
+        {
+            <div class="acc-empty">
+                <div class="acc-empty__emoji" aria-hidden="true">@(Store.BankStatus == BankTransactionStatus.Open ? "✅" : "📭")</div>
+                <div class="acc-empty__title">@L[Store.BankStatus == BankTransactionStatus.Open ? "Bank_Empty" : "Bank_EmptyOther"]</div>
+                @if (Store.BankStatus == BankTransactionStatus.Open)
+                {
+                    <div class="acc-empty__text">@L["Bank_EmptyHint"]</div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="acc-entries">
+                @foreach (var line in lines)
+                {
+                    var current = line;
+                    var rule = current.RuleId is { } ruleId ? Store.BankRules.FirstOrDefault(r => r.Id == ruleId) : null;
+                    <div class="acc-recon">
+                        <span class="acc-recon__icon" aria-hidden="true">@(current.AmountCents > 0 ? "⬇️" : "⬆️")</span>
+                        <div class="acc-entry__main">
+                            <span class="acc-entry__text">@(current.CounterpartyName ?? current.Reference)</span>
+                            <span class="acc-entry__meta">
+                                <span>@AccountingHelpers.Date(current.BookingDate)</span>
+                                @if (current.CounterpartyName is not null && current.Reference.Length > 0)
+                                {
+                                    <span class="acc-recon__reference">@current.Reference</span>
+                                }
+                                @if (Store.BankAccountId is null)
+                                {
+                                    <span>@AccountName(current.MoneyAccountId)</span>
+                                }
+                            </span>
+                            @if (current.Status == BankTransactionStatus.Open && canManage)
+                            {
+                                <div class="acc-recon__matches">
+                                    @foreach (var match in current.Matches)
+                                    {
+                                        var candidate = match;
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Link" OnClick="() => Match(current, candidate)">
+                                            @(candidate.Kind == BankMatchKind.Entry ? $"#{candidate.Number} {candidate.Text}" : $"{L["Bank_Suggestion"]}: {candidate.Text}") · @AccountingHelpers.ShortDate(candidate.Date)
+                                        </MudChip>
+                                    }
+                                    @if (rule is not null && current.Matches.Count == 0)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Rule" OnClick="() => Book(current, rule)">
+                                            @CategoryName(rule.CategoryId)
+                                        </MudChip>
+                                    }
+                                </div>
+                            }
+                            @if (current.EntryNumber is { } number)
+                            {
+                                <span class="acc-note">🔗 @string.Format(L["Bank_BookedAs"], number)</span>
+                            }
+                        </div>
+                        <div class="acc-recon__end">
+                            <span class="@AccountingHelpers.AmountClass(current.AmountCents)">@AccountingHelpers.SignedAmount(current.AmountCents)</span>
+                            @if (canManage)
+                            {
+                                <div class="acc-recon__actions">
+                                    @if (current.Status == BankTransactionStatus.Open)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.PostAdd" Size="Size.Small" Color="Color.Primary" OnClick="() => Book(current, rule)" aria-label="@L["Bank_Book"]" title="@L["Bank_Book"]" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.AddTask" Size="Size.Small" OnClick="() => NewRule(current)" aria-label="@L["Bank_NewRule"]" title="@L["Bank_NewRule"]" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.VisibilityOff" Size="Size.Small" OnClick="() => Ignore(current)" aria-label="@L["Bank_Ignore"]" title="@L["Bank_Ignore"]" />
+                                    }
+                                    else
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Undo" Size="Size.Small" OnClick="() => Reopen(current)" aria-label="@L["Bank_Reopen"]" title="@L["Bank_Reopen"]" />
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (Store.BankImports.Count > 0)
+        {
+            <div class="acc-subtitle">@L["Bank_Imports"]</div>
+            <div class="acc-imports">
+                @foreach (var import in Store.BankImports.Take(10))
+                {
+                    var difference = import is { ClosingBalanceCents: { } bank, BooksBalanceCents: { } books } ? bank - books : (long?)null;
+                    <div class="acc-import">
+                        <div class="acc-entry__main">
+                            <span class="acc-import__name">📄 @import.FileName</span>
+                            <span class="acc-entry__meta">
+                                <span>@AccountName(import.MoneyAccountId)</span>
+                                @if (import.FromDate is { } from && import.ToDate is { } to)
+                                {
+                                    <span>@AccountingHelpers.ShortDate(from) – @AccountingHelpers.Date(to)</span>
+                                }
+                                <span>@string.Format(L["Bank_ImportCounts"], import.ImportedCount, import.SkippedCount)</span>
+                            </span>
+                        </div>
+                        @if (import.ClosingBalanceCents is { } closing && import.ClosingDate is { } closingDate)
+                        {
+                            <div class="acc-import__check">
+                                <span class="acc-note">@string.Format(L["Bank_BalanceOn"], AccountingHelpers.Date(closingDate)): @AccountingHelpers.Amount(closing)</span>
+                                @if (difference is 0)
+                                {
+                                    <span class="acc-chip">✅ @L["Bank_BalanceFits"]</span>
+                                }
+                                else if (difference is { } diff)
+                                {
+                                    <span class="acc-chip acc-chip--warn">⚠️ @string.Format(L["Bank_BalanceDiffers"], AccountingHelpers.SignedAmount(diff))</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </ChildContent>
+</SectionCard>
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private bool uploading;
+
+    private bool AutomationIsOn => Store.Automation?.Sources.Any(s => s.Mode != AccountingAutomationMode.Off) == true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        // The account picked before must be one of this club (the store outlives a change of club)
+        var accounts = Store.Basics?.MoneyAccounts ?? [];
+        var defaultAccount = accounts.Any(a => a.Id == Store.BankAccountId)
+            ? Store.BankAccountId
+            : accounts.FirstOrDefault(a => a.Kind == MoneyAccountKind.Bank && !a.IsArchived)?.Id;
+        await Task.WhenAll(Store.LoadProposals(), Store.LoadAutomation(), Store.LoadBank(defaultAccount, Store.BankStatus));
+    }
+
+    /// <summary>Only the code of the problem is kept (not its details): a text without placeholders.</summary>
+    private string ProblemText(string code) => code switch
+    {
+        "AccountingFiscalYearMissing" => L["Proposals_ProblemNoYear"],
+        "AccountingFiscalYearClosed" or "AccountingDateOutsideFiscalYear" => L["Proposals_ProblemYearClosed"],
+        "AccountingArchived" => L["Proposals_ProblemArchived"],
+        _ => L["Proposals_ProblemOther"],
+    };
+
+    private string AccountName(int id) => Store.Basics?.MoneyAccounts.FirstOrDefault(a => a.Id == id)?.Name ?? "?";
+
+    private string CategoryName(int id) => Store.Basics?.Categories.FirstOrDefault(c => c.Id == id) is { } category ? AccountingHelpers.CategoryName(category) : "?";
+
+    private static string SourceIcon(AccountingSource source) => source switch
+    {
+        AccountingSource.MembershipFees => "🎫",
+        AccountingSource.CourtSales => "🎾",
+        AccountingSource.Clubhouse => "🍺",
+        _ => "💳",
+    };
+
+    /// <summary>What the suggestion does to its money account, signed (a transfer shows its amount).</summary>
+    private long ProposalEffect(AccountingProposalDto proposal)
+    {
+        if (proposal.Kind == AccountingEntryKind.Transfer)
+            return proposal.AmountCents;
+        var kind = Store.Basics?.Categories.FirstOrDefault(c => c.Id == proposal.CategoryId)?.Kind;
+        return kind == AccountingCategoryKind.Expense ? -proposal.AmountCents : proposal.AmountCents;
+    }
+
+    private string ProposalAmount(AccountingProposalDto proposal)
+        => proposal.Kind == AccountingEntryKind.Transfer ? AccountingHelpers.Amount(proposal.AmountCents) : AccountingHelpers.SignedAmount(ProposalEffect(proposal));
+
+    private string ProposalAmountClass(AccountingProposalDto proposal)
+        => proposal.Kind == AccountingEntryKind.Transfer ? "acc-amount" : AccountingHelpers.AmountClass(ProposalEffect(proposal));
+
+    private async Task OpenAutomation()
+    {
+        await AccountingDialogs.Open(DialogService, L["Automation_Title"], new DialogParameters<AccountingAutomationDialog>());
+    }
+
+    private async Task Sync()
+    {
+        var result = await Store.SyncProposals();
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(string.Format(L["Proposals_Synced"], result.Dto.Created, result.Dto.Booked), Severity.Success);
+        if (result.Dto.StripeFailed)
+            Snackbar.Add(L["Proposals_StripeFailed"], Severity.Warning);
+    }
+
+    private async Task BookProposal(AccountingProposalDto proposal)
+    {
+        var result = await Store.BookProposal(proposal.Id, null);
+        if (result is { Success: true, Dto: not null })
+            Snackbar.Add(string.Format(L["Entry_Added"], result.Dto.Number), Severity.Success);
+        else
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private Task EditProposal(AccountingProposalDto proposal)
+        => AccountingDialogs.OpenDraft(DialogService, L, new SaveAccountingEntryModel
+        {
+            Date = proposal.Date,
+            Text = proposal.Text,
+            Kind = proposal.Kind,
+            MoneyAccountId = proposal.MoneyAccountId,
+            ToMoneyAccountId = proposal.ToMoneyAccountId,
+            TransferAmountCents = proposal.Kind == AccountingEntryKind.Transfer ? proposal.AmountCents : null,
+            Lines = proposal.Kind == AccountingEntryKind.Booking ? [new SaveAccountingEntryLineModel { CategoryId = proposal.CategoryId ?? 0, AmountCents = proposal.AmountCents }] : [],
+            CounterpartyMemberId = proposal.CounterpartyMemberId,
+            CounterpartyName = proposal.CounterpartyName,
+        }, model => Store.BookProposal(proposal.Id, model));
+
+    private async Task Dismiss(AccountingProposalDto proposal)
+    {
+        var result = await Store.DismissProposal(proposal.Id);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private Task OnAccountChanged(int? accountId) => Store.LoadBank(accountId, Store.BankStatus);
+
+    private Task OnStatusChanged(BankTransactionStatus status) => Store.LoadBank(Store.BankAccountId, status);
+
+    private async Task Import(InputFileChangeEventArgs e)
+    {
+        if (Store.BankAccountId is not { } accountId)
+            return;
+
+        var file = e.File;
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            Snackbar.Add(BackendLocale["AccountingBankFileInvalid"], Severity.Warning);
+            return;
+        }
+
+        uploading = true;
+        try
+        {
+            await using var stream = file.OpenReadStream(5 * 1024 * 1024);
+            var data = new MemoryStream();
+            await stream.CopyToAsync(data);
+            await ImportData(accountId, data.ToArray(), file.Name, null);
+        }
+        finally
+        {
+            uploading = false;
+        }
+    }
+
+    private async Task ImportData(int accountId, byte[] data, string fileName, CsvColumnsDto? layout)
+    {
+        var result = await Store.ImportBankStatement(accountId, new MemoryStream(data), fileName, layout);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        if (result.Dto.NeedsCsvLayout)
+        {
+            // The columns of this CSV are not known: the treasurer maps them once for the account
+            var parameters = new DialogParameters<BankCsvLayoutDialog>
+            {
+                { d => d.Preview, result.Dto.Preview },
+                { d => d.Columns, result.Dto.Columns },
+            };
+            var dialog = await DialogService.ShowAsync<BankCsvLayoutDialog>(L["Csv_Title"], parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true });
+            if (await dialog.Result is { Canceled: false, Data: CsvColumnsDto mapped })
+                await ImportData(accountId, data, fileName, mapped);
+            return;
+        }
+
+        Snackbar.Add(string.Format(L["Bank_Imported"], result.Dto.Imported, result.Dto.Skipped), result.Dto.Imported > 0 ? Severity.Success : Severity.Info);
+    }
+
+    private async Task Match(BankTransactionDto line, BankMatchDto match)
+    {
+        var result = await Store.MatchBankTransaction(line.Id, match.Kind == BankMatchKind.Entry ? new MatchBankTransactionModel { EntryId = match.Id } : new MatchBankTransactionModel { ProposalId = match.Id });
+        if (result.Success)
+            Snackbar.Add(L["Bank_Matched"], Severity.Success);
+        else
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    /// <summary>Opens the entry filled in with the line (and the category of its rule); saving books the line with it.</summary>
+    private Task Book(BankTransactionDto line, BankRuleDto? rule)
+    {
+        var kind = rule is null ? (AccountingCategoryKind?)null : Store.Basics?.Categories.FirstOrDefault(c => c.Id == rule.CategoryId)?.Kind;
+        var text = rule?.Text ?? string.Join(" ", new[] { line.CounterpartyName, line.Reference }.Where(t => !string.IsNullOrWhiteSpace(t)));
+        return AccountingDialogs.OpenDraft(DialogService, L, new SaveAccountingEntryModel
+        {
+            Date = line.BookingDate,
+            Text = text.Length > 200 ? text[..200] : text,
+            Kind = AccountingEntryKind.Booking,
+            MoneyAccountId = line.MoneyAccountId,
+            Lines =
+            [
+                new SaveAccountingEntryLineModel
+                {
+                    CategoryId = rule?.CategoryId ?? 0,
+                    CostCenterId = rule?.CostCenterId,
+                    AmountCents = kind switch
+                    {
+                        AccountingCategoryKind.Income => line.AmountCents,
+                        AccountingCategoryKind.Expense => -line.AmountCents,
+                        _ => line.AmountCents,
+                    },
+                },
+            ],
+            CounterpartyName = line.CounterpartyName,
+        }, model => Store.BookBankTransaction(line.Id, model));
+    }
+
+    private async Task BookByRules()
+    {
+        var result = await Store.BookBankTransactionsByRules();
+        if (result is { Success: true, Dto: not null })
+            Snackbar.Add(string.Format(L["Bank_BookedByRules"], result.Dto.Booked), Severity.Success);
+        else
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private async Task Ignore(BankTransactionDto line)
+    {
+        var result = await Store.IgnoreBankTransaction(line.Id);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private async Task Reopen(BankTransactionDto line)
+    {
+        var result = await Store.ReopenBankTransaction(line.Id);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private Task OpenRules() => AccountingDialogs.Open(DialogService, L["Rules_Title"], new DialogParameters<BankRulesDialog>());
+
+    /// <summary>A rule for lines like this one: the name of the other party to look for, the direction of the money.</summary>
+    private Task NewRule(BankTransactionDto line)
+        => AccountingDialogs.Open(DialogService, L["Rules_Title"], new DialogParameters<BankRulesDialog>
+        {
+            { d => d.Draft, new SaveBankRuleModel
+                {
+                    MatchText = line.CounterpartyName ?? (line.Reference.Length > 40 ? line.Reference[..40] : line.Reference),
+                    Direction = line.AmountCents > 0 ? BankRuleDirection.Incoming : BankRuleDirection.Outgoing,
+                }
+            },
+        });
+}

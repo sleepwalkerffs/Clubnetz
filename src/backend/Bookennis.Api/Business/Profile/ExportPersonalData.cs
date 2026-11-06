@@ -175,6 +175,14 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                     Lines = entry.Lines.OrderBy(l => l.Position).Select(l => new { l.CategoryId, l.AmountCents }).ToList(),
                 }
             ).ToListAsync(cancellationToken);
+            // Suggested entries of the automatic entries that name the user (booked ones are in the entries above)
+            var accountingProposals = await (
+                from proposal in context.AccountingProposals.IgnoreQueryFilters()
+                join club in context.Clubs.IgnoreQueryFilters() on proposal.ClubId equals club.Id
+                where memberIds.Contains(proposal.CounterpartyMemberId ?? 0) && proposal.Status != Domain.Accounting.AccountingProposalStatus.Booked
+                orderby proposal.Date
+                select new PersonalDataAccountingProposal(club.Name, proposal.Date, proposal.Text, proposal.CounterpartyName, proposal.AmountCents / 100m, proposal.Status)
+            ).ToListAsync(cancellationToken);
             var categoryIds = accountingEntries.SelectMany(e => e.Lines.Select(l => l.CategoryId)).Distinct().ToList();
             var categoryNames = await context.AccountingCategories.IgnoreQueryFilters()
                 .Where(c => categoryIds.Contains(c.Id))
@@ -269,7 +277,8 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                 clubhouseTabs,
                 accountingEntries.ConvertAll(e => new PersonalDataAccountingEntry(
                     e.Club, e.Date, e.Text, e.CounterpartyName, e.Status,
-                    e.Lines.ConvertAll(l => new PersonalDataAccountingLine(categoryNames.GetValueOrDefault(l.CategoryId, ""), l.AmountCents / 100m)))));
+                    e.Lines.ConvertAll(l => new PersonalDataAccountingLine(categoryNames.GetValueOrDefault(l.CategoryId, ""), l.AmountCents / 100m)))),
+                accountingProposals);
         }
 
         private static string? NullIfEmpty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
@@ -292,7 +301,10 @@ public record PersonalDataExport(
     List<PersonalDataCourtPurchase> CourtPurchases,
     List<PersonalDataBookingCredit> BookingCredits,
     List<PersonalDataClubhouseTab> ClubhouseTabs,
-    List<PersonalDataAccountingEntry> AccountingEntries);
+    List<PersonalDataAccountingEntry> AccountingEntries,
+    List<PersonalDataAccountingProposal> AccountingProposals);
+
+public record PersonalDataAccountingProposal(string Club, DateOnly Date, string Text, string? Counterparty, decimal Amount, Bookennis.Domain.Accounting.AccountingProposalStatus Status);
 
 public record PersonalDataAccount(
     string FirstName,

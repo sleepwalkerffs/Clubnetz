@@ -1,0 +1,20 @@
+@using Bookennis.Shared.Controller.Accounting
+
+@* A money account picked from the books (with its icon), for the settings of the automatic entries and the bank rules. *@
+
+<MudSelect T="int?" Value="@Value" ValueChanged="ValueChanged" Label="@Label" HelperText="@Hint" Variant="Variant.Outlined" Margin="Margin.Dense"
+           Clearable="@(!Required)" Required="@Required" Error="@(Required && Value is null)">
+    @foreach (var account in Accounts)
+    {
+        <MudSelectItem T="int?" Value="@account.Id">@AccountingHelpers.AccountIcon(account.Kind) @account.Name</MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter] public string? Hint { get; set; }
+    [Parameter, EditorRequired] public IReadOnlyList<MoneyAccountDto> Accounts { get; set; } = [];
+    [Parameter] public int? Value { get; set; }
+    [Parameter] public EventCallback<int?> ValueChanged { get; set; }
+    [Parameter] public bool Required { get; set; }
+}

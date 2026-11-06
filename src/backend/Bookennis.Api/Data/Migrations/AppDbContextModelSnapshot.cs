@@ -31,6 +31,10 @@ namespace Bookennis.Api.Data.Migrations
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence<int>("AccountingProposals_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence<int>("AccountingReceipts_Id_Sequence")
                 .StartsAt(10L)
                 .IncrementsBy(10);
@@ -39,7 +43,27 @@ namespace Bookennis.Api.Data.Migrations
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence<int>("AccountingSourceSettings_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence<int>("BadgeTiers_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence<int>("BankCsvLayouts_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence<int>("BankRules_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence<int>("BankStatementImports_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
+            modelBuilder.HasSequence<int>("BankTransactions_Id_Sequence")
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
@@ -440,6 +464,89 @@ namespace Bookennis.Api.Data.Migrations
                     b.ToTable("AccountingEntryLines");
                 });
 
+            modelBuilder.Entity("Bookennis.Domain.Accounting.AccountingProposal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "AccountingProposals_Id_Sequence");
+
+                    b.Property<int>("AmountCents")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CounterpartyMemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CounterpartyName")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("EntryId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MoneyAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Problem")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("ToMoneyAccountId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("CounterpartyMemberId");
+
+                    b.HasIndex("EntryId");
+
+                    b.HasIndex("MoneyAccountId");
+
+                    b.HasIndex("ToMoneyAccountId");
+
+                    b.HasIndex("ClubId", "SourceKey")
+                        .IsUnique()
+                        .HasDatabaseName("UX_AccountingProposals_ClubId_SourceKey");
+
+                    b.HasIndex("ClubId", "Status");
+
+                    b.ToTable("AccountingProposals");
+                });
+
             modelBuilder.Entity("Bookennis.Domain.Accounting.AccountingReceipt", b =>
                 {
                     b.Property<int>("Id")
@@ -506,19 +613,285 @@ namespace Bookennis.Api.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "AccountingSettings_Id_Sequence");
 
+                    b.Property<int?>("BankMoneyAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CardMoneyAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CashMoneyAccountId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("ClubId")
                         .HasColumnType("integer");
 
                     b.Property<int>("FiscalYearStartMonth")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("GermanTexts")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("OnlineMoneyAccountId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("BankMoneyAccountId");
+
+                    b.HasIndex("CardMoneyAccountId");
+
+                    b.HasIndex("CashMoneyAccountId");
 
                     b.HasIndex("ClubId")
                         .IsUnique()
                         .HasDatabaseName("UX_AccountingSettings_ClubId");
 
+                    b.HasIndex("OnlineMoneyAccountId");
+
                     b.ToTable("AccountingSettings");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Accounting.AccountingSourceSetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "AccountingSourceSettings_Id_Sequence");
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Mode")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("Since")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("ClubId", "Source")
+                        .IsUnique()
+                        .HasDatabaseName("UX_AccountingSourceSettings_ClubId_Source");
+
+                    b.ToTable("AccountingSourceSettings");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Accounting.BankCsvLayout", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "BankCsvLayouts_Id_Sequence");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Columns")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("MoneyAccountId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
+
+                    b.HasIndex("MoneyAccountId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_BankCsvLayouts_MoneyAccountId");
+
+                    b.ToTable("BankCsvLayouts");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Accounting.BankRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "BankRules_Id_Sequence");
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CostCenterId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Direction")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MatchIban")
+                        .HasMaxLength(34)
+                        .HasColumnType("character varying(34)");
+
+                    b.Property<string>("MatchText")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("MoneyAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("ClubId");
+
+                    b.HasIndex("CostCenterId");
+
+                    b.HasIndex("MoneyAccountId");
+
+                    b.ToTable("BankRules");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Accounting.BankStatementImport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "BankStatementImports_Id_Sequence");
+
+                    b.Property<long?>("ClosingBalanceCents")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly?>("ClosingDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<int>("Format")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("FromDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset>("ImportedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ImportedByMemberId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ImportedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MoneyAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("OpeningBalanceCents")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("ToDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImportedByMemberId");
+
+                    b.HasIndex("MoneyAccountId");
+
+                    b.HasIndex("ClubId", "MoneyAccountId", "ImportedAt");
+
+                    b.ToTable("BankStatementImports");
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Accounting.BankTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "BankTransactions_Id_Sequence");
+
+                    b.Property<int>("AmountCents")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BankReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateOnly>("BookingDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CounterpartyIban")
+                        .HasMaxLength(34)
+                        .HasColumnType("character varying(34)");
+
+                    b.Property<string>("CounterpartyName")
+                        .HasMaxLength(140)
+                        .HasColumnType("character varying(140)");
+
+                    b.Property<int?>("EntryId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<int>("ImportId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MoneyAccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("ValueDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntryId", "MoneyAccountId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_BankTransactions_EntryId_MoneyAccountId")
+                        .HasFilter("\"EntryId\" IS NOT NULL");
+
+                    b.HasIndex("ImportId");
+
+                    b.HasIndex("MoneyAccountId", "Fingerprint")
+                        .IsUnique()
+                        .HasDatabaseName("UX_BankTransactions_MoneyAccountId_Fingerprint");
+
+                    b.HasIndex("ClubId", "Status", "BookingDate");
+
+                    b.ToTable("BankTransactions");
                 });
 
             modelBuilder.Entity("Bookennis.Domain.Accounting.CostCenter", b =>
@@ -3246,6 +3619,72 @@ namespace Bookennis.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
                 });
 
+            modelBuilder.Entity("Bookennis.Domain.Accounting.AccountingProposal", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Accounting.AccountingCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("CounterpartyMemberId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bookennis.Domain.Accounting.AccountingEntry", null)
+                        .WithMany()
+                        .HasForeignKey("EntryId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Bookennis.Domain.Accounting.MoneyAccount", null)
+                        .WithMany()
+                        .HasForeignKey("MoneyAccountId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Accounting.MoneyAccount", null)
+                        .WithMany()
+                        .HasForeignKey("ToMoneyAccountId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("AccountingProposals");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Bookennis.Domain.Accounting.AccountingReceipt", b =>
                 {
                     b.HasOne("Bookennis.Domain.Clubs.Club", null)
@@ -3307,6 +3746,71 @@ namespace Bookennis.Api.Data.Migrations
 
             modelBuilder.Entity("Bookennis.Domain.Accounting.AccountingSettings", b =>
                 {
+                    b.HasOne("Bookennis.Domain.Accounting.MoneyAccount", null)
+                        .WithMany()
+                        .HasForeignKey("BankMoneyAccountId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Bookennis.Domain.Accounting.MoneyAccount", null)
+                        .WithMany()
+                        .HasForeignKey("CardMoneyAccountId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Bookennis.Domain.Accounting.MoneyAccount", null)
+                        .WithMany()
+                        .HasForeignKey("CashMoneyAccountId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Accounting.MoneyAccount", null)
+                        .WithMany()
+                        .HasForeignKey("OnlineMoneyAccountId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("AccountingSettings");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Accounting.AccountingSourceSetting", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Accounting.AccountingCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Bookennis.Domain.Clubs.Club", null)
                         .WithMany()
                         .HasForeignKey("ClubId")
@@ -3335,7 +3839,217 @@ namespace Bookennis.Api.Data.Migrations
 
                             b1.HasKey("EntityId");
 
-                            b1.ToTable("AccountingSettings");
+                            b1.ToTable("AccountingSourceSettings");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Accounting.BankCsvLayout", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Accounting.MoneyAccount", null)
+                        .WithMany()
+                        .HasForeignKey("MoneyAccountId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("BankCsvLayouts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Accounting.BankRule", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Accounting.AccountingCategory", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Accounting.CostCenter", null)
+                        .WithMany()
+                        .HasForeignKey("CostCenterId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Bookennis.Domain.Accounting.MoneyAccount", null)
+                        .WithMany()
+                        .HasForeignKey("MoneyAccountId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("BankRules");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Accounting.BankStatementImport", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Members.Member", null)
+                        .WithMany()
+                        .HasForeignKey("ImportedByMemberId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Bookennis.Domain.Accounting.MoneyAccount", null)
+                        .WithMany()
+                        .HasForeignKey("MoneyAccountId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("BankStatementImports");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Accounting.BankTransaction", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Accounting.AccountingEntry", null)
+                        .WithMany()
+                        .HasForeignKey("EntryId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Bookennis.Domain.Accounting.BankStatementImport", null)
+                        .WithMany()
+                        .HasForeignKey("ImportId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Bookennis.Domain.Accounting.MoneyAccount", null)
+                        .WithMany()
+                        .HasForeignKey("MoneyAccountId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("BankTransactions");
 
                             b1.WithOwner()
                                 .HasForeignKey("EntityId");

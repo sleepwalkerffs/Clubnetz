@@ -65,6 +65,9 @@ else
                 case AccountingTab.Receipts:
                     <AccountingReceipts />
                     break;
+                case AccountingTab.Reconcile:
+                    <AccountingReconcile />
+                    break;
                 case AccountingTab.Reports:
                     <AccountingReports />
                     break;
@@ -108,6 +111,8 @@ else
         await Store.Load();
         await Store.LoadSummary();
         await Store.LoadInbox();
+        if (Store.Basics?.IsSetUp == true)
+            await Store.LoadProposals();
     }
 
     private async void OnClubProfileChanged()
@@ -138,8 +143,12 @@ else
         </MudSelect>
     };
 
-    private string TabText(AccountingTab value)
-        => value == AccountingTab.Receipts && Store.Inbox.Count > 0 ? $"{L["Tab_Receipts"]} ({Store.Inbox.Count})" : L[$"Tab_{value}"];
+    private string TabText(AccountingTab value) => value switch
+    {
+        AccountingTab.Receipts when Store.Inbox.Count > 0 => $"{L["Tab_Receipts"]} ({Store.Inbox.Count})",
+        AccountingTab.Reconcile when Store.Proposals.Count + (Store.BankTransactions?.OpenCount ?? 0) is > 0 and var open => $"{L["Tab_Reconcile"]} ({open})",
+        _ => L[$"Tab_{value}"],
+    };
 
     private string AuditChip(FiscalYearDto year) => year.AuditStatus switch
     {

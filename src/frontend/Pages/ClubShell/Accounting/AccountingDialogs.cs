@@ -26,6 +26,20 @@ public static class AccountingDialogs
         await dialogService.ShowAsync<AccountingEntryDialog>(locale[entry is null ? "Entry_AddTitle" : "Entry_EditTitle"], parameters, Wide);
     }
 
+    /// <summary>A new entry filled in with <paramref name="draft"/>, saved with <paramref name="save"/> (a suggestion or bank line is booked with it).</summary>
+    public static async Task<bool> OpenDraft(IDialogService dialogService, IStringLocalizer<AccountingLocale> locale, SaveAccountingEntryModel draft,
+        Func<SaveAccountingEntryModel, Task<Bookennis.Client.Services.HttpClients.HttpResult<AccountingEntryDetailDto>>> save)
+    {
+        var parameters = new DialogParameters<AccountingEntryDialog>
+        {
+            { d => d.Draft, draft },
+            { d => d.SaveFunc, save },
+        };
+        var dialog = await dialogService.ShowAsync<AccountingEntryDialog>(locale["Entry_AddTitle"], parameters, Wide);
+        var result = await dialog.Result;
+        return result is { Canceled: false };
+    }
+
     public static async Task OpenDetail(IDialogService dialogService, IStringLocalizer<AccountingLocale> locale, int entryId)
     {
         var parameters = new DialogParameters<AccountingEntryDetailDialog> { { d => d.EntryId, entryId } };

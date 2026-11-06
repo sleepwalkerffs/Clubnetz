@@ -43,6 +43,29 @@ public interface IStripeGateway
     /// Throws <see cref="StripeSignatureException"/> when the request was not sent by Stripe.
     /// </summary>
     StripeEventInfo ParseWebhookEvent(string payload, string? signatureHeader);
+
+    /// <summary>
+    /// What moved on the Stripe balance of the connected account (payments, refunds, fees, payouts) between <paramref name="from"/>
+    /// (inclusive) and <paramref name="to"/> (exclusive), oldest first. Used for the accounting of the club.
+    /// </summary>
+    Task<IReadOnlyList<StripeBalanceTransaction>> ListBalanceTransactions(string accountId, DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken);
+}
+
+/// <param name="Id">The id of the balance transaction (<c>txn_...</c>).</param>
+/// <param name="Type"><c>charge</c>, <c>payment</c>, <c>refund</c>, <c>payout</c>, <c>payout_failure</c>, <c>stripe_fee</c>, <c>adjustment</c>, ...</param>
+/// <param name="AmountCents">What it adds to the balance before fees (negative for a refund or payout).</param>
+/// <param name="FeeCents">The fees Stripe (and the platform) kept on it.</param>
+/// <param name="Currency">Three-letter ISO code in lower case.</param>
+/// <param name="Created">When it was created.</param>
+/// <param name="SourceId">The object it belongs to (<c>ch_...</c>, <c>po_...</c>).</param>
+public record StripeBalanceTransaction(string Id, string Type, long AmountCents, long FeeCents, string Currency, DateTimeOffset Created, string? SourceId)
+{
+    public const string TypePayout = "payout";
+    public const string TypePayoutFailure = "payout_failure";
+    public const string TypeStripeFee = "stripe_fee";
+
+    /// <summary>Disputes (source <c>dp_...</c>): the amount taken back, or given back when the dispute is won.</summary>
+    public const string TypeAdjustment = "adjustment";
 }
 
 public record StripeAccountData(int ClubId, string ClubName, string? Email, string? WebsiteUrl, string Country);

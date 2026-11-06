@@ -1,0 +1,182 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+
+@* The bank rules: "lines of ÖTV are association fees". A line a rule fits gets its category, cost center and text with one click. *@
+
+<BaseDialog SubmitFunc="Close" SubmitCaption="@SharedLocale["Close"]" CancelFunc="Close" CancelCaption="@SharedLocale["Cancel"]" Loading="@Store.IsSaving"
+            CanSubmit="@(editing is null)" Title="@L["Rules_Title"]">
+    <div class="rules-form">
+        <div class="rules-form__hint">@L["Rules_Hint"]</div>
+
+        @if (editing is not null)
+        {
+            <div class="rules-form__edit">
+                <div class="rules-form__row">
+                    <MudTextField T="string" @bind-Value="editing.MatchText" Label="@L["Rules_MatchText"]" Placeholder="ÖTV" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="100" Immediate="true" />
+                    <MudTextField T="string" @bind-Value="editing.MatchIban" Label="@L["Rules_MatchIban"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="42" Immediate="true" />
+                </div>
+                <div class="rules-form__row">
+                    <MudSelect T="BankRuleDirection" @bind-Value="editing.Direction" Label="@L["Rules_Direction"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        @foreach (var value in Enum.GetValues<BankRuleDirection>())
+                        {
+                            <MudSelectItem T="BankRuleDirection" Value="@value">@L[$"Rules_Direction_{value}"]</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <AccountSelect Label="@L["Rules_Account"]" Hint="@L["Rules_AccountHint"]" Accounts="@BankAccounts" @bind-Value="editing.MoneyAccountId" />
+                </div>
+                <div class="rules-form__row">
+                    <MudSelect T="int?" @bind-Value="editing.CategoryId" Label="@L["Category"]" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true">
+                        @foreach (var category in Categories)
+                        {
+                            <MudSelectItem T="int?" Value="@category.Id">@AccountingHelpers.CategoryName(category)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    @if (Store.Basics?.CostCenters.Count > 0)
+                    {
+                        <MudSelect T="int?" @bind-Value="editing.CostCenterId" Label="@L["CostCenter"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                            @foreach (var costCenter in Store.Basics.CostCenters.Where(c => !c.IsArchived || c.Id == editing.CostCenterId))
+                            {
+                                <MudSelectItem T="int?" Value="@costCenter.Id">@costCenter.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                </div>
+                <MudTextField T="string" @bind-Value="editing.Text" Label="@L["Rules_Text"]" HelperText="@L["Rules_TextHint"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200" />
+                <div class="rules-form__buttons">
+                    <MudButton Variant="Variant.Text" OnClick="() => editing = null">@SharedLocale["Cancel"]</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save" Disabled="@(!CanSave || Store.IsSaving)">@SharedLocale["Save"]</MudButton>
+                </div>
+            </div>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => Edit(null)">@L["Rules_Add"]</MudButton>
+        }
+
+        @if (Store.BankRules.Count == 0 && editing is null)
+        {
+            <div class="rules-form__hint">@L["Rules_Empty"]</div>
+        }
+        @foreach (var rule in Store.BankRules)
+        {
+            var current = rule;
+            <div class="rules-form__rule">
+                <div class="rules-form__rule-text">
+                    <span class="rules-form__rule-match">
+                        @(current.Direction switch { BankRuleDirection.Incoming => "⬇️ ", BankRuleDirection.Outgoing => "⬆️ ", _ => "" })@(current.MatchText ?? current.MatchIban)
+                        → @CategoryName(current.CategoryId)
+                    </span>
+                    @if (current.Text is { } text)
+                    {
+                        <span class="rules-form__rule-meta">“@text”</span>
+                    }
+                </div>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => Edit(current)" aria-label="@SharedLocale["Edit"]" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => Delete(current)" aria-label="@SharedLocale["Delete"]" />
+            </div>
+        }
+    </div>
+</BaseDialog>
+
+@code {
+    private sealed class RuleInput
+    {
+        public int? Id { get; init; }
+        public string? MatchText { get; set; }
+        public string? MatchIban { get; set; }
+        public BankRuleDirection Direction { get; set; }
+        public int? CategoryId { get; set; }
+        public int? CostCenterId { get; set; }
+        public string? Text { get; set; }
+        public int? MoneyAccountId { get; set; }
+    }
+
+    /// <summary>A new rule filled in already (from a bank line).</summary>
+    [Parameter] public SaveBankRuleModel? Draft { get; set; }
+
+    [Inject] private IAccountingStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private RuleInput? editing;
+
+    private bool CanSave => editing is { CategoryId: not null } && (!string.IsNullOrWhiteSpace(editing.MatchText) || !string.IsNullOrWhiteSpace(editing.MatchIban));
+
+    private List<MoneyAccountDto> BankAccounts => (Store.Basics?.MoneyAccounts ?? []).Where(a => a.Kind == MoneyAccountKind.Bank && (!a.IsArchived || a.Id == editing?.MoneyAccountId)).ToList();
+
+    /// <summary>Income for money that comes in, expenses for money that goes out (both when the rule takes any direction).</summary>
+    private IEnumerable<AccountingCategoryDto> Categories => (Store.Basics?.Categories ?? []).Where(c => (!c.IsArchived || c.Id == editing?.CategoryId)
+        && (editing?.Direction switch
+        {
+            BankRuleDirection.Incoming => c.Kind == AccountingCategoryKind.Income,
+            BankRuleDirection.Outgoing => c.Kind == AccountingCategoryKind.Expense,
+            _ => true,
+        }));
+
+    protected override void OnInitialized()
+    {
+        if (Draft is { } draft)
+        {
+            editing = new RuleInput { MatchText = draft.MatchText, MatchIban = draft.MatchIban, Direction = draft.Direction, MoneyAccountId = Store.BankAccountId };
+        }
+    }
+
+    private string CategoryName(int id) => Store.Basics?.Categories.FirstOrDefault(c => c.Id == id) is { } category ? AccountingHelpers.CategoryName(category) : "?";
+
+    private void Edit(BankRuleDto? rule)
+        => editing = rule is null
+            ? new RuleInput { Direction = BankRuleDirection.Outgoing }
+            : new RuleInput
+            {
+                Id = rule.Id,
+                MatchText = rule.MatchText,
+                MatchIban = rule.MatchIban,
+                Direction = rule.Direction,
+                CategoryId = rule.CategoryId,
+                CostCenterId = rule.CostCenterId,
+                Text = rule.Text,
+                MoneyAccountId = rule.MoneyAccountId,
+            };
+
+    private async Task Save()
+    {
+        if (editing is not { CategoryId: { } categoryId } input)
+            return;
+
+        var result = await Store.SaveBankRule(input.Id, new SaveBankRuleModel
+        {
+            MatchText = input.MatchText,
+            MatchIban = input.MatchIban,
+            Direction = input.Direction,
+            CategoryId = categoryId,
+            CostCenterId = input.CostCenterId,
+            Text = input.Text,
+            MoneyAccountId = input.MoneyAccountId,
+        });
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        editing = null;
+        Snackbar.Add(L["Saved"], Severity.Success);
+    }
+
+    private async Task Delete(BankRuleDto rule)
+    {
+        var result = await Store.DeleteBankRule(rule.Id);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private Task<DialogResult?> Close() => Task.FromResult<DialogResult?>(DialogResult.Ok(true));
+}

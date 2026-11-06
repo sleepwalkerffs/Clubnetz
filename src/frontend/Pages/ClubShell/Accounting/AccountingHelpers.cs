@@ -81,6 +81,7 @@ public enum AccountingTab
     Overview,
     Entries,
     Receipts,
+    Reconcile,
     Reports,
     Settings,
 }

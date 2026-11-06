@@ -2,6 +2,7 @@
 @using Bookennis.Client.Components.Shared.Dialogs
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.HttpClients
 @using Bookennis.Client.Services.Store.Accounting
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Accounting
@@ -162,6 +163,12 @@
     /// <summary>Receipts of the inbox to attach to a new entry.</summary>
     [Parameter] public List<int> ReceiptIds { get; set; } = [];
 
+    /// <summary>A new entry filled in already (a suggestion, a bank line). A line without category has <c>CategoryId</c> 0.</summary>
+    [Parameter] public SaveAccountingEntryModel? Draft { get; set; }
+
+    /// <summary>Saves a new entry another way than <see cref="IAccountingStore.SaveEntry"/> (book a suggestion, book a bank line).</summary>
+    [Parameter] public Func<SaveAccountingEntryModel, Task<HttpResult<AccountingEntryDetailDto>>>? SaveFunc { get; set; }
+
     [Inject] private IAccountingStore Store { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
@@ -220,6 +227,39 @@
                 var firstKind = basics?.Categories.FirstOrDefault(c => c.Id == entry.Lines.FirstOrDefault()?.CategoryId)?.Kind;
                 type = firstKind == AccountingCategoryKind.Expense ? EntryType.Expense : EntryType.Income;
                 lines = entry.Lines.Select(l => new LineInput { CategoryId = l.CategoryId, CostCenterId = l.CostCenterId, Amount = AccountingHelpers.ToEuros(l.AmountCents) }).ToList();
+            }
+        }
+        else if (Draft is { } draft)
+        {
+            date = draft.Date.ToDateTime(TimeOnly.MinValue);
+            text = draft.Text;
+            moneyAccountId = draft.MoneyAccountId;
+            counterpartyName = draft.CounterpartyName;
+            if (draft.CounterpartyMemberId is { } memberId)
+                member = new AccountingMemberDto { MemberId = memberId, Name = draft.CounterpartyName ?? "" };
+
+            if (draft.Kind == AccountingEntryKind.Transfer)
+            {
+                type = EntryType.Transfer;
+                toMoneyAccountId = draft.ToMoneyAccountId;
+                transferAmount = AccountingHelpers.ToEuros(draft.TransferAmountCents ?? 0);
+            }
+            else
+            {
+                var firstKind = basics?.Categories.FirstOrDefault(c => c.Id == draft.Lines.FirstOrDefault()?.CategoryId)?.Kind;
+                type = firstKind switch
+                {
+                    AccountingCategoryKind.Expense => EntryType.Expense,
+                    AccountingCategoryKind.Income => EntryType.Income,
+                    _ => draft.Lines.Sum(l => l.AmountCents) < 0 ? EntryType.Expense : EntryType.Income,
+                };
+                lines = draft.Lines.Select(l => new LineInput
+                {
+                    CategoryId = l.CategoryId == 0 ? null : l.CategoryId,
+                    CostCenterId = l.CostCenterId,
+                    // Without category the amount is what moved on the account: an expense is entered as a positive amount
+                    Amount = AccountingHelpers.ToEuros(firstKind is null ? Math.Abs(l.AmountCents) : l.AmountCents),
+                }).ToList();
             }
         }
         else
@@ -337,7 +377,7 @@
             ReceiptIds = receipts.Select(r => r.Id).ToList(),
         };
 
-        var result = await Store.SaveEntry(Entry?.Id, model);
+        var result = Entry is null && SaveFunc is not null ? await SaveFunc(model) : await Store.SaveEntry(Entry?.Id, model);
         if (result is not { Success: true, Dto: not null })
         {
             Snackbar.ShowErrorDetails(result, BackendLocale);
