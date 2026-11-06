@@ -6,8 +6,10 @@
     border: 1px solid var(--mud-palette-lines-default);
 }
 
+/* Wraps on narrow screens: a wide button moves below the title instead of squeezing it into a column */
 .section-card__header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 12px;
     margin-bottom: 16px;
@@ -26,7 +28,7 @@
 }
 
 .section-card__heading {
-    flex: 1 1 auto;
+    flex: 1 1 180px;
     min-width: 0;
 }
 
@@ -43,6 +45,9 @@
 
 .section-card__actions {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    gap: 8px;
     flex-shrink: 0;
+    margin-left: auto;
 }
