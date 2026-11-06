@@ -127,6 +127,38 @@ public enum AccountingErrorCode
     /// <summary>The statement is about another bank account. Details: the IBAN of the file.</summary>
     AccountingBankFileOtherAccount = 40,
 
+    /// <summary>The BIC (8 or 11 characters), the number prefix (letters, digits, - / _) or the payment term (0-365 days) is invalid.</summary>
+    AccountingInvoiceSettingsInvalid = 41,
+
+    /// <summary>A text of an invoice is missing or too long. Details: the maximum length.</summary>
+    AccountingInvoiceTextInvalid = 42,
+
+    /// <summary>Only a draft can be changed, issued or deleted. Details: the number of the invoice.</summary>
+    AccountingInvoiceNotDraft = 43,
+
+    /// <summary>The invoice is paid or cancelled already. Details: the number of the invoice.</summary>
+    AccountingInvoiceNotOpen = 44,
+
+    /// <summary>A draft has no number yet: issue it before sending or reminding.</summary>
+    AccountingInvoiceNotIssued = 45,
+
+    AccountingInvoiceEmailInvalid = 46,
+
+    /// <summary>The due date is before the invoice date.</summary>
+    AccountingInvoiceDueDateInvalid = 47,
+
+    /// <summary>The quantity is above 0 with at most two decimals.</summary>
+    AccountingInvoiceQuantityInvalid = 48,
+
+    /// <summary>The club's details for invoices (address, bank account) are not set yet.</summary>
+    AccountingInvoicingNotSetUp = 49,
+
+    /// <summary>The invoice has no email address to send it to.</summary>
+    AccountingInvoiceNoEmail = 50,
+
+    /// <summary>The money account of the invoices needs an IBAN (for the payment details and the QR code).</summary>
+    AccountingInvoiceAccountWithoutIban = 51,
+
     /// <summary>The file holds statements of several accounts: give the money account its IBAN, then only its statements are read.</summary>
     AccountingBankFileSeveralAccounts = 52,
 }

@@ -40,6 +40,10 @@ public record UpdateMoneyAccount(int ClubId, int MoneyAccountId, SaveMoneyAccoun
             var account = await context.MoneyAccounts.SingleRequiredAsync(a => a.Id == request.MoneyAccountId && a.ClubId == request.ClubId, cancellationToken);
             account.Update(request.Model.ToData());
             account.SetArchived(request.Model.IsArchived);
+
+            // The invoices print its IBAN (and their PDFs are drawn again for every email)
+            if (account.Iban is null && await context.InvoiceSettings.AnyAsync(s => s.ClubId == request.ClubId && s.MoneyAccountId == account.Id, cancellationToken))
+                throw new PreconditionException(AccountingErrorCode.AccountingInvoiceAccountWithoutIban, "The invoices name this account.");
             await context.EnsureUniqueName(context.MoneyAccounts, account, cancellationToken);
 
             await context.SaveChangesAsync(cancellationToken);
@@ -178,7 +182,8 @@ public record DeleteCostCenter(int ClubId, int CostCenterId) : ICommand
         {
             await context.LockAccounting(request.ClubId, cancellationToken);
             var costCenter = await context.CostCenters.SingleRequiredAsync(c => c.Id == request.CostCenterId && c.ClubId == request.ClubId, cancellationToken);
-            if (await context.IsUsed(costCenter, cancellationToken) || await context.BankRules.AnyAsync(r => r.CostCenterId == costCenter.Id, cancellationToken))
+            if (await context.IsUsed(costCenter, cancellationToken) || await context.BankRules.AnyAsync(r => r.CostCenterId == costCenter.Id, cancellationToken)
+                || await context.Invoices.AnyAsync(i => i.ClubId == costCenter.ClubId && i.Lines.Any(l => l.CostCenterId == costCenter.Id), cancellationToken))
                 throw new PreconditionException(AccountingErrorCode.AccountingInUse, [costCenter.Name], "The cost center is used.");
 
             context.CostCenters.Remove(costCenter);
@@ -243,13 +248,15 @@ internal static class AccountingMasterDataExtensions
            || await context.AccountingProposals.AnyAsync(p => p.ClubId == account.ClubId && (p.MoneyAccountId == account.Id || p.ToMoneyAccountId == account.Id), cancellationToken)
            || await context.BankStatementImports.AnyAsync(i => i.ClubId == account.ClubId && i.MoneyAccountId == account.Id, cancellationToken)
            || await context.BankRules.AnyAsync(r => r.ClubId == account.ClubId && r.MoneyAccountId == account.Id, cancellationToken)
-           || await context.BankCsvLayouts.AnyAsync(l => l.ClubId == account.ClubId && l.MoneyAccountId == account.Id, cancellationToken);
+           || await context.BankCsvLayouts.AnyAsync(l => l.ClubId == account.ClubId && l.MoneyAccountId == account.Id, cancellationToken)
+           || await context.InvoiceSettings.AnyAsync(s => s.ClubId == account.ClubId && s.MoneyAccountId == account.Id, cancellationToken);
 
     /// <summary>Automatic entries, suggestions or bank rules point to the category.</summary>
     public static async Task<bool> IsReferenced(this AppDbContext context, AccountingCategory category, CancellationToken cancellationToken)
         => await context.AccountingSourceSettings.AnyAsync(s => s.ClubId == category.ClubId && s.CategoryId == category.Id, cancellationToken)
            || await context.AccountingProposals.AnyAsync(p => p.ClubId == category.ClubId && p.CategoryId == category.Id, cancellationToken)
-           || await context.BankRules.AnyAsync(r => r.ClubId == category.ClubId && r.CategoryId == category.Id, cancellationToken);
+           || await context.BankRules.AnyAsync(r => r.ClubId == category.ClubId && r.CategoryId == category.Id, cancellationToken)
+           || await context.Invoices.AnyAsync(i => i.ClubId == category.ClubId && i.Lines.Any(l => l.CategoryId == category.Id), cancellationToken);
 
     public static Task<bool> IsUsed(this AppDbContext context, CostCenter costCenter, CancellationToken cancellationToken)
         => context.AccountingEntryLines.AnyAsync(l => l.CostCenterId == costCenter.Id, cancellationToken);

@@ -317,5 +317,76 @@ public class AccountingController(IMediator mediator, IUserAccessor userAccessor
     public Task DeleteBankRule(int clubId, int bankRuleId, CancellationToken cancellationToken)
         => mediator.Send(new DeleteBankRule(clubId, bankRuleId), cancellationToken);
 
+    // ---------- invoices ----------
+
+    [HttpGet("invoice-settings")]
+    [Authorize(AuthorizationPolicies.AccountingReader)]
+    public Task<InvoiceSettingsDto> GetInvoiceSettings(int clubId, CancellationToken cancellationToken)
+        => mediator.Send(new GetInvoiceSettings(clubId), cancellationToken);
+
+    [HttpPut("invoice-settings")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<InvoiceSettingsDto> SaveInvoiceSettings(int clubId, [FromBody] SaveInvoiceSettingsModel model, CancellationToken cancellationToken)
+        => mediator.Send(new SaveInvoiceSettings(clubId, model), cancellationToken);
+
+    [HttpGet("invoices")]
+    [Authorize(AuthorizationPolicies.AccountingReader)]
+    public Task<GetInvoicesResult> GetInvoices(int clubId, [FromQuery] InvoiceStatus? status, CancellationToken cancellationToken)
+        => mediator.Send(new GetInvoices(clubId, (Domain.Accounting.InvoiceStatus?)status, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpGet("invoices/{invoiceId:int}")]
+    [Authorize(AuthorizationPolicies.AccountingReader)]
+    public Task<InvoiceDetailDto> GetInvoice(int clubId, int invoiceId, CancellationToken cancellationToken)
+        => mediator.Send(new GetInvoice(clubId, invoiceId, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpGet("invoices/{invoiceId:int}/pdf")]
+    [Authorize(AuthorizationPolicies.AccountingReader)]
+    public async Task<IActionResult> GetInvoicePdf(int clubId, int invoiceId, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetInvoicePdf(clubId, invoiceId), cancellationToken);
+        Response.Headers.XContentTypeOptions = "nosniff";
+        return File(result.Data, InvoicePdfFile.ContentType, result.FileName);
+    }
+
+    [HttpPost("invoices")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<InvoiceDetailDto> CreateInvoice(int clubId, [FromBody] SaveInvoiceModel model, CancellationToken cancellationToken)
+        => mediator.Send(new CreateInvoice(clubId, model, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpPut("invoices/{invoiceId:int}")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<InvoiceDetailDto> UpdateInvoice(int clubId, int invoiceId, [FromBody] SaveInvoiceModel model, CancellationToken cancellationToken)
+        => mediator.Send(new UpdateInvoice(clubId, invoiceId, model, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpDelete("invoices/{invoiceId:int}")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task DeleteInvoice(int clubId, int invoiceId, CancellationToken cancellationToken)
+        => mediator.Send(new DeleteInvoice(clubId, invoiceId), cancellationToken);
+
+    [HttpPost("invoices/{invoiceId:int}/issue")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<InvoiceDetailDto> IssueInvoice(int clubId, int invoiceId, CancellationToken cancellationToken)
+        => mediator.Send(new IssueInvoice(clubId, invoiceId, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpPost("invoices/{invoiceId:int}/send")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<InvoiceDetailDto> SendInvoice(int clubId, int invoiceId, [FromBody] SendInvoiceModel model, CancellationToken cancellationToken)
+        => mediator.Send(new SendInvoice(clubId, invoiceId, model.Email, false, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpPost("invoices/{invoiceId:int}/remind")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<InvoiceDetailDto> RemindInvoice(int clubId, int invoiceId, [FromBody] SendInvoiceModel model, CancellationToken cancellationToken)
+        => mediator.Send(new SendInvoice(clubId, invoiceId, model.Email, true, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpPost("invoices/{invoiceId:int}/pay")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<InvoiceDetailDto> PayInvoice(int clubId, int invoiceId, [FromBody] PayInvoiceModel model, CancellationToken cancellationToken)
+        => mediator.Send(new PayInvoice(clubId, userAccessor.GetUserId(), invoiceId, model, DateTimeOffset.UtcNow), cancellationToken);
+
+    [HttpPost("invoices/{invoiceId:int}/cancel")]
+    [Authorize(AuthorizationPolicies.AccountingManager)]
+    public Task<InvoiceDetailDto> CancelInvoice(int clubId, int invoiceId, [FromBody] CancelInvoiceModel model, CancellationToken cancellationToken)
+        => mediator.Send(new CancelInvoice(clubId, invoiceId, model.Reason, DateTimeOffset.UtcNow), cancellationToken);
+
     private async Task<bool> Passes(string policy) => (await authorizationService.AuthorizeAsync(User, policy)).Succeeded;
 }

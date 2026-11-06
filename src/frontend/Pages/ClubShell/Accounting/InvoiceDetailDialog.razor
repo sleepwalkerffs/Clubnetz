@@ -1,0 +1,244 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+@using Microsoft.JSInterop
+
+@* An invoice with what can be done with it: a draft is changed, deleted or issued; an issued one is sent, reminded, paid or cancelled; every
+   one has its PDF. *@
+
+<BaseDialog SubmitFunc="Close" SubmitCaption="@SharedLocale["Close"]" CancelFunc="Close" CancelCaption="@SharedLocale["Cancel"]" ShowCancel="false" Loading="@Store.IsSaving"
+            Title="@(invoice?.Number is { } number ? $"{L["Invoice"]} {number}" : L["InvoiceStatus_Draft"])">
+    @if (invoice is null)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        var canManage = Store.Basics?.CanManage == true;
+        <div class="invoice-detail">
+            <div class="invoice-detail__head">
+                <div>
+                    <div class="invoice-detail__name">@invoice.RecipientName</div>
+                    @if (invoice.RecipientAddress is { } recipientAddress)
+                    {
+                        <div class="invoice-detail__address">@recipientAddress</div>
+                    }
+                    @if (invoice.RecipientEmail is { } recipientEmail)
+                    {
+                        <div class="invoice-detail__meta">✉️ @recipientEmail</div>
+                    }
+                </div>
+                <div class="invoice-detail__total">@AccountingHelpers.Amount(invoice.TotalCents)</div>
+            </div>
+
+            <div class="invoice-detail__facts">
+                @if (invoice.Number is { } invoiceNumber)
+                {
+                    <span>@L["Invoice_Number"]: <b>@invoiceNumber</b></span>
+                }
+                else
+                {
+                    <span class="acc-chip acc-chip--muted">✏️ @L["InvoiceStatus_Draft"]</span>
+                }
+                <span>@L["Invoice_Date"]: <b>@AccountingHelpers.Date(invoice.InvoiceDate)</b></span>
+                <span>@L["Invoice_DueDate"]: <b>@AccountingHelpers.Date(invoice.DueDate)</b></span>
+                @if (invoice.SentAt is { } sentAt)
+                {
+                    <span>📨 @string.Format(L["Invoice_SentTo"], invoice.SentTo, AccountingHelpers.DateTime(sentAt))</span>
+                }
+                @if (invoice.ReminderCount > 0 && invoice.LastReminderAt is { } remindedAt)
+                {
+                    <span>⏰ @string.Format(L["Invoice_Reminded"], invoice.ReminderCount, AccountingHelpers.DateTime(remindedAt))</span>
+                }
+                @if (invoice.PaidDate is { } paid)
+                {
+                    <span class="acc-amount--in">✅ @string.Format(L["Invoice_PaidAs"], AccountingHelpers.Date(paid), invoice.EntryNumber)</span>
+                }
+                @if (invoice.Status == InvoiceStatus.Cancelled)
+                {
+                    <span class="acc-amount--out">🚫 @L["InvoiceStatus_Cancelled"]@(invoice.CancelReason is { } reason ? $": {reason}" : null)</span>
+                }
+                @if (invoice.IsOverdue)
+                {
+                    <span class="acc-amount--out">⏰ @L["Invoices_OverdueChip"]</span>
+                }
+            </div>
+
+            @if (invoice.Subject is { } subject)
+            {
+                <div class="invoice-detail__subject">@subject</div>
+            }
+            <div class="invoice-detail__lines">
+                @foreach (var line in invoice.Lines)
+                {
+                    <div class="invoice-detail__line">
+                        <span>@line.Text</span>
+                        <span class="invoice-detail__qty">@line.Quantity.ToString("0.##") × @AccountingHelpers.Amount(line.UnitPriceCents)</span>
+                        <span class="invoice-detail__amount">@AccountingHelpers.Amount(line.TotalCents)</span>
+                    </div>
+                }
+            </div>
+
+            <div class="invoice-detail__actions">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="DownloadPdf">PDF</MudButton>
+                @if (canManage)
+                {
+                    @switch (invoice.Status)
+                    {
+                        case InvoiceStatus.Draft:
+                            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Edit" OnClick="Edit">@SharedLocale["Edit"]</MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="Delete">@SharedLocale["Delete"]</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Verified" OnClick="Issue">@L["Invoice_Issue"]</MudButton>
+                            break;
+                        case InvoiceStatus.Issued:
+                            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Send" OnClick="() => mode = Mode.Send">@L["Invoice_Send"]</MudButton>
+                            @if (invoice.SentAt is not null || invoice.IsOverdue)
+                            {
+                                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.NotificationsActive" OnClick="() => mode = Mode.Remind">@L["Invoice_Remind"]</MudButton>
+                            }
+                            <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block" OnClick="() => mode = Mode.Cancel">@L["Invoice_Cancel"]</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Payments" OnClick="() => mode = Mode.Pay">@L["Invoice_Pay"]</MudButton>
+                            break;
+                    }
+                }
+            </div>
+
+            @switch (mode)
+            {
+                case Mode.Send or Mode.Remind:
+                    <div class="invoice-detail__form">
+                        <div class="invoice-form__hint">@L[mode == Mode.Send ? "Invoice_SendHint" : "Invoice_RemindHint"]</div>
+                        <MudTextField T="string" @bind-Value="sendTo" Label="@L["Invoice_Email"]" InputType="InputType.Email" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Send" OnClick="Send" Disabled="@(string.IsNullOrWhiteSpace(sendTo) || Store.IsSaving)">
+                            @L[mode == Mode.Send ? "Invoice_SendNow" : "Invoice_RemindNow"]
+                        </MudButton>
+                    </div>
+                    break;
+                case Mode.Pay:
+                    <div class="invoice-detail__form">
+                        <div class="invoice-form__hint">@L["Invoice_PayHint"]</div>
+                        <div class="invoice-form__row">
+                            <AccountSelect Label="@L["Invoice_PaidInto"]" Accounts="@PayAccounts" @bind-Value="payAccountId" Required="true" />
+                            <MudDatePicker Date="@payDate" DateChanged="d => payDate = d" Label="@L["Invoice_PaidOn"]" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Payments" OnClick="Pay" Disabled="@(payAccountId is null || payDate is null || Store.IsSaving)">@L["Invoice_PayNow"]</MudButton>
+                    </div>
+                    break;
+                case Mode.Cancel:
+                    <div class="invoice-detail__form">
+                        <div class="invoice-form__hint">@L["Invoice_CancelHint"]</div>
+                        <MudTextField T="string" @bind-Value="cancelReason" Label="@L["Invoice_CancelReason"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200" />
+                        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Block" OnClick="CancelInvoice" Disabled="@Store.IsSaving">@L["Invoice_CancelNow"]</MudButton>
+                    </div>
+                    break;
+            }
+        </div>
+    }
+</BaseDialog>
+
+@code {
+    private enum Mode { None, Send, Remind, Pay, Cancel }
+
+    [Parameter, EditorRequired] public int InvoiceId { get; set; }
+
+    [Inject] private IAccountingStore Store { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private InvoiceDetailDto? invoice;
+    private Mode mode;
+    private string? sendTo;
+    private int? payAccountId;
+    private DateTime? payDate = DateTime.Today;
+    private string? cancelReason;
+
+    private List<MoneyAccountDto> PayAccounts => (Store.Basics?.MoneyAccounts ?? []).Where(a => !a.IsArchived || a.Id == payAccountId).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Reload();
+        payAccountId = Store.InvoiceSettings?.MoneyAccountId;
+    }
+
+    private async Task Reload()
+    {
+        var result = await Store.GetInvoice(InvoiceId);
+        if (result is { Success: true, Dto: not null })
+        {
+            invoice = result.Dto;
+            sendTo = invoice.SentTo ?? invoice.RecipientEmail;
+        }
+        else
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+    }
+
+    private async Task Apply(Task<Bookennis.Client.Services.HttpClients.HttpResult<InvoiceDetailDto>> call, string message)
+    {
+        var result = await call;
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        invoice = result.Dto;
+        mode = Mode.None;
+        Snackbar.Add(message, Severity.Success);
+    }
+
+    private Task Issue() => Apply(Store.InvoiceAction(InvoiceId, "issue", null), L["Invoice_Issued"]);
+
+    private Task Send() => Apply(Store.InvoiceAction(InvoiceId, mode == Mode.Send ? "send" : "remind", new SendInvoiceModel { Email = sendTo }), string.Format(L["Invoice_SentNow"], sendTo));
+
+    private Task Pay() => payAccountId is { } accountId && payDate is { } date
+        ? Apply(Store.InvoiceAction(InvoiceId, "pay", new PayInvoiceModel { MoneyAccountId = accountId, Date = DateOnly.FromDateTime(date) }), L["Invoice_Paid"])
+        : Task.CompletedTask;
+
+    private Task CancelInvoice() => Apply(Store.InvoiceAction(InvoiceId, "cancel", new CancelInvoiceModel { Reason = cancelReason }), L["Invoice_Cancelled"]);
+
+    private async Task Edit()
+    {
+        MudDialog.Close();
+        await AccountingDialogs.OpenInvoice(DialogService, L, invoice);
+    }
+
+    private async Task Delete()
+    {
+        var result = await Store.DeleteInvoice(InvoiceId);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        MudDialog.Close();
+    }
+
+    private async Task DownloadPdf()
+    {
+        var result = await Store.GetInvoicePdf(InvoiceId);
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        using var streamReference = new DotNetStreamReference(new MemoryStream(result.Dto.Data));
+        await JsRuntime.InvokeVoidAsync("App.downloadFileFromStream", result.Dto.FileName, streamReference);
+    }
+
+    private Task<DialogResult?> Close()
+    {
+        MudDialog.Close();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

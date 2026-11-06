@@ -102,6 +102,7 @@ public sealed record ApiEndpoint(string Method, RoutePattern Pattern, string Con
             "proposalid" => ids.AccountingProposalId,
             "banktransactionid" => ids.BankTransactionId,
             "bankruleid" => ids.BankRuleId,
+            "invoiceid" => ids.InvoiceId,
             "id" => ids.BookingId,
             _ => (int?)null,
         };

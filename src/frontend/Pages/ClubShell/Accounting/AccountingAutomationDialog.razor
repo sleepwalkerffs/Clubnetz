@@ -5,8 +5,9 @@
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Accounting
 
-@* Which payments Clubnetz turns into entries: per source off, as suggestions to review, or booked right away; and the money accounts
-   the payments go to. *@
+@* Which payments Clubnetz turns into entries: per source off, as suggestions to review, or booked right away, and in each source the
+   money accounts its payments are booked into by the way they were paid. The accounts are shared (cash is the same cash box for the
+   membership fees and the clubhouse), so a row says which other sources use it too. *@
 
 <BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
             Loading="@Store.IsSaving" Title="@L["Automation_Title"]">
@@ -49,6 +50,15 @@
                             <MudDatePicker Date="@current.Since" DateChanged="d => current.Since = d" Label="@L["Automation_Since"]" Variant="Variant.Outlined" Margin="Margin.Dense"
                                            HelperText="@L["Automation_SinceHint"]" />
                         </div>
+                        <div class="automation-source__subtitle">@L["Automation_BookedInto"]</div>
+                        <div class="automation-source__accounts">
+                            @foreach (var row in Rows(current.Source))
+                            {
+                                var slot = row.Slot;
+                                <AccountSelect Label="@L[row.Label]" Hint="@RowHint(current.Source, slot)" Accounts="@Accounts(slot)" Value="@Get(slot)"
+                                               ValueChanged="v => Set(slot, v)" Required="true" Invalid="@(slot == Slot.Online && OnlineIsNoProvider)" />
+                            }
+                        </div>
                         @if (current.Mode == AccountingAutomationMode.Book)
                         {
                             <div class="automation-source__note">@L["Mode_BookHint"]</div>
@@ -57,23 +67,6 @@
                 </div>
             }
 
-            <div class="automation-form__subtitle">@L["Automation_Accounts"]</div>
-            <div class="automation-form__accounts">
-                @if (stripeConnected || online is not null)
-                {
-                    <AccountSelect Label="@L["Automation_Online"]" Hint="@L["Automation_OnlineHint"]" Accounts="@Accounts()" @bind-Value="online" Required="@NeedsOnline" />
-                }
-                <AccountSelect Label="@L["Automation_Bank"]" Accounts="@Accounts()" @bind-Value="bank" Required="@NeedsBank" />
-                <AccountSelect Label="@L["Automation_Cash"]" Accounts="@Accounts()" @bind-Value="cash" Required="@NeedsCash" />
-                @if (IsOn(AccountingSource.Clubhouse) || card is not null)
-                {
-                    <AccountSelect Label="@L["Automation_Card"]" Hint="@L["Automation_CardHint"]" Accounts="@Accounts()" @bind-Value="card" Required="@IsOn(AccountingSource.Clubhouse)" />
-                }
-            </div>
-            @if (!stripeConnected && online is null)
-            {
-                <div class="automation-form__hint">@L["Automation_NoStripe"]</div>
-            }
             @if (Missing is { } missing)
             {
                 <MudAlert Severity="Severity.Warning" Dense="true">@missing</MudAlert>
@@ -107,10 +100,50 @@
     private int? cash;
     private int? card;
 
-    private bool IsOn(AccountingSource source) => sources.Any(s => s.Source == source && s.Mode != AccountingAutomationMode.Off);
-    private bool NeedsOnline => IsOn(AccountingSource.CourtSales) || IsOn(AccountingSource.Stripe) || (stripeConnected && IsOn(AccountingSource.MembershipFees));
-    private bool NeedsBank => IsOn(AccountingSource.MembershipFees) || IsOn(AccountingSource.Stripe);
-    private bool NeedsCash => IsOn(AccountingSource.MembershipFees) || IsOn(AccountingSource.Clubhouse);
+    /// <summary>The money accounts the payments are booked into, by the way they were paid (one setting each, used by several sources).</summary>
+    private enum Slot { Online, Bank, Cash, Card }
+
+    /// <summary>The accounts a source books into, as the server does (online membership fees only with Stripe connected).</summary>
+    private IEnumerable<(Slot Slot, string Label)> Rows(AccountingSource source) => source switch
+    {
+        AccountingSource.MembershipFees when stripeConnected => [(Slot.Online, "Booked_Online"), (Slot.Bank, "Booked_Bank"), (Slot.Cash, "Booked_Cash")],
+        AccountingSource.MembershipFees => [(Slot.Bank, "Booked_Bank"), (Slot.Cash, "Booked_Cash")],
+        AccountingSource.CourtSales => [(Slot.Online, "Booked_Online")],
+        AccountingSource.Clubhouse => [(Slot.Cash, "Booked_Cash"), (Slot.Card, "Booked_Card")],
+        _ => [(Slot.Online, "Booked_StripeBalance"), (Slot.Bank, "Booked_Payouts")],
+    };
+
+    private bool Needs(Slot slot) => sources.Any(s => s.Mode != AccountingAutomationMode.Off && Rows(s.Source).Any(r => r.Slot == slot));
+
+    private int? Get(Slot slot) => slot switch { Slot.Online => online, Slot.Bank => bank, Slot.Cash => cash, _ => card };
+
+    private void Set(Slot slot, int? value)
+    {
+        switch (slot)
+        {
+            case Slot.Online: online = value; break;
+            case Slot.Bank: bank = value; break;
+            case Slot.Cash: cash = value; break;
+            default: card = value; break;
+        }
+    }
+
+    /// <summary>Online payments wait at Stripe until the payout: they belong in a payment provider account, not in the bank.</summary>
+    private bool OnlineIsNoProvider
+        => online is { } id && Store.Basics?.MoneyAccounts.FirstOrDefault(a => a.Id == id)?.Kind is { } kind && kind != MoneyAccountKind.PaymentProvider;
+
+    /// <summary>What to look out for in the row, and the other switched-on sources that book into the same account.</summary>
+    private string? RowHint(AccountingSource source, Slot slot)
+    {
+        if (slot == Slot.Online && (OnlineIsNoProvider || Accounts(slot).Count == 0))
+            return L[Accounts(slot).Any(a => a.Kind == MoneyAccountKind.PaymentProvider) ? "Automation_OnlineKind" : "Automation_NoProvider"];
+
+        var others = sources.Where(s => s.Source != source && s.Mode != AccountingAutomationMode.Off && Rows(s.Source).Any(r => r.Slot == slot))
+            .Select(s => L[$"Source_{s.Source}"].Value)
+            .ToList();
+        var also = others.Count > 0 ? string.Format(L["Automation_AlsoFor"], string.Join(", ", others)) : null;
+        return slot == Slot.Card ? string.Join(" · ", new[] { L["Automation_CardHint"].Value, also }.OfType<string>()) : also;
+    }
 
     /// <summary>What is still missing for the sources that are on (the server says the same with an error).</summary>
     private string? Missing
@@ -119,8 +152,10 @@
         {
             if (sources.Any(s => s.Mode != AccountingAutomationMode.Off && s.CategoryId is null))
                 return L["Automation_MissingCategory"];
-            if (NeedsOnline && online is null || NeedsBank && bank is null || NeedsCash && cash is null || IsOn(AccountingSource.Clubhouse) && card is null)
+            if (Enum.GetValues<Slot>().Any(slot => Needs(slot) && Get(slot) is null))
                 return L["Automation_MissingAccount"];
+            if (Needs(Slot.Online) && OnlineIsNoProvider)
+                return L["Automation_OnlineKind"];
             return null;
         }
     }
@@ -169,7 +204,10 @@
         return (Store.Basics?.Categories ?? []).Where(c => c.Kind == kind && !c.IsArchived);
     }
 
-    private List<MoneyAccountDto> Accounts() => (Store.Basics?.MoneyAccounts ?? []).Where(a => !a.IsArchived || a.Id == online || a.Id == bank || a.Id == cash || a.Id == card).ToList();
+    /// <summary>The accounts to choose from: for online payments only payment providers (and the one chosen before, so it can be changed).</summary>
+    private List<MoneyAccountDto> Accounts(Slot slot) => (Store.Basics?.MoneyAccounts ?? [])
+        .Where(a => a.Id == Get(slot) || !a.IsArchived && (slot != Slot.Online || a.Kind == MoneyAccountKind.PaymentProvider))
+        .ToList();
 
     private static string Emoji(AccountingSource source) => source switch
     {

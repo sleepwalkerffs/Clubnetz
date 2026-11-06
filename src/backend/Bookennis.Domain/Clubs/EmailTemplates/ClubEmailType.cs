@@ -27,4 +27,6 @@ public enum ClubEmailType
     CourtPurchaseCompensated = 18,
     ClubhouseTabPaid = 19,
     ClubhouseTabNeedsAttention = 20,
+    Invoice = 21,
+    InvoiceReminder = 22,
 }

@@ -1,0 +1,219 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Accounting
+@using Bookennis.Client.Services.Store.Accounting
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Accounting
+
+@* Writes or changes a draft invoice: recipient (a member or anyone), dates, lines with income category. Issuing it (number, final) is done
+   in its details. *@
+
+<BaseDialog SubmitFunc="Submit" SubmitCaption="@L["Invoice_SaveDraft"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            CanSubmit="@CanSubmit" Loading="@Store.IsSaving" Title="@L[Invoice is null ? "Invoice_AddTitle" : "Invoice_EditTitle"]">
+    <div class="invoice-form">
+        <div class="invoice-form__subtitle">@L["Invoice_Recipient"]</div>
+        <MudAutocomplete T="AccountingMemberDto" Value="@member" ValueChanged="OnMemberChanged" Label="@L["Invoice_Member"]" SearchFunc="SearchMembers"
+                         ToStringFunc="@(m => m?.Name ?? "")" DebounceInterval="300" ResetValueOnEmptyText="true" Clearable="true"
+                         Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@L["Invoice_MemberHint"]" />
+        <div class="invoice-form__row">
+            <MudTextField T="string" @bind-Value="name" Label="@L["Invoice_Name"]" Placeholder="Autohaus Muster GmbH" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="120" Immediate="true" Required="true" />
+            <MudTextField T="string" @bind-Value="email" Label="@L["Invoice_Email"]" InputType="InputType.Email" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="254" />
+        </div>
+        <MudTextField T="string" @bind-Value="address" Label="@L["Invoice_Address"]" Lines="3" AutoGrow="true" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="300" />
+
+        <div class="invoice-form__subtitle">@L["Invoice_Details"]</div>
+        <div class="invoice-form__row">
+            <MudTextField T="string" @bind-Value="subject" Label="@L["Invoice_Subject"]" Placeholder="@L["Invoice_SubjectPlaceholder"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="120" />
+            <MudTextField T="string" @bind-Value="servicePeriod" Label="@L["Invoice_ServicePeriod"]" Placeholder="@L["Invoice_ServicePeriodPlaceholder"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="60" />
+        </div>
+        <div class="invoice-form__row">
+            <MudDatePicker Date="@invoiceDate" DateChanged="OnDateChanged" Label="@L["Invoice_Date"]" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+            <MudDatePicker Date="@dueDate" DateChanged="d => dueDate = d" Label="@L["Invoice_DueDate"]" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" MinDate="@invoiceDate" />
+        </div>
+        <MudTextField T="string" @bind-Value="notes" Label="@L["Invoice_Notes"]" Placeholder="@L["Invoice_NotesPlaceholder"]" Lines="2" AutoGrow="true" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="1000" />
+
+        <div class="invoice-form__subtitle">@L["Invoice_Lines"]</div>
+        <div class="invoice-lines">
+            @foreach (var line in lines)
+            {
+                var current = line;
+                <div class="invoice-line">
+                    <MudTextField T="string" @bind-Value="current.Text" Label="@L["Invoice_LineText"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200" Immediate="true" Class="invoice-line__text" />
+                    <MudNumericField T="decimal" @bind-Value="current.Quantity" Label="@L["Invoice_Quantity"]" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0.01m" Format="0.##" HideSpinButtons="true" Class="invoice-line__qty" />
+                    <MudNumericField T="decimal" @bind-Value="current.UnitPrice" Label="@L["Invoice_UnitPrice"]" Variant="Variant.Outlined" Margin="Margin.Dense" Format="N2"
+                                     Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true" Class="invoice-line__price" />
+                    <div class="invoice-line__category">
+                        <MudSelect T="int?" @bind-Value="current.CategoryId" Label="@L["Category"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                            @foreach (var category in Categories(current.CategoryId))
+                            {
+                                <MudSelectItem T="int?" Value="@category.Id">@AccountingHelpers.CategoryName(category)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </div>
+                    @if (Store.Basics?.CostCenters.Count > 0)
+                    {
+                        <div class="invoice-line__cost-center">
+                            <MudSelect T="int?" @bind-Value="current.CostCenterId" Label="@L["CostCenter"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                                @foreach (var costCenter in Store.Basics.CostCenters.Where(c => !c.IsArchived || c.Id == current.CostCenterId))
+                                {
+                                    <MudSelectItem T="int?" Value="@costCenter.Id">@costCenter.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </div>
+                    }
+                    <span class="invoice-line__total">@AccountingHelpers.Amount(LineCents(current))</span>
+                    @if (lines.Count > 1)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => lines.Remove(current)" aria-label="@L["Entry_RemoveLine"]" Class="invoice-line__remove" />
+                    }
+                </div>
+            }
+            <div class="invoice-lines__footer">
+                @if (lines.Count < 30)
+                {
+                    <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="AddLine">@L["Invoice_AddLine"]</MudButton>
+                }
+                <span class="invoice-lines__total">@L["Entry_Total"] <b>@AccountingHelpers.Amount(TotalCents)</b></span>
+            </div>
+        </div>
+    </div>
+</BaseDialog>
+
+@code {
+    private sealed class LineInput
+    {
+        public string? Text { get; set; }
+        public decimal Quantity { get; set; } = 1;
+        public decimal UnitPrice { get; set; }
+        public int? CategoryId { get; set; }
+        public int? CostCenterId { get; set; }
+    }
+
+    [Parameter] public InvoiceDetailDto? Invoice { get; set; }
+
+    [Inject] private IAccountingStore Store { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<AccountingLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private AccountingMemberDto? member;
+    private string? name;
+    private string? email;
+    private string? address;
+    private string? subject;
+    private string? servicePeriod;
+    private string? notes;
+    private DateTime? invoiceDate = DateTime.Today;
+    private DateTime? dueDate;
+    private List<LineInput> lines = [new()];
+
+    /// <summary>As the server: the unit price in cents times the quantity, rounded.</summary>
+    private static long LineCents(LineInput line) => (long)Math.Round(line.Quantity * AccountingHelpers.ToCents(line.UnitPrice), MidpointRounding.AwayFromZero);
+
+    private long TotalCents => lines.Sum(LineCents);
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(name) && invoiceDate is not null && dueDate is not null && dueDate >= invoiceDate && TotalCents > 0
+                              && lines.All(l => !string.IsNullOrWhiteSpace(l.Text) && l.Quantity > 0 && l.CategoryId is not null);
+
+    protected override void OnInitialized()
+    {
+        var term = Store.InvoiceSettings?.PaymentTermDays ?? 14;
+        if (Invoice is { } invoice)
+        {
+            if (invoice.RecipientMemberId is { } memberId)
+                member = new AccountingMemberDto { MemberId = memberId, Name = invoice.RecipientName };
+            name = invoice.RecipientName;
+            email = invoice.RecipientEmail;
+            address = invoice.RecipientAddress;
+            subject = invoice.Subject;
+            servicePeriod = invoice.ServicePeriod;
+            notes = invoice.Notes;
+            invoiceDate = invoice.InvoiceDate.ToDateTime(TimeOnly.MinValue);
+            dueDate = invoice.DueDate.ToDateTime(TimeOnly.MinValue);
+            lines = invoice.Lines.Select(l => new LineInput
+            {
+                Text = l.Text,
+                Quantity = l.Quantity,
+                UnitPrice = AccountingHelpers.ToEuros(l.UnitPriceCents),
+                CategoryId = l.CategoryId,
+                CostCenterId = l.CostCenterId,
+            }).ToList();
+        }
+        else
+        {
+            dueDate = DateTime.Today.AddDays(term);
+            lines[0].CategoryId = Categories(null).FirstOrDefault(c => c.Number == "4400")?.Id;
+        }
+    }
+
+    /// <summary>Income categories only: an invoice brings money in.</summary>
+    private IEnumerable<AccountingCategoryDto> Categories(int? selected)
+        => (Store.Basics?.Categories ?? []).Where(c => c.Id == selected || (c.Kind == AccountingCategoryKind.Income && !c.IsArchived));
+
+    private void OnDateChanged(DateTime? value)
+    {
+        // The due date moves along with the date by the payment term
+        if (value is { } date && invoiceDate is { } before && dueDate is { } due)
+            dueDate = date.AddDays((due - before).Days);
+        invoiceDate = value;
+    }
+
+    private void AddLine() => lines.Add(new LineInput { CategoryId = lines.LastOrDefault()?.CategoryId, CostCenterId = lines.LastOrDefault()?.CostCenterId });
+
+    private async Task<IEnumerable<AccountingMemberDto>> SearchMembers(string? search, CancellationToken cancellationToken)
+    {
+        var result = await Store.GetMembers(search, cancellationToken);
+        return result is { Success: true, Dto: not null } ? result.Dto : [];
+    }
+
+    private void OnMemberChanged(AccountingMemberDto? value)
+    {
+        if (string.IsNullOrWhiteSpace(name) || name == member?.Name)
+            name = value?.Name;
+        member = value;
+    }
+
+    private async Task<DialogResult?> Submit()
+    {
+        if (!CanSubmit || invoiceDate is not { } date || dueDate is not { } due)
+            return null;
+
+        var result = await Store.SaveInvoice(Invoice?.Id, new SaveInvoiceModel
+        {
+            RecipientMemberId = member?.MemberId,
+            RecipientName = name,
+            RecipientAddress = address,
+            RecipientEmail = email,
+            Subject = subject,
+            ServicePeriod = servicePeriod,
+            Notes = notes,
+            InvoiceDate = DateOnly.FromDateTime(date),
+            DueDate = DateOnly.FromDateTime(due),
+            Lines = lines.Select(l => new SaveInvoiceLineModel
+            {
+                Text = l.Text,
+                Quantity = l.Quantity,
+                UnitPriceCents = AccountingHelpers.ToCents(l.UnitPrice),
+                CategoryId = l.CategoryId!.Value,
+                CostCenterId = l.CostCenterId,
+            }).ToList(),
+        });
+        if (result is not { Success: true, Dto: not null })
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return null;
+        }
+
+        Snackbar.Add(L["Invoice_Saved"], Severity.Success);
+        return DialogResult.Ok(result.Dto);
+    }
+
+    private Task<DialogResult?> Cancel()
+    {
+        MudDialog.Cancel();
+        return Task.FromResult<DialogResult?>(null);
+    }
+}

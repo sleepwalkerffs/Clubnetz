@@ -175,6 +175,17 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                     Lines = entry.Lines.OrderBy(l => l.Position).Select(l => new { l.CategoryId, l.AmountCents }).ToList(),
                 }
             ).ToListAsync(cancellationToken);
+            // Invoices of the clubs to the user (drafts are not sent yet)
+            var invoices = await (
+                from invoice in context.Invoices.IgnoreQueryFilters()
+                join club in context.Clubs.IgnoreQueryFilters() on invoice.ClubId equals club.Id
+                where memberIds.Contains(invoice.RecipientMemberId ?? 0) && invoice.Status != Domain.Accounting.InvoiceStatus.Draft
+                orderby invoice.InvoiceDate
+                select new PersonalDataInvoice(club.Name, invoice.Number, invoice.InvoiceDate, invoice.DueDate, invoice.RecipientName, invoice.RecipientAddress,
+                    invoice.RecipientEmail, invoice.Subject, invoice.TotalCents / 100m, invoice.Status, invoice.PaidDate,
+                    invoice.Lines.OrderBy(l => l.Position).Select(l => new PersonalDataInvoiceLine(l.Text, l.Quantity, l.UnitPriceCents / 100m)).ToList())
+            ).ToListAsync(cancellationToken);
+
             // Suggested entries of the automatic entries that name the user (booked ones are in the entries above)
             var accountingProposals = await (
                 from proposal in context.AccountingProposals.IgnoreQueryFilters()
@@ -278,7 +289,8 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                 accountingEntries.ConvertAll(e => new PersonalDataAccountingEntry(
                     e.Club, e.Date, e.Text, e.CounterpartyName, e.Status,
                     e.Lines.ConvertAll(l => new PersonalDataAccountingLine(categoryNames.GetValueOrDefault(l.CategoryId, ""), l.AmountCents / 100m)))),
-                accountingProposals);
+                accountingProposals,
+                invoices);
         }
 
         private static string? NullIfEmpty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
@@ -302,9 +314,15 @@ public record PersonalDataExport(
     List<PersonalDataBookingCredit> BookingCredits,
     List<PersonalDataClubhouseTab> ClubhouseTabs,
     List<PersonalDataAccountingEntry> AccountingEntries,
-    List<PersonalDataAccountingProposal> AccountingProposals);
+    List<PersonalDataAccountingProposal> AccountingProposals,
+    List<PersonalDataInvoice> Invoices);
 
 public record PersonalDataAccountingProposal(string Club, DateOnly Date, string Text, string? Counterparty, decimal Amount, Bookennis.Domain.Accounting.AccountingProposalStatus Status);
+
+public record PersonalDataInvoice(string Club, string? Number, DateOnly Date, DateOnly DueDate, string Name, string? Address, string? Email, string? Subject, decimal Total,
+    Bookennis.Domain.Accounting.InvoiceStatus Status, DateOnly? PaidDate, List<PersonalDataInvoiceLine> Lines);
+
+public record PersonalDataInvoiceLine(string Text, decimal Quantity, decimal UnitPrice);
 
 public record PersonalDataAccount(
     string FirstName,

@@ -24,9 +24,16 @@ else
                   Hint="@string.Format(L["Overview_AssetsHint"], AccountingHelpers.Amount(summary.OpeningCents))" Color="#7C3AED" />
     </div>
 
-    @if (summary.ReceiptsInInbox > 0 || summary.EntriesWithoutReceipt > 0 || Store.Proposals.Count > 0 || Store.SelectedYear?.AuditStatus == FiscalYearAuditStatus.AuditedWithRemarks)
+    @if (summary.ReceiptsInInbox > 0 || summary.EntriesWithoutReceipt > 0 || Store.Proposals.Count > 0 || Store.Invoices?.OverdueCount > 0 || Store.SelectedYear?.AuditStatus == FiscalYearAuditStatus.AuditedWithRemarks)
     {
         <div class="acc-todos">
+            @if (Store.Invoices is { OverdueCount: > 0 } invoices)
+            {
+                <button type="button" class="acc-todo acc-todo--warn" @onclick="() => OnOpenTab.InvokeAsync(AccountingTab.Invoices)">
+                    <span class="acc-todo__emoji" aria-hidden="true">⏰</span>
+                    <span>@string.Format(L[invoices.OverdueCount == 1 ? "Overview_OverdueOne" : "Overview_Overdue"], invoices.OverdueCount)</span>
+                </button>
+            }
             @if (Store.Proposals.Count > 0)
             {
                 <button type="button" class="acc-todo" @onclick="() => OnOpenTab.InvokeAsync(AccountingTab.Reconcile)">

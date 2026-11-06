@@ -176,6 +176,34 @@ public class ExportPersonalDataTests(TestFixture fixture) : TestBase(fixture)
         entry.Lines.Should().ContainSingle().Which.Should().Be(new PersonalDataAccountingLine("Fees", 120m));
     }
 
+    [Fact]
+    public async Task Export_ContainsTheInvoicesOfTheClubsToTheUser_ButNoDrafts()
+    {
+        await QueryAsync(async ctx =>
+        {
+            var category = new Domain.Accounting.AccountingCategory(TestDataSeed.ClubId,
+                new Domain.Accounting.AccountingCategory.CategoryData(Domain.Accounting.AccountingCategoryKind.Income, null, "Kurse", Domain.Accounting.TaxSphere.NonProfit));
+            ctx.Add(category);
+            await ctx.SaveChangesAsync();
+
+            Domain.Accounting.Invoice Invoice(string name) => new(TestDataSeed.ClubId, new Domain.Accounting.Invoice.InvoiceData(TestDataSeed.Member1Id, name, "Weg 1", null, "Kurs", null, null,
+                new DateOnly(2026, 5, 4), new DateOnly(2026, 5, 18), [new Domain.Accounting.Invoice.LineData("Tenniskurs", 1, 9_000, category.Id, null)]), german: true);
+            var settings = new Domain.Accounting.InvoiceSettings(TestDataSeed.ClubId, new Domain.Accounting.InvoiceSettings.SettingsData("Platz 1", null, null, 1, null, "RE", 14, null));
+            var issued = Invoice("Max Member");
+            issued.Issue(settings, 1, DateTimeOffset.UtcNow);
+            ctx.AddRange(issued, Invoice("Draft name"));
+            await ctx.SaveChangesAsync();
+        });
+        SetCurrentUser(TestDataSeed.UserId);
+
+        var export = await SendAsync(new ExportPersonalData());
+
+        var invoice = export.Invoices.Should().ContainSingle().Which;
+        invoice.Number.Should().Be("RE2026-0001");
+        invoice.Total.Should().Be(90m);
+        invoice.Lines.Should().ContainSingle().Which.Text.Should().Be("Tenniskurs");
+    }
+
     private void SetCurrentUser(int userId)
     {
         var userAccessor = GetInstance<IUserAccessor>();

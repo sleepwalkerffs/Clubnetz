@@ -11,6 +11,17 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
 
     public event Action? OnAccountingChanged;
 
+    /// <summary>
+    /// Saves in the saving context and tells the pages again once it is over: what changed was announced while <see cref="SemaphoreStore.IsSaving"/>
+    /// was still true, and a page that opened the dialog doing the save would otherwise keep its buttons disabled.
+    /// </summary>
+    private async Task<HttpResult> Save(Func<CancellationToken, Task<HttpResult>> action, string name)
+    {
+        var result = await RunInSavingContextAsync(action, name);
+        OnAccountingChanged?.Invoke();
+        return result;
+    }
+
     public AccountingDto? Basics { get; private set; }
     public FiscalYearDto? SelectedYear => Basics?.FiscalYears.FirstOrDefault(y => y.Id == selectedYearId);
     public AccountingSummaryDto? Summary { get; private set; }
@@ -55,6 +66,8 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
             OnAccountingChanged?.Invoke();
         }
     }, nameof(LoadSummary));
+
+    public Task<HttpResult<AccountingSummaryDto>> GetSummary(int fiscalYearId) => httpClient.GetSummary(fiscalYearId);
 
     public Task LoadEntries(AccountingEntryFilter filter) => RunInLoadingContextAsync(async cancellationToken =>
     {
@@ -108,7 +121,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
     }, nameof(LoadAccountSheet));
 
     public async Task<HttpResult<AccountingDto>> SetUp(SetUpAccountingModel model)
-        => (HttpResult<AccountingDto>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<AccountingDto>)await Save(async cancellationToken =>
         {
             var result = await httpClient.SetUp(model, cancellationToken);
             if (result is { Success: true, Dto: not null })
@@ -132,7 +145,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
     public Task<HttpResult<FiscalYearDto>> RecordAudit(int fiscalYearId, RecordAuditModel model) => SaveYear(token => httpClient.RecordAudit(fiscalYearId, model, token), nameof(RecordAudit));
 
     public async Task<HttpResult<FileDownload>> Export(int fiscalYearId)
-        => (HttpResult<FileDownload>)await RunInSavingContextAsync(async cancellationToken => await httpClient.Export(fiscalYearId, cancellationToken), nameof(Export));
+        => (HttpResult<FileDownload>)await Save(async cancellationToken => await httpClient.Export(fiscalYearId, cancellationToken), nameof(Export));
 
     public Task<HttpResult<MoneyAccountDto>> SaveMoneyAccount(int? moneyAccountId, SaveMoneyAccountModel model)
         => SaveAndReload(token => httpClient.SaveMoneyAccount(moneyAccountId, model, token), nameof(SaveMoneyAccount));
@@ -152,7 +165,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
     public Task<HttpResult<AccountingEntryDetailDto>> GetEntry(int entryId) => httpClient.GetEntry(entryId);
 
     public async Task<HttpResult<AccountingEntryDetailDto>> SaveEntry(int? entryId, SaveAccountingEntryModel model)
-        => (HttpResult<AccountingEntryDetailDto>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<AccountingEntryDetailDto>)await Save(async cancellationToken =>
         {
             var result = await httpClient.SaveEntry(entryId, model, cancellationToken);
             if (result.Success)
@@ -162,7 +175,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, nameof(SaveEntry));
 
     public async Task<HttpResult<AccountingEntryDetailDto>> CancelEntry(int entryId, string? reason)
-        => (HttpResult<AccountingEntryDetailDto>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<AccountingEntryDetailDto>)await Save(async cancellationToken =>
         {
             var result = await httpClient.CancelEntry(entryId, new CancelAccountingEntryModel { Reason = reason }, cancellationToken);
             if (result.Success)
@@ -174,7 +187,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
     public Task<HttpResult<List<AccountingMemberDto>>> GetMembers(string? search, CancellationToken cancellationToken = default) => httpClient.GetMembers(search, cancellationToken);
 
     public async Task<HttpResult<AccountingReceiptDto>> UploadReceipt(Stream content, string fileName)
-        => (HttpResult<AccountingReceiptDto>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<AccountingReceiptDto>)await Save(async cancellationToken =>
         {
             var result = await httpClient.UploadReceipt(content, fileName, cancellationToken);
             if (result.Success)
@@ -184,7 +197,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, nameof(UploadReceipt));
 
     public Task<HttpResult> DeleteReceipt(int receiptId)
-        => RunInSavingContextAsync(async cancellationToken =>
+        => Save(async cancellationToken =>
         {
             var result = await httpClient.DeleteReceipt(receiptId, cancellationToken);
             if (result.Success)
@@ -211,7 +224,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
     }, nameof(LoadAutomation));
 
     public async Task<HttpResult<AccountingAutomationDto>> SaveAutomation(SaveAccountingAutomationModel model)
-        => (HttpResult<AccountingAutomationDto>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<AccountingAutomationDto>)await Save(async cancellationToken =>
         {
             var result = await httpClient.SaveAutomation(model, cancellationToken);
             if (result is { Success: true, Dto: not null })
@@ -234,7 +247,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
     }, nameof(LoadProposals));
 
     public async Task<HttpResult<SyncAccountingProposalsResult>> SyncProposals()
-        => (HttpResult<SyncAccountingProposalsResult>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<SyncAccountingProposalsResult>)await Save(async cancellationToken =>
         {
             var result = await httpClient.SyncProposals(cancellationToken);
             if (result.Success)
@@ -244,7 +257,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, nameof(SyncProposals));
 
     public async Task<HttpResult<AccountingEntryDetailDto>> BookProposal(int proposalId, SaveAccountingEntryModel? changed)
-        => (HttpResult<AccountingEntryDetailDto>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<AccountingEntryDetailDto>)await Save(async cancellationToken =>
         {
             var result = await httpClient.BookProposal(proposalId, new BookAccountingProposalModel { Entry = changed }, cancellationToken);
             if (result.Success)
@@ -254,7 +267,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, nameof(BookProposal));
 
     public Task<HttpResult> DismissProposal(int proposalId)
-        => RunInSavingContextAsync(async cancellationToken =>
+        => Save(async cancellationToken =>
         {
             var result = await httpClient.DismissProposal(proposalId, cancellationToken);
             if (result.Success)
@@ -288,7 +301,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
     }, nameof(LoadBank));
 
     public async Task<HttpResult<BankImportResultDto>> ImportBankStatement(int moneyAccountId, Stream content, string fileName, CsvColumnsDto? layout)
-        => (HttpResult<BankImportResultDto>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<BankImportResultDto>)await Save(async cancellationToken =>
         {
             var result = await httpClient.ImportBankStatement(moneyAccountId, content, fileName, layout, cancellationToken);
             if (result is { Success: true, Dto.NeedsCsvLayout: false })
@@ -298,7 +311,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, nameof(ImportBankStatement));
 
     public Task<HttpResult> MatchBankTransaction(int bankTransactionId, MatchBankTransactionModel model)
-        => RunInSavingContextAsync(async cancellationToken =>
+        => Save(async cancellationToken =>
         {
             var result = await httpClient.MatchBankTransaction(bankTransactionId, model, cancellationToken);
             if (result.Success)
@@ -308,7 +321,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, nameof(MatchBankTransaction));
 
     public async Task<HttpResult<AccountingEntryDetailDto>> BookBankTransaction(int bankTransactionId, SaveAccountingEntryModel model)
-        => (HttpResult<AccountingEntryDetailDto>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<AccountingEntryDetailDto>)await Save(async cancellationToken =>
         {
             var result = await httpClient.BookBankTransaction(bankTransactionId, model, cancellationToken);
             if (result.Success)
@@ -318,7 +331,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, nameof(BookBankTransaction));
 
     public async Task<HttpResult<BookBankTransactionsByRulesResult>> BookBankTransactionsByRules()
-        => (HttpResult<BookBankTransactionsByRulesResult>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<BookBankTransactionsByRulesResult>)await Save(async cancellationToken =>
         {
             var result = await httpClient.BookBankTransactionsByRules(BankAccountId, cancellationToken);
             if (result.Success)
@@ -328,7 +341,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, nameof(BookBankTransactionsByRules));
 
     public Task<HttpResult> IgnoreBankTransaction(int bankTransactionId)
-        => RunInSavingContextAsync(async cancellationToken =>
+        => Save(async cancellationToken =>
         {
             var result = await httpClient.IgnoreBankTransaction(bankTransactionId, cancellationToken);
             if (result.Success)
@@ -338,7 +351,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, nameof(IgnoreBankTransaction));
 
     public Task<HttpResult> ReopenBankTransaction(int bankTransactionId)
-        => RunInSavingContextAsync(async cancellationToken =>
+        => Save(async cancellationToken =>
         {
             var result = await httpClient.ReopenBankTransaction(bankTransactionId, cancellationToken);
             if (result.Success)
@@ -348,7 +361,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, nameof(ReopenBankTransaction));
 
     public async Task<HttpResult<BankRuleDto>> SaveBankRule(int? bankRuleId, SaveBankRuleModel model)
-        => (HttpResult<BankRuleDto>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<BankRuleDto>)await Save(async cancellationToken =>
         {
             var result = await httpClient.SaveBankRule(bankRuleId, model, cancellationToken);
             if (result.Success)
@@ -358,7 +371,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, nameof(SaveBankRule));
 
     public Task<HttpResult> DeleteBankRule(int bankRuleId)
-        => RunInSavingContextAsync(async cancellationToken =>
+        => Save(async cancellationToken =>
         {
             var result = await httpClient.DeleteBankRule(bankRuleId, cancellationToken);
             if (result.Success)
@@ -367,12 +380,83 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
             return result;
         }, nameof(DeleteBankRule));
 
+    // ---------- invoices ----------
+
+    public InvoiceSettingsDto? InvoiceSettings { get; private set; }
+    public GetInvoicesResult? Invoices { get; private set; }
+    public InvoiceStatus? InvoiceFilter { get; private set; }
+
+    public Task LoadInvoices(InvoiceStatus? status) => RunInLoadingContextAsync(async cancellationToken =>
+    {
+        InvoiceFilter = status;
+        var invoices = httpClient.GetInvoices(status, cancellationToken);
+        var settings = httpClient.GetInvoiceSettings(cancellationToken);
+        var invoicesResult = await invoices;
+        if (InvoiceFilter == status)
+            Invoices = invoicesResult is { Success: true, Dto: not null } i ? i.Dto : null;
+        InvoiceSettings = await settings is { Success: true, Dto: not null } s ? s.Dto : null;
+        OnAccountingChanged?.Invoke();
+    }, nameof(LoadInvoices));
+
+    public async Task<HttpResult<InvoiceSettingsDto>> SaveInvoiceSettings(SaveInvoiceSettingsModel model)
+        => (HttpResult<InvoiceSettingsDto>)await Save(async cancellationToken =>
+        {
+            var result = await httpClient.SaveInvoiceSettings(model, cancellationToken);
+            if (result is { Success: true, Dto: not null })
+            {
+                InvoiceSettings = result.Dto;
+                OnAccountingChanged?.Invoke();
+            }
+
+            return result;
+        }, nameof(SaveInvoiceSettings));
+
+    public Task<HttpResult<InvoiceDetailDto>> GetInvoice(int invoiceId) => httpClient.GetInvoice(invoiceId);
+
+    public async Task<HttpResult<InvoiceDetailDto>> SaveInvoice(int? invoiceId, SaveInvoiceModel model)
+        => (HttpResult<InvoiceDetailDto>)await Save(async cancellationToken =>
+        {
+            var result = await httpClient.SaveInvoice(invoiceId, model, cancellationToken);
+            if (result.Success)
+                await LoadInvoices(InvoiceFilter);
+
+            return result;
+        }, nameof(SaveInvoice));
+
+    public Task<HttpResult> DeleteInvoice(int invoiceId)
+        => Save(async cancellationToken =>
+        {
+            var result = await httpClient.DeleteInvoice(invoiceId, cancellationToken);
+            if (result.Success)
+                await LoadInvoices(InvoiceFilter);
+
+            return result;
+        }, nameof(DeleteInvoice));
+
+    public async Task<HttpResult<InvoiceDetailDto>> InvoiceAction(int invoiceId, string action, object? body)
+        => (HttpResult<InvoiceDetailDto>)await Save(async cancellationToken =>
+        {
+            var result = await httpClient.InvoiceAction(invoiceId, action, body, cancellationToken);
+            if (result.Success)
+            {
+                if (action == "pay")
+                    await AfterReconciled();
+                else
+                    await LoadInvoices(InvoiceFilter);
+            }
+
+            return result;
+        }, nameof(InvoiceAction));
+
+    public Task<HttpResult<FileDownload>> GetInvoicePdf(int invoiceId) => httpClient.GetInvoicePdf(invoiceId);
+
     private Task ReloadBank() => BankTransactions is null && BankImports.Count == 0 ? Task.CompletedTask : LoadBank(BankAccountId, BankStatus);
 
     /// <summary>Entries were booked from suggestions or bank lines: everything that shows them.</summary>
     private async Task AfterReconciled()
     {
-        await Task.WhenAll(LoadProposals(), ReloadBank());
+        // A bank line may have paid an invoice
+        await Task.WhenAll(LoadProposals(), ReloadBank(), Invoices is null ? Task.CompletedTask : LoadInvoices(InvoiceFilter));
         await AfterEntryChanged();
     }
 
@@ -398,7 +482,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
     }
 
     private async Task<HttpResult<FiscalYearDto>> SaveYear(Func<CancellationToken, Task<HttpResult<FiscalYearDto>>> call, string name)
-        => (HttpResult<FiscalYearDto>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<FiscalYearDto>)await Save(async cancellationToken =>
         {
             var result = await call(cancellationToken);
             if (result.Success)
@@ -411,7 +495,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, name);
 
     private async Task<HttpResult<T>> SaveAndReload<T>(Func<CancellationToken, Task<HttpResult<T>>> call, string name)
-        => (HttpResult<T>)await RunInSavingContextAsync(async cancellationToken =>
+        => (HttpResult<T>)await Save(async cancellationToken =>
         {
             var result = await call(cancellationToken);
             if (result.Success)
@@ -421,7 +505,7 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
         }, name);
 
     private Task<HttpResult> DeleteAndReload(Func<CancellationToken, Task<HttpResult>> call, string name)
-        => RunInSavingContextAsync(async cancellationToken =>
+        => Save(async cancellationToken =>
         {
             var result = await call(cancellationToken);
             if (result.Success)

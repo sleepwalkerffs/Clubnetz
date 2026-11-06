@@ -1,0 +1,87 @@
+.invoice-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.invoice-form__hint {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.invoice-form__subtitle {
+    margin-top: 4px;
+    font-weight: 800;
+}
+
+.invoice-form__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.invoice-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-background-gray);
+}
+
+/* Own areas per part: the columns line up with or without cost centers and remove button. Category and cost center get a row of
+   their own, in one row with the rest their names were cut off ("4400 · Spon…") */
+.invoice-line {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) 80px minmax(110px, 1fr) 90px 32px;
+    grid-template-areas: "text qty price total remove" "category category category . .";
+    gap: 8px;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--mud-palette-lines-default);
+}
+
+.invoice-line:has(.invoice-line__cost-center) {
+    grid-template-areas: "text qty price total remove" "category cost-center cost-center . .";
+}
+
+.invoice-line ::deep .invoice-line__text { grid-area: text; }
+.invoice-line ::deep .invoice-line__qty { grid-area: qty; }
+.invoice-line ::deep .invoice-line__price { grid-area: price; }
+.invoice-line__category { grid-area: category; min-width: 0; }
+.invoice-line__cost-center { grid-area: cost-center; min-width: 0; }
+
+.invoice-line__total {
+    grid-area: total;
+    text-align: right;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.invoice-line ::deep .invoice-line__remove {
+    grid-area: remove;
+    justify-self: center;
+}
+
+.invoice-lines__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.invoice-lines__total {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+    .invoice-line,
+    .invoice-line:has(.invoice-line__cost-center) {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 32px;
+        grid-template-areas: "text text remove" "qty price price" "category category category" "cost-center cost-center cost-center" ". total total";
+        padding-bottom: 8px;
+        border-bottom: 1px dashed var(--mud-palette-lines-default);
+    }
+}

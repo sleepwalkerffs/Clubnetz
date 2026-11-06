@@ -34,6 +34,7 @@ public static class SimpleInjectorConfiguration
                 services.AddScoped<HtmlRenderer>();
                 container.RegisterEmail(o => configuration.GetSection("Email").Bind(o));
                 container.Collection.Append<IEmailAttachmentResolver, ClubAnnouncementAttachmentResolver>();
+                container.Collection.Append<IEmailAttachmentResolver, Business.Accounting.InvoiceAttachmentResolver>();
 
                 // Manual CrossWire
                 services.AddScoped(_ => container.GetInstance<IDomainEventDispatcher>());

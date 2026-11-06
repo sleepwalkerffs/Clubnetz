@@ -526,6 +526,15 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         context.Add(bankLine);
         await context.SaveChangesAsync();
 
+        // Invoices: the club's details and an issued invoice to the plain member
+        var invoiceSettings = new InvoiceSettings(club.Id, new InvoiceSettings.SettingsData($"Street {text}", null, null, moneyAccount.Id, null, "RE", 14, null));
+        var invoice = new Invoice(club.Id, new Invoice.InvoiceData(seeded.Member.MemberId, $"Recipient {text}", $"Address {text}", "invoice@security.test", $"Invoice {text}", null, null,
+            today, today.AddDays(14), [new Invoice.LineData($"Line {text}", 1, 9_000, category.Id, null)]), german: true);
+        invoice.Issue(invoiceSettings, 1, now);
+        context.AddRange(invoiceSettings, invoice);
+        await context.SaveChangesAsync();
+        seeded.InvoiceId = invoice.Id;
+
         seeded.AccountingProposalId = proposal.Id;
         seeded.BankTransactionId = bankLine.Id;
         seeded.BankRuleId = bankRule.Id;
@@ -690,6 +699,9 @@ public sealed class SeededClub
 
     /// <summary>A bank rule looking for <c>Rule {text}</c>.</summary>
     public int BankRuleId { get; set; }
+
+    /// <summary>An issued invoice <c>Invoice {text}</c> to <see cref="Member"/>.</summary>
+    public int InvoiceId { get; set; }
     public List<int> UserIds { get; } = [];
 }
 

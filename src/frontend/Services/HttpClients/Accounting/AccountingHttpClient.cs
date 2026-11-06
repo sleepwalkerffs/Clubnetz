@@ -193,4 +193,35 @@ public class AccountingHttpClient(HttpClient httpClient, JsonSerializerOptions j
 
     public async Task<HttpResult> DeleteBankRule(int bankRuleId, CancellationToken cancellationToken = default)
         => await (await httpClient.DeleteAsync($"bank-rules/{bankRuleId}", cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
+
+    // ---------- invoices ----------
+
+    public async Task<HttpResult<InvoiceSettingsDto>> GetInvoiceSettings(CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync("invoice-settings", cancellationToken)).AsHttpResult<InvoiceSettingsDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<InvoiceSettingsDto>> SaveInvoiceSettings(SaveInvoiceSettingsModel model, CancellationToken cancellationToken = default)
+        => await (await httpClient.PutAsJsonAsync("invoice-settings", model, jsonOptions, cancellationToken)).AsHttpResult<InvoiceSettingsDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<GetInvoicesResult>> GetInvoices(InvoiceStatus? status, CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync(status is { } value ? $"invoices?status={value}" : "invoices", cancellationToken)).AsHttpResult<GetInvoicesResult>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<InvoiceDetailDto>> GetInvoice(int invoiceId, CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync($"invoices/{invoiceId}", cancellationToken)).AsHttpResult<InvoiceDetailDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<InvoiceDetailDto>> SaveInvoice(int? invoiceId, SaveInvoiceModel model, CancellationToken cancellationToken = default)
+        => await (invoiceId is { } id
+            ? await httpClient.PutAsJsonAsync($"invoices/{id}", model, jsonOptions, cancellationToken)
+            : await httpClient.PostAsJsonAsync("invoices", model, jsonOptions, cancellationToken)).AsHttpResult<InvoiceDetailDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult> DeleteInvoice(int invoiceId, CancellationToken cancellationToken = default)
+        => await (await httpClient.DeleteAsync($"invoices/{invoiceId}", cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
+
+    /// <summary><paramref name="action"/>: issue, send, remind, pay or cancel.</summary>
+    public async Task<HttpResult<InvoiceDetailDto>> InvoiceAction(int invoiceId, string action, object? body, CancellationToken cancellationToken = default)
+        => await (body is null
+            ? await httpClient.PostAsync($"invoices/{invoiceId}/{action}", null, cancellationToken)
+            : await httpClient.PostAsync($"invoices/{invoiceId}/{action}", JsonContent.Create(body, body.GetType(), options: jsonOptions), cancellationToken)).AsHttpResult<InvoiceDetailDto>(jsonOptions, cancellationToken);
+
+    public async Task<HttpResult<FileDownload>> GetInvoicePdf(int invoiceId, CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync($"invoices/{invoiceId}/pdf", cancellationToken)).AsFileHttpResult(jsonOptions, cancellationToken);
 }

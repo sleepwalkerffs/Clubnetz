@@ -357,6 +357,12 @@ public record AccountingSummaryDto
 
     /// <summary>Receipts waiting in the inbox (all years).</summary>
     public required int ReceiptsInInbox { get; init; }
+
+    /// <summary>Suggested entries of this year still waiting to be booked or dismissed.</summary>
+    public int OpenProposals { get; init; }
+
+    /// <summary>Imported bank lines of this year neither matched nor ignored.</summary>
+    public int OpenBankLines { get; init; }
 }
 
 public record MoneyAccountBalanceDto

@@ -16,13 +16,16 @@
                     FullWidth="@(MudDialog.Options.FullScreen == true)">
             @SubmitCaption
         </LoadButton>
-        <MudButton Variant="Variant.Outlined"
-                    Color="Color.Secondary"
-                    OnClick=@Cancel
-                    Disabled="@Loading"
-                    FullWidth="@(MudDialog.Options.FullScreen == true)">
-            @CancelCaption
-        </MudButton>
+        @if (ShowCancel)
+        {
+            <MudButton Variant="Variant.Outlined"
+                        Color="Color.Secondary"
+                        OnClick=@Cancel
+                        Disabled="@Loading"
+                        FullWidth="@(MudDialog.Options.FullScreen == true)">
+                @CancelCaption
+            </MudButton>
+        }
     </DialogActions>
 </MudDialog>
 
@@ -48,6 +51,10 @@
 
     [Parameter]
     public bool AllowFullScreen { get; set; } = true;
+
+    /// <summary>False for a dialog that only shows something: its submit button closes it, a second button would do the same.</summary>
+    [Parameter]
+    public bool ShowCancel { get; set; } = true;
 
     [Inject]
     public required IBrowserViewportService BreakpointListener { get; set; }

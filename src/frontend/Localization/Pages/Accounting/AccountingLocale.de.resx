@@ -687,29 +687,8 @@
   <data name="Automation_SinceHint" xml:space="preserve">
     <value>Frühere Zahlungen bleiben weg (von Hand gebucht)</value>
   </data>
-  <data name="Automation_Accounts" xml:space="preserve">
-    <value>Wohin das Geld geht</value>
-  </data>
-  <data name="Automation_Online" xml:space="preserve">
-    <value>Online bezahlt (Stripe-Guthaben)</value>
-  </data>
-  <data name="Automation_OnlineHint" xml:space="preserve">
-    <value>Ein Geldkonto der Art „Zahlungsanbieter“</value>
-  </data>
-  <data name="Automation_Bank" xml:space="preserve">
-    <value>Überweisungen und Stripe-Auszahlungen</value>
-  </data>
-  <data name="Automation_Cash" xml:space="preserve">
-    <value>Bar</value>
-  </data>
-  <data name="Automation_Card" xml:space="preserve">
-    <value>Kartenzahlungen im Clubhaus</value>
-  </data>
   <data name="Automation_CardHint" xml:space="preserve">
     <value>Das Kartenterminal oder SumUp-Konto des Vereins</value>
-  </data>
-  <data name="Automation_NoStripe" xml:space="preserve">
-    <value>Der Verein nimmt noch keine Onlinezahlungen: Mitgliedsbeiträge gehen auf die Bank oder in die Kassa.</value>
   </data>
   <data name="Automation_MissingCategory" xml:space="preserve">
     <value>Wähl für jede eingeschaltete Quelle eine Kategorie.</value>
@@ -941,5 +920,309 @@
   </data>
   <data name="Proposals_ProblemOther" xml:space="preserve">
     <value>Konnte nicht von selbst gebucht werden</value>
+  </data>
+  <data name="Tab_Invoices" xml:space="preserve">
+    <value>Rechnungen</value>
+  </data>
+  <data name="Invoice" xml:space="preserve">
+    <value>Rechnung</value>
+  </data>
+  <data name="Overview_Overdue" xml:space="preserve">
+    <value>{0} Rechnungen sind überfällig</value>
+  </data>
+  <data name="Overview_OverdueOne" xml:space="preserve">
+    <value>1 Rechnung ist überfällig</value>
+  </data>
+  <data name="Invoices_SetUpTitle" xml:space="preserve">
+    <value>Rechnungen aus Clubnetz schreiben</value>
+  </data>
+  <data name="Invoices_SetUpText" xml:space="preserve">
+    <value>An Sponsoren, für Kurse oder Turniere: als PDF mit Zahlungs-QR-Code, per E-Mail verschickt, mit einem Klick oder über den Bankimport bezahlt. Gib zuerst einmal die Vereinsdaten ein.</value>
+  </data>
+  <data name="Invoices_SetUp" xml:space="preserve">
+    <value>Vereinsdaten eingeben</value>
+  </data>
+  <data name="Invoices_Settings" xml:space="preserve">
+    <value>Vereinsdaten</value>
+  </data>
+  <data name="Invoices_Add" xml:space="preserve">
+    <value>Neue Rechnung</value>
+  </data>
+  <data name="Invoices_All" xml:space="preserve">
+    <value>Alle</value>
+  </data>
+  <data name="Invoices_Open" xml:space="preserve">
+    <value>Offen:</value>
+  </data>
+  <data name="Invoices_Overdue" xml:space="preserve">
+    <value>{0} überfällig</value>
+  </data>
+  <data name="Invoices_OverdueChip" xml:space="preserve">
+    <value>Überfällig</value>
+  </data>
+  <data name="Invoices_Empty" xml:space="preserve">
+    <value>Noch keine Rechnungen</value>
+  </data>
+  <data name="Invoices_EmptyHint" xml:space="preserve">
+    <value>Schreib die erste mit „Neue Rechnung“.</value>
+  </data>
+  <data name="Invoices_DueOn" xml:space="preserve">
+    <value>fällig am {0}</value>
+  </data>
+  <data name="Invoices_PaidOn" xml:space="preserve">
+    <value>bezahlt am {0}</value>
+  </data>
+  <data name="Invoices_Reminders" xml:space="preserve">
+    <value>{0}× gemahnt</value>
+  </data>
+  <data name="InvoiceStatus_Draft" xml:space="preserve">
+    <value>Entwurf</value>
+  </data>
+  <data name="InvoiceStatus_Issued" xml:space="preserve">
+    <value>Offen</value>
+  </data>
+  <data name="InvoiceStatus_Paid" xml:space="preserve">
+    <value>Bezahlt</value>
+  </data>
+  <data name="InvoiceStatus_Cancelled" xml:space="preserve">
+    <value>Storniert</value>
+  </data>
+  <data name="InvoiceSettings_Title" xml:space="preserve">
+    <value>Vereinsdaten für Rechnungen</value>
+  </data>
+  <data name="InvoiceSettings_Hint" xml:space="preserve">
+    <value>Sie stehen auf jeder Rechnung. Der Vereinsname kommt aus den Vereinseinstellungen.</value>
+  </data>
+  <data name="InvoiceSettings_Address" xml:space="preserve">
+    <value>Adresse des Vereins</value>
+  </data>
+  <data name="InvoiceSettings_AddressPlaceholder" xml:space="preserve">
+    <value>Sportplatzweg 1
+6800 Feldkirch</value>
+  </data>
+  <data name="InvoiceSettings_Zvr" xml:space="preserve">
+    <value>ZVR-Zahl</value>
+  </data>
+  <data name="InvoiceSettings_ZvrHint" xml:space="preserve">
+    <value>Aus dem Vereinsregister</value>
+  </data>
+  <data name="InvoiceSettings_Contact" xml:space="preserve">
+    <value>Kontaktzeile</value>
+  </data>
+  <data name="InvoiceSettings_Account" xml:space="preserve">
+    <value>Bankkonto für Zahlungen</value>
+  </data>
+  <data name="InvoiceSettings_AccountHint" xml:space="preserve">
+    <value>Seine IBAN steht mit dem QR-Code drauf</value>
+  </data>
+  <data name="InvoiceSettings_Prefix" xml:space="preserve">
+    <value>Nummernkürzel</value>
+  </data>
+  <data name="InvoiceSettings_PrefixHint" xml:space="preserve">
+    <value>Die erste Rechnung eines Jahres bekommt {0}</value>
+  </data>
+  <data name="InvoiceSettings_Term" xml:space="preserve">
+    <value>Zahlungsziel (Tage)</value>
+  </data>
+  <data name="InvoiceSettings_TermHint" xml:space="preserve">
+    <value>Fälligkeit neuer Rechnungen</value>
+  </data>
+  <data name="InvoiceSettings_Footer" xml:space="preserve">
+    <value>Fußzeile</value>
+  </data>
+  <data name="InvoiceSettings_FooterHint" xml:space="preserve">
+    <value>Z. B. der Hinweis zur Umsatzsteuer. Frag deine Steuerberatung, welcher für den Verein gilt.</value>
+  </data>
+  <data name="InvoiceSettings_FooterDefault" xml:space="preserve">
+    <value>Umsatzsteuerbefreit – Kleinunternehmer gem. § 6 Abs. 1 Z 27 UStG.</value>
+  </data>
+  <data name="Invoice_AddTitle" xml:space="preserve">
+    <value>Neue Rechnung</value>
+  </data>
+  <data name="Invoice_EditTitle" xml:space="preserve">
+    <value>Entwurf ändern</value>
+  </data>
+  <data name="Invoice_SaveDraft" xml:space="preserve">
+    <value>Entwurf speichern</value>
+  </data>
+  <data name="Invoice_Saved" xml:space="preserve">
+    <value>Entwurf gespeichert</value>
+  </data>
+  <data name="Invoice_Recipient" xml:space="preserve">
+    <value>Empfänger</value>
+  </data>
+  <data name="Invoice_Member" xml:space="preserve">
+    <value>Mitglied</value>
+  </data>
+  <data name="Invoice_MemberHint" xml:space="preserve">
+    <value>Optional: ein Mitglied des Vereins</value>
+  </data>
+  <data name="Invoice_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Invoice_Email" xml:space="preserve">
+    <value>E-Mail</value>
+  </data>
+  <data name="Invoice_Address" xml:space="preserve">
+    <value>Adresse</value>
+  </data>
+  <data name="Invoice_Details" xml:space="preserve">
+    <value>Rechnung</value>
+  </data>
+  <data name="Invoice_Subject" xml:space="preserve">
+    <value>Betreff</value>
+  </data>
+  <data name="Invoice_SubjectPlaceholder" xml:space="preserve">
+    <value>Bandenwerbung Saison 2026</value>
+  </data>
+  <data name="Invoice_ServicePeriod" xml:space="preserve">
+    <value>Leistungszeitraum</value>
+  </data>
+  <data name="Invoice_ServicePeriodPlaceholder" xml:space="preserve">
+    <value>Saison 2026</value>
+  </data>
+  <data name="Invoice_Date" xml:space="preserve">
+    <value>Rechnungsdatum</value>
+  </data>
+  <data name="Invoice_DueDate" xml:space="preserve">
+    <value>Zahlbar bis</value>
+  </data>
+  <data name="Invoice_Notes" xml:space="preserve">
+    <value>Text über den Positionen</value>
+  </data>
+  <data name="Invoice_NotesPlaceholder" xml:space="preserve">
+    <value>Vielen Dank für die Unterstützung!</value>
+  </data>
+  <data name="Invoice_Lines" xml:space="preserve">
+    <value>Positionen</value>
+  </data>
+  <data name="Invoice_LineText" xml:space="preserve">
+    <value>Beschreibung</value>
+  </data>
+  <data name="Invoice_Quantity" xml:space="preserve">
+    <value>Menge</value>
+  </data>
+  <data name="Invoice_UnitPrice" xml:space="preserve">
+    <value>Einzelpreis</value>
+  </data>
+  <data name="Invoice_AddLine" xml:space="preserve">
+    <value>Position hinzufügen</value>
+  </data>
+  <data name="Invoice_Issue" xml:space="preserve">
+    <value>Ausstellen</value>
+  </data>
+  <data name="Invoice_Issued" xml:space="preserve">
+    <value>Ausgestellt: die Rechnung hat ihre Nummer und ist endgültig</value>
+  </data>
+  <data name="Invoice_Send" xml:space="preserve">
+    <value>Senden</value>
+  </data>
+  <data name="Invoice_SendHint" xml:space="preserve">
+    <value>Die Rechnung geht als PDF mit der Vereins-E-Mail „Rechnung“ (den Text änderst du unter E-Mail-Vorlagen).</value>
+  </data>
+  <data name="Invoice_SendNow" xml:space="preserve">
+    <value>Rechnung senden</value>
+  </data>
+  <data name="Invoice_Remind" xml:space="preserve">
+    <value>Erinnern</value>
+  </data>
+  <data name="Invoice_RemindHint" xml:space="preserve">
+    <value>Eine freundliche Zahlungserinnerung, die Rechnung hängt noch einmal an.</value>
+  </data>
+  <data name="Invoice_RemindNow" xml:space="preserve">
+    <value>Erinnerung senden</value>
+  </data>
+  <data name="Invoice_SentNow" xml:space="preserve">
+    <value>An {0} gesendet</value>
+  </data>
+  <data name="Invoice_SentTo" xml:space="preserve">
+    <value>an {0} gesendet am {1}</value>
+  </data>
+  <data name="Invoice_Reminded" xml:space="preserve">
+    <value>{0}× erinnert, zuletzt am {1}</value>
+  </data>
+  <data name="Invoice_Pay" xml:space="preserve">
+    <value>Bezahlt</value>
+  </data>
+  <data name="Invoice_PayHint" xml:space="preserve">
+    <value>Bucht die Einnahme der Rechnung (ihre Positionen je Kategorie) auf dieses Konto und diesen Tag. Eine Bankzeile mit der Rechnungsnummer wird im Abgleich von selbst zugeordnet.</value>
+  </data>
+  <data name="Invoice_PaidInto" xml:space="preserve">
+    <value>Eingegangen auf</value>
+  </data>
+  <data name="Invoice_PaidOn" xml:space="preserve">
+    <value>Am</value>
+  </data>
+  <data name="Invoice_PayNow" xml:space="preserve">
+    <value>Zahlung buchen</value>
+  </data>
+  <data name="Invoice_Paid" xml:space="preserve">
+    <value>Zahlung gebucht</value>
+  </data>
+  <data name="Invoice_PaidAs" xml:space="preserve">
+    <value>Bezahlt am {0} (Buchung #{1})</value>
+  </data>
+  <data name="Invoice_Cancel" xml:space="preserve">
+    <value>Stornieren</value>
+  </data>
+  <data name="Invoice_CancelHint" xml:space="preserve">
+    <value>Die Rechnung behält ihre Nummer und wird nie bezahlt. Schreib bei Bedarf eine neue.</value>
+  </data>
+  <data name="Invoice_CancelReason" xml:space="preserve">
+    <value>Grund</value>
+  </data>
+  <data name="Invoice_CancelNow" xml:space="preserve">
+    <value>Rechnung stornieren</value>
+  </data>
+  <data name="Invoice_Cancelled" xml:space="preserve">
+    <value>Rechnung storniert</value>
+  </data>
+  <data name="Invoice_Number" xml:space="preserve">
+    <value>Nummer</value>
+  </data>
+  <data name="Years_OpenTitle" xml:space="preserve">
+    <value>Noch offen in {0}:</value>
+  </data>
+  <data name="Years_OpenProposals" xml:space="preserve">
+    <value>Vorgeschlagene Buchungen nicht gebucht: {0}</value>
+  </data>
+  <data name="Years_OpenBankLines" xml:space="preserve">
+    <value>Bankzeilen nicht abgeglichen: {0}</value>
+  </data>
+  <data name="Years_OpenWithoutReceipt" xml:space="preserve">
+    <value>Buchungen ohne Beleg: {0}</value>
+  </data>
+  <data name="Years_OpenInbox" xml:space="preserve">
+    <value>Belege noch im Eingang: {0}</value>
+  </data>
+  <data name="Automation_BookedInto" xml:space="preserve">
+    <value>Gebucht auf</value>
+  </data>
+  <data name="Booked_Online" xml:space="preserve">
+    <value>Online bezahlt</value>
+  </data>
+  <data name="Booked_Bank" xml:space="preserve">
+    <value>Per Überweisung bezahlt</value>
+  </data>
+  <data name="Booked_Cash" xml:space="preserve">
+    <value>Bar bezahlt</value>
+  </data>
+  <data name="Booked_Card" xml:space="preserve">
+    <value>Mit Karte oder SumUp bezahlt</value>
+  </data>
+  <data name="Booked_StripeBalance" xml:space="preserve">
+    <value>Gebühren vom Stripe-Guthaben</value>
+  </data>
+  <data name="Booked_Payouts" xml:space="preserve">
+    <value>Auszahlungen auf</value>
+  </data>
+  <data name="Automation_AlsoFor" xml:space="preserve">
+    <value>Auch für: {0}</value>
+  </data>
+  <data name="Automation_OnlineKind" xml:space="preserve">
+    <value>Wähl ein Geldkonto der Art „Zahlungsanbieter“: Onlinezahlungen liegen bis zur Auszahlung bei Stripe.</value>
+  </data>
+  <data name="Automation_NoProvider" xml:space="preserve">
+    <value>Leg zuerst unter Einrichtung ein Geldkonto der Art „Zahlungsanbieter“ an.</value>
   </data>
 </root>

@@ -39,6 +39,10 @@ public class AccountingSecurityTests(ApiSecurityFixture app)
         $"bank-statements?moneyAccountId={club.MoneyAccountId}",
         "bank-transactions",
         "bank-rules",
+        "invoice-settings",
+        "invoices",
+        $"invoices/{club.InvoiceId}",
+        $"invoices/{club.InvoiceId}/pdf",
     ];
 
     /// <summary>Everything that changes the books, only for treasurers and admins.</summary>
@@ -76,7 +80,19 @@ public class AccountingSecurityTests(ApiSecurityFixture app)
         (HttpMethod.Post, "bank-rules", $$"""{"matchText":"Stolen","categoryId":{{club.AccountingCategoryId}}}"""),
         (HttpMethod.Put, $"bank-rules/{club.BankRuleId}", $$"""{"matchText":"Stolen","categoryId":{{club.AccountingCategoryId}}}"""),
         (HttpMethod.Delete, $"bank-rules/{club.BankRuleId}", null),
+        (HttpMethod.Put, "invoice-settings", $$"""{"address":"Stolen","moneyAccountId":{{club.MoneyAccountId}}}"""),
+        (HttpMethod.Post, "invoices", InvoiceBody(club)),
+        (HttpMethod.Put, $"invoices/{club.InvoiceId}", InvoiceBody(club)),
+        (HttpMethod.Delete, $"invoices/{club.InvoiceId}", null),
+        (HttpMethod.Post, $"invoices/{club.InvoiceId}/issue", null),
+        (HttpMethod.Post, $"invoices/{club.InvoiceId}/send", """{"email":"thief@example.test"}"""),
+        (HttpMethod.Post, $"invoices/{club.InvoiceId}/remind", """{"email":"thief@example.test"}"""),
+        (HttpMethod.Post, $"invoices/{club.InvoiceId}/pay", $$"""{"moneyAccountId":{{club.MoneyAccountId}},"date":"{{DateTime.UtcNow:yyyy-MM-dd}}"}"""),
+        (HttpMethod.Post, $"invoices/{club.InvoiceId}/cancel", """{"reason":"Stolen"}"""),
     ];
+
+    private static string InvoiceBody(SeededClub club)
+        => $$"""{"recipientName":"Stolen","invoiceDate":"{{DateTime.UtcNow:yyyy-MM-dd}}","dueDate":"{{DateTime.UtcNow:yyyy-MM-dd}}","lines":[{"text":"X","quantity":1,"unitPriceCents":100,"categoryId":{{club.AccountingCategoryId}}}]}""";
 
     private static string AuditBody => """{"status":"Audited","comment":"Fine"}""";
 
@@ -195,7 +211,7 @@ public class AccountingSecurityTests(ApiSecurityFixture app)
                 .Status.Should().Be(HttpStatusCode.NotFound);
 
             // What club B lists: nothing of club A (not checked: the members of club B, the admin of club A who plays in B is one of them, under the name of club A)
-            foreach (var path in new[] { "", "receipts", $"fiscal-years/{app.ClubB.FiscalYearId}/entries", "proposals", "bank-transactions", "bank-rules", "bank-statements" })
+            foreach (var path in new[] { "", "receipts", $"fiscal-years/{app.ClubB.FiscalYearId}/entries", "proposals", "bank-transactions", "bank-rules", "bank-statements", "invoices", "invoice-settings" })
                 (await Send(HttpMethod.Get, $"{AccountingOf(app.ClubB)}/{path}", attacker)).Body.Should().NotContain(ApiSecurityFixture.Marker, path);
         }
 

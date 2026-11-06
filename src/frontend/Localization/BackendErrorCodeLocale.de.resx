@@ -945,4 +945,37 @@
   <data name="AccountingBankFileSeveralAccounts" xml:space="preserve">
     <value>Die Datei enthält Auszüge mehrerer Konten. Gib dem Geldkonto unter Einrichtung seine IBAN: dann werden nur seine Auszüge importiert.</value>
   </data>
+  <data name="AccountingInvoiceSettingsInvalid" xml:space="preserve">
+    <value>Prüf die BIC (8 oder 11 Zeichen), das Nummernkürzel (Buchstaben, Ziffern, - / _) und das Zahlungsziel (0 bis 365 Tage).</value>
+  </data>
+  <data name="AccountingInvoiceTextInvalid" xml:space="preserve">
+    <value>Füll den Text aus (höchstens {0} Zeichen).</value>
+  </data>
+  <data name="AccountingInvoiceNotDraft" xml:space="preserve">
+    <value>Die Rechnung {0} ist ausgestellt und endgültig: storniere sie und schreib eine neue.</value>
+  </data>
+  <data name="AccountingInvoiceNotOpen" xml:space="preserve">
+    <value>Die Rechnung {0} ist schon bezahlt oder storniert.</value>
+  </data>
+  <data name="AccountingInvoiceNotIssued" xml:space="preserve">
+    <value>Stell die Rechnung zuerst aus: ein Entwurf hat noch keine Nummer.</value>
+  </data>
+  <data name="AccountingInvoiceEmailInvalid" xml:space="preserve">
+    <value>Diese E-Mail-Adresse ist ungültig.</value>
+  </data>
+  <data name="AccountingInvoiceDueDateInvalid" xml:space="preserve">
+    <value>Das Zahlungsziel kann nicht vor dem Rechnungsdatum liegen.</value>
+  </data>
+  <data name="AccountingInvoiceQuantityInvalid" xml:space="preserve">
+    <value>Gib eine Menge über 0 mit höchstens zwei Nachkommastellen ein.</value>
+  </data>
+  <data name="AccountingInvoicingNotSetUp" xml:space="preserve">
+    <value>Hinterleg zuerst die Vereinsdaten für Rechnungen (Adresse und Bankkonto).</value>
+  </data>
+  <data name="AccountingInvoiceNoEmail" xml:space="preserve">
+    <value>Die Rechnung hat keine E-Mail-Adresse: gib eine ein.</value>
+  </data>
+  <data name="AccountingInvoiceAccountWithoutIban" xml:space="preserve">
+    <value>Gib diesem Geldkonto unter Einrichtung seine IBAN: sie steht mit dem QR-Code auf den Rechnungen.</value>
+  </data>
 </root>

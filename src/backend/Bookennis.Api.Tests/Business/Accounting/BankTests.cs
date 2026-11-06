@@ -179,6 +179,28 @@ public class BankTests(TestFixture fixture) : TestBase(fixture)
     }
 
     [Fact]
+    public async Task Summary_CountsWhatIsStillOpenInTheYear()
+    {
+        var books = await SetUp();
+        await QueryAsync(async ctx =>
+        {
+            ctx.Add(new AccountingProposal(ClubId, Domain.Accounting.AccountingSource.MembershipFees, "membership-order:1",
+                new AccountingProposal.ProposalData(new DateOnly(2026, 5, 1), "Mitgliedsbeitrag Erwachsene", Domain.Accounting.AccountingEntryKind.Booking, books.Bank, null, books.Membership, 12_000, null, "Anna Huber"), Now));
+            await ctx.SaveChangesAsync();
+            return 0;
+        });
+        await Import(books.Bank, Camt(Iban, ("2026-05-10", -30m, "ÖTV", "Lizenz"), ("2026-05-11", -5m, "Bank", "Spesen")));
+        var year = (await SendAsync(new GetAccounting(ClubId, TreasurerUserId, true, false))).FiscalYears.Single().Id;
+
+        var before = await SendAsync(new GetAccountingSummary(ClubId, year));
+        before.OpenProposals.Should().Be(1);
+        before.OpenBankLines.Should().Be(2);
+
+        await SendAsync(new IgnoreBankTransaction(ClubId, (await Lines()).Transactions.First().Id));
+        (await SendAsync(new GetAccountingSummary(ClubId, year))).OpenBankLines.Should().Be(1, "an ignored line is done");
+    }
+
+    [Fact]
     public async Task Rules_BookTheLinesTheyFit_UnlessAnEntryFitsAlready()
     {
         var books = await SetUp();

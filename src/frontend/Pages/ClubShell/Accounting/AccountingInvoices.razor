@@ -1,0 +1,128 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Shared.Controller.Accounting
+
+@inherits AccountingComponentBase
+
+@* The invoices of the club: drafts, issued (open and overdue), paid and cancelled ones. Click one for its PDF and what can be done with it. *@
+
+@{
+    var canManage = Store.Basics?.CanManage == true;
+    var settings = Store.InvoiceSettings;
+    var result = Store.Invoices;
+}
+
+@if (settings is { IsSetUp: false })
+{
+    <div class="acc-empty">
+        <div class="acc-empty__emoji" aria-hidden="true">🧾</div>
+        <div class="acc-empty__title">@L["Invoices_SetUpTitle"]</div>
+        <div class="acc-empty__text">@L["Invoices_SetUpText"]</div>
+        @if (canManage)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="OpenSettings" Class="mt-2">@L["Invoices_SetUp"]</MudButton>
+        }
+    </div>
+}
+else
+{
+    <div class="acc-toolbar">
+        <MudSelect T="InvoiceStatus?" Value="@Store.InvoiceFilter" ValueChanged="OnFilterChanged" Label="@L["Bank_Show"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="acc-toolbar__filter"
+                   Placeholder="@L["Invoices_All"]">
+            @foreach (var status in Enum.GetValues<InvoiceStatus>())
+            {
+                <MudSelectItem T="InvoiceStatus?" Value="@status">@L[$"InvoiceStatus_{status}"]</MudSelectItem>
+            }
+        </MudSelect>
+        @if (canManage)
+        {
+            <div class="acc-toolbar__end">
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Settings" OnClick="OpenSettings">@L["Invoices_Settings"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="() => Edit(null)">@L["Invoices_Add"]</MudButton>
+            </div>
+        }
+    </div>
+
+    @if (result is not null)
+    {
+        <div class="acc-sums">
+            <span>@L["Invoices_Open"] <b>@result.OpenCount</b> · <b>@AccountingHelpers.Amount(result.OpenCents)</b></span>
+            @if (result.OverdueCount > 0)
+            {
+                <span class="acc-amount--out">⏰ @string.Format(L["Invoices_Overdue"], result.OverdueCount)</span>
+            }
+        </div>
+
+        @if (result.Invoices.Count == 0)
+        {
+            <div class="acc-empty">
+                <div class="acc-empty__emoji" aria-hidden="true">🧾</div>
+                <div class="acc-empty__title">@L["Invoices_Empty"]</div>
+                <div class="acc-empty__text">@L["Invoices_EmptyHint"]</div>
+            </div>
+        }
+        else
+        {
+            <div class="acc-entries acc-entries--invoices">
+                @foreach (var invoice in result.Invoices)
+                {
+                    var current = invoice;
+                    <button type="button" class="acc-entry @(current.Status == InvoiceStatus.Cancelled ? "acc-entry--cancelled" : null)" @onclick="() => Open(current)">
+                        <span class="acc-entry__number">@(current.Number ?? "✏️")</span>
+                        <span class="acc-entry__date">@AccountingHelpers.ShortDate(current.InvoiceDate)</span>
+                        <span class="acc-entry__main">
+                            <span class="acc-entry__text">@current.RecipientName</span>
+                            <span class="acc-entry__meta">
+                                @if (current.Subject is { } subject)
+                                {
+                                    <span>@subject</span>
+                                }
+                                <span>@StatusText(current)</span>
+                            </span>
+                        </span>
+                        <span class="acc-entry__end">
+                            <span class="@(current.Status == InvoiceStatus.Paid ? "acc-amount acc-amount--in" : "acc-amount")">@AccountingHelpers.Amount(current.TotalCents)</span>
+                            <span class="acc-chip @(current.IsOverdue ? "acc-chip--warn" : current.Status is InvoiceStatus.Draft or InvoiceStatus.Cancelled ? "acc-chip--muted" : null)">@StatusChip(current)</span>
+                        </span>
+                    </button>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+}
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+
+    protected override Task OnYearChangedAsync() => Store.LoadInvoices(Store.InvoiceFilter);
+
+    private Task OnFilterChanged(InvoiceStatus? status) => Store.LoadInvoices(status);
+
+    private string StatusText(InvoiceDto invoice) => invoice.Status switch
+    {
+        InvoiceStatus.Draft => L["InvoiceStatus_Draft"],
+        InvoiceStatus.Paid when invoice.PaidDate is { } paid => string.Format(L["Invoices_PaidOn"], AccountingHelpers.Date(paid)),
+        InvoiceStatus.Cancelled => L["InvoiceStatus_Cancelled"],
+        _ => string.Format(L["Invoices_DueOn"], AccountingHelpers.Date(invoice.DueDate))
+             + (invoice.ReminderCount > 0 ? " · " + string.Format(L["Invoices_Reminders"], invoice.ReminderCount) : ""),
+    };
+
+    private string StatusChip(InvoiceDto invoice) => invoice.Status switch
+    {
+        InvoiceStatus.Issued when invoice.IsOverdue => "⏰ " + L["Invoices_OverdueChip"],
+        InvoiceStatus.Issued => (invoice.SentAt is null ? "📄 " : "📨 ") + L["InvoiceStatus_Issued"],
+        InvoiceStatus.Paid => "✅ " + L["InvoiceStatus_Paid"],
+        InvoiceStatus.Cancelled => "🚫 " + L["InvoiceStatus_Cancelled"],
+        _ => "✏️ " + L["InvoiceStatus_Draft"],
+    };
+
+    private Task OpenSettings() => AccountingDialogs.Open(DialogService, L["InvoiceSettings_Title"], new DialogParameters<InvoiceSettingsDialog>());
+
+    private Task Edit(InvoiceDetailDto? invoice) => AccountingDialogs.OpenInvoice(DialogService, L, invoice);
+
+    private Task Open(InvoiceDto invoice) => AccountingDialogs.OpenInvoiceDetail(DialogService, L, invoice.Id);
+}
