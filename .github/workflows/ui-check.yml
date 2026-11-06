@@ -1,0 +1,81 @@
+name: UI check setup
+
+# Checks that the app Claude looks at in its UI checks still starts with its test data
+# (scripts/ui-check, "Checking the UI" in CLAUDE.md): the app starts, the test users can log in
+# and Chrome renders the login page. Runs when the scripts change, or by hand.
+
+on:
+  pull_request:
+    paths:
+      - scripts/ui-check/**
+      - .github/workflows/ui-check.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ui-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: developer
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore workloads
+        working-directory: ./src/
+        run: dotnet workload restore
+
+      - name: Start the app with test data
+        run: scripts/ui-check/start-app.sh
+
+      - name: Seeding again changes nothing
+        run: scripts/ui-check/seed.sh
+
+      - name: Test users can log in
+        run: |
+          for email in anna.admin@example.test ben.member@example.test; do
+            status=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:5080/api/Account/Login \
+              -H 'Content-Type: application/json' \
+              -d "{\"email\":\"$email\",\"password\":\"UiCheck-2026!\",\"rememberMe\":false}")
+            echo "$email: HTTP $status"
+            [[ "$status" == 200 ]]
+          done
+
+      - name: Chrome renders the app
+        run: |
+          mkdir -p "$RUNNER_TEMP/ui-check"
+          npx -y playwright@1.55.0 screenshot --channel chrome --wait-for-timeout 8000 \
+            http://localhost:5080/account/login "$RUNNER_TEMP/ui-check/login.png"
+
+      - name: Show the app log
+        if: always()
+        run: tail -100 /tmp/clubnetz-ui.log || true
+
+      - name: Upload the screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-check-setup
+          path: ${{ runner.temp }}/ui-check
+          if-no-files-found: ignore
+          retention-days: 7
