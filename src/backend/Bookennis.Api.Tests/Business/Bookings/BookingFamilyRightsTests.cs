@@ -172,6 +172,27 @@ public class BookingFamilyRightsTests : TestBase
         result.Id.Should().BePositive();
     }
 
+    [Fact]
+    public async Task ApplicationAdministratorWithoutMember_CanBookForStrangers_ButOneWithAMemberActsAsMember()
+    {
+        var seed = await SeedFamilies();
+        var supportUserId = await QueryAsync(async ctx =>
+        {
+            var user = new User("support@test.com", "support@test.com", "Support", "Admin", new DateOnly(1980, 1, 1), Gender.Female);
+            ctx.Add(user);
+            await ctx.SaveChangesAsync();
+            ctx.Add(new Microsoft.AspNetCore.Identity.IdentityUserRole<int> { UserId = user.Id, RoleId = (int)UserRoles.Administrator });
+            await ctx.SaveChangesAsync();
+            return user.Id;
+        });
+
+        (await Book(supportUserId, seed.StrangerMemberId)).Id.Should().BePositive();
+
+        // The test user is an application administrator and a plain member of the club: the member roles count
+        var act = () => Book(seed.ParentUserId, seed.StrangerMemberId);
+        (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(BookCourt.ErrorCode.UserNotAllowedToBook));
+    }
+
     private async Task<int> AddStaff(MemberRole role)
         => await QueryAsync(async ctx =>
         {

@@ -172,7 +172,8 @@
 
     private int InvalidCount => Enumerable.Range(0, Slots.Count).Count(i => SlotError(i) is not null);
 
-    private bool CanSubmit => !submitting && !checking && checkResult is not null && checkError is null && InvalidCount == 0 && Slots.Count > 0;
+    private bool CanSubmit => !submitting && !checking && checkResult is not null && checkError is null && InvalidCount == 0 && Slots.Count > 0
+        && SelectedPlayers.Count > 0;
 
     private string SubmitCaption => Locale.Count("CreateBookings", Slots.Count);
 
