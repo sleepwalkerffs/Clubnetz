@@ -38,10 +38,18 @@
     white-space: normal;
 }
 
+/* Its own surface over the tooltip's padding: the tooltip colours of the dark theme (light grey, white text) are hard to read */
 .weather-tip {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    margin: -4px -8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
     font-size: 0.78rem;
     text-align: left;
 }
@@ -50,12 +58,12 @@
     font-weight: 700;
 }
 
-.weather-tip__time {
-    opacity: 0.8;
+.weather-tip__time,
+.weather-tip__hint {
+    color: var(--mud-palette-text-secondary);
 }
 
 .weather-tip__hint {
     margin-top: 2px;
     font-style: italic;
-    opacity: 0.8;
 }

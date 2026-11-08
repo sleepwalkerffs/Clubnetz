@@ -3,7 +3,7 @@
 @using Bookennis.Shared.Controller.Weather
 
 @* The weather of one period: emoji and temperature, the details on hover or tap *@
-<MudTooltip ShowOnClick="true" ShowOnHover="true" Placement="Placement.Right" Arrow="true" Inline="true">
+<MudTooltip ShowOnClick="true" ShowOnHover="true" Placement="Placement.Right" Inline="true">
     <ChildContent>
         <span class="weather-mark @(WeatherSymbols.IsRainLikely(Period) ? "weather-mark--rain" : null) @(Period.Hours > 1 ? "weather-mark--coarse" : null) @Class"
               role="img" aria-label="@Summary" tabindex="0">
