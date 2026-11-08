@@ -291,6 +291,10 @@ namespace Bookennis.Api.Data.Migrations
                 .StartsAt(10L)
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence<int>("WeatherForecasts_Id_Sequence")
+                .StartsAt(10L)
+                .IncrementsBy(10);
+
             modelBuilder.Entity("Bookennis.Domain.Accounting.AccountingCategory", b =>
                 {
                     b.Property<int>("Id")
@@ -886,12 +890,12 @@ namespace Bookennis.Api.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ImportId");
+
                     b.HasIndex("EntryId", "MoneyAccountId")
                         .IsUnique()
                         .HasDatabaseName("UX_BankTransactions_EntryId_MoneyAccountId")
                         .HasFilter("\"EntryId\" IS NOT NULL");
-
-                    b.HasIndex("ImportId");
 
                     b.HasIndex("MoneyAccountId", "Fingerprint")
                         .IsUnique()
@@ -2112,6 +2116,14 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<bool>("IsAtpClub")
                         .HasColumnType("boolean");
 
+                    b.Property<decimal?>("Latitude")
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -2507,6 +2519,9 @@ namespace Bookennis.Api.Data.Migrations
 
                     b.Property<int>("ClubId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("IsIndoor")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -3555,6 +3570,48 @@ namespace Bookennis.Api.Data.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Weather.WeatherForecast", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "WeatherForecasts_Id_Sequence");
+
+                    b.Property<DateTimeOffset?>("CheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastModified")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("Latitude")
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)");
+
+                    b.Property<decimal>("Longitude")
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)");
+
+                    b.Property<string>("Periods")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_WeatherForecasts_ClubId");
+
+                    b.ToTable("WeatherForecasts");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -7186,6 +7243,46 @@ namespace Bookennis.Api.Data.Migrations
                         .WithOne()
                         .HasForeignKey("Bookennis.Domain.User.UserProfilePicture", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bookennis.Domain.Weather.WeatherForecast", b =>
+                {
+                    b.HasOne("Bookennis.Domain.Clubs.Club", null)
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Bookennis.Domain.Base.EntityMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<int>("EntityId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("Created")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("timestamp with time zone")
+                                .HasDefaultValueSql("NOW()");
+
+                            b1.Property<int?>("CreationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("ModificationUserId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime?>("Modified")
+                                .IsConcurrencyToken()
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("EntityId");
+
+                            b1.ToTable("WeatherForecasts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EntityId");
+                        });
+
+                    b.Navigation("Metadata")
                         .IsRequired();
                 });
 

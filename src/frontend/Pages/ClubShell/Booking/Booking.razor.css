@@ -278,3 +278,14 @@
         color-mix(in srgb, var(--mud-palette-text-secondary) 18%, transparent) 0 3px,
         color-mix(in srgb, var(--mud-palette-text-secondary) 32%, transparent) 3px 6px);
 }
+
+.booking-weather-credit {
+    margin-top: 6px;
+    font-size: 0.7rem;
+    text-align: right;
+    color: var(--mud-palette-text-secondary);
+}
+
+.booking-weather-credit a {
+    color: inherit;
+}

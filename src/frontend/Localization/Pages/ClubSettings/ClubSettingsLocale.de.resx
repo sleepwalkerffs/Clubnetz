@@ -415,4 +415,52 @@
   <data name="WrappedReleased" xml:space="preserve">
     <value>Saisonrückblick freigegeben</value>
   </data>
+  <data name="IndoorCourt" xml:space="preserve">
+    <value>Hallenplatz</value>
+  </data>
+  <data name="IndoorCourtHint" xml:space="preserve">
+    <value>In einer Halle oder überdacht: Für diesen Platz wird kein Wetter angezeigt.</value>
+  </data>
+  <data name="LocationTitle" xml:space="preserve">
+    <value>Standort &amp; Wetter</value>
+  </data>
+  <data name="LocationSubtitle" xml:space="preserve">
+    <value>Wettervorhersage im Buchungsplan</value>
+  </data>
+  <data name="LocationText" xml:space="preserve">
+    <value>Gib an, wo eure Plätze liegen. Mitglieder sehen dann im Buchungsplan neben den Uhrzeiten die Wettervorhersage für die nächsten 3 Tage. Tipp: In Google Maps mit der rechten Maustaste auf die Plätze klicken und die Koordinaten anklicken, um sie zu kopieren.</value>
+  </data>
+  <data name="Coordinates" xml:space="preserve">
+    <value>Koordinaten</value>
+  </data>
+  <data name="CoordinatesHelper" xml:space="preserve">
+    <value>Breitengrad, Längengrad – z. B. 47.3012, 9.6345</value>
+  </data>
+  <data name="CoordinatesInvalid" xml:space="preserve">
+    <value>Gib Breiten- und Längengrad durch ein Komma getrennt ein, z. B. 47.3012, 9.6345.</value>
+  </data>
+  <data name="ShowOnMap" xml:space="preserve">
+    <value>Auf der Karte prüfen</value>
+  </data>
+  <data name="SaveLocation" xml:space="preserve">
+    <value>Standort speichern</value>
+  </data>
+  <data name="RemoveLocation" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="LocationSaved" xml:space="preserve">
+    <value>Standort gespeichert. Die Vorhersage erscheint in wenigen Minuten im Buchungsplan.</value>
+  </data>
+  <data name="LocationRemoved" xml:space="preserve">
+    <value>Standort entfernt: Mitglieder sehen kein Wetter mehr.</value>
+  </data>
+  <data name="WeatherOn" xml:space="preserve">
+    <value>Wetter wird angezeigt</value>
+  </data>
+  <data name="WeatherOff" xml:space="preserve">
+    <value>Kein Standort: Es wird kein Wetter angezeigt</value>
+  </data>
+  <data name="WeatherSource" xml:space="preserve">
+    <value>Vorhersage von MET Norway (yr.no), von Clubnetz alle 30 Minuten abgerufen. Die Browser eurer Mitglieder kontaktieren den Wetterdienst nie.</value>
+  </data>
 </root>

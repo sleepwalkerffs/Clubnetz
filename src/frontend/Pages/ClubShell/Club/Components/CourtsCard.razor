@@ -28,7 +28,7 @@
                             <span class="court__alias">@court.Alias</span>
                         </span>
                         <span class="court__text">
-                            <span class="court__name">@court.Name</span>
+                            <span class="court__name">@court.Name@(court.IsIndoor ? $" · 🏠 {L["IndoorCourt"]}" : null)</span>
                             <span class="court__status">@status.Text</span>
                         </span>
                     </button>
@@ -97,7 +97,7 @@
             if (court.SortOrder == sortOrder)
                 continue;
 
-            var result = await ClubStore.UpdateCourt(court.CourtId, court.Name, court.Alias, court.Inactive, sortOrder);
+            var result = await ClubStore.UpdateCourt(court.CourtId, court.Name, court.Alias, court.Inactive, sortOrder, court.IsIndoor);
             if (!result.Success)
             {
                 Snackbar.ShowErrorDetails(result, BackendLocale);

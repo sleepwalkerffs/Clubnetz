@@ -423,6 +423,24 @@ Maintainers, sports directors and admins block one or more courts for a time win
 - `Components/Booking/Day.razor` renders the occurrences (`Blockings` parameter, `.day__blocking`, violet stripes with title and time). `Booking.razor` loads them with the bookings (`ICourtBlockingsStore.LoadOccurrences`), shows chips, a legend entry and a dot in the day strip, and a lock button to the management page for managers.
 - `NavMenu.razor` shows the link (section "Courts & play") to admins, maintainers and sports directors. Texts are in `CourtBlockingsLocale(.de).resx`.
 
+## Weather Forecast
+
+### Overview
+
+The club admin enters where the courts are (`Club.Latitude`/`Longitude`, `GeoLocation`, 4 decimals, both or none). Members then see the weather forecast for the next 72 hours next to the hours of the booking grid, in the booking dialog and on the booking detail page. Courts with `Court.IsIndoor` show no weather (when every court is indoor, the grid shows none).
+
+### Data (`Bookennis.Domain/Weather`, `Business/Weather`)
+
+- Source: **MET Norway Locationforecast 2.0** (`MetNorwayWeatherProvider`, `WeatherSettings`: `Weather__IsEnabled`, `ApiUrl`, `UserAgent`). Free also for commercial use under **CC BY 4.0: every page that shows the data credits MET Norway** (`Booking.razor` shows the credit under the grid). Their terms: a `User-Agent` that names the app with a contact, at most 4 decimals, never ask again before the `Expires` header, `If-Modified-Since` with the last `Last-Modified`. Hourly for about 2-3 days, then 6-hour periods (`WeatherPeriod.Hours`).
+- **Only the server calls the weather service**; browsers read the cached copy. `WeatherForecast` (`TenantDomainEntity`, one row per club, unique `ClubId`) holds the location it is for, `CheckedAt`, `ExpiresAt`, `LastModified` and the periods as jsonb (only those not over and starting within `Horizon`).
+- `WeatherRefreshJob` (Hangfire, minutes 7/22/37/52) lists `GetClubsDueForWeather` and sends `RefreshClubWeather` per club (`[OutOfBand]`, own job). A failed fetch keeps the old forecast; a forecast older than `MaxAge` (6 h) is not shown. `UpdateClubLocation` throws the old forecast away and fetches the new one right away.
+- `IWeatherProvider` is a substitute in `TestFixture`; the API security tests switch it off (`Weather:IsEnabled=false`).
+
+### API / FE
+
+- `WeatherController` (`api/Clubs/{clubId}/Weather`): `GET ?from&to` (`Member`, also for members who are not active - no personal data), `PUT location` (`ClubAdministrator`). Open to club API keys like `Courts`/`Clubs`. The location is also in `ClubInformationResult`, `IsIndoor` in `CourtResult`/`UpdateCourtRequest`.
+- FE: `IWeatherStore` (loads now..+4 days, reloads after 10 minutes), `Components/Weather/WeatherMark.razor` (emoji, temperature, tooltip on hover/tap with rain, probability, wind) and `WeatherSymbols` (MET symbol codes → emoji and `WeatherLocale` keys). `Day.razor` shows a mark per hour in the time column (a 6-hour period only at its first hour; on phones without the temperature). Settings: `LocationCard.razor` on the club settings page (paste coordinates, `Coordinates.TryParse`, link to OpenStreetMap), indoor switch in `EditCourtDialog`.
+
 ## Season Wrapped (Saisonrückblick)
 
 ### Overview

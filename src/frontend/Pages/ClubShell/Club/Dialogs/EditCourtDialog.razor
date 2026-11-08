@@ -21,6 +21,11 @@
             </div>
         </section>
 
+        <section class="court-edit__indoor">
+            <MudSwitch T="bool" @bind-Value="isIndoor" Color="Color.Primary" Label="@L["IndoorCourt"]" />
+            <p class="court-edit__hint">@L["IndoorCourtHint"]</p>
+        </section>
+
         <section class="court-edit__closure @(closed ? "court-edit__closure--on" : null)">
             <MudSwitch T="bool" @bind-Value="closed" Color="Color.Error" Label="@L["CourtClosure"]" />
             <p class="court-edit__hint">@L["CourtClosureHint"]</p>
@@ -53,6 +58,7 @@
     private string Name = string.Empty;
     private string Alias = string.Empty;
     private bool closed;
+    private bool isIndoor;
 
     private bool CanSubmit => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Alias)
                               && (!closed || From is { } from && To is { } to && to > from);
@@ -64,12 +70,13 @@
         closed = Court.Inactive is not null;
         Name = Court.Name;
         Alias = Court.Alias;
+        isIndoor = Court.IsIndoor;
     }
 
     private async Task<DialogResult?> Submit()
     {
         var inactive = closed && From is not null && To is not null ? new DateTimeOffsetInterval(From.Value, To.Value) : null;
-        var result = await ClubStore.UpdateCourt(Court.CourtId, Name.Trim(), Alias.Trim(), inactive, Court.SortOrder);
+        var result = await ClubStore.UpdateCourt(Court.CourtId, Name.Trim(), Alias.Trim(), inactive, Court.SortOrder, isIndoor);
         if (!result.Success)
         {
             Snackbar.ShowErrorDetails(result, BackendLocale);

@@ -1,3 +1,4 @@
+using Bookennis.Client.Services.Store.Weather;
 using Bookennis.Client.Services;
 using Bookennis.Client.Services.Store.Admin;
 using Bookennis.Client.Services.Store.Badges;
@@ -50,6 +51,7 @@ public static class AddStores
         builder.Services.AddSingleton<IClubEventsStore, ClubEventsStore>();
         builder.Services.AddSingleton<IPlayRequestsStore, PlayRequestsStore>();
         builder.Services.AddSingleton<ICourtBlockingsStore, CourtBlockingsStore>();
+        builder.Services.AddSingleton<IWeatherStore, WeatherStore>();
         builder.Services.AddSingleton<IClubAnnouncementsStore, ClubAnnouncementsStore>();
         builder.Services.AddSingleton<IClubEmailTemplatesStore, ClubEmailTemplatesStore>();
         builder.Services.AddSingleton<IClubApiKeysStore, ClubApiKeysStore>();

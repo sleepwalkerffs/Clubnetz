@@ -112,3 +112,7 @@
     font-size: 0.8rem;
     color: var(--mud-palette-text-secondary);
 }
+
+.book-summary__weather {
+    margin-top: 4px;
+}

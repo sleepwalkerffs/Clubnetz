@@ -4,7 +4,7 @@ using Fusonic.Extensions.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Clubs;
 
-public record UpdateCourt(int CourtId, string Name, string Alias, DateTimeOffsetInterval? Inactive, int SortOrder) : ICommand
+public record UpdateCourt(int CourtId, string Name, string Alias, DateTimeOffsetInterval? Inactive, int SortOrder, bool? IsIndoor = null) : ICommand
 {
     public class Handler(AppDbContext context) : IRequestHandler<UpdateCourt>
     {
@@ -15,6 +15,9 @@ public record UpdateCourt(int CourtId, string Name, string Alias, DateTimeOffset
             court.RenameCourt(request.Name);
             court.RenameCourtAlias(request.Alias);
             court.Order(request.SortOrder);
+            // Not sent by older clients and scripts: the court stays as it is
+            if (request.IsIndoor is { } isIndoor)
+                court.SetIndoor(isIndoor);
             if (request.Inactive is null)
             {
                 court.ReactivateCourt();

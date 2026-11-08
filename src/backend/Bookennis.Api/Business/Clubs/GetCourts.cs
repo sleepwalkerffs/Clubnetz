@@ -20,7 +20,8 @@ public record GetCourts : ICommand<GetCourtsResult>
                     Name = c.Name,
                     Inactive = c.Inactive,
                     Alias = c.Alias,
-                    SortOrder = c.SortOrder
+                    SortOrder = c.SortOrder,
+                    IsIndoor = c.IsIndoor,
                 }).ToListAsync(cancellationToken);
 
             return new GetCourtsResult() { Courts = courts };

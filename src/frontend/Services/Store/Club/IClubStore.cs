@@ -12,6 +12,7 @@ public interface IClubStore : ISemaphoreStore
     public List<CourtResult> Courts { get; }
     public List<PlayModeDto> PlayModes { get; }
     public List<SeasonResult> Seasons { get; }
+    public event Action OnDetailsChanged;
     public event Action OnCourtsDataChanged;
     public event Action OnPlayersDataChanged;
     public event Action OnPlayModesChanged;
@@ -25,7 +26,7 @@ public interface IClubStore : ISemaphoreStore
     public Task<HttpResult> UpdatePlayMode(int playModeId, PlayModeRequest request);
     public Task<HttpResult> DeletePlayMode(int playModeId);
     public Task LoadCourts();
-    public Task<HttpResult> UpdateCourt(int courtId, string courtName, string alias, DateTimeOffsetInterval? inactive, int sortOrder);
+    public Task<HttpResult> UpdateCourt(int courtId, string courtName, string alias, DateTimeOffsetInterval? inactive, int sortOrder, bool isIndoor);
     public void ClearCourts();
     public Task LoadPlayers();
     public void ClearClubPlayers();

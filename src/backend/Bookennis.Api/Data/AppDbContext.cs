@@ -1,3 +1,4 @@
+using Bookennis.Domain.Weather;
 using Bookennis.Api.Infrastructure.Tenant;
 using Bookennis.Domain.Accounting;
 using Bookennis.Domain.Base;
@@ -110,6 +111,7 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<BankCsvLayout> BankCsvLayouts => Set<BankCsvLayout>();
     public DbSet<InvoiceSettings> InvoiceSettings => Set<InvoiceSettings>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<WeatherForecast> WeatherForecasts => Set<WeatherForecast>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -81,6 +81,24 @@
     color: var(--mud-palette-text-secondary);
 }
 
+/* The forecast of the hour, under its label */
+.day__weather {
+    grid-column: 1;
+    position: sticky;
+    left: 0;
+    z-index: 7;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    /* Right under the label of its hour (the label sits on the hour line) */
+    padding: 9px 2px 0 0;
+    pointer-events: none;
+}
+
+.day__weather > ::deep * {
+    pointer-events: auto;
+}
+
 /* The first label would be cut off by the header */
 .day__time--first > span {
     transform: none;
@@ -401,6 +419,11 @@
 
     .day {
         grid-template-columns: 48px repeat(var(--court-count), minmax(92px, 1fr));
+    }
+
+    /* The column is narrow on phones: the icon only, the temperature is in the details (tap) */
+    .day__weather ::deep .weather-mark__temp {
+        display: none;
     }
 }
 

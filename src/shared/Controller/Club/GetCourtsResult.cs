@@ -15,4 +15,7 @@ public record CourtResult
     public required string Alias { get; init; }
     public required int SortOrder { get; init; }
     public required DateTimeOffsetInterval? Inactive { get; init; }
+
+    /// <summary>In a hall or under a roof: no weather forecast for it.</summary>
+    public bool IsIndoor { get; init; }
 }

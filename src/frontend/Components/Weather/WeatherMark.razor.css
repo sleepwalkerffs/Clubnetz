@@ -1,0 +1,69 @@
+.weather-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 1px 4px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    color: var(--mud-palette-text-secondary);
+    cursor: default;
+    white-space: nowrap;
+}
+
+.weather-mark:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 1px;
+}
+
+.weather-mark__icon {
+    font-size: 0.85rem;
+}
+
+/* Rain is likely: tinted, so it stands out in the column */
+.weather-mark--rain {
+    color: var(--mud-palette-info);
+    background: rgba(59, 130, 246, 0.12);
+}
+
+/* A 6-hour period (day 3): less precise, so less prominent */
+.weather-mark--coarse {
+    opacity: 0.75;
+}
+
+.weather-mark__text {
+    font-weight: 500;
+    white-space: normal;
+}
+
+/* Its own surface over the tooltip's padding: the tooltip colours of the dark theme (light grey, white text) are hard to read */
+.weather-tip {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: -4px -8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    font-size: 0.78rem;
+    text-align: left;
+}
+
+.weather-tip__title {
+    font-weight: 700;
+}
+
+.weather-tip__time,
+.weather-tip__hint {
+    color: var(--mud-palette-text-secondary);
+}
+
+.weather-tip__hint {
+    margin-top: 2px;
+    font-style: italic;
+}

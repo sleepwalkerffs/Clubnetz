@@ -604,6 +604,9 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
             builder.UseSetting("Stripe:SecretKey", "sk_test_security_tests_only");
             builder.UseSetting("Stripe:WebhookSecret", StripeWebhookSecret);
 
+            // The sweeps set club locations: no weather is fetched from MET Norway
+            builder.UseSetting("Weather:IsEnabled", "false");
+
             builder.ConfigureTestServices(services => services.AddTransient<IStartupFilter, ProbeStartupFilter>());
         }
     }

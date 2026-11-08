@@ -2,6 +2,7 @@
 @using Bookennis.Client.Utils
 @using Bookennis.Client.Components.Booking.Dialogs
 @using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Weather
 @using Bookennis.Client.Localization.Components.Booking
 @using Bookennis.Client.Services
 @using Bookennis.Global.Intervals
@@ -9,6 +10,7 @@
 @using Bookennis.Shared.Controller.Booking.Shared
 @using Bookennis.Shared.Controller.Club
 @using Bookennis.Shared.Controller.CourtBlockings
+@using Bookennis.Shared.Controller.Weather
 
 @implements IDisposable
 
@@ -22,7 +24,7 @@
         {
             var court = Courts[i];
             <div class="day__court" style="grid-column: @(i + ColumnOffset)" title="@court.Name">
-                <span class="day__court-alias">@court.Alias</span>
+                <span class="day__court-alias">@court.Alias@(court.IsIndoor && ShowWeather ? " 🏠" : null)</span>
                 <span class="day__court-count">@BookingsPerCourt(court.CourtId)</span>
             </div>
         }
@@ -39,6 +41,12 @@
             <div class="day__time @(hour == 0 ? "day__time--first" : null)" style="grid-row: @row">
                 <span>@(((openingHourStart + hour) % 24).ToString("00")):00</span>
             </div>
+            @if (hour < Hours && WeatherAtHour(hour) is { } weather)
+            {
+                <div class="day__weather" style="grid-row: @row / span 2">
+                    <WeatherMark Period="@weather" />
+                </div>
+            }
         }
 
         @* Prime time band *@
@@ -247,6 +255,10 @@
     [Parameter]
     public EventCallback<BuySlot> OnBuySlot { get; set; }
 
+    /// <summary>The weather forecast (empty: none). Shown next to the hours unless every court is indoor.</summary>
+    [Parameter]
+    public List<WeatherPeriodDto> Weather { get; set; } = [];
+
     /// <summary>Raised after a booking was created, so the page can reload its bookings.</summary>
     [Parameter]
     public EventCallback OnBooked { get; set; }
@@ -348,6 +360,28 @@
 
     private bool IsOwnBooking(BookingResult booking)
         => booking.Players.Any(p => p.MemberId == MemberId || MemberChildren.Any(c => c.MemberId == p.MemberId));
+
+    private bool ShowWeather => Weather.Count > 0 && Courts.Any(c => !c.IsIndoor);
+
+    /// <summary>
+    /// The forecast for the hour row <paramref name="hour"/> (local time of the browser, like the grid). A 6-hour period is shown only at
+    /// its first hour on the grid, so it does not look like an hourly forecast.
+    /// </summary>
+    private WeatherPeriodDto? WeatherAtHour(int hour)
+    {
+        if (!ShowWeather)
+            return null;
+
+        var time = LocalTime(hour);
+        var period = Weather.FirstOrDefault(p => p.Contains(time));
+        if (period is null || period.Hours == 1 || hour == 0)
+            return period;
+
+        return period.Contains(LocalTime(hour - 1)) ? null : period;
+    }
+
+    private DateTimeOffset LocalTime(int hour)
+        => new(DateTime.SpecifyKind(Date.ToDateTime(TimeOnly.MinValue).AddHours(openingHourStart + hour), DateTimeKind.Local));
 
     private int BookingsPerCourt(int courtId) => BookingsOfDay.Count(b => b.CourtId == courtId);
 

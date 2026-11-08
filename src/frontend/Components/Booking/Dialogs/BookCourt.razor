@@ -1,5 +1,7 @@
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Weather
+@using Bookennis.Client.Services.Store.Weather
 @using Bookennis.Client.Components.Shared.Dialogs
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Components.Booking
@@ -31,6 +33,12 @@
                 <div class="book-summary__meta">
                     📍 @(SelectedCourt?.Name ?? Locale["ChooseCourt"]) · @selectedPlayMode.Name
                 </div>
+                @if (WeatherAtStart is { } weather)
+                {
+                    <div class="book-summary__weather">
+                        <WeatherMark Period="@weather" ShowTemperature="false" ShowText="true" />
+                    </div>
+                }
             </div>
         </div>
 
@@ -129,6 +137,8 @@
     [Inject]
     private IBookingStore BookingStore { get; set; } = null!;
     [Inject]
+    private IWeatherStore WeatherStore { get; set; } = null!;
+    [Inject]
     private ISnackbar snackbar { get; set; } = null!;
     [Inject]
     private IStringLocalizer<BookingSharedLocale> Locale { get; set; } = null!;
@@ -169,6 +179,12 @@
                 : FixedPlayerAlternatives;
 
     private TimeSpan? EndTime { get; set; }
+
+    /// <summary>The forecast at the start of the booking; none for an indoor court.</summary>
+    private Bookennis.Shared.Controller.Weather.WeatherPeriodDto? WeatherAtStart
+        => Time is { } time && SelectedCourt is not { IsIndoor: true }
+            ? WeatherStore.At(new DateTimeOffset(DateTime.SpecifyKind(Date.Date.Add(time), DateTimeKind.Local)))
+            : null;
     private bool EntireDay { get; set; }
     private string? Comment { get; set; }
     private bool IsRecurring { get; set; }

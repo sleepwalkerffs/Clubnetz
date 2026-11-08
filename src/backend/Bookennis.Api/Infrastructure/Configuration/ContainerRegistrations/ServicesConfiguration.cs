@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Weather;
 using Bookennis.Api.Business.Badges;
 using Bookennis.Api.Business.ClubEmails;
 using Bookennis.Api.Business.Clubhouse;
@@ -50,6 +51,8 @@ public static class ServicesConfiguration
         container.Register<ICourtPurchaseSettlement, CourtPurchaseSettlement>();
         container.Register<ICourtPurchaseNotifier, CourtPurchaseNotifier>();
         container.RegisterSingleton<ISumUpGateway, SumUpGateway>();
+        // The second constructor is for tests (canned answers)
+        container.RegisterSingleton<IWeatherProvider>(() => new MetNorwayWeatherProvider(container.GetInstance<Bookennis.Api.Config.AppSettings>()));
         container.RegisterSingleton<SumUpTokenProtector>();
         container.RegisterSingleton<SumUpOAuthState>();
         container.Register<ISumUpTokenRefresher, SumUpTokenRefresher>();
@@ -61,5 +64,6 @@ public static class ServicesConfiguration
         container.Register<StripeEventRecoveryJob>();
         container.Register<CourtPurchaseHoldReleaseJob>();
         container.Register<ClubhouseTabPaymentJob>();
+        container.Register<WeatherRefreshJob>();
     }
 }

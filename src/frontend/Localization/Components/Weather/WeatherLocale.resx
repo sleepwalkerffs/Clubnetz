@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Weather_clearsky" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Weather_fair" xml:space="preserve">
+    <value>Fair</value>
+  </data>
+  <data name="Weather_partlycloudy" xml:space="preserve">
+    <value>Partly cloudy</value>
+  </data>
+  <data name="Weather_cloudy" xml:space="preserve">
+    <value>Cloudy</value>
+  </data>
+  <data name="Weather_fog" xml:space="preserve">
+    <value>Fog</value>
+  </data>
+  <data name="Weather_rainshowers" xml:space="preserve">
+    <value>Rain showers</value>
+  </data>
+  <data name="Weather_rain" xml:space="preserve">
+    <value>Rain</value>
+  </data>
+  <data name="Weather_thunder" xml:space="preserve">
+    <value>Thunderstorms</value>
+  </data>
+  <data name="Weather_sleet" xml:space="preserve">
+    <value>Sleet</value>
+  </data>
+  <data name="Weather_snow" xml:space="preserve">
+    <value>Snow</value>
+  </data>
+  <data name="Weather_unknown" xml:space="preserve">
+    <value>Weather</value>
+  </data>
+  <data name="Temperature" xml:space="preserve">
+    <value>{0} °C</value>
+  </data>
+  <data name="Rain" xml:space="preserve">
+    <value>Rain: {0} mm</value>
+  </data>
+  <data name="RainChance" xml:space="preserve">
+    <value>Chance of rain: {0} %</value>
+  </data>
+  <data name="Wind" xml:space="preserve">
+    <value>Wind: {0} km/h</value>
+  </data>
+  <data name="Period" xml:space="preserve">
+    <value>{0}–{1}</value>
+  </data>
+  <data name="SixHours" xml:space="preserve">
+    <value>Forecast for 6 hours, less precise</value>
+  </data>
+  <data name="Attribution" xml:space="preserve">
+    <value>Weather data:</value>
+  </data>
+  <data name="Forecast" xml:space="preserve">
+    <value>Forecast</value>
+  </data>
+  <data name="IndoorCourt" xml:space="preserve">
+    <value>Indoor court</value>
+  </data>
+</root>

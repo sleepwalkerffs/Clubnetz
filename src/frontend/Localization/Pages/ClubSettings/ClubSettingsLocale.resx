@@ -415,4 +415,52 @@
   <data name="WrappedReleased" xml:space="preserve">
     <value>Season Wrapped released</value>
   </data>
+  <data name="IndoorCourt" xml:space="preserve">
+    <value>Indoor court</value>
+  </data>
+  <data name="IndoorCourtHint" xml:space="preserve">
+    <value>In a hall or under a roof: no weather forecast is shown for it.</value>
+  </data>
+  <data name="LocationTitle" xml:space="preserve">
+    <value>Location &amp; weather</value>
+  </data>
+  <data name="LocationSubtitle" xml:space="preserve">
+    <value>Weather forecast in the booking grid</value>
+  </data>
+  <data name="LocationText" xml:space="preserve">
+    <value>Enter where your courts are. Members then see the weather forecast for the next 3 days next to the times in the booking grid. Tip: in Google Maps, right-click the courts and click the coordinates to copy them.</value>
+  </data>
+  <data name="Coordinates" xml:space="preserve">
+    <value>Coordinates</value>
+  </data>
+  <data name="CoordinatesHelper" xml:space="preserve">
+    <value>Latitude, longitude – e.g. 47.3012, 9.6345</value>
+  </data>
+  <data name="CoordinatesInvalid" xml:space="preserve">
+    <value>Enter latitude and longitude separated by a comma, e.g. 47.3012, 9.6345.</value>
+  </data>
+  <data name="ShowOnMap" xml:space="preserve">
+    <value>Check on the map</value>
+  </data>
+  <data name="SaveLocation" xml:space="preserve">
+    <value>Save location</value>
+  </data>
+  <data name="RemoveLocation" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="LocationSaved" xml:space="preserve">
+    <value>Location saved. The forecast appears in the booking grid in a few minutes.</value>
+  </data>
+  <data name="LocationRemoved" xml:space="preserve">
+    <value>Location removed: members see no weather any more.</value>
+  </data>
+  <data name="WeatherOn" xml:space="preserve">
+    <value>Weather is shown</value>
+  </data>
+  <data name="WeatherOff" xml:space="preserve">
+    <value>No location: no weather is shown</value>
+  </data>
+  <data name="WeatherSource" xml:space="preserve">
+    <value>Forecast by MET Norway (yr.no), fetched by Clubnetz every 30 minutes. The browsers of your members never contact the weather service.</value>
+  </data>
 </root>

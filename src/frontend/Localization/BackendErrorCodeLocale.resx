@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -977,5 +977,8 @@
   </data>
   <data name="AccountingInvoiceAccountWithoutIban" xml:space="preserve">
     <value>Give this money account its IBAN under Setup: it is printed on the invoices with the QR code.</value>
+  </data>
+  <data name="ClubLocationInvalid" xml:space="preserve">
+    <value>The coordinates are not valid: the latitude must be between -90 and 90, the longitude between -180 and 180.</value>
   </data>
 </root>

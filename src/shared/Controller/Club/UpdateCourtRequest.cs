@@ -2,4 +2,4 @@ using Bookennis.Global.Intervals;
 
 namespace Bookennis.Shared.Controller.Club;
 
-public record UpdateCourtRequest(string Name, string Alias, DateTimeOffsetInterval? Interval, int SortOrder);
+public record UpdateCourtRequest(string Name, string Alias, DateTimeOffsetInterval? Interval, int SortOrder, bool? IsIndoor = null);

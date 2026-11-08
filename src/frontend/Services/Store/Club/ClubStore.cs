@@ -42,7 +42,9 @@ public class ClubStore(IClubsHttpClient clubsHttpClient, IClubProfileStore clubP
             {
                 OpeningHours = model.OpeningHours,
                 PrimeTimeSettings = model.PrimeTimeSettings,
-                BookingGracePeriodInMinutes = model.BookingGracePeriodInMinutes
+                BookingGracePeriodInMinutes = model.BookingGracePeriodInMinutes,
+                Latitude = ClubDetails?.Latitude,
+                Longitude = ClubDetails?.Longitude,
             };
             OnDetailsChanged?.Invoke();
         }
@@ -102,9 +104,9 @@ public class ClubStore(IClubsHttpClient clubsHttpClient, IClubProfileStore clubP
         }
     }, nameof(LoadCourts));
 
-    public Task<HttpResult> UpdateCourt(int courtId, string courtName, string alias, DateTimeOffsetInterval? inactive, int sortOrder) => RunInSavingContextAsync(async cancellationToken =>
+    public Task<HttpResult> UpdateCourt(int courtId, string courtName, string alias, DateTimeOffsetInterval? inactive, int sortOrder, bool isIndoor) => RunInSavingContextAsync(async cancellationToken =>
     {
-        var result = await clubsHttpClient.UpdateCourt(courtId, new UpdateCourtRequest(courtName, alias, inactive, sortOrder), cancellationToken);
+        var result = await clubsHttpClient.UpdateCourt(courtId, new UpdateCourtRequest(courtName, alias, inactive, sortOrder, isIndoor), cancellationToken);
         if (result.Success)
         {
             Courts[Courts.IndexOf(Courts.Single(x => x.CourtId == courtId))] = new CourtResult()
@@ -115,6 +117,7 @@ public class ClubStore(IClubsHttpClient clubsHttpClient, IClubProfileStore clubP
                 Inactive = inactive,
                 Alias = alias,
                 SortOrder = sortOrder,
+                IsIndoor = isIndoor,
             };
             Courts = Courts.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToList();
             OnCourtsDataChanged?.Invoke();

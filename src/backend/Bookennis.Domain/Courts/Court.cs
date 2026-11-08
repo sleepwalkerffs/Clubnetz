@@ -27,6 +27,11 @@ public class Court : TenantDomainEntity, IAggregateRoot
 
     public DateTimeOffsetInterval? Inactive { get; private set; }
 
+    /// <summary>In a hall or under a roof: the weather forecast is not shown for it.</summary>
+    public bool IsIndoor { get; private set; }
+
+    public void SetIndoor(bool isIndoor) => IsIndoor = isIndoor;
+
     public void RenameCourt(string newName) => Name = newName;
     public void RenameCourtAlias(string alias) => Alias = alias;
     public void Order(int sortOrder) => SortOrder = sortOrder;
