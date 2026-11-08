@@ -25,6 +25,8 @@ public class AppSettings
 
     public SumUpSettings SumUp { get; set; } = new();
 
+    public WeatherSettings Weather { get; set; } = new();
+
     public static IReadOnlyList<CultureInfo> SupportedCultures
         => new[] { "de-AT", "en-AT" }
           .Select(c => new CultureInfo(c))

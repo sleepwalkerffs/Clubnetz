@@ -25,7 +25,9 @@ public record GetClubInformation(int ClubId) : IQuery<ClubInformationResult>
                                                 RestrictGuests = c.PrimeTimeSettings.RestrictGuests,
                                                 ChildAgeThreshold = c.PrimeTimeSettings.ChildAgeThreshold
                                             },
-                                            BookingGracePeriodInMinutes = c.BookingGracePeriodInMinutes
+                                            BookingGracePeriodInMinutes = c.BookingGracePeriodInMinutes,
+                                            Latitude = c.Latitude,
+                                            Longitude = c.Longitude,
                                         })
                                         .AsNoTracking()
                                         .SingleRequiredAsync(cancellationToken);

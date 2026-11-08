@@ -1,0 +1,72 @@
+@using System.Globalization
+@using Bookennis.Client.Localization.Components.Weather
+@using Bookennis.Shared.Controller.Weather
+
+@* The weather of one period: emoji and temperature, the details on hover or tap *@
+<MudTooltip ShowOnClick="true" ShowOnHover="true" Placement="Placement.Right" Arrow="true" Inline="true">
+    <ChildContent>
+        <span class="weather-mark @(WeatherSymbols.IsRainLikely(Period) ? "weather-mark--rain" : null) @(Period.Hours > 1 ? "weather-mark--coarse" : null) @Class"
+              role="img" aria-label="@Summary" tabindex="0">
+            <span class="weather-mark__icon" aria-hidden="true">@WeatherSymbols.Emoji(Period.Symbol)</span>
+            @if (ShowTemperature && Period.TemperatureCelsius is not null)
+            {
+                <span class="weather-mark__temp" aria-hidden="true">@WeatherSymbols.Temperature(Period.TemperatureCelsius)</span>
+            }
+            @if (ShowText)
+            {
+                <span class="weather-mark__text" aria-hidden="true">@Summary</span>
+            }
+        </span>
+    </ChildContent>
+    <TooltipContent>
+        <div class="weather-tip">
+            <div class="weather-tip__title">@WeatherSymbols.Emoji(Period.Symbol) @L[WeatherSymbols.TextKey(Period.Symbol)]</div>
+            <div class="weather-tip__time">@string.Format(L["Period"], Period.From.ToLocalTime().ToString("t", CultureInfo.CurrentCulture), Period.To.ToLocalTime().ToString("t", CultureInfo.CurrentCulture))</div>
+            @if (Period.TemperatureCelsius is { } temperature)
+            {
+                <div>🌡️ @string.Format(L["Temperature"], temperature.ToString("0.#", CultureInfo.CurrentCulture))</div>
+            }
+            @if (Period.PrecipitationProbability is { } probability)
+            {
+                <div>💧 @string.Format(L["RainChance"], Math.Round(probability).ToString("0", CultureInfo.CurrentCulture))</div>
+            }
+            @if (Period.PrecipitationMm is { } rain)
+            {
+                <div>🌧️ @string.Format(L["Rain"], rain.ToString("0.#", CultureInfo.CurrentCulture))</div>
+            }
+            @if (Period.WindSpeedMs is { } wind)
+            {
+                <div>💨 @string.Format(L["Wind"], WeatherSymbols.WindKmh(wind))</div>
+            }
+            @if (Period.Hours > 1)
+            {
+                <div class="weather-tip__hint">@L["SixHours"]</div>
+            }
+        </div>
+    </TooltipContent>
+</MudTooltip>
+
+@code {
+    [Parameter, EditorRequired] public required WeatherPeriodDto Period { get; set; }
+    [Parameter] public bool ShowTemperature { get; set; } = true;
+
+    /// <summary>Also the description and the chance of rain, e.g. in the booking dialog.</summary>
+    [Parameter] public bool ShowText { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    [Inject] private IStringLocalizer<WeatherLocale> L { get; set; } = null!;
+
+    private string Summary
+    {
+        get
+        {
+            var parts = new List<string> { L[WeatherSymbols.TextKey(Period.Symbol)] };
+            if (Period.TemperatureCelsius is not null)
+                parts.Add(WeatherSymbols.Temperature(Period.TemperatureCelsius));
+            if (Period.PrecipitationProbability is { } probability)
+                parts.Add(string.Format(L["RainChance"], Math.Round(probability).ToString("0", CultureInfo.CurrentCulture)));
+            return string.Join(" · ", parts);
+        }
+    }
+}

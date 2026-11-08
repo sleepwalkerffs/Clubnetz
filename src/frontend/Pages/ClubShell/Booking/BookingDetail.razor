@@ -2,6 +2,8 @@
 @using Bookennis.Client.Components.Booking
 @using Bookennis.Client.Components.Booking.Dialogs
 @using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Weather
+@using Bookennis.Client.Services.Store.Weather
 @using Bookennis.Client.Components.Shared.Buttons
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Components.Booking
@@ -59,6 +61,10 @@ else
                 <div class="detail-hero__chips">
                     <span class="detail-chip">📍 @GetCourtName(booking.CourtId)</span>
                     <span class="detail-chip detail-chip--mode">@booking.PlayMode.Name</span>
+                    @if (WeatherOf(booking) is { } weather)
+                    {
+                        <span class="detail-chip"><WeatherMark Period="@weather" ShowTemperature="false" ShowText="true" /></span>
+                    }
                     @if (booking.RecurringBookingSeriesId is not null)
                     {
                         <span class="detail-chip"><MudIcon Icon="@Icons.Material.Filled.Repeat" Size="Size.Small" /> @Locale["RecurringBookingIndicator"]</span>
@@ -206,6 +212,8 @@ else
     private ISnackbar Snackbar { get; set; } = null!;
     [Inject]
     private IClubStore ClubStore { get; set; } = null!;
+    [Inject]
+    private IWeatherStore WeatherStore { get; set; } = null!;
     [Inject]
     private IClubProfileStore ProfileStore { get; set; } = null!;
     [Inject]
@@ -497,6 +505,7 @@ else
             ClubStore.Courts.Count == 0 ? ClubStore.LoadCourts() : Task.CompletedTask,
             ClubStore.PlayModes.Count == 0 ? ClubStore.LoadPlayModes() : Task.CompletedTask,
             ClubStore.ClubPlayers.Count == 0 ? ClubStore.LoadPlayers() : Task.CompletedTask,
+            WeatherStore.LoadForecast(),
             loadMember);
 
         if (MembersStore.MemberDetail?.FamilyId is { } familyId && !FamilyStore.LoadedForFamilyId(familyId))
@@ -570,6 +579,12 @@ else
         if (CanOpenProfile(player))
             NavManager.NavigateTo($"/clubs/{ClubId}/members/{player.MemberId}/profile");
     }
+
+    /// <summary>The forecast at the start of a booking that is not over yet; none for an indoor court.</summary>
+    private Bookennis.Shared.Controller.Weather.WeatherPeriodDto? WeatherOf(BookingResult booking)
+        => booking.Interval.To > DateTimeOffset.Now && ClubStore.Courts.FirstOrDefault(c => c.CourtId == booking.CourtId) is not { IsIndoor: true }
+            ? WeatherStore.At(booking.Interval.From < DateTimeOffset.Now ? DateTimeOffset.Now : booking.Interval.From)
+            : null;
 
     private string? GetCourtName(int? courtId)
         => ClubStore.Courts.FirstOrDefault(court => court.CourtId == courtId)?.Name;

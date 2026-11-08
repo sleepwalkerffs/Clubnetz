@@ -2,6 +2,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using Bookennis.Domain.Base;
 using Bookennis.Domain.Members;
+using Bookennis.Domain.Weather;
 using Bookennis.Global;
 using Bookennis.Global.Intervals;
 
@@ -56,6 +57,18 @@ public class Club : DomainEntity, IAggregateRoot
 
     /// <summary>Address members reach when replying to a club email.</summary>
     public string? ReplyToEmail { get; private set; }
+
+    /// <summary>Where the courts are (see <see cref="GeoLocation"/>); both or none are set. Members see the weather forecast when set.</summary>
+    public decimal? Latitude { get; private set; }
+    public decimal? Longitude { get; private set; }
+
+    public GeoLocation? Location => Latitude is { } lat && Longitude is { } lon ? new GeoLocation(lat, lon) : null;
+
+    public void SetLocation(GeoLocation? location)
+    {
+        Latitude = location?.Latitude;
+        Longitude = location?.Longitude;
+    }
 
     public void SetIsAtpClub(bool isAtpClub) => IsAtpClub = isAtpClub;
 

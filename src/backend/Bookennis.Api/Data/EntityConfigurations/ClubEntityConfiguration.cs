@@ -19,5 +19,8 @@ public class ClubEntityConfiguration : IEntityTypeConfiguration<Club>
         });
         builder.Property(n => n.WebsiteUrl).HasMaxLength(500);
         builder.Property(n => n.ReplyToEmail).HasMaxLength(256);
+        builder.Property(n => n.Latitude).HasPrecision(7, 4);
+        builder.Property(n => n.Longitude).HasPrecision(7, 4);
+        builder.Ignore(n => n.Location);
     }
 }

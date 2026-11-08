@@ -19,6 +19,7 @@ public class RecurringJobRegistrationTests
     [InlineData(typeof(ClubEventReminderJob))]
     [InlineData(typeof(StripeEventRecoveryJob))]
     [InlineData(typeof(Bookennis.Api.Business.CourtSales.CourtPurchaseHoldReleaseJob))]
+    [InlineData(typeof(Bookennis.Api.Business.Weather.WeatherRefreshJob))]
     public void RecurringJob_IsRegisteredInTheContainer(Type jobType)
     {
         var container = new Container();

@@ -174,6 +174,9 @@ recurringJobs.AddOrUpdate<ClubhouseTabPaymentJob>(ClubhouseTabPaymentJob.JobId, 
 // The automatic entries of the clubs' accounting: what was paid becomes a suggestion (or an entry), club by club
 recurringJobs.AddOrUpdate<Bookennis.Api.Business.Accounting.AccountingAutomationJob>(Bookennis.Api.Business.Accounting.AccountingAutomationJob.JobId, job => job.Run(), Bookennis.Api.Business.Accounting.AccountingAutomationJob.Schedule);
 
+// The weather forecast of the clubs with a location (MET Norway), every club in its own job once the last answer expired
+recurringJobs.AddOrUpdate<Bookennis.Api.Business.Weather.WeatherRefreshJob>(Bookennis.Api.Business.Weather.WeatherRefreshJob.JobId, job => job.Run(), Bookennis.Api.Business.Weather.WeatherRefreshJob.Schedule);
+
 container.Verify();
 
 app.Run();

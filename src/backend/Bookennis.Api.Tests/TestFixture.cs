@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Weather;
 using Bookennis.Api.Business.Badges;
 using Bookennis.Api.Business.ClubEmails;
 using Bookennis.Api.Business.CourtSales;
@@ -129,6 +130,9 @@ public class TestFixture : SimpleInjectorTestFixture
                 container.Register<ISumUpTokenRefresher, InlineSumUpTokenRefresher>();
                 container.Register<ISumUpAccessTokens, SumUpAccessTokens>();
                 container.Register<IClubhouseTabPaymentSettlement, ClubhouseTabPaymentSettlement>();
+
+                // Weather: MET Norway is never called in tests
+                container.RegisterSingleton(() => Substitute.For<IWeatherProvider>());
             }
         );
 

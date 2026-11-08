@@ -14,6 +14,9 @@
 @using Bookennis.Shared.Controller.CourtSales
 @using Bookennis.Client.Services.Store.Family
 @using Bookennis.Client.Services.Store.Members
+@using Bookennis.Client.Services.Store.Weather
+@using Bookennis.Global.Intervals
+@using Bookennis.Client.Localization.Components.Weather
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Booking.Shared
 @using Bookennis.Shared.Controller.Club
@@ -186,8 +189,17 @@ else
                  EligibleChildMemberIds="@(ClubProfileStore.BookingOptions?.EligibleChildMemberIds ?? [])"
                  MemberChildren="@MemberChildren"
                  PlayModes="@AllowedPlaymodes"
+                 Weather="@WeatherStore.Periods"
                  OnBooked="@(() => ReloadBookings())" />
         </div>
+        @if (ShowsWeatherOnSelectedDate)
+        {
+            @* MET Norway's licence (CC BY 4.0) asks for the credit wherever the data is shown *@
+            <div class="booking-weather-credit">
+                @WeatherLocale["Attribution"] <a href="https://www.met.no/en" target="_blank" rel="noopener noreferrer">MET Norway</a>
+                (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>)
+            </div>
+        }
     </div>
 }
 
@@ -216,6 +228,10 @@ else
     private IBookingStore BookingStore { get; set; } = null!;
     [Inject]
     private ICourtBlockingsStore CourtBlockingsStore { get; set; } = null!;
+    [Inject]
+    private IWeatherStore WeatherStore { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<WeatherLocale> WeatherLocale { get; set; } = null!;
     [Inject]
     private IClubStore ClubStore { get; set; } = null!;
     [Inject]
@@ -421,6 +437,21 @@ else
         disposed.Dispose();
     }
 
+    /// <summary>The grid shows weather on the selected day: a forecast period overlaps its opening hours (and not every court is indoor).</summary>
+    private bool ShowsWeatherOnSelectedDate
+    {
+        get
+        {
+            if (!Courts.Any(c => !c.IsIndoor) || WeatherStore.Periods.Count == 0)
+                return false;
+
+            var openingHours = ClubStore.ClubDetails.OpeningHours;
+            var opens = new DateTimeOffset(DateTime.SpecifyKind(SelectedDate.ToDateTime(openingHours.From), DateTimeKind.Local));
+            var closes = opens + openingHours.GetDifference();
+            return WeatherStore.Periods.Any(p => p.From < closes && p.To > opens);
+        }
+    }
+
     private List<BookingResult> BookingsOn(DateOnly date) => bookingsByDay.GetValueOrDefault(date) ?? [];
 
     private List<CourtBlockingOccurrenceDto> BlockingsOn(DateOnly date) => Blockings.Where(b => b.IsOn(date)).ToList();
@@ -502,7 +533,8 @@ else
     {
         await Task.WhenAll(
             BookingStore.LoadBookings(ClubProfileStore.SelectedClubId, Start, End),
-            CourtBlockingsStore.LoadOccurrences(Start, End));
+            CourtBlockingsStore.LoadOccurrences(Start, End),
+            WeatherStore.LoadForecast());
         Bookings = BookingStore.Bookings;
         Blockings = CourtBlockingsStore.Occurrences;
         bookingsByDay = Bookings

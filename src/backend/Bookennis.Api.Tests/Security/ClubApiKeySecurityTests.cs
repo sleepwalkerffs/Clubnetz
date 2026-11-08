@@ -33,6 +33,9 @@ public class ClubApiKeySecurityTests(ApiSecurityFixture app)
         "Families", "Leaderboards", "MemberBadges", "Members", "OneTimeBadges", "PlayModes", "Players", "Seasons", "Statistics",
         "SubscriptionPlans",
 
+        // The weather forecast (no personal data) and the location of the courts, which is club setup like the courts themselves.
+        "Weather",
+
         // Season review (Wrapped) of the key's creator; releasing it is an admin action like the rest of the club setup.
         "Wrapped",
 

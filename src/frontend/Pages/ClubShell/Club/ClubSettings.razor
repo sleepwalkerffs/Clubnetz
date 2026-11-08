@@ -61,6 +61,7 @@ else
             <a href="@($"/clubs/{ClubId}/profile#rules")">⏰ @L["RulesTitle"]</a>
             <a href="@($"/clubs/{ClubId}/profile#seasons")">🗓️ @L["SeasonsTitle"]</a>
             <a href="@($"/clubs/{ClubId}/profile#courts")">🎾 @L["CourtsTitle"]</a>
+            <a href="@($"/clubs/{ClubId}/profile#location")">🌦️ @L["LocationTitle"]</a>
             <a href="@($"/clubs/{ClubId}/profile#playmodes")">🏷️ @L["PlayModesTitle"]</a>
         </nav>
 
@@ -79,6 +80,10 @@ else
 
         <div id="courts" class="club-settings__anchor">
             <CourtsCard />
+        </div>
+
+        <div id="location" class="club-settings__anchor">
+            <LocationCard />
         </div>
 
         <div id="playmodes" class="club-settings__anchor">

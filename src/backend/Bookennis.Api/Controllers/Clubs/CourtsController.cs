@@ -15,5 +15,5 @@ public class CourtsController(IMediator mediator) : ClubControllerBase
     [HttpPatch("{courtId:int}/Update")]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]
     public Task EditCourt(int courtId, UpdateCourtRequest updateCourt, CancellationToken cancellationToken)
-        => mediator.Send(new UpdateCourt(courtId, updateCourt.Name, updateCourt.Alias, updateCourt.Interval, updateCourt.SortOrder), cancellationToken);
+        => mediator.Send(new UpdateCourt(courtId, updateCourt.Name, updateCourt.Alias, updateCourt.Interval, updateCourt.SortOrder, updateCourt.IsIndoor), cancellationToken);
 }

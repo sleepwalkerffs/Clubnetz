@@ -1,0 +1,122 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.ClubSettings
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.Weather
+@using Bookennis.Client.Utils
+@implements IDisposable
+
+<SectionCard Emoji="🌦️" Title="@L["LocationTitle"]" Subtitle="@L["LocationSubtitle"]">
+    <div class="location">
+        <div class="location__status @(HasLocation ? "location__status--on" : null)">
+            @if (HasLocation)
+            {
+                <span>✅ @L["WeatherOn"]</span>
+            }
+            else
+            {
+                <span>⚪ @L["WeatherOff"]</span>
+            }
+        </div>
+        <p class="location__hint">@L["LocationText"]</p>
+
+        <div class="location__row">
+            <MudTextField T="string" Variant="Variant.Outlined" Label="@L["Coordinates"]" HelperText="@L["CoordinatesHelper"]" Margin="Margin.Dense"
+                          Value="@text" ValueChanged="@OnTextChanged" Immediate="true"
+                          Error="@invalid" Clearable="true" />
+            @if (Parsed is { } parsed)
+            {
+                <a class="location__map" href="@Coordinates.MapUrl(parsed.Latitude, parsed.Longitude)" target="_blank" rel="noopener noreferrer">🗺️ @L["ShowOnMap"]</a>
+            }
+        </div>
+        @if (invalid)
+        {
+            <div class="location__error" role="alert">⚠️ @L["CoordinatesInvalid"]</div>
+        }
+
+        <p class="location__source">@L["WeatherSource"]</p>
+    </div>
+
+    <div class="location__actions">
+        @if (HasLocation)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="Remove" Disabled="@WeatherStore.IsSaving">@L["RemoveLocation"]</MudButton>
+        }
+        <LoadButton Variant="Variant.Filled" Color="Color.Primary" Loading="@WeatherStore.IsSaving" Disabled="@(!IsDirty)" OnClick="Save">
+            @L["SaveLocation"]
+        </LoadButton>
+    </div>
+</SectionCard>
+
+@code {
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IWeatherStore WeatherStore { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    private string? text;
+    private bool invalid;
+
+    private bool HasLocation => ClubStore.ClubDetails is { Latitude: not null, Longitude: not null };
+
+    private string? Saved => ClubStore.ClubDetails is { Latitude: { } lat, Longitude: { } lon } ? Coordinates.Format(lat, lon) : null;
+
+    private (decimal Latitude, decimal Longitude)? Parsed => Coordinates.TryParse(text, out var lat, out var lon) ? (lat, lon) : null;
+
+    /// <summary>Something new to save: other coordinates than the saved ones (clearing the field is done with "Remove").</summary>
+    private bool IsDirty => !string.IsNullOrWhiteSpace(text) && (Parsed is not { } parsed || Coordinates.Format(parsed.Latitude, parsed.Longitude) != Saved);
+
+    protected override void OnInitialized()
+    {
+        text = Saved;
+        ClubStore.OnDetailsChanged += OnDetailsChanged;
+    }
+
+    public void Dispose() => ClubStore.OnDetailsChanged -= OnDetailsChanged;
+
+    private void OnDetailsChanged()
+    {
+        text = Saved;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnTextChanged(string? value)
+    {
+        text = value;
+        invalid = false;
+    }
+
+    private async Task Save()
+    {
+        if (Parsed is not { } parsed)
+        {
+            invalid = true;
+            return;
+        }
+
+        var result = await WeatherStore.SaveLocation(parsed.Latitude, parsed.Longitude);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(L["LocationSaved"], Severity.Success);
+        await ClubStore.LoadClubDetails();
+    }
+
+    private async Task Remove()
+    {
+        var result = await WeatherStore.SaveLocation(null, null);
+        if (!result.Success)
+        {
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+            return;
+        }
+
+        Snackbar.Add(L["LocationRemoved"], Severity.Info);
+        await ClubStore.LoadClubDetails();
+    }
+}

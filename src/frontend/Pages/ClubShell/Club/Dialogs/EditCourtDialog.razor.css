@@ -43,3 +43,13 @@
     font-weight: 600;
     color: var(--bk-dark-red, #B91C1C);
 }
+
+.court-edit__indoor {
+    padding: 8px 14px 4px 6px;
+    border-radius: 14px;
+    border: 1px solid var(--mud-palette-lines-inputs);
+}
+
+.court-edit__indoor > :not(:first-child) {
+    margin-left: 10px;
+}
