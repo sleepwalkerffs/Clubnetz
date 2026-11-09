@@ -98,6 +98,59 @@
     background: color-mix(in srgb, var(--mud-palette-error) 15%, transparent);
 }
 
+.audit-quick {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+}
+
+.audit-quick__item {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--mud-palette-lines-default);
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.audit-quick__item:hover {
+    border-color: var(--mud-palette-primary);
+    background: color-mix(in srgb, var(--mud-palette-primary) 8%, var(--mud-palette-surface));
+}
+
+.audit-history {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--mud-palette-secondary) 10%, var(--mud-palette-surface));
+    border: 1px solid color-mix(in srgb, var(--mud-palette-secondary) 35%, transparent);
+}
+
+.audit-history__title {
+    flex: 1 1 auto;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.audit-history__link {
+    font-size: 0.85rem;
+    color: var(--mud-palette-primary);
+}
+
+.audit-filters__top ::deep .audit-filters__export {
+    margin-left: auto;
+}
+
 @media (max-width: 959px) {
     .audit-filters__grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));

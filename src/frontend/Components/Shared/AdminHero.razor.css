@@ -120,12 +120,15 @@
     white-space: nowrap;
 }
 
-.admin-hero__chips ::deep button.hero-chip {
+.admin-hero__chips ::deep button.hero-chip,
+.admin-hero__chips ::deep a.hero-chip {
     cursor: pointer;
+    text-decoration: none;
     transition: background 0.15s ease;
 }
 
-.admin-hero__chips ::deep button.hero-chip:hover {
+.admin-hero__chips ::deep button.hero-chip:hover,
+.admin-hero__chips ::deep a.hero-chip:hover {
     background: rgba(255, 255, 255, 0.28);
 }
 

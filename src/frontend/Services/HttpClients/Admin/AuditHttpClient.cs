@@ -10,6 +10,16 @@ public class AuditHttpClient(HttpClient httpClient, JsonSerializerOptions jsonOp
     public async Task<HttpResult<AuditEventPage>> GetEvents(AuditEventFilter filter, CancellationToken cancellationToken = default)
         => await (await httpClient.GetAsync(QueryHelpers.AddQueryString("Events", ToQuery(filter)), cancellationToken)).AsHttpResult<AuditEventPage>(jsonOptions, cancellationToken);
 
+    public async Task<HttpResult<AuditEventCounts>> GetCounts(AuditEventFilter filter, int utcOffsetMinutes, CancellationToken cancellationToken = default)
+    {
+        var query = ToQuery(filter);
+        query.Add(new("utcOffsetMinutes", utcOffsetMinutes.ToString(CultureInfo.InvariantCulture)));
+        return await (await httpClient.GetAsync(QueryHelpers.AddQueryString("Events/Counts", query), cancellationToken)).AsHttpResult<AuditEventCounts>(jsonOptions, cancellationToken);
+    }
+
+    public async Task<HttpResult<FileDownload>> Export(AuditEventFilter filter, CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync(QueryHelpers.AddQueryString("Events/Export", ToQuery(filter)), cancellationToken)).AsFileHttpResult(jsonOptions, cancellationToken);
+
     public async Task<HttpResult<AuditEventDetail>> GetEvent(long id, CancellationToken cancellationToken = default)
         => await (await httpClient.GetAsync(string.Create(CultureInfo.InvariantCulture, $"Events/{id}"), cancellationToken)).AsHttpResult<AuditEventDetail>(jsonOptions, cancellationToken);
 

@@ -1,4 +1,5 @@
 using Bookennis.Client.Services.HttpClients.Admin;
+using Bookennis.Client.Services.HttpClients;
 using Bookennis.Client.Services.Store.Base;
 using Bookennis.Shared.Controller.Admin.Audit;
 
@@ -33,7 +34,11 @@ public class AuditStore(IAuditHttpClient auditHttpClient) : SemaphoreStore, IAud
             filter = newFilter;
             newFilter.Cursor = null;
             EventsLoaded = false;
+            var offset = (int)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
+            var countsTask = auditHttpClient.GetCounts(newFilter, offset, cancellationToken);
             var result = await auditHttpClient.GetEvents(newFilter, cancellationToken);
+            var counts = await countsTask;
+            Counts = counts is { Success: true } ? counts.Dto : null;
             if (result is { Success: true, Dto: not null })
             {
                 Events = result.Dto.Items;
@@ -58,6 +63,11 @@ public class AuditStore(IAuditHttpClient auditHttpClient) : SemaphoreStore, IAud
                 OnEventsChanged?.Invoke();
             }
         }, nameof(LoadMore));
+
+    public AuditEventCounts? Counts { get; private set; }
+
+    public Task<HttpResult<FileDownload>> Export(AuditEventFilter exportFilter)
+        => auditHttpClient.Export(exportFilter);
 
     public async Task<AuditEventDetail?> LoadEvent(long id)
     {

@@ -93,3 +93,24 @@ public record AuditFilterOptions
 }
 
 public record AuditClubOption(int Id, string Name);
+
+public enum AuditBucketSize
+{
+    FiveMinutes,
+    Hour,
+    Day,
+    Month
+}
+
+/// <param name="Start">Local time of the viewer (the offset they sent), without kind.</param>
+public record AuditCountBucket(DateTime Start, int Succeeded, int Failed, int Denied)
+{
+    public int Total => Succeeded + Failed + Denied;
+}
+
+/// <summary>How many entries match the filter over time, for the chart above the list.</summary>
+public record AuditEventCounts
+{
+    public required AuditBucketSize BucketSize { get; init; }
+    public required List<AuditCountBucket> Buckets { get; init; }
+}

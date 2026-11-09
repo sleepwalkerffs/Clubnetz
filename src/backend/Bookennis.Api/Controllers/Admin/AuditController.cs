@@ -15,6 +15,17 @@ public class AuditController(IMediator mediator) : ControllerBase
     public Task<AuditEventPage> GetEvents([FromQuery] AuditEventFilter filter, CancellationToken cancellationToken)
         => mediator.Send(new GetAuditEvents(filter), cancellationToken);
 
+    [HttpGet("Events/Counts")]
+    public Task<AuditEventCounts> GetCounts([FromQuery] AuditEventFilter filter, [FromQuery] int utcOffsetMinutes, CancellationToken cancellationToken)
+        => mediator.Send(new GetAuditEventCounts(filter, utcOffsetMinutes), cancellationToken);
+
+    [HttpGet("Events/Export")]
+    public async Task<IActionResult> Export([FromQuery] AuditEventFilter filter, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new ExportAuditEvents(filter), cancellationToken);
+        return File(result.Data, ExportAuditEventsResult.ContentType, result.FileName);
+    }
+
     [HttpGet("Events/{id:long}")]
     public Task<AuditEventDetail> GetEvent(long id, CancellationToken cancellationToken)
         => mediator.Send(new GetAuditEvent(id), cancellationToken);

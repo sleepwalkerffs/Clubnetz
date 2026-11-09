@@ -1,3 +1,4 @@
+using Bookennis.Client.Services.HttpClients;
 using Bookennis.Client.Services.Store.Base;
 using Bookennis.Shared.Controller.Admin.Audit;
 
@@ -22,4 +23,10 @@ public interface IAuditStore : ISemaphoreStore
     public Task LoadMore();
 
     public Task<AuditEventDetail?> LoadEvent(long id);
+
+    /// <summary>The counts over time of the last filter (for the chart), loaded with <see cref="LoadEvents"/>.</summary>
+    public AuditEventCounts? Counts { get; }
+
+    /// <summary>The entries of the filter as CSV.</summary>
+    public Task<HttpResult<FileDownload>> Export(AuditEventFilter filter);
 }

@@ -837,4 +837,52 @@
   <data name="AuditClose" xml:space="preserve">
     <value>Schließen</value>
   </data>
+  <data name="AuditQuickViews" xml:space="preserve">
+    <value>Schnellansichten</value>
+  </data>
+  <data name="AuditQuick_FailedSignIns" xml:space="preserve">
+    <value>Fehlgeschlagene Anmeldungen</value>
+  </data>
+  <data name="AuditQuick_Refused" xml:space="preserve">
+    <value>Abgelehnte Zugriffe</value>
+  </data>
+  <data name="AuditQuick_Impersonations" xml:space="preserve">
+    <value>„Anmelden als“-Sitzungen</value>
+  </data>
+  <data name="AuditQuick_Deletions" xml:space="preserve">
+    <value>Löschungen</value>
+  </data>
+  <data name="AuditQuick_Security" xml:space="preserve">
+    <value>Sicherheit</value>
+  </data>
+  <data name="AuditQuick_ApiKeys" xml:space="preserve">
+    <value>Aktivität von API-Schlüsseln</value>
+  </data>
+  <data name="AuditQuick_Exports" xml:space="preserve">
+    <value>Exporte</value>
+  </data>
+  <data name="AuditHistory" xml:space="preserve">
+    <value>Audit-Verlauf</value>
+  </data>
+  <data name="AuditHistoryOfUser" xml:space="preserve">
+    <value>Verlauf von {0}</value>
+  </data>
+  <data name="AuditHistoryOfRecord" xml:space="preserve">
+    <value>Verlauf von {0}</value>
+  </data>
+  <data name="AuditHistoryOfClub" xml:space="preserve">
+    <value>Verlauf des Vereins {0}</value>
+  </data>
+  <data name="AuditOpenInAdmin" xml:space="preserve">
+    <value>Im Admin-Bereich öffnen</value>
+  </data>
+  <data name="AuditExport" xml:space="preserve">
+    <value>CSV exportieren</value>
+  </data>
+  <data name="AuditChartTotal" xml:space="preserve">
+    <value>{0:N0} Einträge</value>
+  </data>
+  <data name="AuditChartLabel" xml:space="preserve">
+    <value>Einträge im Zeitverlauf</value>
+  </data>
 </root>

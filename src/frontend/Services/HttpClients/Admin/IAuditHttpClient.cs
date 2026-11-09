@@ -6,6 +6,10 @@ public interface IAuditHttpClient
 {
     public Task<HttpResult<AuditEventPage>> GetEvents(AuditEventFilter filter, CancellationToken cancellationToken = default);
 
+    public Task<HttpResult<AuditEventCounts>> GetCounts(AuditEventFilter filter, int utcOffsetMinutes, CancellationToken cancellationToken = default);
+
+    public Task<HttpResult<FileDownload>> Export(AuditEventFilter filter, CancellationToken cancellationToken = default);
+
     public Task<HttpResult<AuditEventDetail>> GetEvent(long id, CancellationToken cancellationToken = default);
 
     public Task<HttpResult<AuditFilterOptions>> GetOptions(CancellationToken cancellationToken = default);

@@ -105,6 +105,59 @@ public class AuditQueriesTests(TestFixture fixture) : TestBase(fixture)
         options.Clubs.Should().NotBeEmpty();
     }
 
+    [Fact]
+    public async Task GetAuditEventCounts_CountsByResult_InTheViewersTime_WithEmptyBuckets()
+    {
+        // 23:30 UTC is already the next day in Vienna (UTC+1)
+        await Write(new AuditEvent { Action = "X", Kind = AuditEventKind.Read, OccurredAt = new DateTime(2026, 11, 2, 23, 30, 0, DateTimeKind.Utc) });
+        await Write(new AuditEvent { Action = "X", Kind = AuditEventKind.Read, Outcome = AuditOutcome.Failed, OccurredAt = new DateTime(2026, 11, 3, 8, 0, 0, DateTimeKind.Utc) });
+        await Write(new AuditEvent { Action = "X", Kind = AuditEventKind.Read, Outcome = AuditOutcome.Denied, OccurredAt = new DateTime(2026, 11, 5, 8, 0, 0, DateTimeKind.Utc) });
+
+        var counts = await SendAsync(new GetAuditEventCounts(new AuditEventFilter
+        {
+            Kinds = [AuditEventKind.Read],
+            From = new DateTime(2026, 11, 1, 23, 0, 0, DateTimeKind.Utc),
+            To = new DateTime(2026, 11, 6, 23, 0, 0, DateTimeKind.Utc)
+        }, 60));
+
+        counts.BucketSize.Should().Be(AuditBucketSize.Day);
+        counts.Buckets.Select(b => b.Start.Day).Should().Equal(2, 3, 4, 5, 6, 7);
+        counts.Buckets.Single(b => b.Start.Day == 3).Should().Be(new AuditCountBucket(new DateTime(2026, 11, 3), 1, 1, 0));
+        counts.Buckets.Single(b => b.Start.Day == 5).Denied.Should().Be(1);
+        counts.Buckets.Single(b => b.Start.Day == 4).Total.Should().Be(0);
+    }
+
+    [Theory]
+    [InlineData(1, AuditBucketSize.FiveMinutes)]
+    [InlineData(24, AuditBucketSize.Hour)]
+    [InlineData(24 * 30, AuditBucketSize.Day)]
+    [InlineData(24 * 365, AuditBucketSize.Month)]
+    public async Task GetAuditEventCounts_ChoosesTheBucketSizeByTheSpan(int hours, AuditBucketSize expected)
+    {
+        var counts = await SendAsync(new GetAuditEventCounts(new AuditEventFilter { From = Now.AddHours(-hours), To = Now }, 0));
+
+        counts.BucketSize.Should().Be(expected);
+        counts.Buckets.Count.Should().BeLessThanOrEqualTo(GetAuditEventCounts.MaxBuckets);
+    }
+
+    [Fact]
+    public async Task ExportAuditEvents_WritesCsv_DefusesFormulas_AndIsLoggedItself()
+    {
+        await Write(new AuditEvent { Action = "X", Kind = AuditEventKind.Security, ActorName = "=HYPERLINK(\"evil\")", Summary = "a, \"quoted\" text" });
+
+        var result = await SendAsync(new ExportAuditEvents(new AuditEventFilter { Kinds = [AuditEventKind.Security] }));
+
+        var csv = System.Text.Encoding.UTF8.GetString(result.Data).TrimStart('﻿');
+        var lines = csv.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        lines.Should().HaveCount(2);
+        lines[0].Should().StartWith("OccurredAtUtc,Kind,Action");
+        lines[1].Should().Contain("\"'=HYPERLINK(\"\"evil\"\")\"").And.Contain("\"a, \"\"quoted\"\" text\"");
+        result.FileName.Should().EndWith(".csv");
+
+        var logged = await QueryAsync(ctx => Task.FromResult(ctx.AuditEvents.Single(e => e.Action == nameof(ExportAuditEvents))));
+        logged.Kind.Should().Be(AuditEventKind.Read);
+    }
+
     private async Task<List<string>> Actions(AuditEventFilter filter) => (await SendAsync(new GetAuditEvents(filter))).Items.Select(i => i.Action).ToList();
 
     private Task Write(AuditEvent e)

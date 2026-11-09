@@ -842,4 +842,52 @@
   <data name="AuditClose" xml:space="preserve">
     <value>Close</value>
   </data>
+  <data name="AuditQuickViews" xml:space="preserve">
+    <value>Quick views</value>
+  </data>
+  <data name="AuditQuick_FailedSignIns" xml:space="preserve">
+    <value>Failed sign-ins</value>
+  </data>
+  <data name="AuditQuick_Refused" xml:space="preserve">
+    <value>Refused requests</value>
+  </data>
+  <data name="AuditQuick_Impersonations" xml:space="preserve">
+    <value>Impersonated sessions</value>
+  </data>
+  <data name="AuditQuick_Deletions" xml:space="preserve">
+    <value>Deletions</value>
+  </data>
+  <data name="AuditQuick_Security" xml:space="preserve">
+    <value>Security</value>
+  </data>
+  <data name="AuditQuick_ApiKeys" xml:space="preserve">
+    <value>API key activity</value>
+  </data>
+  <data name="AuditQuick_Exports" xml:space="preserve">
+    <value>Exports</value>
+  </data>
+  <data name="AuditHistory" xml:space="preserve">
+    <value>Audit history</value>
+  </data>
+  <data name="AuditHistoryOfUser" xml:space="preserve">
+    <value>History of {0}</value>
+  </data>
+  <data name="AuditHistoryOfRecord" xml:space="preserve">
+    <value>History of {0}</value>
+  </data>
+  <data name="AuditHistoryOfClub" xml:space="preserve">
+    <value>History of the club {0}</value>
+  </data>
+  <data name="AuditOpenInAdmin" xml:space="preserve">
+    <value>Open in the admin panel</value>
+  </data>
+  <data name="AuditExport" xml:space="preserve">
+    <value>Export CSV</value>
+  </data>
+  <data name="AuditChartTotal" xml:space="preserve">
+    <value>{0:N0} entries</value>
+  </data>
+  <data name="AuditChartLabel" xml:space="preserve">
+    <value>Entries over time</value>
+  </data>
 </root>

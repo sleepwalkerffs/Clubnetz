@@ -91,6 +91,8 @@ public class AuditLogSecurityTests(ApiSecurityFixture app)
     [InlineData("/api/Admin/Audit/Events")]
     [InlineData("/api/Admin/Audit/Events/1")]
     [InlineData("/api/Admin/Audit/Options")]
+    [InlineData("/api/Admin/Audit/Events/Counts?utcOffsetMinutes=60")]
+    [InlineData("/api/Admin/Audit/Events/Export")]
     public async Task TheLog_IsOnlyForTheApplicationAdministrator(string url)
     {
         // Club B's admin manages a club but is no administrator of the installation; the key is one of the application administrator
