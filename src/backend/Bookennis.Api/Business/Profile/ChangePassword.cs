@@ -6,9 +6,11 @@ using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.User;
 using Fusonic.Extensions.Common.Security;
 using Microsoft.AspNetCore.Identity;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Profile;
 
+[SecurityAudit]
 public record ChangePassword([Required] string CurrentPassword, [Required] string NewPassword) : ICommand
 {
     public class Handler(UserManager<User> userManager, SignInManager<User> signInManager, IUserAccessor userAccessor) : IRequestHandler<ChangePassword>

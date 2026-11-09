@@ -18,6 +18,7 @@ public static class HangfireConfiguration
             config.UseActivator(new ContainerJobActivator(container));
             config.UseRecommendedSerializerSettings();
             config.UseSerilogLogProvider();
+            config.UseFilter(new Bookennis.Api.Infrastructure.Audit.AuditJobFilter());
         });
         services.AddHangfireServer(options => options.WorkerCount = 4);
     }

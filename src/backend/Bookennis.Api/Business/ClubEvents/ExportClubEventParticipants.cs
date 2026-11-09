@@ -3,9 +3,11 @@ using Bookennis.Api.Business.ClubEmails;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.ClubEvents;
 
+[AuditedRead]
 public record ExportClubEventParticipants(int ClubId, int UserId, int ClubEventId) : IQuery<ExportClubEventParticipantsResult>
 {
     public class Handler(AppDbContext context, IClubEmailRenderer renderer, IUserLanguageAccessor languageAccessor) : IRequestHandler<ExportClubEventParticipants, ExportClubEventParticipantsResult>

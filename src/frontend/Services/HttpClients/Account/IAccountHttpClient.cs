@@ -12,4 +12,6 @@ public interface IAccountHttpClient
     public Task<HttpResult> LoginUser(LoginUserModel userModel, CancellationToken cancellationToken = default);
     public Task<HttpResult<GetAuthenticatedUserResult>> GetAuthenticatedUser(CancellationToken cancellationToken = default);
     public Task<HttpResult> LogoutUser(CancellationToken cancellationToken = default);
+
+    public Task<HttpResult> StopImpersonation(CancellationToken cancellationToken = default);
 }

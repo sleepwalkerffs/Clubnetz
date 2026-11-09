@@ -3,6 +3,7 @@ using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.User;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Account;
 
@@ -11,6 +12,7 @@ namespace Bookennis.Api.Business.Account;
 /// An unknown email and a wrong password both answer with <see cref="ErrorCode.InvalidCredentials"/>, so the login can't be used to find
 /// out which email addresses are registered.
 /// </summary>
+[SecurityAudit]
 public record LoginUser([Required, EmailAddress] string Email, [Required] string Password, [Required] bool RememberMe) : ICommand
 {
     public enum ErrorCode
@@ -20,11 +22,12 @@ public record LoginUser([Required, EmailAddress] string Email, [Required] string
         NotAllowed
     }
 
-    public class Handler(UserManager<User> userManager, SignInManager<User> signInManager) : IRequestHandler<LoginUser>
+    public class Handler(UserManager<User> userManager, SignInManager<User> signInManager, IAuditContext auditContext) : IRequestHandler<LoginUser>
     {
         public async Task<Unit> Handle(LoginUser request, CancellationToken cancellationToken)
         {
             var user = await userManager.FindByEmailAsync(request.Email) ?? throw InvalidCredentials();
+            auditContext.SetSubject(user.Id, user.FullName);
             var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
 
             if (result.Succeeded)

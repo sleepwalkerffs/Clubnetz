@@ -1,0 +1,57 @@
+@using Bookennis.Client.Localization.Navigation
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.HttpClients.Account
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.IdentityModel.JsonWebTokens
+
+@* An application administrator is signed in as this user (impersonation): says so, and leads back to the own account *@
+@if (impersonatorName is not null)
+{
+    <div class="impersonation-banner" role="status">
+        <span class="impersonation-banner__emoji" aria-hidden="true">🎭</span>
+        <div class="impersonation-banner__body">
+            <div class="impersonation-banner__title">@string.Format(Locale["ImpersonationTitle"], userName)</div>
+            <div class="impersonation-banner__text">@string.Format(Locale["ImpersonationText"], impersonatorName)</div>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.SwitchAccount"
+                   OnClick="StopImpersonation" Disabled="stopping" Class="impersonation-banner__button">
+            @Locale["ImpersonationStop"]
+        </MudButton>
+    </div>
+}
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+    [Inject] private IAccountHttpClient AccountHttpClient { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<NavigationLocale> Locale { get; set; } = null!;
+
+    private string? impersonatorName;
+    private string? userName;
+    private bool stopping;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (AuthenticationState is null)
+            return;
+
+        var user = (await AuthenticationState).User;
+        impersonatorName = user.FindFirst(ApiAuthenticationStateProvider.ImpersonatorNameClaim)?.Value;
+        userName = user.FindFirst(JwtRegisteredClaimNames.Name)?.Value;
+    }
+
+    private async Task StopImpersonation()
+    {
+        stopping = true;
+        var result = await AccountHttpClient.StopImpersonation();
+        if (result.Success)
+        {
+            NavigationManager.NavigateTo("/admin/users", forceLoad: true);
+            return;
+        }
+
+        stopping = false;
+        Snackbar.Add(Locale["ImpersonationStopFailed"], Severity.Error);
+    }
+}

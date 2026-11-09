@@ -270,4 +270,16 @@
   <data name="Finances" xml:space="preserve">
     <value>Buchhaltung</value>
   </data>
+  <data name="ImpersonationTitle" xml:space="preserve">
+    <value>Angemeldet als {0}</value>
+  </data>
+  <data name="ImpersonationText" xml:space="preserve">
+    <value>{0} (Plattform-Administrator) nutzt dieses Konto. Das Audit-Log ordnet alles, was hier passiert, dem Administrator zu.</value>
+  </data>
+  <data name="ImpersonationStop" xml:space="preserve">
+    <value>Zurück zu meinem Konto</value>
+  </data>
+  <data name="ImpersonationStopFailed" xml:space="preserve">
+    <value>Zurück zum eigenen Konto hat nicht geklappt. Bitte melde dich neu an.</value>
+  </data>
 </root>

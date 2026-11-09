@@ -187,7 +187,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
 
     /// <summary>
     /// A fingerprint of everything a club owns: the content of every row with its <c>ClubId</c> (all tables that have one), the club itself
-    /// and its users. API keys are left out because using a key updates its last use.
+    /// and its users. API keys are left out because using a key updates its last use, the audit log because it records the attacks themselves.
     /// </summary>
     public async Task<string> Fingerprint(SeededClub club)
     {
@@ -196,7 +196,7 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
 
         var tables = new List<string>();
         await using (var command = new NpgsqlCommand(
-                         """SELECT table_name FROM information_schema.columns WHERE table_schema = 'public' AND column_name = 'ClubId' AND table_name <> 'ClubApiKeys' ORDER BY table_name""",
+                         """SELECT table_name FROM information_schema.columns WHERE table_schema = 'public' AND column_name = 'ClubId' AND table_name NOT IN ('ClubApiKeys', 'AuditEvents') ORDER BY table_name""",
                          connection))
         await using (var reader = await command.ExecuteReaderAsync())
         {

@@ -1,9 +1,11 @@
 using Bookennis.Api.Data;
 using Fusonic.Extensions.EntityFrameworkCore;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.ClubApiKeys;
 
 /// <summary>Revokes an API key: it is rejected from now on.</summary>
+[SecurityAudit]
 public record DeleteClubApiKey(int ClubId, int ClubApiKeyId) : ICommand
 {
     public class Handler(AppDbContext context) : IRequestHandler<DeleteClubApiKey>

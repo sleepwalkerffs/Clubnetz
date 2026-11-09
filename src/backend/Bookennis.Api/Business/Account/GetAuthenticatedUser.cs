@@ -25,7 +25,8 @@ public record GetAuthenticatedUser : IQuery<GetAuthenticatedUserResult>
                     user.FindFirst(JwtRegisteredClaimNames.FamilyName)!.Value,
                     user.FindFirst(JwtRegisteredClaimNames.Email)!.Value,
                     user.FindFirst(JwtRegisteredClaimNames.Name)!.Value,
-                    roles
+                    roles,
+                    user.FindFirst(Infrastructure.Audit.ImpersonationClaims.ImpersonatorName)?.Value
                 )
             );
         }

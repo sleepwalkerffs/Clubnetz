@@ -1,3 +1,4 @@
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Business.Account;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Exceptions;
@@ -84,5 +85,18 @@ public class LoginUserTests
         (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(LoginUser.ErrorCode.InvalidCredentials));
     }
 
-    private LoginUser.Handler CreateHandler() => new(userManager, signInManager);
+    [Fact]
+    public async Task WrongPassword_TellsTheAuditLogWhichAccountItWasAbout()
+    {
+        signInManager.CheckPasswordSignInAsync(user, "wrong", true).Returns(SignInResult.Failed);
+
+        var act = () => CreateHandler().Handle(new LoginUser("user@bookennis.com", "wrong", false), CancellationToken.None);
+        await act.Should().ThrowAsync<PreconditionException>();
+
+        auditContext.Received(1).SetSubject(42, Arg.Any<string?>());
+    }
+
+    private readonly IAuditContext auditContext = Substitute.For<IAuditContext>();
+
+    private LoginUser.Handler CreateHandler() => new(userManager, signInManager, auditContext);
 }

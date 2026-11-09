@@ -6,18 +6,21 @@ using Fusonic.Extensions.Email;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Texts = Bookennis.Api.Resources.Localization.View_Emails_ForgotPassword;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Account;
 
+[SecurityAudit]
 public record ForgotPassword([Required] string Email) : ICommand
 {
-    public class Handler(UserManager<User> userManager, IMediator mediator, AppSettings appSettings) : IRequestHandler<ForgotPassword>
+    public class Handler(UserManager<User> userManager, IMediator mediator, AppSettings appSettings, IAuditContext auditContext) : IRequestHandler<ForgotPassword>
     {
         public async Task<Unit> Handle(ForgotPassword request, CancellationToken cancellationToken)
         {
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user is null)
                 return default;
+            auditContext.SetSubject(user.Id, user.FullName);
 
             var culture = user.Language.ToCultureInfo();
             var token = await userManager.GeneratePasswordResetTokenAsync(user);

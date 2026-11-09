@@ -1,6 +1,7 @@
 using Bookennis.Api.Business.ClubAnnouncements;
 using Bookennis.Api.Config;
 using Bookennis.Api.Data;
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Infrastructure.Configuration.ContainerRegistrations;
 using Bookennis.Api.Infrastructure.Tenant;
 using Fusonic.Extensions.Common.Security;
@@ -41,6 +42,8 @@ public static class SimpleInjectorConfiguration
                 services.AddScoped(_ => container.GetInstance<IUserAccessor>());
                 services.AddScoped(_ => container.GetInstance<ITenantService>());
                 services.AddScoped(_ => container.GetInstance<IMediator>());
+                services.AddScoped(_ => container.GetInstance<IAuditContext>());
+                services.AddScoped(_ => container.GetInstance<IAuditWriter>());
             }
         );
     }

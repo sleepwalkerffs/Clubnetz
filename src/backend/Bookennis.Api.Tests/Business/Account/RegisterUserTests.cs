@@ -1,3 +1,4 @@
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Business.Account;
 using Bookennis.Api.Config;
 using Bookennis.Api.Tests.TestUtils;
@@ -73,5 +74,5 @@ public class RegisterUserTests
         => new("New", "User", new DateOnly(2000, 1, 1), "new@bookennis.com", "new@bookennis.com", "Secret-123", Gender.Male, street, city, zipCode, Country.Austria, acceptPrivacyPolicy);
 
     private RegisterUser.Handler CreateHandler()
-        => new(userManager, mediator, new AppSettings { AppUrl = "https://bookennis.test" });
+        => new(userManager, mediator, new AppSettings { AppUrl = "https://bookennis.test" }, Substitute.For<IAuditContext>());
 }

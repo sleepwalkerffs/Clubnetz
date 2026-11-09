@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Bookennis.Api.Business.Events;
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Infrastructure.User;
 using Bookennis.Domain.Base;
 using Fusonic.Extensions.Common.Security;
@@ -51,8 +52,13 @@ public static class DbContextHelpers
         }
     }
 #pragma warning restore EF1001
-    public static async Task<int> WrapSaveChanges(DbContext context, IDomainEventDispatcher? dispatcher, Func<Task<int>> saveChanges, IUserAccessor? userAccessor, CancellationToken cancellationToken)
+    public static async Task<int> WrapSaveChanges(DbContext context, IDomainEventDispatcher? dispatcher, Func<Task<int>> saveChanges, IUserAccessor? userAccessor, CancellationToken cancellationToken, IAuditContext? auditContext = null)
     {
+        // Collected before anything else touches the change tracker, and saved in the same transaction as the changes
+        var auditEvents = auditContext is null ? [] : AuditChangeCollector.Collect(context, auditContext);
+        if (auditEvents.Count != 0)
+            context.AddRange(auditEvents);
+
         foreach (var entry in context.ChangeTracker.Entries<IEntity>())
         {
             if (entry.State == EntityState.Added)
@@ -75,6 +81,14 @@ public static class DbContextHelpers
 
         UpdateMetadata(context, userAccessor);
         var value = await saveChanges();
+
+        if (auditEvents.Count != 0)
+        {
+            // Not needed any more, and a long job would otherwise keep all of them in memory
+            foreach (var auditEvent in auditEvents)
+                context.Entry(auditEvent).State = EntityState.Detached;
+            auditContext!.AddDataChanges(auditEvents.Count);
+        }
         await DispatchEvents(dispatcher, eventEntities, cancellationToken);
         return value;
     }

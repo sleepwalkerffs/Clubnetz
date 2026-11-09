@@ -1,6 +1,7 @@
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs.ApiKeys;
 using Microsoft.EntityFrameworkCore;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.ClubApiKeys;
 
@@ -8,6 +9,7 @@ namespace Bookennis.Api.Business.ClubApiKeys;
 /// Checks an API key for a request to the club and returns who it acts as, or <c>null</c> when it must be rejected:
 /// unknown, expired, a key of another club, or its creator is no longer an admin of the club.
 /// </summary>
+[NotAudited]
 public record AuthenticateClubApiKey(string Token, int ClubId) : ICommand<AuthenticatedClubApiKey?>
 {
     /// <summary>The last use is only written this often, so reading with a key does not write on every request.</summary>

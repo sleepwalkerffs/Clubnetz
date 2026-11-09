@@ -9,6 +9,7 @@ using Bookennis.Domain.User;
 using Fusonic.Extensions.Common.Security;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Profile;
 
@@ -16,6 +17,7 @@ namespace Bookennis.Api.Business.Profile;
 /// Lets the current user delete their own account with all personal data (GDPR Art. 17). The current password is required and counts
 /// towards the lockout. The user is signed out afterwards.
 /// </summary>
+[SecurityAudit]
 public record DeleteOwnAccount([Required] string CurrentPassword) : ICommand
 {
     public enum ErrorCode
@@ -25,7 +27,7 @@ public record DeleteOwnAccount([Required] string CurrentPassword) : ICommand
         LastClubAdmin
     }
 
-    public class Handler(AppDbContext context, SignInManager<User> signInManager, IUserAccessor userAccessor) : IRequestHandler<DeleteOwnAccount>
+    public class Handler(AppDbContext context, SignInManager<User> signInManager, IUserAccessor userAccessor, IAuditContext auditContext) : IRequestHandler<DeleteOwnAccount>
     {
         public async Task<Unit> Handle(DeleteOwnAccount request, CancellationToken cancellationToken)
         {
@@ -46,6 +48,7 @@ public record DeleteOwnAccount([Required] string CurrentPassword) : ICommand
                 throw new PreconditionException(ErrorCode.LastClubAdmin, [clubName], $"The user is the last admin of the club {clubName}.");
 
             await UserDeletion.DeleteUser(context, user, cancellationToken);
+            auditContext.PseudonymizeAfterCommand(user.Id);
             await signInManager.SignOutAsync();
 
             return default;

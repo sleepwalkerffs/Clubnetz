@@ -11,6 +11,7 @@ using Bookennis.Api.Business.Push;
 using Bookennis.Api.Config;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Infrastructure.Authorization;
 using Bookennis.Api.Infrastructure.Tenant;
 using Bookennis.Domain.Bookings;
@@ -80,8 +81,13 @@ public class TestFixture : SimpleInjectorTestFixture
 
                 container.Register<ITransactionScopeHandler, TransactionScopeHandler>();
 
-                // Mediator
+                // Mediator; the audit decorator as in the app, so every handler test also writes its audit entries
+                container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(AuditRequestHandlerDecorator<,>));
                 container.RegisterMediator(services, [typeof(AppDbContext).Assembly]);
+
+                // Audit log
+                container.Register<IAuditContext, AuditContext>(Lifestyle.Scoped);
+                container.Register<IAuditWriter, AuditWriter>(Lifestyle.Scoped);
 
                 // Auth
                 container.Register(() => Substitute.For<IDomainEventDispatcher>());
@@ -140,6 +146,7 @@ public class TestFixture : SimpleInjectorTestFixture
         services.AddScoped(_ => container.GetInstance<IUserAccessor>());
         services.AddScoped(_ => container.GetInstance<IMediator>());
         services.AddScoped(_ => container.GetInstance<IDomainEventDispatcher>());
+        services.AddScoped(_ => container.GetInstance<IAuditContext>());
 
         services.AddIdentity<User, UserRole>().AddEntityFrameworkStores<AppDbContext>();
 

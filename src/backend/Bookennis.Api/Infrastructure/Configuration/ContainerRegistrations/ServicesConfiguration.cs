@@ -11,6 +11,7 @@ using Bookennis.Api.Business.Payments.Stripe;
 using Bookennis.Api.Business.PlayRequests;
 using Bookennis.Api.Business.Push;
 using Bookennis.Api.Data;
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Infrastructure.Tenant;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.SubscriptionPlans;
@@ -27,6 +28,9 @@ public static class ServicesConfiguration
         container.Register<IDomainEventDispatcher, DomainEventDispatcher>();
         container.Register<IUserAccessor, HttpContextUserAccessor>();
         container.Register<IUserLanguageAccessor, UserLanguageAccessor>();
+        container.Register<IAuditContext, AuditContext>();
+        container.Register<IAuditWriter, AuditWriter>();
+        container.Register<AuditRetentionJob>();
 
         container.Register<ITenantService, TenantService>();
         container.Register<MultiTenantServiceMiddleware>();

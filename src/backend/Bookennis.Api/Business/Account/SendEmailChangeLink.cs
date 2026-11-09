@@ -6,12 +6,14 @@ using Fusonic.Extensions.Email;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Texts = Bookennis.Api.Resources.Localization.View_Emails_ConfirmEmailChange;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Account;
 
 /// <summary>
 /// Sends the confirmation link for an email change to the new address. The email is only changed once the link is confirmed (see <see cref="ConfirmEmailChange"/>).
 /// </summary>
+[SecurityAudit]
 public record SendEmailChangeLink(int UserId, string NewEmail, bool RequestedByAdmin) : ICommand
 {
     public class Handler(UserManager<User> userManager, IMediator mediator, AppSettings appSettings) : IRequestHandler<SendEmailChangeLink>

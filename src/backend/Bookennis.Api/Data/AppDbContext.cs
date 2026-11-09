@@ -1,4 +1,5 @@
 using Bookennis.Domain.Weather;
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Infrastructure.Tenant;
 using Bookennis.Domain.Accounting;
 using Bookennis.Domain.Base;
@@ -29,12 +30,15 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     private readonly IUserAccessor? userAccessor;
     private readonly ITenantService tenantService;
     private readonly IDomainEventDispatcher? domainEventDispatcher;
+    private readonly IAuditContext? auditContext;
 
     public AppDbContext(string connectionString) : base(new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString).Options) => tenantService = new EmptyTenantService();
 
-    public AppDbContext(DbContextOptions<AppDbContext> options, ITenantService? tenantService, IUserAccessor? userAccessor, IDomainEventDispatcher? domainEventDispatcher) : base(options)
+    // Without an audit context (design time, the audit writer itself) nothing is written to the audit log
+    public AppDbContext(DbContextOptions<AppDbContext> options, ITenantService? tenantService, IUserAccessor? userAccessor, IDomainEventDispatcher? domainEventDispatcher, IAuditContext? auditContext = null) : base(options)
     {
         this.domainEventDispatcher = domainEventDispatcher;
+        this.auditContext = auditContext;
         this.userAccessor = userAccessor;
         this.tenantService = tenantService ?? new EmptyTenantService();
     }
@@ -112,6 +116,7 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<InvoiceSettings> InvoiceSettings => Set<InvoiceSettings>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<WeatherForecast> WeatherForecasts => Set<WeatherForecast>();
+    public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -124,7 +129,7 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     }
 
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default) =>
-        await DbContextHelpers.WrapSaveChanges(this, domainEventDispatcher, () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken), userAccessor, cancellationToken);
+        await DbContextHelpers.WrapSaveChanges(this, domainEventDispatcher, () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken), userAccessor, cancellationToken, auditContext);
 
     // Necessary for LinqPad compatibility
     private sealed class EmptyTenantService : ITenantService

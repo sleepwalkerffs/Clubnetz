@@ -9,10 +9,12 @@ using Microsoft.EntityFrameworkCore;
 using AccountingCategoryKind = Bookennis.Domain.Accounting.AccountingCategoryKind;
 using AccountingEntryKind = Bookennis.Domain.Accounting.AccountingEntryKind;
 using AccountingEntryStatus = Bookennis.Domain.Accounting.AccountingEntryStatus;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Accounting;
 
 /// <summary>A fiscal year as an Excel workbook for the tax adviser and the auditors, in the language of the request.</summary>
+[AuditedRead]
 public record ExportAccounting(int ClubId, int FiscalYearId) : IQuery<ExportAccountingResult>
 {
     public class Handler(AppDbContext context, IUserLanguageAccessor languageAccessor, IMediator mediator) : IRequestHandler<ExportAccounting, ExportAccountingResult>

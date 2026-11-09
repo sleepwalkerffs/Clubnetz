@@ -3,9 +3,11 @@ using Bookennis.Api.Business.Account;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.User;
 using Microsoft.AspNetCore.Identity;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Admin;
 
+[SecurityAudit]
 public record ChangeUserEmail([Required] int UserId, [Required, EmailAddress] string NewEmail) : ICommand
 {
     public enum ErrorCode
