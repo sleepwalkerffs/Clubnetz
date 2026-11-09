@@ -1,3 +1,4 @@
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Business.Account;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Exceptions;
@@ -21,7 +22,7 @@ public class ConfirmEmailTests
     {
         userManager.ConfirmEmailAsync(user, "token").Returns(IdentityResult.Success);
 
-        await new ConfirmEmail.Handler(userManager).Handle(new ConfirmEmail("new@bookennis.com", "token"), CancellationToken.None);
+        await new ConfirmEmail.Handler(userManager, Substitute.For<IAuditContext>()).Handle(new ConfirmEmail("new@bookennis.com", "token"), CancellationToken.None);
 
         await userManager.Received(1).ConfirmEmailAsync(user, "token");
     }
@@ -31,7 +32,7 @@ public class ConfirmEmailTests
     {
         user.EmailConfirmed = true;
 
-        await new ConfirmEmail.Handler(userManager).Handle(new ConfirmEmail("new@bookennis.com", "used-token"), CancellationToken.None);
+        await new ConfirmEmail.Handler(userManager, Substitute.For<IAuditContext>()).Handle(new ConfirmEmail("new@bookennis.com", "used-token"), CancellationToken.None);
 
         await userManager.DidNotReceiveWithAnyArgs().ConfirmEmailAsync(default!, default!);
     }
@@ -41,7 +42,7 @@ public class ConfirmEmailTests
     {
         userManager.ConfirmEmailAsync(user, "bad").Returns(IdentityResult.Failed(new IdentityError { Code = "InvalidToken" }));
 
-        var act = () => new ConfirmEmail.Handler(userManager).Handle(new ConfirmEmail("new@bookennis.com", "bad"), CancellationToken.None);
+        var act = () => new ConfirmEmail.Handler(userManager, Substitute.For<IAuditContext>()).Handle(new ConfirmEmail("new@bookennis.com", "bad"), CancellationToken.None);
 
         (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(ConfirmEmail.Handler.ErrorCode.TokenInvalid));
     }
@@ -49,7 +50,7 @@ public class ConfirmEmailTests
     [Fact]
     public async Task UnknownEmail_ThrowsLikeAnInvalidToken()
     {
-        var act = () => new ConfirmEmail.Handler(userManager).Handle(new ConfirmEmail("unknown@bookennis.com", "token"), CancellationToken.None);
+        var act = () => new ConfirmEmail.Handler(userManager, Substitute.For<IAuditContext>()).Handle(new ConfirmEmail("unknown@bookennis.com", "token"), CancellationToken.None);
 
         (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(ConfirmEmail.Handler.ErrorCode.TokenInvalid));
     }

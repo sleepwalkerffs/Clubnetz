@@ -1,12 +1,14 @@
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.User;
 using Microsoft.AspNetCore.Identity;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Account;
 
+[SecurityAudit]
 public record ResetPassword(string Email, string Token, string NewPassword) : ICommand
 {
-    public class Handler(UserManager<User> userManager) : IRequestHandler<ResetPassword>
+    public class Handler(UserManager<User> userManager, IAuditContext auditContext) : IRequestHandler<ResetPassword>
     {
         public enum Error
         {
@@ -18,6 +20,7 @@ public record ResetPassword(string Email, string Token, string NewPassword) : IC
             // An unknown email is reported like an invalid token, so the reset can't be used to probe for registered addresses
             var user = await userManager.FindByEmailAsync(request.Email)
                     ?? throw new PreconditionException(Error.IdentityError, [nameof(IdentityErrorDescriber.InvalidToken)], "Error when changing the password.");
+            auditContext.SetSubject(user.Id, user.FullName);
 
             var resetResult = await userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
             if (!resetResult.Succeeded)

@@ -654,4 +654,235 @@
   <data name="BookingsChipOne" xml:space="preserve">
     <value>1 Buchung in 30 Tagen</value>
   </data>
+  <data name="AuditLog" xml:space="preserve">
+    <value>Audit-Log</value>
+  </data>
+  <data name="AuditLogSubtitle" xml:space="preserve">
+    <value>Alles, was passiert ist: Änderungen, Aktionen, Anmeldungen und abgelehnte Zugriffe</value>
+  </data>
+  <data name="AuditSearch" xml:space="preserve">
+    <value>Namen, E-Mail, IP, Aktion, IDs suchen …</value>
+  </data>
+  <data name="AuditMoreFilters" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="AuditReset" xml:space="preserve">
+    <value>Zurücksetzen</value>
+  </data>
+  <data name="AuditTimeRange" xml:space="preserve">
+    <value>Zeitraum</value>
+  </data>
+  <data name="AuditRange_1h" xml:space="preserve">
+    <value>Letzte Stunde</value>
+  </data>
+  <data name="AuditRange_24h" xml:space="preserve">
+    <value>24 Stunden</value>
+  </data>
+  <data name="AuditRange_7d" xml:space="preserve">
+    <value>7 Tage</value>
+  </data>
+  <data name="AuditRange_30d" xml:space="preserve">
+    <value>30 Tage</value>
+  </data>
+  <data name="AuditRange_all" xml:space="preserve">
+    <value>Alles</value>
+  </data>
+  <data name="AuditRange_custom" xml:space="preserve">
+    <value>Eigener</value>
+  </data>
+  <data name="AuditFrom" xml:space="preserve">
+    <value>Von</value>
+  </data>
+  <data name="AuditTo" xml:space="preserve">
+    <value>Bis</value>
+  </data>
+  <data name="AuditKind" xml:space="preserve">
+    <value>Art</value>
+  </data>
+  <data name="AuditKind_DataChange" xml:space="preserve">
+    <value>Datenänderung</value>
+  </data>
+  <data name="AuditKind_Command" xml:space="preserve">
+    <value>Aktion</value>
+  </data>
+  <data name="AuditKind_Security" xml:space="preserve">
+    <value>Sicherheit</value>
+  </data>
+  <data name="AuditKind_Read" xml:space="preserve">
+    <value>Lesezugriff</value>
+  </data>
+  <data name="AuditOutcome" xml:space="preserve">
+    <value>Ergebnis</value>
+  </data>
+  <data name="AuditOutcome_Succeeded" xml:space="preserve">
+    <value>Erfolgreich</value>
+  </data>
+  <data name="AuditOutcome_Failed" xml:space="preserve">
+    <value>Fehlgeschlagen</value>
+  </data>
+  <data name="AuditOutcome_Denied" xml:space="preserve">
+    <value>Abgelehnt</value>
+  </data>
+  <data name="AuditAction_Created" xml:space="preserve">
+    <value>Angelegt</value>
+  </data>
+  <data name="AuditAction_Modified" xml:space="preserve">
+    <value>Geändert</value>
+  </data>
+  <data name="AuditAction_Deleted" xml:space="preserve">
+    <value>Gelöscht</value>
+  </data>
+  <data name="AuditAccessDenied" xml:space="preserve">
+    <value>Zugriff abgelehnt</value>
+  </data>
+  <data name="AuditClub" xml:space="preserve">
+    <value>Verein</value>
+  </data>
+  <data name="AuditUser" xml:space="preserve">
+    <value>Benutzer (hat es getan oder war betroffen)</value>
+  </data>
+  <data name="AuditEntityType" xml:space="preserve">
+    <value>Datensatz-Typ</value>
+  </data>
+  <data name="AuditEntityId" xml:space="preserve">
+    <value>Datensatz-ID</value>
+  </data>
+  <data name="AuditAction" xml:space="preserve">
+    <value>Aktion</value>
+  </data>
+  <data name="AuditImpersonatedOnly" xml:space="preserve">
+    <value>Nur „Anmelden als“</value>
+  </data>
+  <data name="AuditApiKeyOnly" xml:space="preserve">
+    <value>Nur über API-Schlüssel</value>
+  </data>
+  <data name="AuditOneRequest" xml:space="preserve">
+    <value>Alles aus einer Anfrage</value>
+  </data>
+  <data name="AuditShowAll" xml:space="preserve">
+    <value>Alle anzeigen</value>
+  </data>
+  <data name="AuditNothingFound" xml:space="preserve">
+    <value>Keine Einträge für diese Filter.</value>
+  </data>
+  <data name="AuditLoadMore" xml:space="preserve">
+    <value>Ältere Einträge laden</value>
+  </data>
+  <data name="AuditImpersonatedBy" xml:space="preserve">
+    <value>Als dieser Benutzer angemeldet von</value>
+  </data>
+  <data name="AuditApiKey" xml:space="preserve">
+    <value>API-Schlüssel</value>
+  </data>
+  <data name="AuditAnonymous" xml:space="preserve">
+    <value>Nicht angemeldet</value>
+  </data>
+  <data name="AuditEntry" xml:space="preserve">
+    <value>Audit-Eintrag</value>
+  </data>
+  <data name="AuditEntryNotFound" xml:space="preserve">
+    <value>Dieser Eintrag existiert nicht mehr.</value>
+  </data>
+  <data name="AuditError" xml:space="preserve">
+    <value>Fehler</value>
+  </data>
+  <data name="AuditActor" xml:space="preserve">
+    <value>Ausgeführt von</value>
+  </data>
+  <data name="AuditSubject" xml:space="preserve">
+    <value>Betroffener Benutzer</value>
+  </data>
+  <data name="AuditRecord" xml:space="preserve">
+    <value>Datensatz</value>
+  </data>
+  <data name="AuditHistoryHint" xml:space="preserve">
+    <value>Klick zeigt den Verlauf</value>
+  </data>
+  <data name="AuditRequest" xml:space="preserve">
+    <value>Anfrage</value>
+  </data>
+  <data name="AuditDuration" xml:space="preserve">
+    <value>Dauer</value>
+  </data>
+  <data name="AuditIpAddress" xml:space="preserve">
+    <value>IP-Adresse</value>
+  </data>
+  <data name="AuditUserAgent" xml:space="preserve">
+    <value>Browser</value>
+  </data>
+  <data name="AuditSystem" xml:space="preserve">
+    <value>Hintergrundjob</value>
+  </data>
+  <data name="AuditChanges" xml:space="preserve">
+    <value>Änderungen</value>
+  </data>
+  <data name="AuditField" xml:space="preserve">
+    <value>Feld</value>
+  </data>
+  <data name="AuditOld" xml:space="preserve">
+    <value>Vorher</value>
+  </data>
+  <data name="AuditNew" xml:space="preserve">
+    <value>Nachher</value>
+  </data>
+  <data name="AuditSameRequest" xml:space="preserve">
+    <value>{0} weitere in derselben Anfrage</value>
+  </data>
+  <data name="AuditShowInList" xml:space="preserve">
+    <value>in der Liste zeigen</value>
+  </data>
+  <data name="AuditBack" xml:space="preserve">
+    <value>Zurück</value>
+  </data>
+  <data name="AuditClose" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="AuditQuickViews" xml:space="preserve">
+    <value>Schnellansichten</value>
+  </data>
+  <data name="AuditQuick_FailedSignIns" xml:space="preserve">
+    <value>Fehlgeschlagene Anmeldungen</value>
+  </data>
+  <data name="AuditQuick_Refused" xml:space="preserve">
+    <value>Abgelehnte Zugriffe</value>
+  </data>
+  <data name="AuditQuick_Impersonations" xml:space="preserve">
+    <value>„Anmelden als“-Sitzungen</value>
+  </data>
+  <data name="AuditQuick_Deletions" xml:space="preserve">
+    <value>Löschungen</value>
+  </data>
+  <data name="AuditQuick_Security" xml:space="preserve">
+    <value>Sicherheit</value>
+  </data>
+  <data name="AuditQuick_ApiKeys" xml:space="preserve">
+    <value>Aktivität von API-Schlüsseln</value>
+  </data>
+  <data name="AuditQuick_Exports" xml:space="preserve">
+    <value>Exporte</value>
+  </data>
+  <data name="AuditHistory" xml:space="preserve">
+    <value>Audit-Verlauf</value>
+  </data>
+  <data name="AuditHistoryOfUser" xml:space="preserve">
+    <value>Verlauf von {0}</value>
+  </data>
+  <data name="AuditHistoryOfRecord" xml:space="preserve">
+    <value>Verlauf von {0}</value>
+  </data>
+  <data name="AuditHistoryOfClub" xml:space="preserve">
+    <value>Verlauf des Vereins {0}</value>
+  </data>
+  <data name="AuditOpenInAdmin" xml:space="preserve">
+    <value>Im Admin-Bereich öffnen</value>
+  </data>
+  <data name="AuditExport" xml:space="preserve">
+    <value>CSV exportieren</value>
+  </data>
+  <data name="AuditChartTotal" xml:space="preserve">
+    <value>{0:N0} Einträge</value>
+  </data>
+  <data name="AuditChartLabel" xml:space="preserve">
+    <value>Einträge im Zeitverlauf</value>
+  </data>
 </root>

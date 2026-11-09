@@ -1,9 +1,11 @@
 using Bookennis.Api.Data;
 using Bookennis.Domain.User;
 using Microsoft.EntityFrameworkCore;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Admin;
 
+[SecurityAudit]
 public record UpdateAdminUser(int UserId, string FirstName, string LastName, DateOnly Birthday, Gender Gender, string Street, string City, string ZipCode, Country Country) : ICommand
 {
     public class Handler(AppDbContext context) : IRequestHandler<UpdateAdminUser>

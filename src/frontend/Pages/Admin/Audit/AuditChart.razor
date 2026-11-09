@@ -1,0 +1,81 @@
+@using System.Globalization
+@using Bookennis.Shared.Controller.Admin.Audit
+
+@* The entries of the filter over time, stacked by result. A bar of a day or month narrows the time range to it. *@
+@if (Counts is { Buckets.Count: > 0 } counts)
+{
+    var max = Math.Max(1, counts.Buckets.Max(b => b.Total));
+    var width = counts.Buckets.Count;
+    <div class="audit-chart">
+        <div class="audit-chart__head">
+            <span class="audit-chart__total">@string.Format(CultureInfo.CurrentCulture, L["AuditChartTotal"], counts.Buckets.Sum(b => b.Total))</span>
+            <span class="audit-chart__legend">
+                <span class="audit-chart__key audit-chart__key--succeeded"></span>@L["AuditOutcome_Succeeded"]
+                <span class="audit-chart__key audit-chart__key--failed"></span>@L["AuditOutcome_Failed"]
+                <span class="audit-chart__key audit-chart__key--denied"></span>@L["AuditOutcome_Denied"]
+            </span>
+        </div>
+        <svg class="audit-chart__bars" viewBox="0 0 @width 100" preserveAspectRatio="none" role="img" aria-label="@L["AuditChartLabel"]">
+            @for (var i = 0; i < counts.Buckets.Count; i++)
+            {
+                var bucket = counts.Buckets[i];
+                var x = i;
+                var succeeded = Height(bucket.Succeeded, max);
+                var failed = Height(bucket.Failed, max);
+                var denied = Height(bucket.Denied, max);
+                var clickable = Clickable(counts.BucketSize);
+                <g class="@(clickable ? "audit-chart__bucket audit-chart__bucket--clickable" : "audit-chart__bucket")" @onclick="@(() => Click(bucket, counts.BucketSize))">
+                    <title>@Label(bucket.Start, counts.BucketSize, full: true): @bucket.Total (@bucket.Failed @L["AuditOutcome_Failed"], @bucket.Denied @L["AuditOutcome_Denied"])</title>
+                    <rect x="@Num(x)" y="0" width="1" height="100" class="audit-chart__hit" />
+                    <rect x="@Num(x + 0.12)" y="@Num(100 - succeeded)" width="0.76" height="@Num(succeeded)" class="audit-chart__bar--succeeded" />
+                    <rect x="@Num(x + 0.12)" y="@Num(100 - succeeded - failed)" width="0.76" height="@Num(failed)" class="audit-chart__bar--failed" />
+                    <rect x="@Num(x + 0.12)" y="@Num(100 - succeeded - failed - denied)" width="0.76" height="@Num(denied)" class="audit-chart__bar--denied" />
+                </g>
+            }
+        </svg>
+        <div class="audit-chart__axis">
+            <span>@Label(counts.Buckets[0].Start, counts.BucketSize, full: false)</span>
+            @if (counts.Buckets.Count > 2)
+            {
+                <span>@Label(counts.Buckets[counts.Buckets.Count / 2].Start, counts.BucketSize, full: false)</span>
+            }
+            @if (counts.Buckets.Count > 1)
+            {
+                <span>@Label(counts.Buckets[^1].Start, counts.BucketSize, full: false)</span>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
+
+    [Parameter] public AuditEventCounts? Counts { get; set; }
+
+    /// <summary>A day or month bar was clicked: its first day and last day (local dates).</summary>
+    [Parameter] public EventCallback<(DateOnly From, DateOnly To)> OnRangeSelected { get; set; }
+
+    // Every bar with entries is visible: at least 3 of 100
+    private static double Height(int count, int max) => count == 0 ? 0 : Math.Max(3, count * 100.0 / max);
+
+    private static string Num(double value) => value.ToString("0.###", CultureInfo.InvariantCulture);
+
+    private static bool Clickable(AuditBucketSize size) => size is AuditBucketSize.Day or AuditBucketSize.Month;
+
+    private Task Click(AuditCountBucket bucket, AuditBucketSize size)
+    {
+        if (!Clickable(size) || bucket.Total == 0)
+            return Task.CompletedTask;
+
+        var from = DateOnly.FromDateTime(bucket.Start);
+        var to = size == AuditBucketSize.Month ? from.AddMonths(1).AddDays(-1) : from;
+        return OnRangeSelected.InvokeAsync((from, to));
+    }
+
+    private static string Label(DateTime start, AuditBucketSize size, bool full) => size switch
+    {
+        AuditBucketSize.FiveMinutes or AuditBucketSize.Hour => full ? start.ToString("g", CultureInfo.CurrentCulture) : start.ToString("t", CultureInfo.CurrentCulture),
+        AuditBucketSize.Day => start.ToString(full ? "D" : "d", CultureInfo.CurrentCulture),
+        _ => start.ToString("Y", CultureInfo.CurrentCulture)
+    };
+}

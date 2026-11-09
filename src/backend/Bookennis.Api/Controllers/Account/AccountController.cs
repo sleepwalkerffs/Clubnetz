@@ -34,6 +34,11 @@ public class AccountController(IMediator mediator) : ControllerBase
     [HttpPost("Logout")]
     public Task Logout(CancellationToken cancellationToken) => mediator.Send(new LogoutUser(), cancellationToken);
 
+    /// <summary>Ends the impersonation of an application administrator (<see cref="Business.Account.StopImpersonation"/>).</summary>
+    [Microsoft.AspNetCore.Authorization.Authorize(Infrastructure.Authorization.AuthorizationPolicies.ApplicationUser)]
+    [HttpPost("Impersonation/Stop")]
+    public Task StopImpersonation(CancellationToken cancellationToken) => mediator.Send(new StopImpersonation(), cancellationToken);
+
     [HttpGet("User")]
     public Task<GetAuthenticatedUserResult> GetUser(CancellationToken cancellationToken) => mediator.Send(new GetAuthenticatedUser(), cancellationToken);
 

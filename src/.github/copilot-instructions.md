@@ -705,6 +705,35 @@ The operator of the installation (ASP.NET role `Administrator`, policy `Applicat
 - The styles shared by the admin pages (`admin-page`, `admin-row`, `admin-chip`, `admin-club-card`, `admin-fields`, ...) are in `AdminLayout.razor.css`; they reach the pages via `.admin-shell ::deep`.
 - `Controllers/Admin/ClubsController` still has endpoints for play modes, courts, seasons, members and families of a club (`Admin*` handlers). Except for adding a member the FE no longer uses them, these things are edited in support mode - don't add new ones.
 
+## Audit Log
+
+### Overview
+
+Everything that happens in the installation is recorded in one table, `AuditEvents` (`Infrastructure/Audit`), for the application administrator, who explores it at `/admin/audit`. Club admins may get a filtered view of their own club later (`ClubId` is on every entry). Decisions: no request payloads are stored, only sensitive reads are logged, entries are kept 3 years (security entries 2 years), deleted users are pseudonymized.
+
+### What is recorded
+
+- **Data changes** (`AuditChangeCollector`, called from `DbContextHelpers.WrapSaveChanges`): one entry per created, modified or deleted row with `{"Property": {"old": .., "new": ..}}`, in the same transaction as the change. Owned types are folded into their owner, `EntityMetadata` is left out. `IgnoredTypes` (weather, Stripe webhook payloads, push keys, identity tokens) are not logged; `RedactedProperties` (password hash, security stamp, key hash, SumUp tokens) are logged as `***`. **A new entity that holds a secret or a token must be added to one of the two lists.** `ExecuteUpdate`/`ExecuteDelete` bypass the change tracker and are not logged as data changes (only the command that ran them).
+- **Commands** (`AuditRequestHandlerDecorator`, the outermost decorator): every top-level command with outcome (`Succeeded`, `Failed` with the `ErrorCode`, `Denied`), duration and actor, written outside the transaction (`AuditWriter`), so failures stay. Commands sent by a command are part of it. Queries and the older reads declared as `ICommand<T>` whose name starts with `Get` are not logged. Background commands that succeed and change nothing are left out.
+- Mark commands about accounts and access with `[SecurityAudit]` (login, password, email, impersonation, API keys, deleting users). They take the subject (who it is about) from `IAuditContext.SetSubject` or the `UserId` of the request. Mark queries that hand out sensitive data (exports) with `[AuditedRead]`, and commands that run on every request with `[NotAudited]`.
+- **Access denied**: requests a policy forbids (`AuditingAuthorizationResultHandler`) and `AccessDeniedException` from resource checks in controllers (`ExceptionFilter`), for signed-in users and API keys.
+- **The actor** (`AuditContext`): user, name and email from the claims, the API key, the impersonating administrator, IP, user agent and `METHOD /path` (never the query string), or the job name (`AuditJobFilter`) in background jobs. One `CorrelationId` per request or job ties a command to its data changes.
+
+### Rules
+
+- The table is append-only: a trigger refuses UPDATE and DELETE unless `AuditWriter` sets its maintenance flag (retention job `AuditRetentionJob`, `PseudonymizeUserAsync`). Never change or delete entries elsewhere.
+- A handler that deletes a user calls `IAuditContext.PseudonymizeAfterCommand(userId)` (`DeleteAdminUser`, `DeleteOwnAccount`).
+- **Impersonation** (`ImpersonateUser`) keeps the administrator in the session (`ImpersonationClaims`, kept across the security stamp refresh). Entries of an impersonated session name the administrator in `ImpersonatorUserId`. `ImpersonationBanner` (in `AuthorizedLayout`) shows it and calls `POST api/Account/Impersonation/Stop` (`StopImpersonation`), which only signs the administrator back in while they still are one.
+- `AuditEvents` is no club data: the security fixture leaves it out of `Fingerprint`.
+
+### Explorer (`/admin/audit`)
+
+- API: `Controllers/Admin/AuditController` (`api/Admin/Audit`, policy `ApplicationAdministrator`, cookie only): `GetAuditEvents` (all filters of `AuditEventFilter`, keyset paging with `Cursor` on `OccurredAt`/`Id`, no total count), `GetAuditEvent` (the parsed field changes and the other entries with the same correlation id), `GetAuditFilterOptions` (clubs, entity types of the EF model, `AuditRequestKinds.LoggedActions`: taken from the code, never a scan of the table).
+- The search looks in `SearchText`, a stored generated column over the text columns with a trigram index (`pg_trgm`). A new text column that should be searchable goes into `AuditEventConfiguration.SearchedColumns` (with a migration).
+- FE: `Pages/Admin/Audit` (`AuditLog.razor`, `AuditEventDialog.razor`, `AuditDisplay`), `IAuditStore`/`IAuditHttpClient`. Every filter is a query parameter of the page (`range`, `club`, `user`, `kinds`, `outcomes`, `type`, `id`, `action`, `imp`, `key`, `q`, `request`, `event` opens one entry), so views can be shared and the back button works. The links in the dialog (user, club, record, request) filter the list.
+- Above the list: quick views (plain links with preset filters), a "History of …" header when the list is narrowed to a user, record or club, and the chart (`AuditChart`, `GetAuditEventCounts`: buckets of 5 minutes / hours / days / months by the time span, in the viewer's time zone via `utcOffsetMinutes`; a day or month bar narrows the range). The admin user and club pages link to their history (`?range=all&user=…` / `&club=…`).
+- `ExportAuditEvents` (CSV, newest first, at most 10,000 rows) is `[AuditedRead]`: every export is logged. Values that start with `=`, `+`, `-` or `@` are prefixed with `'` so spreadsheets don't run them as formulas.
+
 ## Memberships & Payments
 
 ### Overview

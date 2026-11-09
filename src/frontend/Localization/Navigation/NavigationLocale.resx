@@ -270,4 +270,16 @@
   <data name="Finances" xml:space="preserve">
     <value>Accounting</value>
   </data>
+  <data name="ImpersonationTitle" xml:space="preserve">
+    <value>Signed in as {0}</value>
+  </data>
+  <data name="ImpersonationText" xml:space="preserve">
+    <value>{0} (application administrator) is using this account. The audit log records everything done here as done by the administrator.</value>
+  </data>
+  <data name="ImpersonationStop" xml:space="preserve">
+    <value>Back to my account</value>
+  </data>
+  <data name="ImpersonationStopFailed" xml:space="preserve">
+    <value>Could not return to your account. Please sign in again.</value>
+  </data>
 </root>

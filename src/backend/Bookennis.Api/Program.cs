@@ -177,6 +177,9 @@ recurringJobs.AddOrUpdate<Bookennis.Api.Business.Accounting.AccountingAutomation
 // The weather forecast of the clubs with a location (MET Norway), every club in its own job once the last answer expired
 recurringJobs.AddOrUpdate<Bookennis.Api.Business.Weather.WeatherRefreshJob>(Bookennis.Api.Business.Weather.WeatherRefreshJob.JobId, job => job.Run(), Bookennis.Api.Business.Weather.WeatherRefreshJob.Schedule);
 
+// Audit entries older than the retention period
+recurringJobs.AddOrUpdate<Bookennis.Api.Infrastructure.Audit.AuditRetentionJob>(Bookennis.Api.Infrastructure.Audit.AuditRetentionJob.JobId, job => job.Run(), Bookennis.Api.Infrastructure.Audit.AuditRetentionJob.Schedule);
+
 container.Verify();
 
 app.Run();

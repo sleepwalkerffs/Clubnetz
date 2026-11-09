@@ -8,9 +8,11 @@ using Fusonic.Extensions.Email;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Texts = Bookennis.Api.Resources.Localization.View_Emails_VerifyUser;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Account;
 
+[SecurityAudit]
 public record RegisterUser(
     [Required] string FirstName,
     [Required] string LastName,
@@ -31,7 +33,7 @@ public record RegisterUser(
         PrivacyPolicyNotAccepted
     }
 
-    public class Handler(UserManager<User> userManager, IMediator mediator, AppSettings appSettings) : IRequestHandler<RegisterUser>
+    public class Handler(UserManager<User> userManager, IMediator mediator, AppSettings appSettings, IAuditContext auditContext) : IRequestHandler<RegisterUser>
     {
         public async Task<Unit> Handle(RegisterUser request, CancellationToken cancellationToken)
         {
@@ -44,6 +46,7 @@ public record RegisterUser(
 
             if (result.Succeeded)
             {
+                auditContext.SetSubject(user.Id, user.FullName);
                 await userManager.AddToRoleAsync(user, UserRoles.User.ToString());
 
                 var culture = user.Language.ToCultureInfo();

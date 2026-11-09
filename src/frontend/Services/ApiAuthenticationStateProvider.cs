@@ -14,6 +14,9 @@ public interface IAuthStateChanged
 
 public class ApiAuthenticationStateProvider(IAccountHttpClient accountHttpClient) : AuthenticationStateProvider, IAuthStateChanged, IClaimsUserDataAccessor
 {
+    /// <summary>Set when an application administrator is signed in as this user (impersonation): the name of the administrator.</summary>
+    public const string ImpersonatorNameClaim = "impersonator_name";
+
     public void AuthStateChanged() => NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -32,6 +35,9 @@ public class ApiAuthenticationStateProvider(IAccountHttpClient accountHttpClient
             identity.AddClaim(new Claim(JwtRegisteredClaimNames.FamilyName, result.Dto.LastName));
             identity.AddClaim(new Claim(JwtRegisteredClaimNames.GivenName, result.Dto.FirstName));
             identity.AddClaim(new Claim(JwtRegisteredClaimNames.Email, result.Dto.Email ?? "no email"));
+
+            if (result.Dto.ImpersonatorName is not null)
+                identity.AddClaim(new Claim(ImpersonatorNameClaim, result.Dto.ImpersonatorName));
 
             foreach (var role in result.Dto.Roles)
                 identity.AddClaim(new Claim(ClaimTypes.Role, role));

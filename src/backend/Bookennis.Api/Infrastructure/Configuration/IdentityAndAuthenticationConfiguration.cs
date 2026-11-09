@@ -31,6 +31,17 @@ public static class IdentityAndAuthenticationConfiguration
                 .AddClaimsPrincipalFactory<CustomUserClaimsPrincipalFactory>()
                 .AddDefaultTokenProviders();
 
+        // The security stamp check rebuilds the principal every 30 minutes: an impersonated session has to stay one (audit log, banner)
+        services.Configure<SecurityStampValidatorOptions>(options => options.OnRefreshingPrincipal = context =>
+        {
+            var claims = context.CurrentPrincipal?.Claims
+                                .Where(c => c.Type is Audit.ImpersonationClaims.ImpersonatorId or Audit.ImpersonationClaims.ImpersonatorName)
+                                .ToList() ?? [];
+            if (claims.Count != 0 && context.NewPrincipal?.Identity is System.Security.Claims.ClaimsIdentity identity)
+                identity.AddClaims(claims.Select(c => new System.Security.Claims.Claim(c.Type, c.Value)));
+            return Task.CompletedTask;
+        });
+
         // Club API keys: not a default scheme, it is only used by the policies that list it
         services.AddAuthentication()
                 .AddScheme<AuthenticationSchemeOptions, ClubApiKeyAuthenticationHandler>(CustomAuthenticationSchemes.ClubApiKey, configureOptions: null);

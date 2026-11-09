@@ -1,6 +1,7 @@
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs.ApiKeys;
 using Microsoft.EntityFrameworkCore;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.ClubApiKeys;
 
@@ -8,6 +9,7 @@ namespace Bookennis.Api.Business.ClubApiKeys;
 /// Checks an API key for a request to the club and returns who it acts as, or <c>null</c> when it must be rejected:
 /// unknown, expired, a key of another club, or its creator is no longer an admin of the club.
 /// </summary>
+[NotAudited]
 public record AuthenticateClubApiKey(string Token, int ClubId) : ICommand<AuthenticatedClubApiKey?>
 {
     /// <summary>The last use is only written this often, so reading with a key does not write on every request.</summary>
@@ -34,6 +36,7 @@ public record AuthenticateClubApiKey(string Token, int ClubId) : ICommand<Authen
                     k.ExpiresAt,
                     k.LastUsedAt,
                     CreatorIsAdmin = context.ClubAdmins(request.ClubId).Any(m => m.UserId == k.CreatedByUserId),
+                    CreatorName = context.Users.Where(u => u.Id == k.CreatedByUserId).Select(u => u.FirstName + " " + u.LastName).FirstOrDefault(),
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -48,9 +51,10 @@ public record AuthenticateClubApiKey(string Token, int ClubId) : ICommand<Authen
                     .ExecuteUpdateAsync(k => k.SetProperty(x => x.LastUsedAt, now), cancellationToken);
             }
 
-            return new AuthenticatedClubApiKey(key.Id, request.ClubId, key.CreatedByUserId, key.IsReadOnly);
+            return new AuthenticatedClubApiKey(key.Id, request.ClubId, key.CreatedByUserId, key.IsReadOnly, key.CreatorName);
         }
     }
 }
 
-public record AuthenticatedClubApiKey(int ClubApiKeyId, int ClubId, int UserId, bool IsReadOnly);
+/// <summary>Who a request with the key acts as. <c>UserName</c> is the creator's name, so the audit log can name them.</summary>
+public record AuthenticatedClubApiKey(int ClubApiKeyId, int ClubId, int UserId, bool IsReadOnly, string? UserName = null);

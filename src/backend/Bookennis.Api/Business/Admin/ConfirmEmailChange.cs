@@ -5,9 +5,11 @@ using Bookennis.Domain.User;
 using Fusonic.Extensions.Email;
 using Microsoft.AspNetCore.Identity;
 using Texts = Bookennis.Api.Resources.Localization.View_Emails_EmailChanged;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Admin;
 
+[SecurityAudit]
 public record ConfirmEmailChange(int UserId, string NewEmail, string Token) : ICommand
 {
     public enum ErrorCode

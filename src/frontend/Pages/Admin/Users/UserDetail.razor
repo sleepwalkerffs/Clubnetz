@@ -32,7 +32,8 @@ else
                 {
                     <span class="hero-chip hero-chip--warn">✉️ @L["Unconfirmed"]</span>
                 }
-                <span class="hero-chip">🗓️ @string.Format(L["RegisteredOn"], user.RegisteredAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))</span>            </Chips>
+                <span class="hero-chip">🗓️ @string.Format(L["RegisteredOn"], user.RegisteredAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))</span>
+                <a class="hero-chip" href="@($"/admin/audit?range=all&user={user.Id}&userName={Uri.EscapeDataString(user.FullName)}")">🕰️ @L["AuditHistory"]</a>            </Chips>
         </AdminHero>
 
         <SectionCard Emoji="🎾" Title="@L["Clubs"]" Subtitle="@L["ClubsOfUserSubtitle"]">

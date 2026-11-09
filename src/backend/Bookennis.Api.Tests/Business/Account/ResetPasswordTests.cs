@@ -1,3 +1,4 @@
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Business.Account;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Exceptions;
@@ -21,7 +22,7 @@ public class ResetPasswordTests
     {
         userManager.ResetPasswordAsync(user, "token", "New-Pass1").Returns(IdentityResult.Success);
 
-        await new ResetPassword.Handler(userManager).Handle(new ResetPassword("user@bookennis.com", "token", "New-Pass1"), CancellationToken.None);
+        await new ResetPassword.Handler(userManager, Substitute.For<IAuditContext>()).Handle(new ResetPassword("user@bookennis.com", "token", "New-Pass1"), CancellationToken.None);
 
         await userManager.Received(1).ResetAccessFailedCountAsync(user);
         await userManager.Received(1).SetLockoutEndDateAsync(user, null);
@@ -33,7 +34,7 @@ public class ResetPasswordTests
     {
         userManager.ResetPasswordAsync(user, "bad", "New-Pass1").Returns(IdentityResult.Failed(new IdentityError { Code = "InvalidToken" }));
 
-        var act = () => new ResetPassword.Handler(userManager).Handle(new ResetPassword("user@bookennis.com", "bad", "New-Pass1"), CancellationToken.None);
+        var act = () => new ResetPassword.Handler(userManager, Substitute.For<IAuditContext>()).Handle(new ResetPassword("user@bookennis.com", "bad", "New-Pass1"), CancellationToken.None);
 
         (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorDetails.Should().BeEquivalentTo("InvalidToken");
         await userManager.DidNotReceiveWithAnyArgs().SetLockoutEndDateAsync(default!, default);
@@ -42,7 +43,7 @@ public class ResetPasswordTests
     [Fact]
     public async Task UnknownEmail_ThrowsLikeAnInvalidToken()
     {
-        var act = () => new ResetPassword.Handler(userManager).Handle(new ResetPassword("unknown@bookennis.com", "token", "New-Pass1"), CancellationToken.None);
+        var act = () => new ResetPassword.Handler(userManager, Substitute.For<IAuditContext>()).Handle(new ResetPassword("unknown@bookennis.com", "token", "New-Pass1"), CancellationToken.None);
 
         var exception = (await act.Should().ThrowAsync<PreconditionException>()).Which;
         exception.ErrorCode.Should().Be(nameof(ResetPassword.Handler.Error.IdentityError));

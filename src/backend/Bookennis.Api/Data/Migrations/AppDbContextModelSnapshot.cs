@@ -21,6 +21,7 @@ namespace Bookennis.Api.Data.Migrations
                 .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.HasSequence<int>("AccountingCategories_Id_Sequence")
@@ -294,6 +295,133 @@ namespace Bookennis.Api.Data.Migrations
             modelBuilder.HasSequence<int>("WeatherForecasts_Id_Sequence")
                 .StartsAt(10L)
                 .IncrementsBy(10);
+
+            modelBuilder.Entity("Bookennis.Api.Infrastructure.Audit.AuditEvent", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ActorEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("ActorName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int?>("ActorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ApiKeyId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Changes")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int?>("ClubId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("CorrelationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("DurationMs")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ImpersonatorName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int?>("ImpersonatorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Request")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("SearchText")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasComputedColumnSql("coalesce(\"Action\", '') || ' ' || coalesce(\"Summary\", '') || ' ' || coalesce(\"ActorName\", '') || ' ' || coalesce(\"ActorEmail\", '') || ' ' || coalesce(\"SubjectName\", '') || ' ' || coalesce(\"ImpersonatorName\", '') || ' ' || coalesce(\"EntityType\", '') || ' ' || coalesce(\"EntityId\", '') || ' ' || coalesce(\"IpAddress\", '') || ' ' || coalesce(\"ErrorCode\", '') || ' ' || coalesce(\"Request\", '') || ' ' || coalesce(\"System\", '')", true);
+
+                    b.Property<string>("SubjectName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int?>("SubjectUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("System")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CorrelationId");
+
+                    b.HasIndex("SearchText");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchText"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("SearchText"), new[] { "gin_trgm_ops" });
+
+                    b.HasIndex("ActorUserId", "OccurredAt");
+
+                    b.HasIndex("ClubId", "OccurredAt");
+
+                    b.HasIndex("OccurredAt", "Id")
+                        .IsDescending();
+
+                    b.HasIndex("SubjectUserId", "OccurredAt");
+
+                    b.HasIndex("EntityType", "EntityId", "OccurredAt");
+
+                    b.ToTable("AuditEvents", (string)null);
+                });
 
             modelBuilder.Entity("Bookennis.Domain.Accounting.AccountingCategory", b =>
                 {

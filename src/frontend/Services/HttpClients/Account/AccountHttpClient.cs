@@ -41,6 +41,9 @@ public class AccountHttpClient(HttpClient httpClient, JsonSerializerOptions json
     public async Task<HttpResult> LogoutUser(CancellationToken cancellationToken)
         => await (await httpClient.PostAsync("Logout", null, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
 
+    public async Task<HttpResult> StopImpersonation(CancellationToken cancellationToken)
+        => await (await httpClient.PostAsync("Impersonation/Stop", null, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
+
     public async Task<HttpResult> RegisterUser(RegisterUserModel userModel, CancellationToken cancellationToken)
         => await (await httpClient.PostAsJsonAsync("Register", userModel, jsonOptions, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
 }

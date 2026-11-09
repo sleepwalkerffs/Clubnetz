@@ -164,6 +164,16 @@ public static class AddHttpClients
            .AddHttpMessageHandler<RedirectToLoginOnUnauthorizedHandler>();
 
         services
+           .AddHttpClient<IAuditHttpClient, AuditHttpClient>(
+                (serviceProvider, client) =>
+                {
+                    var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
+                    client.BaseAddress = new Uri(apiUrl! + "Admin/Audit/");
+                }
+            )
+           .AddHttpMessageHandler<RedirectToLoginOnUnauthorizedHandler>();
+
+        services
            .AddHttpClient<IStatisticsHttpClient, StatisticsHttpClient>(
                 (serviceProvider, client) =>
                 {

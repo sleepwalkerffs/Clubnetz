@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Infrastructure.Exceptions;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Shared.Controller.Shared;
@@ -61,6 +62,10 @@ public class ExceptionFilter(ILogger<ExceptionFilter> logger) : IAsyncExceptionF
         }
         else
         {
+            // Denied by a resource check in a controller. A command that was denied is logged by its decorator already.
+            if (!context.Exception.Data.Contains(AccessDeniedAudit.LoggedKey))
+                await AccessDeniedAudit.Write(context.HttpContext.RequestServices, context.Exception.Message);
+
             HandleException<AccessDeniedException>(context, HttpStatusCode.Forbidden, e => new { e.Message });
         }
     }

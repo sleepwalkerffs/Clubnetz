@@ -2,9 +2,11 @@ using System.Text.RegularExpressions;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.SubscriptionPlans;
 
+[AuditedRead]
 public record ExportSubscriptionPlan(int ClubId, int SubscriptionPlanId) : IQuery<ExportSubscriptionPlanResult>
 {
     public class Handler(AppDbContext context, IUserLanguageAccessor languageAccessor) : IRequestHandler<ExportSubscriptionPlan, ExportSubscriptionPlanResult>

@@ -9,6 +9,7 @@ using Bookennis.Domain.Notifications;
 using Bookennis.Domain.User;
 using Fusonic.Extensions.Common.Security;
 using Microsoft.EntityFrameworkCore;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Profile;
 
@@ -16,6 +17,7 @@ namespace Bookennis.Api.Business.Profile;
 /// Collects the personal data stored about the current user (GDPR Art. 15 / 20) in a machine readable form. The controller hands it out
 /// as a JSON download. Co-players of bookings are included by name only, because they are part of the user's own booking records.
 /// </summary>
+[AuditedRead]
 public record ExportPersonalData : IQuery<PersonalDataExport>
 {
     public class Handler(AppDbContext context, IUserAccessor userAccessor) : IRequestHandler<ExportPersonalData, PersonalDataExport>

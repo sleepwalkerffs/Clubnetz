@@ -6,6 +6,7 @@ using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.User;
 using Fusonic.Extensions.Common.Security;
 using Microsoft.AspNetCore.Identity;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Profile;
 
@@ -13,6 +14,7 @@ namespace Bookennis.Api.Business.Profile;
 /// Lets the current user change their own email address. The current password is required and the new address has to be confirmed via
 /// the link that is sent to it. The email is only changed in <see cref="Admin.ConfirmEmailChange"/>, which also notifies the old address.
 /// </summary>
+[SecurityAudit]
 public record RequestEmailChange([Required] string CurrentPassword, [Required, EmailAddress] string NewEmail) : ICommand
 {
     public enum ErrorCode

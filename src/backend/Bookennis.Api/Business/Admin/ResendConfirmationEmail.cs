@@ -6,9 +6,11 @@ using Fusonic.Extensions.Email;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Texts = Bookennis.Api.Resources.Localization.View_Emails_VerifyUser;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Admin;
 
+[SecurityAudit]
 public record ResendConfirmationEmail(int UserId) : ICommand
 {
     public class Handler(UserManager<User> userManager, IMediator mediator, AppSettings appSettings) : IRequestHandler<ResendConfirmationEmail>

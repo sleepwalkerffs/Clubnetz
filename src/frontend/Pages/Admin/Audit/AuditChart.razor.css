@@ -1,0 +1,78 @@
+.audit-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px 4px 0;
+}
+
+.audit-chart__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.audit-chart__total {
+    font-weight: 700;
+}
+
+.audit-chart__legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+    color: var(--mud-palette-text-secondary);
+}
+
+.audit-chart__key {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-left: 6px;
+    border-radius: 3px;
+}
+
+.audit-chart__key--succeeded,
+.audit-chart__bar--succeeded {
+    background: var(--mud-palette-primary);
+    fill: var(--mud-palette-primary);
+}
+
+.audit-chart__key--failed,
+.audit-chart__bar--failed {
+    background: var(--mud-palette-warning);
+    fill: var(--mud-palette-warning);
+}
+
+.audit-chart__key--denied,
+.audit-chart__bar--denied {
+    background: var(--mud-palette-error);
+    fill: var(--mud-palette-error);
+}
+
+.audit-chart__bars {
+    display: block;
+    width: 100%;
+    height: 72px;
+}
+
+.audit-chart__hit {
+    fill: transparent;
+}
+
+.audit-chart__bucket--clickable {
+    cursor: pointer;
+}
+
+.audit-chart__bucket:hover .audit-chart__hit {
+    fill: var(--mud-palette-action-default-hover);
+}
+
+.audit-chart__axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}

@@ -4,10 +4,12 @@ using Bookennis.Domain.Clubs.ApiKeys;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Shared.Controller.ClubApiKeys;
 using Microsoft.EntityFrameworkCore;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.ClubApiKeys;
 
 /// <summary>Creates an API key that acts as the user in the club. The key is only returned by this command.</summary>
+[SecurityAudit]
 public record CreateClubApiKey(int ClubId, int UserId, string? Name, bool IsReadOnly, int? ExpiresInDays) : ICommand<CreateClubApiKeyResult>
 {
     public enum ErrorCode

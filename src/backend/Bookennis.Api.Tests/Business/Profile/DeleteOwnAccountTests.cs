@@ -1,3 +1,4 @@
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Business.Profile;
 using Bookennis.Api.Data;
 using Bookennis.Api.Tests.TestUtils;
@@ -81,7 +82,7 @@ public class DeleteOwnAccountTests(TestFixture fixture) : TestBase(fixture)
     private Task Handle(int userId, string password)
         => ScopedAsync(async () =>
         {
-            var handler = new DeleteOwnAccount.Handler(GetInstance<AppDbContext>(), signInManager, IdentityTestHelper.CreateUserAccessor(userId));
+            var handler = new DeleteOwnAccount.Handler(GetInstance<AppDbContext>(), signInManager, IdentityTestHelper.CreateUserAccessor(userId), Substitute.For<IAuditContext>());
             await handler.Handle(new DeleteOwnAccount(password), CancellationToken.None);
         });
 }

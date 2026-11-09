@@ -5,10 +5,12 @@ using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Bookennis.Shared.Controller.Memberships;
 using ClosedXML.Excel;
+using Bookennis.Api.Infrastructure.Audit;
 
 namespace Bookennis.Api.Business.Memberships;
 
 /// <summary>The payments list of a season as an Excel workbook, in the language of the request.</summary>
+[AuditedRead]
 public record ExportMembershipPayments(int ClubId, int SeasonId) : IQuery<ExportMembershipPaymentsResult>
 {
     public class Handler(AppDbContext context, IUserLanguageAccessor languageAccessor) : IRequestHandler<ExportMembershipPayments, ExportMembershipPaymentsResult>
