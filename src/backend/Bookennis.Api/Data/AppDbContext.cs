@@ -120,6 +120,7 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        builder.HasPostgresExtension("pg_trgm"); // the search of the audit log
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly, config => config.Namespace?.StartsWith(typeof(AppDbContext).Namespace ?? "") ?? false);
         DbContextHelpers.ApplyDefaultConventions(builder);
         builder.Entity<Club>().HasQueryFilter(i => tenantService.GetTenantId() == null || i.Id == tenantService.GetTenantId());

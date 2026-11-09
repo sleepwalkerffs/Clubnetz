@@ -1,0 +1,231 @@
+@using System.Globalization
+@using Bookennis.Client.Services.Store.Admin
+@using Bookennis.Shared.Controller.Admin.Audit
+
+@* One entry of the audit log: what happened, who did it, the changed fields, and everything else of the same request.
+   The links filter the list (by user, club, record, action) and close the dialog. *@
+<MudDialog ContentClass="audit-dialog">
+    <DialogContent>
+        @if (detail is null)
+        {
+            @if (loading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else
+            {
+                <div class="audit-dialog__empty">@L["AuditEntryNotFound"]</div>
+            }
+        }
+        else
+        {
+            var e = detail.Event;
+            <div class="audit-dialog__head">
+                <span class="audit-dialog__emoji" aria-hidden="true">@AuditDisplay.KindEmoji(e.Kind)</span>
+                <div class="audit-dialog__title">
+                    <div class="audit-dialog__name">@AuditDisplay.Title(e, L)</div>
+                    <div class="audit-dialog__time">@e.OccurredAt.ToLocalTime().ToString("F", CultureInfo.CurrentCulture)</div>
+                </div>
+                <span class="audit-dialog__outcome audit-dialog__outcome--@e.Outcome.ToString().ToLowerInvariant()">@L[$"AuditOutcome_{e.Outcome}"]</span>
+            </div>
+
+            <dl class="audit-facts">
+                <dt>@L["AuditKind"]</dt>
+                <dd>@L[$"AuditKind_{e.Kind}"]</dd>
+
+                @if (e.ErrorCode is not null)
+                {
+                    <dt>@L["AuditError"]</dt>
+                    <dd class="audit-facts__mono">@e.ErrorCode</dd>
+                }
+
+                <dt>@L["AuditActor"]</dt>
+                <dd>
+                    @if (e.ActorUserId is { } actorId)
+                    {
+                        <button type="button" class="audit-link" @onclick="@(() => Filter(("user", actorId), ("userName", e.ActorName)))">@AuditDisplay.Actor(e, L)</button>
+                        @if (detail.ActorEmail is not null)
+                        {
+                            <span class="audit-facts__muted"> · @detail.ActorEmail</span>
+                        }
+                    }
+                    else
+                    {
+                        @AuditDisplay.Actor(e, L)
+                    }
+                </dd>
+
+                @if (e.ImpersonatorUserId is { } impersonatorId)
+                {
+                    <dt>@L["AuditImpersonatedBy"]</dt>
+                    <dd><button type="button" class="audit-link" @onclick="@(() => Filter(("user", impersonatorId), ("userName", e.ImpersonatorName)))">🎭 @(e.ImpersonatorName ?? $"#{impersonatorId}")</button></dd>
+                }
+
+                @if (e.ApiKeyId is not null)
+                {
+                    <dt>@L["AuditApiKey"]</dt>
+                    <dd>🔑 #@e.ApiKeyId</dd>
+                }
+
+                @if (e.SubjectUserId is { } subjectId && subjectId != e.ActorUserId)
+                {
+                    <dt>@L["AuditSubject"]</dt>
+                    <dd><button type="button" class="audit-link" @onclick="@(() => Filter(("user", subjectId), ("userName", e.SubjectName)))">@(e.SubjectName ?? $"#{subjectId}")</button></dd>
+                }
+
+                @if (e.ClubId is { } clubId)
+                {
+                    <dt>@L["AuditClub"]</dt>
+                    <dd><button type="button" class="audit-link" @onclick="@(() => Filter(("club", clubId)))">@(e.ClubName ?? $"#{clubId}")</button></dd>
+                }
+
+                @if (e.EntityType is not null)
+                {
+                    <dt>@L["AuditRecord"]</dt>
+                    <dd>
+                        <button type="button" class="audit-link" @onclick="@(() => Filter(("type", e.EntityType), ("id", e.EntityId)))">@e.EntityType @(e.EntityId is null ? "" : $"#{e.EntityId}")</button>
+                        <span class="audit-facts__muted"> · @L["AuditHistoryHint"]</span>
+                    </dd>
+                }
+                else
+                {
+                    <dt>@L["AuditAction"]</dt>
+                    <dd><button type="button" class="audit-link audit-facts__mono" @onclick="@(() => Filter(("action", e.Action)))">@e.Action</button></dd>
+                }
+
+                @if (e.Request is not null)
+                {
+                    <dt>@L["AuditRequest"]</dt>
+                    <dd class="audit-facts__mono">@e.Request</dd>
+                }
+
+                @if (detail.DurationMs is not null)
+                {
+                    <dt>@L["AuditDuration"]</dt>
+                    <dd>@detail.DurationMs ms</dd>
+                }
+
+                @if (detail.IpAddress is not null)
+                {
+                    <dt>@L["AuditIpAddress"]</dt>
+                    <dd class="audit-facts__mono">@detail.IpAddress</dd>
+                }
+
+                @if (detail.UserAgent is not null)
+                {
+                    <dt>@L["AuditUserAgent"]</dt>
+                    <dd class="audit-facts__small">@detail.UserAgent</dd>
+                }
+
+                @if (e.System is not null)
+                {
+                    <dt>@L["AuditSystem"]</dt>
+                    <dd>⚙️ @e.System</dd>
+                }
+            </dl>
+
+            @if (detail.Changes.Count > 0)
+            {
+                <div class="audit-section">@L["AuditChanges"]</div>
+                <div class="audit-changes">
+                    <div class="audit-changes__row audit-changes__row--head">
+                        <div>@L["AuditField"]</div>
+                        <div>@L["AuditOld"]</div>
+                        <div>@L["AuditNew"]</div>
+                    </div>
+                    @foreach (var change in detail.Changes)
+                    {
+                        <div class="audit-changes__row" @key="change.Field">
+                            <div class="audit-changes__field">@change.Field</div>
+                            <div class="audit-changes__old" data-label="@L["AuditOld"]">@Value(change.HasOld, change.Old)</div>
+                            <div class="audit-changes__new" data-label="@L["AuditNew"]">@Value(change.HasNew, change.New)</div>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (detail.Related.Count > 0)
+            {
+                <div class="audit-section">
+                    @string.Format(CultureInfo.CurrentCulture, L["AuditSameRequest"], detail.Related.Count)
+                    <button type="button" class="audit-link" @onclick="@(() => Filter(("request", e.CorrelationId)))">@L["AuditShowInList"]</button>
+                </div>
+                <div class="audit-related">
+                    @foreach (var related in detail.Related)
+                    {
+                        <button type="button" class="audit-related__row" @key="related.Id" @onclick="() => Load(related.Id)">
+                            <span aria-hidden="true">@AuditDisplay.KindEmoji(related.Kind)</span>
+                            <span class="audit-related__title">@AuditDisplay.Title(related, L)</span>
+                            @if (related.Outcome != AuditOutcome.Succeeded)
+                            {
+                                <span class="audit-related__outcome">@L[$"AuditOutcome_{related.Outcome}"]</span>
+                            }
+                        </button>
+                    }
+                </div>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (history.Count > 0)
+        {
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="Back">@L["AuditBack"]</MudButton>
+        }
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => MudDialog.Close())">@L["AuditClose"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Inject] private IAuditStore AuditStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
+
+    [Parameter, EditorRequired] public long EventId { get; set; }
+
+    /// <summary>Changes the filter of the list (query parameters of the page).</summary>
+    [Parameter, EditorRequired] public Action<(string, object?)[]> ApplyFilter { get; set; } = null!;
+
+    private AuditEventDetail? detail;
+    private bool loading;
+    private readonly Stack<long> history = new();
+
+    protected override Task OnInitializedAsync() => Show(EventId);
+
+    private async Task Load(long id)
+    {
+        if (detail is not null)
+            history.Push(detail.Event.Id);
+        await Show(id);
+    }
+
+    private Task Back() => history.TryPop(out var id) ? Show(id) : Task.CompletedTask;
+
+    private async Task Show(long id)
+    {
+        loading = true;
+        detail = null;
+        detail = await AuditStore.LoadEvent(id);
+        loading = false;
+    }
+
+    private void Filter(params (string, object?)[] changes)
+    {
+        MudDialog.Close();
+        ApplyFilter(changes);
+    }
+
+    private RenderFragment Value(bool has, string? value) => builder =>
+    {
+        if (!has)
+        {
+            builder.AddContent(0, "–");
+            return;
+        }
+
+        builder.OpenElement(1, "span");
+        builder.AddAttribute(2, "class", value is null ? "audit-changes__null" : "audit-changes__value");
+        builder.AddContent(3, value ?? "null");
+        builder.CloseElement();
+    };
+}

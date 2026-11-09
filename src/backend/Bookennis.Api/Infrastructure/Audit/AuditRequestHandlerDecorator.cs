@@ -20,7 +20,7 @@ public sealed class AuditRequestHandlerDecorator<TRequest, TResponse>(
     IAuditWriter auditWriter) : IRequestHandler<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    private static readonly AuditEventKind? kind = GetKind(typeof(TRequest));
+    private static readonly AuditEventKind? kind = AuditRequestKinds.GetKind(typeof(TRequest));
 
     private static readonly PropertyInfo? userIdProperty = typeof(TRequest).GetProperty("UserId") is { PropertyType: var t } p && t == typeof(int) ? p : null;
 
@@ -87,8 +87,12 @@ public sealed class AuditRequestHandlerDecorator<TRequest, TResponse>(
         actor.ApplyTo(e);
         return auditWriter.WriteAsync(e);
     }
+}
 
-    private static AuditEventKind? GetKind(Type requestType)
+public static class AuditRequestKinds
+{
+    /// <summary>How a request is logged, or null when it is not logged as a command (reads, <see cref="NotAuditedAttribute"/>).</summary>
+    public static AuditEventKind? GetKind(Type requestType)
     {
         if (requestType.GetCustomAttribute<NotAuditedAttribute>() is not null)
             return null;
@@ -103,6 +107,15 @@ public sealed class AuditRequestHandlerDecorator<TRequest, TResponse>(
     private static bool IsRead(Type requestType) =>
         requestType.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IQuery<>))
         || requestType.Name.StartsWith("Get", StringComparison.Ordinal);
+
+    /// <summary>The names of all requests of the app that are logged (for the filter of the explorer).</summary>
+    public static IReadOnlyList<string> LoggedActions { get; } = typeof(AuditRequestKinds).Assembly.GetTypes()
+        .Where(t => t is { IsAbstract: false, IsGenericTypeDefinition: false } && t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequest<>)))
+        .Where(t => GetKind(t) is not null)
+        .Select(t => t.Name)
+        .Distinct()
+        .Order(StringComparer.Ordinal)
+        .ToList();
 }
 
 public static class AuditOutcomes

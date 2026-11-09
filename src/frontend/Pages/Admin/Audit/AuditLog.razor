@@ -1,0 +1,333 @@
+@page "/admin/audit"
+@using System.Globalization
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Services.Store.Admin
+@using Bookennis.Shared.Controller.Admin
+@using Bookennis.Shared.Controller.Admin.Audit
+
+@implements IDisposable
+
+<PageTitle>@L["AdminPanel"] - @L["AuditLog"]</PageTitle>
+
+<div class="admin-page">
+    <AdminHero Emoji="🧾" Eyebrow="@L["PlatformAdministration"]" Title="@L["AuditLog"]" Subtitle="@L["AuditLogSubtitle"]" />
+
+    @* Search and the filters. All of them live in the URL: a view can be bookmarked and shared, and the back button works. *@
+    <div class="admin-list-card audit-filters">
+        <div class="audit-filters__top">
+            <MudTextField T="string" Value="searchText" ValueChanged="OnSearchChanged" DebounceInterval="400" Clearable="true"
+                          Placeholder="@L["AuditSearch"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined" Margin="Margin.Dense" Class="audit-filters__search" />
+            <MudBadge Content="@MoreFilterCount" Visible="@(MoreFilterCount > 0)" Color="Color.Primary" Overlap="true">
+                <MudButton Variant="@(showMore ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune"
+                           OnClick="@(() => showMore = !showMore)">@L["AuditMoreFilters"]</MudButton>
+            </MudBadge>
+            @if (HasAnyFilter)
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.FilterAltOff" OnClick="ResetFilters">@L["AuditReset"]</MudButton>
+            }
+        </div>
+
+        <ChoiceChips TItem="string" Items="Ranges" Value="@Range" ValueChanged="OnRangeChanged" TextFunc="@(r => L[$"AuditRange_{r}"])" Label="@L["AuditTimeRange"]" />
+        @if (Range == CustomRange)
+        {
+            <div class="audit-filters__dates">
+                <MudDatePicker Label="@L["AuditFrom"]" Date="@FromDate" DateChanged="@(d => Navigate(("from", d?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))))"
+                               Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" />
+                <MudDatePicker Label="@L["AuditTo"]" Date="@ToDate" DateChanged="@(d => Navigate(("to", d?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))))"
+                               Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" />
+            </div>
+        }
+
+        <MultiChoiceChips TItem="AuditEventKind" Items="Enum.GetValues<AuditEventKind>()" Values="SelectedKinds" ValuesChanged="@(v => Navigate(("kinds", Join(v))))"
+                          TextFunc="@(k => $"{AuditDisplay.KindEmoji(k)} {L[$"AuditKind_{k}"]}")" Label="@L["AuditKind"]" Dense="true" />
+        <MultiChoiceChips TItem="AuditOutcome" Items="Enum.GetValues<AuditOutcome>()" Values="SelectedOutcomes" ValuesChanged="@(v => Navigate(("outcomes", Join(v))))"
+                          TextFunc="@(o => L[$"AuditOutcome_{o}"])" Label="@L["AuditOutcome"]" Dense="true" />
+
+        @if (showMore)
+        {
+            <div class="audit-filters__grid">
+                <MudSelect T="int?" Label="@L["AuditClub"]" Value="@Club" ValueChanged="@(v => Navigate(("club", v)))" Clearable="true"
+                           Variant="Variant.Outlined" Margin="Margin.Dense">
+                    @foreach (var club in AuditStore.Options?.Clubs ?? [])
+                    {
+                        <MudSelectItem T="int?" Value="@club.Id">@club.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudAutocomplete T="AdminUserResult" Label="@L["AuditUser"]" Value="@selectedUser" ValueChanged="OnUserChanged" SearchFunc="SearchUsers"
+                                 ToStringFunc="@(u => u is null ? "" : u.FullName)" Clearable="true" DebounceInterval="300" MinCharacters="2"
+                                 Placeholder="@(User is not null && selectedUser is null ? (UserName ?? $"#{User}") : null)"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true" />
+
+                <MudAutocomplete T="string" Label="@L["AuditEntityType"]" Value="@EntityType" ValueChanged="@(v => Navigate(("type", v)))"
+                                 SearchFunc="@((t, _) => Search(AuditStore.Options?.EntityTypes, t))" Clearable="true" MaxItems="null"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true" />
+
+                <MudTextField T="string" Label="@L["AuditEntityId"]" Value="@EntityId" ValueChanged="@(v => Navigate(("id", string.IsNullOrWhiteSpace(v) ? null : v.Trim())))"
+                              Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense" />
+
+                <MudAutocomplete T="string" Label="@L["AuditAction"]" Value="@Action" ValueChanged="@(v => Navigate(("action", v)))"
+                                 SearchFunc="@((t, _) => Search(AuditStore.Options?.Actions, t))" Clearable="true" MaxItems="null"
+                                 Variant="Variant.Outlined" Margin="Margin.Dense" ResetValueOnEmptyText="true" />
+
+                <div class="audit-filters__switches">
+                    <MudSwitch T="bool" Value="@Impersonated" ValueChanged="@(v => Navigate(("imp", v ? "1" : null)))" Color="Color.Primary" Label="@L["AuditImpersonatedOnly"]" />
+                    <MudSwitch T="bool" Value="@ApiKey" ValueChanged="@(v => Navigate(("key", v ? "1" : null)))" Color="Color.Primary" Label="@L["AuditApiKeyOnly"]" />
+                </div>
+            </div>
+        }
+
+        @if (Correlation is not null)
+        {
+            <div class="admin-chips">
+                <span class="admin-chip admin-chip--info">🔗 @L["AuditOneRequest"]</span>
+                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => Navigate(("request", null)))">@L["AuditShowAll"]</MudButton>
+            </div>
+        }
+    </div>
+
+    <div class="admin-list-card">
+        @if (AuditStore.IsLoading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+        }
+
+        @if (AuditStore.EventsLoaded && AuditStore.Events.Count == 0)
+        {
+            <div class="admin-empty">
+                <div class="admin-empty__emoji" aria-hidden="true">🔍</div>
+                <div>@L["AuditNothingFound"]</div>
+            </div>
+        }
+        else
+        {
+            <div class="admin-list">
+                @{ DateOnly? day = null; }
+                @foreach (var e in AuditStore.Events)
+                {
+                    var local = e.OccurredAt.ToLocalTime();
+                    var eventDay = DateOnly.FromDateTime(local);
+                    if (day != eventDay)
+                    {
+                        day = eventDay;
+                        <div class="audit-day" @key="@($"day-{eventDay}")">@local.ToString("D", CultureInfo.CurrentCulture)</div>
+                    }
+
+                    <div class="admin-row admin-row--clickable audit-row" @key="e.Id" role="button" tabindex="0"
+                         @onclick="() => OpenEvent(e.Id)" @onkeydown="@(k => k.Key is "Enter" or " " ? OpenEvent(e.Id) : Task.CompletedTask)">
+                        <span class="audit-row__emoji audit-row__emoji--@e.Outcome.ToString().ToLowerInvariant()" aria-hidden="true">@AuditDisplay.KindEmoji(e.Kind)</span>
+                        <div class="admin-row__main">
+                            <div class="admin-row__title">@AuditDisplay.Title(e, L)</div>
+                            <div class="admin-row__text">
+                                @local.ToString("t", CultureInfo.CurrentCulture) · @AuditDisplay.Actor(e, L)@if (e.ClubId is not null)
+                                {
+                                    <text> · @(e.ClubName ?? $"#{e.ClubId}")</text>
+                                }
+                                @if (e.Kind != AuditEventKind.DataChange && e.SubjectUserId is not null && e.SubjectUserId != e.ActorUserId)
+                                {
+                                    <text> · → @(e.SubjectName ?? $"#{e.SubjectUserId}")</text>
+                                }
+                            </div>
+                            @if (e.Kind == AuditEventKind.DataChange && e.Summary is not null && e.Action == "Modified")
+                            {
+                                <div class="admin-row__text audit-row__summary">@e.Summary</div>
+                            }
+                        </div>
+                        <div class="admin-row__aside">
+                            @if (e.Outcome != AuditOutcome.Succeeded)
+                            {
+                                <span class="admin-chip audit-chip--@e.Outcome.ToString().ToLowerInvariant()">@L[$"AuditOutcome_{e.Outcome}"]@(e.ErrorCode is null ? "" : $" · {AuditDisplay.Short(e.ErrorCode)}")</span>
+                            }
+                            @if (e.ImpersonatorUserId is not null)
+                            {
+                                <span class="admin-chip admin-chip--warn" title="@L["AuditImpersonatedBy"]">🎭 @(e.ImpersonatorName ?? $"#{e.ImpersonatorUserId}")</span>
+                            }
+                            @if (e.ApiKeyId is not null)
+                            {
+                                <span class="admin-chip admin-chip--info">🔑 @L["AuditApiKey"] #@e.ApiKeyId</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (AuditStore.HasMore)
+            {
+                <div class="d-flex justify-center pa-2">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AuditStore.LoadMore" Disabled="AuditStore.IsLoading"
+                               StartIcon="@Icons.Material.Filled.ExpandMore">@L["AuditLoadMore"]</MudButton>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private const string CustomRange = "custom";
+    private const string DefaultRange = "7d";
+    private static readonly string[] Ranges = ["1h", "24h", DefaultRange, "30d", "all", CustomRange];
+
+    [Inject] private IAuditStore AuditStore { get; set; } = null!;
+    [Inject] private IAdminStore AdminStore { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private IStringLocalizer<AdminLocale> L { get; set; } = null!;
+
+    [SupplyParameterFromQuery(Name = "range")] public string? RangeParameter { get; set; }
+    [SupplyParameterFromQuery(Name = "from")] public string? From { get; set; }
+    [SupplyParameterFromQuery(Name = "to")] public string? To { get; set; }
+    [SupplyParameterFromQuery(Name = "club")] public int? Club { get; set; }
+    [SupplyParameterFromQuery(Name = "user")] public int? User { get; set; }
+    [SupplyParameterFromQuery(Name = "userName")] public string? UserName { get; set; }
+    [SupplyParameterFromQuery(Name = "kinds")] public string? Kinds { get; set; }
+    [SupplyParameterFromQuery(Name = "outcomes")] public string? Outcomes { get; set; }
+    [SupplyParameterFromQuery(Name = "type")] public string? EntityType { get; set; }
+    [SupplyParameterFromQuery(Name = "id")] public string? EntityId { get; set; }
+    [SupplyParameterFromQuery(Name = "action")] public string? Action { get; set; }
+    [SupplyParameterFromQuery(Name = "imp")] public string? ImpersonatedParameter { get; set; }
+    [SupplyParameterFromQuery(Name = "key")] public string? ApiKeyParameter { get; set; }
+    [SupplyParameterFromQuery(Name = "q")] public string? Query { get; set; }
+    [SupplyParameterFromQuery(Name = "request")] public Guid? Correlation { get; set; }
+    [SupplyParameterFromQuery(Name = "event")] public long? OpenEventId { get; set; }
+
+    private string? searchText;
+    private bool showMore;
+    private AdminUserResult? selectedUser;
+    private string? loadedFilterKey;
+    private long? openedEventId;
+
+    private string Range => RangeParameter is { } r && Ranges.Contains(r) ? r : DefaultRange;
+    private bool Impersonated => ImpersonatedParameter is "1";
+    private bool ApiKey => ApiKeyParameter is "1";
+    private DateTime? FromDate => ParseDate(From);
+    private DateTime? ToDate => ParseDate(To);
+    private IReadOnlyCollection<AuditEventKind> SelectedKinds => ParseList<AuditEventKind>(Kinds);
+    private IReadOnlyCollection<AuditOutcome> SelectedOutcomes => ParseList<AuditOutcome>(Outcomes);
+
+    private int MoreFilterCount => new object?[] { Club, User, EntityType, EntityId, Action, Impersonated ? true : null, ApiKey ? true : null }.Count(v => v is not null);
+
+    private bool HasAnyFilter => MoreFilterCount > 0 || Range != DefaultRange || !string.IsNullOrEmpty(Query) || SelectedKinds.Count > 0
+                                 || SelectedOutcomes.Count > 0 || Correlation is not null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuditStore.OnEventsChanged += OnChanged;
+        if (AuditStore.Options is null)
+            await AuditStore.LoadOptions();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        searchText = Query;
+        if (MoreFilterCount > 0)
+            showMore = true;
+        if (selectedUser is not null && selectedUser.Id != User)
+            selectedUser = null;
+
+        var filter = BuildFilter();
+        var key = System.Text.Json.JsonSerializer.Serialize(new { RangeParameter, From, To, Club, User, Kinds, Outcomes, EntityType, EntityId, Action, Impersonated, ApiKey, Query, Correlation });
+        if (key != loadedFilterKey)
+        {
+            loadedFilterKey = key;
+            await AuditStore.LoadEvents(filter);
+        }
+
+        // A link to one entry (?event=123) opens it
+        if (OpenEventId is { } id && openedEventId != id)
+        {
+            openedEventId = id;
+            await ShowEvent(id);
+        }
+    }
+
+    private AuditEventFilter BuildFilter()
+    {
+        var now = DateTime.UtcNow;
+        var filter = new AuditEventFilter
+        {
+            ClubId = Club,
+            UserId = User,
+            Kinds = SelectedKinds.ToList(),
+            Outcomes = SelectedOutcomes.ToList(),
+            EntityType = EntityType,
+            EntityId = EntityId,
+            Action = Action,
+            ImpersonatedOnly = Impersonated,
+            ApiKeyOnly = ApiKey,
+            Search = Query,
+            CorrelationId = Correlation
+        };
+
+        // A single request is shown whole, whatever the time range
+        if (Correlation is not null)
+            return filter;
+
+        (filter.From, filter.To) = Range switch
+        {
+            "1h" => (now.AddHours(-1), (DateTime?)null),
+            "24h" => (now.AddDays(-1), null),
+            "7d" => (now.AddDays(-7), null),
+            "30d" => (now.AddDays(-30), null),
+            CustomRange => (FromDate?.ToUniversalTime(), ToDate?.AddDays(1).ToUniversalTime()),
+            _ => (null, null)
+        };
+        return filter;
+    }
+
+    private void Navigate(params (string Name, object? Value)[] changes)
+    {
+        var parameters = changes.ToDictionary(c => c.Name, c => c.Value);
+        parameters["event"] = null;
+        NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameters(parameters));
+    }
+
+    private void OnSearchChanged(string? text) => Navigate(("q", string.IsNullOrWhiteSpace(text) ? null : text.Trim()));
+
+    private void OnRangeChanged(string range) => Navigate(("range", range == DefaultRange ? null : range), ("from", null), ("to", null));
+
+    private void OnUserChanged(AdminUserResult? user)
+    {
+        selectedUser = user;
+        Navigate(("user", user?.Id), ("userName", user?.FullName));
+    }
+
+    private void ResetFilters()
+    {
+        selectedUser = null;
+        NavigationManager.NavigateTo("/admin/audit");
+    }
+
+    private async Task<IEnumerable<AdminUserResult>> SearchUsers(string? text, CancellationToken _)
+        => string.IsNullOrWhiteSpace(text) ? [] : await AdminStore.SearchUsers(text.Trim());
+
+    private static Task<IEnumerable<string>> Search(IEnumerable<string>? items, string? text)
+        => Task.FromResult((items ?? []).Where(i => string.IsNullOrWhiteSpace(text) || i.Contains(text.Trim(), StringComparison.OrdinalIgnoreCase)));
+
+    private Task OpenEvent(long id) => ShowEvent(id);
+
+    private async Task ShowEvent(long id)
+    {
+        var parameters = new DialogParameters<AuditEventDialog>
+        {
+            { d => d.EventId, id },
+            { d => d.ApplyFilter, (Action<(string, object?)[]>)(changes => Navigate(changes)) }
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true, BackdropClick = true };
+        await DialogService.ShowAsync<AuditEventDialog>(L["AuditEntry"], parameters, options);
+    }
+
+    private static string? Join<T>(IReadOnlyCollection<T> values) where T : struct, Enum
+        => values.Count == 0 ? null : string.Join(",", values);
+
+    private static List<T> ParseList<T>(string? value) where T : struct, Enum
+        => (value ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).Select(v => Enum.TryParse<T>(v, out var parsed) ? (T?)parsed : null)
+                        .Where(v => v is not null).Select(v => v!.Value).Distinct().ToList();
+
+    private static DateTime? ParseDate(string? value)
+        => DateTime.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var date) ? date : null;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => AuditStore.OnEventsChanged -= OnChanged;
+}

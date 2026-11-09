@@ -42,6 +42,7 @@ public static class AddStores
         builder.Services.AddSingleton<IClubStore, ClubStore>();
         builder.Services.AddSingleton<IFamilyStore, FamilyStore>();
         builder.Services.AddSingleton<IAdminStore, AdminStore>();
+        builder.Services.AddSingleton<IAuditStore, AuditStore>();
         builder.Services.AddSingleton<IStatisticsStore, StatisticsStore>();
         builder.Services.AddSingleton<IClubStatisticsStore, ClubStatisticsStore>();
         builder.Services.AddSingleton<ILeaderboardStore, LeaderboardStore>();

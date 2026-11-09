@@ -59,4 +59,7 @@ public class AuditEvent
     public string? Changes { get; set; }
 
     public int? DurationMs { get; set; }
+
+    /// <summary>Computed by the database from the text columns, with a trigram index for the search of the explorer.</summary>
+    public string SearchText { get; private set; } = "";
 }

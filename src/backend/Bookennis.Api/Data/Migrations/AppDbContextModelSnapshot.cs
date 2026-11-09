@@ -21,6 +21,7 @@ namespace Bookennis.Api.Data.Migrations
                 .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.HasSequence<int>("AccountingCategories_Id_Sequence")
@@ -374,6 +375,12 @@ namespace Bookennis.Api.Data.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
+                    b.Property<string>("SearchText")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasComputedColumnSql("coalesce(\"Action\", '') || ' ' || coalesce(\"Summary\", '') || ' ' || coalesce(\"ActorName\", '') || ' ' || coalesce(\"ActorEmail\", '') || ' ' || coalesce(\"SubjectName\", '') || ' ' || coalesce(\"ImpersonatorName\", '') || ' ' || coalesce(\"EntityType\", '') || ' ' || coalesce(\"EntityId\", '') || ' ' || coalesce(\"IpAddress\", '') || ' ' || coalesce(\"ErrorCode\", '') || ' ' || coalesce(\"Request\", '') || ' ' || coalesce(\"System\", '')", true);
+
                     b.Property<string>("SubjectName")
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
@@ -396,6 +403,11 @@ namespace Bookennis.Api.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CorrelationId");
+
+                    b.HasIndex("SearchText");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchText"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("SearchText"), new[] { "gin_trgm_ops" });
 
                     b.HasIndex("ActorUserId", "OccurredAt");
 

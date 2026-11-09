@@ -6,6 +6,13 @@ namespace Bookennis.Api.Data.EntityConfigurations;
 
 public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
 {
+    private static readonly string[] SearchedColumns =
+    [
+        nameof(AuditEvent.Action), nameof(AuditEvent.Summary), nameof(AuditEvent.ActorName), nameof(AuditEvent.ActorEmail), nameof(AuditEvent.SubjectName),
+        nameof(AuditEvent.ImpersonatorName), nameof(AuditEvent.EntityType), nameof(AuditEvent.EntityId), nameof(AuditEvent.IpAddress),
+        nameof(AuditEvent.ErrorCode), nameof(AuditEvent.Request), nameof(AuditEvent.System)
+    ];
+
     public void Configure(EntityTypeBuilder<AuditEvent> builder)
     {
         builder.ToTable("AuditEvents");
@@ -28,6 +35,11 @@ public class AuditEventConfiguration : IEntityTypeConfiguration<AuditEvent>
         builder.Property(e => e.Request).HasMaxLength(512);
         builder.Property(e => e.Summary).HasMaxLength(1000);
         builder.Property(e => e.Changes).HasColumnType("jsonb");
+
+        // The text the search of the explorer looks in, one column so one trigram index serves it ("||" is immutable, concat_ws is not)
+        builder.Property(e => e.SearchText).HasComputedColumnSql(
+            string.Join(" || ' ' || ", SearchedColumns.Select(c => $"coalesce(\"{c}\", '')")), stored: true);
+        builder.HasIndex(e => e.SearchText).HasMethod("gin").HasOperators("gin_trgm_ops");
 
         // The filters of the explorer: newest first, by club, by actor, by the user it is about, the history of a row, one request
         builder.HasIndex(e => new { e.OccurredAt, e.Id }).IsDescending(true, true);

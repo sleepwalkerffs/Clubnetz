@@ -709,7 +709,7 @@ The operator of the installation (ASP.NET role `Administrator`, policy `Applicat
 
 ### Overview
 
-Everything that happens in the installation is recorded in one table, `AuditEvents` (`Infrastructure/Audit`), for the application administrator. Phase 1 records; the explorer in the admin panel comes later. Club admins may get a filtered view of their own club later (`ClubId` is on every entry). Decisions: no request payloads are stored, only sensitive reads are logged, entries are kept 3 years (security entries 2 years), deleted users are pseudonymized.
+Everything that happens in the installation is recorded in one table, `AuditEvents` (`Infrastructure/Audit`), for the application administrator, who explores it at `/admin/audit`. Club admins may get a filtered view of their own club later (`ClubId` is on every entry). Decisions: no request payloads are stored, only sensitive reads are logged, entries are kept 3 years (security entries 2 years), deleted users are pseudonymized.
 
 ### What is recorded
 
@@ -725,6 +725,12 @@ Everything that happens in the installation is recorded in one table, `AuditEven
 - A handler that deletes a user calls `IAuditContext.PseudonymizeAfterCommand(userId)` (`DeleteAdminUser`, `DeleteOwnAccount`).
 - **Impersonation** (`ImpersonateUser`) keeps the administrator in the session (`ImpersonationClaims`, kept across the security stamp refresh). Entries of an impersonated session name the administrator in `ImpersonatorUserId`. `ImpersonationBanner` (in `AuthorizedLayout`) shows it and calls `POST api/Account/Impersonation/Stop` (`StopImpersonation`), which only signs the administrator back in while they still are one.
 - `AuditEvents` is no club data: the security fixture leaves it out of `Fingerprint`.
+
+### Explorer (`/admin/audit`)
+
+- API: `Controllers/Admin/AuditController` (`api/Admin/Audit`, policy `ApplicationAdministrator`, cookie only): `GetAuditEvents` (all filters of `AuditEventFilter`, keyset paging with `Cursor` on `OccurredAt`/`Id`, no total count), `GetAuditEvent` (the parsed field changes and the other entries with the same correlation id), `GetAuditFilterOptions` (clubs, entity types of the EF model, `AuditRequestKinds.LoggedActions`: taken from the code, never a scan of the table).
+- The search looks in `SearchText`, a stored generated column over the text columns with a trigram index (`pg_trgm`). A new text column that should be searchable goes into `AuditEventConfiguration.SearchedColumns` (with a migration).
+- FE: `Pages/Admin/Audit` (`AuditLog.razor`, `AuditEventDialog.razor`, `AuditDisplay`), `IAuditStore`/`IAuditHttpClient`. Every filter is a query parameter of the page (`range`, `club`, `user`, `kinds`, `outcomes`, `type`, `id`, `action`, `imp`, `key`, `q`, `request`, `event` opens one entry), so views can be shared and the back button works. The links in the dialog (user, club, record, request) filter the list.
 
 ## Memberships & Payments
 

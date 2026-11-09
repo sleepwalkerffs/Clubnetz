@@ -87,6 +87,23 @@ public class AuditLogSecurityTests(ApiSecurityFixture app)
         response.Headers.Contains("Set-Cookie").Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData("/api/Admin/Audit/Events")]
+    [InlineData("/api/Admin/Audit/Events/1")]
+    [InlineData("/api/Admin/Audit/Options")]
+    public async Task TheLog_IsOnlyForTheApplicationAdministrator(string url)
+    {
+        // Club B's admin manages a club but is no administrator of the installation; the key is one of the application administrator
+        (await app.Send(HttpMethod.Get, url, configure: Cookie(await app.Login(app.ClubB.Admin)))).Status.Should().Be(HttpStatusCode.Forbidden);
+        (await app.Send(HttpMethod.Get, url, configure: Cookie(await app.Login(app.MemberOfA)))).Status.Should().Be(HttpStatusCode.Forbidden);
+        var key = await app.NewKey(app.ClubA, app.ClubA.Admin.UserId);
+        (await app.Send(HttpMethod.Get, url, key.Bearer)).Status.Should().BeOneOf(HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden);
+        (await app.Send(HttpMethod.Get, url)).Status.Should().Be(HttpStatusCode.Unauthorized);
+
+        var asAdministrator = await app.Send(HttpMethod.Get, url, configure: Cookie(await app.Login(app.ClubA.Admin)));
+        asAdministrator.Status.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.NotFound);
+    }
+
     private static Action<HttpRequestMessage> Cookie(string cookie) => request => request.Headers.Add("Cookie", cookie);
 
     private static string SessionCookie(ApiResponse response)
