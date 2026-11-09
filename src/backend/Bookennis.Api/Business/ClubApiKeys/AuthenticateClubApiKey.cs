@@ -36,6 +36,7 @@ public record AuthenticateClubApiKey(string Token, int ClubId) : ICommand<Authen
                     k.ExpiresAt,
                     k.LastUsedAt,
                     CreatorIsAdmin = context.ClubAdmins(request.ClubId).Any(m => m.UserId == k.CreatedByUserId),
+                    CreatorName = context.Users.Where(u => u.Id == k.CreatedByUserId).Select(u => u.FirstName + " " + u.LastName).FirstOrDefault(),
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -50,9 +51,10 @@ public record AuthenticateClubApiKey(string Token, int ClubId) : ICommand<Authen
                     .ExecuteUpdateAsync(k => k.SetProperty(x => x.LastUsedAt, now), cancellationToken);
             }
 
-            return new AuthenticatedClubApiKey(key.Id, request.ClubId, key.CreatedByUserId, key.IsReadOnly);
+            return new AuthenticatedClubApiKey(key.Id, request.ClubId, key.CreatedByUserId, key.IsReadOnly, key.CreatorName);
         }
     }
 }
 
-public record AuthenticatedClubApiKey(int ClubApiKeyId, int ClubId, int UserId, bool IsReadOnly);
+/// <summary>Who a request with the key acts as. <c>UserName</c> is the creator's name, so the audit log can name them.</summary>
+public record AuthenticatedClubApiKey(int ClubApiKeyId, int ClubId, int UserId, bool IsReadOnly, string? UserName = null);

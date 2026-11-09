@@ -4,6 +4,7 @@ using System.Text.Json;
 using Bookennis.Api.Business.Account;
 using Bookennis.Api.Business.Admin;
 using Bookennis.Api.Infrastructure.Audit;
+using Bookennis.Api.Infrastructure.Authorization;
 using Bookennis.Shared.Controller.Admin.Audit;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,21 @@ public class AuditLogSecurityTests(ApiSecurityFixture app)
     }
 
     [Fact]
+    public async Task ReadOnlyKeyThatTriesToWrite_IsRecordedAsAccessDenied()
+    {
+        var key = await app.NewKey(app.ClubA, app.ClubA.Admin.UserId, isReadOnly: true);
+
+        var response = await app.Send(HttpMethod.Post, $"/api/Clubs/{app.ClubA.Id}/Bookings/BookCourt", key.Bearer, body: "{}");
+        response.Status.Should().Be(HttpStatusCode.Forbidden);
+
+        var e = await app.Db(ctx => ctx.AuditEvents.SingleAsync(x => x.Action == AccessDeniedAudit.Action && x.ApiKeyId == key.Id));
+        e.Outcome.Should().Be(AuditOutcome.Denied);
+        e.ErrorCode.Should().Be(ClubApiKeyReadOnlyFilter.ErrorCode);
+        e.ClubId.Should().Be(app.ClubA.Id);
+        e.ActorName.Should().NotBeNullOrWhiteSpace("the key acts as its creator, and the log names them");
+    }
+
+    [Fact]
     public async Task ImpersonatedSession_NamesTheAdministrator_AndGoesBackToThem()
     {
         var target = await app.NewAdmin(app.ClubA);
@@ -72,6 +88,7 @@ public class AuditLogSecurityTests(ApiSecurityFixture app)
         var started = await app.Db(ctx => ctx.AuditEvents.SingleAsync(x => x.Action == nameof(ImpersonateUser) && x.SubjectUserId == target.UserId));
         started.ActorUserId.Should().Be(administrator.UserId);
         started.Outcome.Should().Be(AuditOutcome.Succeeded);
+        started.SubjectName.Should().NotBeNullOrWhiteSpace("the impersonated user is named, not only their id");
 
         var stopped = await app.Db(ctx => ctx.AuditEvents.SingleAsync(x => x.Action == nameof(StopImpersonation) && x.ActorUserId == target.UserId));
         stopped.ImpersonatorUserId.Should().Be(administrator.UserId, "what happens in the impersonated session is the administrator's doing");

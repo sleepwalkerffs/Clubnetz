@@ -1,5 +1,6 @@
 using System.Net;
 using System.Security.Claims;
+using Bookennis.Api.Infrastructure.Audit;
 using Bookennis.Api.Infrastructure.Authorization;
 using Bookennis.Api.Infrastructure.Identity;
 using Bookennis.Shared.Controller.Shared;
@@ -9,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Xunit;
 
 namespace Bookennis.Api.Tests.Infrastructure;
@@ -20,28 +23,30 @@ public class ClubApiKeyReadOnlyFilterTests
     [InlineData("PUT")]
     [InlineData("PATCH")]
     [InlineData("DELETE")]
-    public void ReadOnlyKey_Writing_IsForbidden(string method)
+    public async Task ReadOnlyKey_Writing_IsForbidden_AndLogged(string method)
     {
-        var context = Authorize(method, ApiKey(isReadOnly: true));
+        var writer = Substitute.For<IAuditWriter>();
+        var context = await Authorize(method, ApiKey(isReadOnly: true), writer);
 
         var result = context.Result.Should().BeOfType<ObjectResult>().Subject;
         result.StatusCode.Should().Be((int)HttpStatusCode.Forbidden);
         result.Value.Should().BeOfType<ErrorCodeResponse>().Which.ErrorCode.Should().Be(ClubApiKeyReadOnlyFilter.ErrorCode);
+        await writer.Received(1).WriteAsync(Arg.Is<AuditEvent>(e => e.Action == AccessDeniedAudit.Action && e.ErrorCode == ClubApiKeyReadOnlyFilter.ErrorCode));
     }
 
     [Theory]
     [InlineData("GET")]
     [InlineData("HEAD")]
-    public void ReadOnlyKey_Reading_IsAllowed(string method)
-        => Authorize(method, ApiKey(isReadOnly: true)).Result.Should().BeNull();
+    public async Task ReadOnlyKey_Reading_IsAllowed(string method)
+        => (await Authorize(method, ApiKey(isReadOnly: true))).Result.Should().BeNull();
 
     [Fact]
-    public void FullAccessKey_Writing_IsAllowed()
-        => Authorize("DELETE", ApiKey(isReadOnly: false)).Result.Should().BeNull();
+    public async Task FullAccessKey_Writing_IsAllowed()
+        => (await Authorize("DELETE", ApiKey(isReadOnly: false))).Result.Should().BeNull();
 
     [Fact]
-    public void SignedInUser_Writing_IsAllowed()
-        => Authorize("POST", new ClaimsPrincipal(new ClaimsIdentity([new Claim("sub", "1")], "cookie"))).Result.Should().BeNull();
+    public async Task SignedInUser_Writing_IsAllowed()
+        => (await Authorize("POST", new ClaimsPrincipal(new ClaimsIdentity([new Claim("sub", "1")], "cookie")))).Result.Should().BeNull();
 
     private static ClaimsPrincipal ApiKey(bool isReadOnly)
         => new(new ClaimsIdentity(
@@ -51,13 +56,19 @@ public class ClubApiKeyReadOnlyFilterTests
             ],
             CustomAuthenticationSchemes.ClubApiKey));
 
-    private static AuthorizationFilterContext Authorize(string method, ClaimsPrincipal user)
+    private static async Task<AuthorizationFilterContext> Authorize(string method, ClaimsPrincipal user, IAuditWriter? writer = null)
     {
-        var httpContext = new DefaultHttpContext { User = user };
+        var auditContext = Substitute.For<IAuditContext>();
+        auditContext.GetActor().Returns(new AuditActor(null, null, null, null, null, 1, null, null, null, null));
+        var services = new ServiceCollection()
+                       .AddSingleton(auditContext)
+                       .AddSingleton(writer ?? Substitute.For<IAuditWriter>())
+                       .BuildServiceProvider();
+        var httpContext = new DefaultHttpContext { User = user, RequestServices = services };
         httpContext.Request.Method = method;
 
         var context = new AuthorizationFilterContext(new ActionContext(httpContext, new RouteData(), new ActionDescriptor()), []);
-        new ClubApiKeyReadOnlyFilter().OnAuthorization(context);
+        await new ClubApiKeyReadOnlyFilter().OnAuthorizationAsync(context);
         return context;
     }
 }

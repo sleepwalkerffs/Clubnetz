@@ -51,6 +51,7 @@ public class ClubApiKeyAuthenticationHandler(
                 new Claim(ClubApiKeyClaims.KeyId, key.ClubApiKeyId.ToString(CultureInfo.InvariantCulture)),
                 new Claim(ClubApiKeyClaims.ClubId, key.ClubId.ToString(CultureInfo.InvariantCulture)),
                 new Claim(ClubApiKeyClaims.ReadOnly, key.IsReadOnly ? "true" : "false"),
+                new Claim(JwtRegisteredClaimNames.Name, key.UserName ?? ""),
             ],
             Scheme.Name,
             JwtRegisteredClaimNames.Sub,

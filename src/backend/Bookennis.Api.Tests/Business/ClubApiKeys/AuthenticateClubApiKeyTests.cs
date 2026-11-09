@@ -17,7 +17,9 @@ public class AuthenticateClubApiKeyTests(TestFixture fixture) : TestBase(fixture
 
         var result = await SendAsync(new AuthenticateClubApiKey(token, TestDataSeed.ClubId));
 
-        result.Should().Be(new AuthenticatedClubApiKey(id, TestDataSeed.ClubId, TestDataSeed.AdminId, IsReadOnly: true));
+        result.Should().NotBeNull();
+        result!.UserName.Should().NotBeNullOrWhiteSpace("the audit log names who the key acts as");
+        (result with { UserName = null }).Should().Be(new AuthenticatedClubApiKey(id, TestDataSeed.ClubId, TestDataSeed.AdminId, IsReadOnly: true));
         var key = await QueryAsync(ctx => ctx.ClubApiKeys.SingleAsync());
         key.LastUsedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1));
     }

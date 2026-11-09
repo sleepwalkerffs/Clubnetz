@@ -39,6 +39,11 @@ public sealed class AuditWriter(DbContextOptions<AppDbContext> options) : IAudit
     {
         using var suppress = new TransactionScope(TransactionScopeOption.Suppress, TransactionScopeAsyncFlowOption.Enabled);
         await using var context = CreateContext();
+        // A security command about another user knows only the id of the request: the name at this moment is recorded with it
+        if (auditEvent is { SubjectUserId: int subjectId, SubjectName: null })
+            auditEvent.SubjectName = await context.Users.Where(u => u.Id == subjectId)
+                                                  .Select(u => u.FirstName + " " + u.LastName)
+                                                  .FirstOrDefaultAsync(CancellationToken.None);
         context.Add(auditEvent);
         await context.SaveChangesAsync(CancellationToken.None); // the entry is written even when the request was cancelled
     }
