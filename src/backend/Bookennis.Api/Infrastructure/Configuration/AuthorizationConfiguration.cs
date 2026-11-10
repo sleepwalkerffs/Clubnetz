@@ -3,6 +3,7 @@ using Bookennis.Api.Infrastructure.Authorization;
 using Bookennis.Api.Infrastructure.Authorization.Requirements;
 using Bookennis.Api.Infrastructure.Identity;
 using Bookennis.Domain.Members;
+using Bookennis.Domain.Permissions;
 using Bookennis.Domain.User;
 using Fusonic.Extensions.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
@@ -65,49 +66,49 @@ public static class AuthorizationConfiguration
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Treasurer, MemberRole.Admin] }))
+                          .AddRequirements(new PermissionRequirement(Permission.PaymentsManage)))
 
                 // One-Time Badge Manager Policy
                 .AddPolicy(AuthorizationPolicies.OneTimeBadgeManager, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.SportsDirector, MemberRole.YouthSportsDirector, MemberRole.Admin] }))
+                          .AddRequirements(new PermissionRequirement(Permission.OneTimeBadgesManage)))
 
                 // Club Event Manager Policy
                 .AddPolicy(AuthorizationPolicies.ClubEventManager, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Maintainer, MemberRole.SportsDirector, MemberRole.YouthSportsDirector, MemberRole.Admin] }))
+                          .AddRequirements(new PermissionRequirement(Permission.EventsManage)))
 
                 // Club Announcement Manager Policy
                 .AddPolicy(AuthorizationPolicies.ClubAnnouncementManager, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Maintainer, MemberRole.SportsDirector, MemberRole.YouthSportsDirector, MemberRole.Admin] }))
+                          .AddRequirements(new PermissionRequirement(Permission.AnnouncementsManage)))
 
                 // Court Blocking Manager Policy
                 .AddPolicy(AuthorizationPolicies.CourtBlockingManager, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Maintainer, MemberRole.SportsDirector, MemberRole.Admin] }))
+                          .AddRequirements(new PermissionRequirement(Permission.CourtBlockingsManage)))
 
                 // Club Member Viewer Policy
                 .AddPolicy(AuthorizationPolicies.ClubMemberViewer, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Maintainer, MemberRole.Admin] }))
+                          .AddRequirements(new PermissionRequirement(Permission.MembersView)))
 
                 // Club Statistics Viewer Policy
                 .AddPolicy(AuthorizationPolicies.ClubStatisticsViewer, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Maintainer, MemberRole.Admin] }))
+                          .AddRequirements(new PermissionRequirement(Permission.StatisticsView)))
 
                 // Active Member Policy: everything that shows other members
                 .AddPolicy(AuthorizationPolicies.ActiveMember, policy =>
@@ -128,7 +129,7 @@ public static class AuthorizationConfiguration
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
                           .RequireAssertion(context => !context.User.IsClubApiKey())
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Treasurer, MemberRole.Admin] }))
+                          .AddRequirements(new PermissionRequirement(Permission.CourtSalesManage)))
                 .AddPolicy(AuthorizationPolicies.OwnsCourtPurchase, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
                           .RequireAuthenticatedUser()
@@ -154,7 +155,7 @@ public static class AuthorizationConfiguration
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
                           .RequireAssertion(context => !context.User.IsClubApiKey())
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.ClubhouseHost, MemberRole.Admin] }))
+                          .AddRequirements(new PermissionRequirement(Permission.ClubhouseHost)))
 
                 // Accounting policies: cookie only, the books of the club are never open to an API key
                 .AddPolicy(AuthorizationPolicies.AccountingReader, policy =>
@@ -162,19 +163,19 @@ public static class AuthorizationConfiguration
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
                           .RequireAssertion(context => !context.User.IsClubApiKey())
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Treasurer, MemberRole.Admin, MemberRole.Auditor] }))
+                          .AddRequirements(new PermissionRequirement(Permission.AccountingRead)))
                 .AddPolicy(AuthorizationPolicies.AccountingManager, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
                           .RequireAssertion(context => !context.User.IsClubApiKey())
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Treasurer, MemberRole.Admin] }))
+                          .AddRequirements(new PermissionRequirement(Permission.AccountingManage)))
                 .AddPolicy(AuthorizationPolicies.AccountingAuditor, policy =>
                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
                           .RequireAssertion(context => !context.User.IsClubApiKey())
-                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Auditor] }))
+                          .AddRequirements(new PermissionRequirement(Permission.AccountingAudit)))
 
                 // Play request policies: cookie only. Requests are personal (who plays with whom), so they are no business of API keys
                 .AddPolicy(AuthorizationPolicies.PlayRequestMember, policy =>
