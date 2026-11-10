@@ -50,6 +50,15 @@ public class Club : DomainEntity, IAggregateRoot
     public IReadOnlyList<Season> Seasons => seasons.AsReadOnly();
     public int? BookingGracePeriodInMinutes { get; private set; }
     public bool IsAtpClub { get; private set; }
+
+    /// <summary>
+    /// The club admin changed what the roles may do: the stored <c>RolePermission</c> rows are the matrix, even when there are none left.
+    /// <c>false</c>: the defaults of <c>PermissionCatalog</c> apply.
+    /// </summary>
+    public bool HasCustomPermissions { get; private set; }
+
+    public void SetHasCustomPermissions(bool value) => HasCustomPermissions = value;
+
     public PrimeTimeSettings PrimeTimeSettings { get; private set; } = PrimeTimeSettings.Default;
 
     /// <summary>Public website of the club, available in club emails as <c>club.website_url</c>.</summary>

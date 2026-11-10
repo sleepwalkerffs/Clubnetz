@@ -223,7 +223,7 @@ else
 
     private bool IsNew => ClubAnnouncementId is null;
 
-    private bool CanManage => NewsHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.AnnouncementsManage);
 
     private string BackUrl => IsNew ? NewsHelpers.NewsUrl(ClubId) : NewsHelpers.AnnouncementUrl(ClubId, ClubAnnouncementId!.Value);
 

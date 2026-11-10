@@ -1,4 +1,6 @@
 using Bookennis.Api.Business.Members;
+using Bookennis.Api.Business.Permissions;
+using Bookennis.Domain.Permissions;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Members;
 using Bookennis.Shared.Controller.ClubProfile;
@@ -33,6 +35,18 @@ public record GetClubProfile(int UserId, int? SupportClubId = null) : IQuery<Get
                 var clubId = await context.ClubMembers.Where(m => m.Id == result.MemberId).Select(m => m.ClubId).SingleAsync(cancellationToken);
                 result.IsActiveMember = await ActiveMembership.IsActive(context, clubId, result.MemberId, cancellationToken)
                                         || request.SupportClubId is not null;
+
+                var roles = result.Role.Select(r => (MemberRole)r).ToArray();
+                var effective = await PermissionEvaluator.GetEffective(context, clubId, result.MemberId, roles, cancellationToken);
+                result.Permissions = effective.Select(p => (Bookennis.Shared.Controller.Permissions.Permission)p).ToList();
+                var scopes = await PermissionEvaluator.GetScopes(context, clubId, result.MemberId, roles, cancellationToken);
+                result.PermissionScopes = scopes.Select(s => new Bookennis.Shared.Controller.Permissions.PermissionScopeDto
+                {
+                    Permission = (Bookennis.Shared.Controller.Permissions.Permission)s.Permission,
+                    ResourceType = (Bookennis.Shared.Controller.Permissions.PermissionResourceType)s.ResourceType,
+                    AllowedIds = s.AllowedIds,
+                    DeniedIds = s.DeniedIds,
+                }).ToList();
                 return result;
             }
 
@@ -47,6 +61,7 @@ public record GetClubProfile(int UserId, int? SupportClubId = null) : IQuery<Get
                         Role = new[] { Bookennis.Shared.Controller.Shared.MemberRole.Admin },
                         IsSupportMode = true,
                         IsActiveMember = true,
+                        Permissions = PermissionCatalog.All.Select(p => (Bookennis.Shared.Controller.Permissions.Permission)p.Permission).ToList(),
                     }).FirstOrDefaultAsync(cancellationToken);
             }
 

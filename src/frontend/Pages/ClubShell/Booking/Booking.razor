@@ -185,7 +185,7 @@ else
                  CanBuy="@CanBuyOnSelectedDate"
                  OnBuySlot="@OpenBuyDialog"
                  IsBookingOnlyForChildren="@(ClubProfileStore.BookingOptions?.IsBookingOnlyForChildren ?? false)"
-                 CanBookForAnyMember="@Bookennis.Client.Pages.ClubShell.Planner.PlannerHelpers.MayBookForAnyMember(ClubProfileStore.Roles, ClubProfileStore.IsSupportMode)"
+                 CanBookForAnyMember="@(ClubProfileStore.IsSupportMode || ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.BookingsManageForAnyMember))"
                  EligibleChildMemberIds="@(ClubProfileStore.BookingOptions?.EligibleChildMemberIds ?? [])"
                  MemberChildren="@MemberChildren"
                  PlayModes="@AllowedPlaymodes"
@@ -284,7 +284,7 @@ else
         => IsBuyerView && !CanBook && CourtSalesStore.Options is { CanBuy: true } options
            && SelectedDate >= Today && SelectedDate.DayNumber - Today.DayNumber <= options.MaxDaysInAdvance;
 
-    private bool CanManageBlockings => CourtBlockingHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManageBlockings => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.CourtBlockingsManage);
 
     private int? FreeCourtsNow
     {

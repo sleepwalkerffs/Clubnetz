@@ -94,7 +94,7 @@ else
 
     private AccountingTab tab = AccountingTab.Overview;
 
-    private bool CanRead => AccountingHelpers.CanRead(ClubProfileStore.Roles);
+    private bool CanRead => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.AccountingRead);
 
     protected override async Task OnInitializedAsync()
     {

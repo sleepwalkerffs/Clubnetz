@@ -27,6 +27,15 @@ public interface IClubProfileStore : ISemaphoreStore
     /// profiles of others: the backend answers those with 403.
     /// </summary>
     bool IsActiveMember { get; }
+
+    /// <summary>
+    /// Whether the member has the permission in the club (role matrix and grants, Admin and support mode have all). Use it instead of
+    /// checking roles: the club admin decides what a role may do. A convenience only, the server decides.
+    /// </summary>
+    bool HasPermission(Bookennis.Shared.Controller.Permissions.Permission permission);
+
+    /// <summary>Whether the member has the permission for this court or play mode (grants can limit it to single ones). The server decides.</summary>
+    bool HasPermission(Bookennis.Shared.Controller.Permissions.Permission permission, Bookennis.Shared.Controller.Permissions.PermissionResourceType resourceType, int resourceId);
     GetBookingOptionsResult? BookingOptions { get; }
     Task LoadClubProfile(int clubId);
     Task LoadBookingOptions();

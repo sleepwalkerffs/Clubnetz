@@ -17,6 +17,7 @@ using Bookennis.Domain.CourtSales;
 using Bookennis.Domain.Members;
 using Bookennis.Domain.Memberships;
 using Bookennis.Domain.Notifications;
+using Bookennis.Domain.Permissions;
 using Bookennis.Domain.SubscriptionPlans;
 using Bookennis.Domain.User;
 using Fusonic.Extensions.Common.Security;
@@ -117,6 +118,8 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<WeatherForecast> WeatherForecasts => Set<WeatherForecast>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<PermissionGrant> PermissionGrants => Set<PermissionGrant>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

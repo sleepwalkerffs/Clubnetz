@@ -34,7 +34,16 @@ public static class MemberRemoval
     /// Returns the name of a club that would be left without an admin if the given members were removed, <c>null</c> if there is none.
     /// </summary>
     public static async Task<string?> FindClubLosingItsLastAdmin(AppDbContext context, IReadOnlyCollection<int> memberIds, CancellationToken cancellationToken)
-        => await (
+    {
+        // One after the other per club (and in the same order), so two admins who leave at the same time see each other
+        var adminClubIds = await context.ClubMembers.IgnoreQueryFilters()
+            .Where(m => memberIds.Contains(m.Id) && m.UserRoles.Contains(MemberRole.Admin))
+            .Select(m => m.ClubId).Distinct().OrderBy(id => id)
+            .ToListAsync(cancellationToken);
+        foreach (var clubId in adminClubIds)
+            await context.LockClubAdmins(clubId, cancellationToken);
+
+        return await (
             from member in context.ClubMembers.IgnoreQueryFilters()
             join club in context.Clubs.IgnoreQueryFilters() on member.ClubId equals club.Id
             where memberIds.Contains(member.Id)
@@ -45,6 +54,7 @@ public static class MemberRemoval
             orderby club.Name
             select club.Name
         ).FirstOrDefaultAsync(cancellationToken);
+    }
 
     /// <summary>
     /// The users the given user created for their children (<see cref="User.BelongsToUserId"/>). A child that still has another parent in one

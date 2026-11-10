@@ -192,6 +192,9 @@
   <data name="SupportModeExit" xml:space="preserve">
     <value>Back to admin panel</value>
   </data>
+  <data name="Permissions" xml:space="preserve">
+    <value>Roles &amp; permissions</value>
+  </data>
   <data name="ApiKeys" xml:space="preserve">
     <value>API keys</value>
   </data>

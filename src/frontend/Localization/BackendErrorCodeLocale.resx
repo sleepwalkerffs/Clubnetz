@@ -423,6 +423,21 @@
   <data name="PrivacyPolicyNotAccepted" xml:space="preserve">
     <value>Please confirm that you have read the privacy policy.</value>
   </data>
+  <data name="UserIsLastClubAdmin" xml:space="preserve">
+    <value>This user is the last admin of {0}. Give another member admin rights or delete the club first.</value>
+  </data>
+  <data name="LastAdminCannotBeRemoved" xml:space="preserve">
+    <value>The last admin of the club can't give up the admin role. Give another member admin rights first.</value>
+  </data>
+  <data name="PermissionRoleNotEditable" xml:space="preserve">
+    <value>The permissions of this role can't be changed.</value>
+  </data>
+  <data name="PermissionGrantForAdmin" xml:space="preserve">
+    <value>An admin always has every permission, so extra permissions can't be given to or taken from them.</value>
+  </data>
+  <data name="PermissionGrantResourceInvalid" xml:space="preserve">
+    <value>This permission can't be limited to that court or play mode.</value>
+  </data>
   <data name="LastClubAdmin" xml:space="preserve">
     <value>You are the last admin of {0}. Give another member admin rights first.</value>
   </data>

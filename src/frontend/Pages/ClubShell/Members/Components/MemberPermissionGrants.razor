@@ -1,0 +1,96 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Permissions
+@using Bookennis.Client.Pages.ClubShell.Members.Dialogs
+@using Bookennis.Client.Services.Store.Permissions
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Permissions
+@implements IDisposable
+
+@* The extra permissions of one member: more or less than their roles give. Only the admin sees this card. *@
+@if (!IsAdminMember)
+{
+    <SectionCard Emoji="🎯" Title="@L["MemberCardTitle"]" Subtitle="@L["MemberCardSubtitle"]">
+        <Actions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" Disabled="@Store.IsSaving" OnClick="Add">@L["Add"]</MudButton>
+        </Actions>
+        <ChildContent>
+            @if (Store.Grants is not { Count: > 0 } grants)
+            {
+                <div class="member-grants__empty">@L["GrantsEmpty"]</div>
+            }
+            else
+            {
+                <div class="member-grants">
+                    @foreach (var grant in grants)
+                    {
+                        <div class="member-grant member-grant--@(grant.Effect == PermissionEffect.Deny ? "deny" : "allow")">
+                            <div class="member-grant__main">
+                                <span class="member-grant__effect">@L[$"Effect_{grant.Effect}"]</span>
+                                <span class="member-grant__name">@L[$"Permission_{grant.Permission}"]</span>
+                                @if (grant.ResourceName is not null)
+                                {
+                                    <span class="member-grant__muted">@L[$"Resource_{grant.ResourceType}"]: @grant.ResourceName</span>
+                                }
+                                @if (!string.IsNullOrEmpty(grant.Note))
+                                {
+                                    <span class="member-grant__muted">“@grant.Note”</span>
+                                }
+                            </div>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@L["RemoveGrant"]" title="@L["RemoveGrant"]"
+                                           Disabled="@Store.IsSaving" OnClick="() => Remove(grant)" />
+                        </div>
+                    }
+                </div>
+            }
+        </ChildContent>
+    </SectionCard>
+}
+
+@code {
+    [Parameter, EditorRequired] public int MemberId { get; set; }
+
+    /// <summary>An admin always has every permission: nothing to add or take.</summary>
+    [Parameter] public bool IsAdminMember { get; set; }
+
+    [Inject] private IPermissionsStore Store { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<PermissionsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnPermissionsChanged += OnChanged;
+        if (!IsAdminMember)
+            await Store.LoadGrants(MemberId);
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task Add()
+    {
+        var dialog = await DialogService.ShowAsync<AddPermissionGrantDialog>(L["AddTitle"],
+            new DialogParameters<AddPermissionGrantDialog> { { x => x.MemberId, MemberId } },
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+
+        if (await dialog.Result is { Canceled: false })
+            await Store.LoadGrants(MemberId);
+    }
+
+    private async Task Remove(PermissionGrantDto grant)
+    {
+        var confirmed = await DialogService.ShowMessageBox(L["RemoveGrant"], string.Format(L["RemoveGrantConfirm"], grant.MemberName), yesText: L["RemoveGrant"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed != true)
+            return;
+
+        var result = await Store.DeleteGrant(grant.Id);
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+
+        await Store.LoadGrants(MemberId);
+    }
+
+    public void Dispose() => Store.OnPermissionsChanged -= OnChanged;
+}

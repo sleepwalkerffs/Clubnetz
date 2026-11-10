@@ -80,12 +80,15 @@ else
                                         <span>@CourtBlockingHelpers.CourtsText(L, blocking.CourtIds, ClubStore.Courts)</span>
                                     </div>
                                 </div>
-                                <div class="blocking__actions">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@SharedLocale["Edit"]" title="@SharedLocale["Edit"]"
-                                                   OnClick="() => OpenDialog(blocking)" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@SharedLocale["Delete"]" title="@SharedLocale["Delete"]"
-                                                   Disabled="@Store.IsSaving" OnClick="() => Delete(blocking)" />
-                                </div>
+                                @if (MayChange(blocking))
+                                {
+                                    <div class="blocking__actions">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" aria-label="@SharedLocale["Edit"]" title="@SharedLocale["Edit"]"
+                                                       OnClick="() => OpenDialog(blocking)" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@SharedLocale["Delete"]" title="@SharedLocale["Delete"]"
+                                                       Disabled="@Store.IsSaving" OnClick="() => Delete(blocking)" />
+                                    </div>
+                                }
                             </div>
                         }
                     </div>
@@ -111,7 +114,13 @@ else
 
     private bool showPast;
 
-    private bool CanManage => CourtBlockingHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.CourtBlockingsManage);
+
+    // A grant can limit the member to single courts: offer only those, and only blockings that touch nothing else
+    private bool MayBlock(int courtId)
+        => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.CourtBlockingsManage, Bookennis.Shared.Controller.Permissions.PermissionResourceType.Court, courtId);
+
+    private bool MayChange(CourtBlockingDto blocking) => blocking.CourtIds.All(MayBlock);
 
     protected override async Task OnInitializedAsync()
     {
@@ -132,7 +141,7 @@ else
 
     private async Task OpenDialog(CourtBlockingDto? blocking)
     {
-        var parameters = new DialogParameters<EditCourtBlockingDialog> { { d => d.Blocking, blocking }, { d => d.Courts, ClubStore.Courts } };
+        var parameters = new DialogParameters<EditCourtBlockingDialog> { { d => d.Blocking, blocking }, { d => d.Courts, ClubStore.Courts.Where(c => MayBlock(c.CourtId)).ToList() } };
         var dialog = await DialogService.ShowAsync<EditCourtBlockingDialog>(L[blocking is null ? "NewTitle" : "EditTitle"], parameters,
             new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
 

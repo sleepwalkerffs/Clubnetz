@@ -1,3 +1,4 @@
+using Bookennis.Client.Services.HttpClients.Permissions;
 using Bookennis.Client.Services.HttpClients.Weather;
 using Bookennis.Client.Services.HttpClients.Profile;
 using Bookennis.Client.Services.HttpClients.Family;
@@ -245,6 +246,7 @@ public static class AddHttpClients
         services.AddClubHttpClient<ICourtSalesHttpClient, CourtSalesHttpClient>("CourtSales");
         services.AddClubHttpClient<IClubhouseHttpClient, ClubhouseHttpClient>("Clubhouse");
         services.AddClubHttpClient<IWeatherHttpClient, WeatherHttpClient>("Weather");
+        services.AddClubHttpClient<IPermissionsHttpClient, PermissionsHttpClient>("Permissions");
         services.AddClubHttpClient<IAccountingHttpClient, AccountingHttpClient>("Accounting");
         services.AddClubHttpClient<IPaymentAccountHttpClient, PaymentAccountHttpClient>("Payments");
 

@@ -208,9 +208,7 @@
 
     private bool isAdmin => ClubProfileStore.Roles.Contains(MemberRole.Admin);
 
-    private bool canManageOneTimeBadges => isAdmin
-                                           || ClubProfileStore.Roles.Contains(MemberRole.SportsDirector)
-                                           || ClubProfileStore.Roles.Contains(MemberRole.YouthSportsDirector);
+    private bool canManageOneTimeBadges => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.OneTimeBadgesManage);
 
     private List<SeasonResult> SeasonsNewestFirst => ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList();
 

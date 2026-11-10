@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Title" xml:space="preserve"><value>Rollen &amp; Berechtigungen</value></data>
+  <data name="Subtitle" xml:space="preserve"><value>Lege fest, was jede Rolle in deinem Verein tun und sehen darf, und gib einzelnen Mitgliedern mehr oder weniger.</value></data>
+  <data name="NoAccess" xml:space="preserve"><value>Nur Vereinsadmins können Berechtigungen verwalten.</value></data>
+  <data name="AdminAlwaysHint" xml:space="preserve"><value>Admins haben immer alle Berechtigungen, das lässt sich nicht ändern. So kann sich der Verein nie aussperren. Auch der letzte Admin eines Vereins kann die Admin-Rolle nicht abgeben. Mit 💶 markierte Berechtigungen betreffen Geld: sie gelten nur bei Anmeldung, nie mit einem API-Schlüssel.</value></data>
+  <data name="MatrixTitle" xml:space="preserve"><value>Was jede Rolle darf</value></data>
+  <data name="MatrixSubtitle" xml:space="preserve"><value>Änderungen gelten sofort.</value></data>
+  <data name="Permission" xml:space="preserve"><value>Berechtigung</value></data>
+  <data name="AdminLocked" xml:space="preserve"><value>Admins haben immer alle Berechtigungen</value></data>
+  <data name="MoneyHint" xml:space="preserve"><value>Geld: nur bei Anmeldung, nie mit einem API-Schlüssel</value></data>
+  <data name="ResetRole" xml:space="preserve"><value>Auf Standard zurücksetzen</value></data>
+  <data name="ResetRoleFor" xml:space="preserve"><value>{0} auf Standard zurücksetzen</value></data>
+  <data name="ResetAll" xml:space="preserve"><value>Alle auf Standard zurücksetzen</value></data>
+  <data name="ResetAllTitle" xml:space="preserve"><value>Alle Rollen zurücksetzen?</value></data>
+  <data name="ResetAllConfirm" xml:space="preserve"><value>Jede Rolle bekommt wieder die Standard-Berechtigungen. Zusätzliche Berechtigungen einzelner Mitglieder bleiben.</value></data>
+  <data name="PermissionCount" xml:space="preserve"><value>{0} von {1}</value></data>
+  <data name="Saved" xml:space="preserve"><value>Gespeichert</value></data>
+  <data name="Area_Members" xml:space="preserve"><value>Mitglieder &amp; Statistik</value></data>
+  <data name="Area_Planning" xml:space="preserve"><value>News, Termine &amp; Abzeichen</value></data>
+  <data name="Area_Bookings" xml:space="preserve"><value>Plätze &amp; Buchungen</value></data>
+  <data name="Area_Money" xml:space="preserve"><value>Geld</value></data>
+  <data name="Permission_MembersView" xml:space="preserve"><value>Alle Mitglieder sehen</value></data>
+  <data name="PermissionDesc_MembersView" xml:space="preserve"><value>Die Mitgliederliste und die Details jedes Mitglieds (E-Mail, Geburtstag, Saisonen), ohne sie zu ändern.</value></data>
+  <data name="Permission_StatisticsView" xml:space="preserve"><value>Vereinsstatistik sehen</value></data>
+  <data name="PermissionDesc_StatisticsView" xml:space="preserve"><value>Die Statistik des ganzen Vereins.</value></data>
+  <data name="Permission_EventsManage" xml:space="preserve"><value>Termine verwalten</value></data>
+  <data name="PermissionDesc_EventsManage" xml:space="preserve"><value>Termine im Vereinskalender planen, ändern und löschen.</value></data>
+  <data name="Permission_AnnouncementsManage" xml:space="preserve"><value>News verwalten</value></data>
+  <data name="PermissionDesc_AnnouncementsManage" xml:space="preserve"><value>Ankündigungen schreiben und per E-Mail versenden.</value></data>
+  <data name="Permission_OneTimeBadgesManage" xml:space="preserve"><value>Einmalige Abzeichen verwalten</value></data>
+  <data name="PermissionDesc_OneTimeBadgesManage" xml:space="preserve"><value>Abzeichen für besondere Leistungen anlegen und an Mitglieder vergeben.</value></data>
+  <data name="Permission_CourtBlockingsManage" xml:space="preserve"><value>Plätze sperren</value></data>
+  <data name="PermissionDesc_CourtBlockingsManage" xml:space="preserve"><value>Plätze für Turniere, Instandhaltung oder Wetter sperren. Für ein Mitglied auf einzelne Plätze beschränkbar.</value></data>
+  <data name="Permission_BookingsManageForAnyMember" xml:space="preserve"><value>Für jedes Mitglied buchen</value></data>
+  <data name="PermissionDesc_BookingsManageForAnyMember" xml:space="preserve"><value>Plätze für Mitglieder buchen, ohne selbst zu spielen. Alle Buchungsregeln gelten weiterhin. Für ein Mitglied auf einzelne Spielarten beschränkbar.</value></data>
+  <data name="Permission_PaymentsManage" xml:space="preserve"><value>Mitgliedsbeiträge verwalten</value></data>
+  <data name="PermissionDesc_PaymentsManage" xml:space="preserve"><value>Mitgliedschaftspläne, Bestellungen und Zahlungen sowie das Zusammenstellen von Familien dafür.</value></data>
+  <data name="Permission_CourtSalesManage" xml:space="preserve"><value>Platzverkauf verwalten</value></data>
+  <data name="PermissionDesc_CourtSalesManage" xml:space="preserve"><value>Preise, Verkäufe und Buchungsguthaben für gekaufte Platzzeit.</value></data>
+  <data name="Permission_ClubhouseHost" xml:space="preserve"><value>Das Clubhaus führen</value></data>
+  <data name="PermissionDesc_ClubhouseHost" xml:space="preserve"><value>Die Speisekarte und die Rechnungen der Gäste.</value></data>
+  <data name="Permission_AccountingRead" xml:space="preserve"><value>Finanzen lesen</value></data>
+  <data name="PermissionDesc_AccountingRead" xml:space="preserve"><value>Die gesamte Buchhaltung, Belege und Berichte, ohne sie zu ändern.</value></data>
+  <data name="Permission_AccountingManage" xml:space="preserve"><value>Die Bücher führen</value></data>
+  <data name="PermissionDesc_AccountingManage" xml:space="preserve"><value>Buchungen, Bankimport, Rechnungen und die Einrichtung der Buchhaltung.</value></data>
+  <data name="Permission_AccountingAudit" xml:space="preserve"><value>Finanzen prüfen</value></data>
+  <data name="PermissionDesc_AccountingAudit" xml:space="preserve"><value>Die Prüfung eines Geschäftsjahres erfassen.</value></data>
+  <data name="GrantsTitle" xml:space="preserve"><value>Zusätzliche Berechtigungen für einzelne Mitglieder</value></data>
+  <data name="GrantsSubtitle" xml:space="preserve"><value>Gib einem Mitglied mehr oder nimm etwas weg, unabhängig von seinen Rollen. Ein „Verbot“ gewinnt immer.</value></data>
+  <data name="GrantsEmpty" xml:space="preserve"><value>Noch keine zusätzlichen Berechtigungen.</value></data>
+  <data name="GrantsHowTo" xml:space="preserve"><value>Zum Hinzufügen öffne das Mitglied in der Mitgliederliste und nutze „Zusätzliche Berechtigungen“.</value></data>
+  <data name="Effect_Allow" xml:space="preserve"><value>Erlaubt</value></data>
+  <data name="Effect_Deny" xml:space="preserve"><value>Verboten</value></data>
+  <data name="Resource_Court" xml:space="preserve"><value>Platz</value></data>
+  <data name="Resource_PlayMode" xml:space="preserve"><value>Spielart</value></data>
+  <data name="RemoveGrant" xml:space="preserve"><value>Entfernen</value></data>
+  <data name="RemoveGrantConfirm" xml:space="preserve"><value>Diese zusätzliche Berechtigung von {0} entfernen?</value></data>
+  <data name="MemberCardTitle" xml:space="preserve"><value>Zusätzliche Berechtigungen</value></data>
+  <data name="MemberCardSubtitle" xml:space="preserve"><value>Mehr oder weniger, als die Rollen dieses Mitglieds geben.</value></data>
+  <data name="Add" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="AddTitle" xml:space="preserve"><value>Neue zusätzliche Berechtigung</value></data>
+  <data name="Create" xml:space="preserve"><value>Speichern</value></data>
+  <data name="Effect" xml:space="preserve"><value>Wirkung</value></data>
+  <data name="Scope" xml:space="preserve"><value>Gilt für</value></data>
+  <data name="WholeClub" xml:space="preserve"><value>Den ganzen Verein</value></data>
+  <data name="Note" xml:space="preserve"><value>Notiz (optional)</value></data>
+  <data name="AdminHint" xml:space="preserve"><value>Admins haben immer alle Berechtigungen, ihnen können keine zusätzlichen Berechtigungen gegeben werden.</value></data>
+</root>

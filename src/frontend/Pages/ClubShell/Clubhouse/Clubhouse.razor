@@ -88,7 +88,7 @@ else
     private string search = "";
     private int? openingMemberId;
 
-    private bool CanManage => ClubProfileStore.IsSupportMode || ClubhouseHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.IsSupportMode || ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.ClubhouseHost);
 
     private bool IsSearching => !string.IsNullOrWhiteSpace(search);
 

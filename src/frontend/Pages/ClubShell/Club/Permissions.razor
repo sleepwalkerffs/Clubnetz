@@ -1,0 +1,236 @@
+@page "/clubs/{ClubId:int}/permissions"
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Permissions
+@using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Services.Store.Permissions
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Permissions
+@using Bookennis.Shared.Controller.Shared
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+@implements IDisposable
+
+<PageTitle>@L["Title"]</PageTitle>
+
+@if (!CanManage)
+{
+    <MudAlert Severity="Severity.Info">@L["NoAccess"]</MudAlert>
+}
+else if (Store.Matrix is not { } matrix)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+else
+{
+    <div class="permissions-page">
+        <AdminHero Emoji="🛡️" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Title"]" Subtitle="@L["Subtitle"]" />
+
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">@L["AdminAlwaysHint"]</MudAlert>
+
+        <SectionCard Emoji="🔐" Title="@L["MatrixTitle"]" Subtitle="@L["MatrixSubtitle"]">
+            <Actions>
+                <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.RestartAlt" Disabled="@Store.IsSaving" OnClick="ResetAll">@L["ResetAll"]</MudButton>
+            </Actions>
+            <ChildContent>
+                @* Desktop: roles as columns *@
+                <div class="perm-table-wrap">
+                    <table class="perm-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">@L["Permission"]</th>
+                                <th scope="col" class="perm-table__role perm-table__role--locked">@SharedLocale["Role_Admin"]<span class="perm-table__lock" title="@L["AdminLocked"]">🔒</span></th>
+                                @foreach (var role in matrix.Roles)
+                                {
+                                    <th scope="col" class="perm-table__role">
+                                        @SharedLocale[$"Role_{role.Role}"]
+                                        @if (!IsDefault(role))
+                                        {
+                                            <button type="button" class="perm-table__reset" title="@L["ResetRole"]" aria-label="@string.Format(L["ResetRoleFor"], SharedLocale[$"Role_{role.Role}"])" disabled="@Store.IsSaving" @onclick="() => ResetRole(role.Role)">↺</button>
+                                        }
+                                    </th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var area in matrix.Catalog.GroupBy(p => p.Area))
+                            {
+                                <tr class="perm-table__area"><th colspan="@(matrix.Roles.Count + 2)" scope="colgroup">@L[$"Area_{area.Key}"]</th></tr>
+                                @foreach (var permission in area)
+                                {
+                                    <tr>
+                                        <th scope="row" class="perm-table__name">
+                                            <span class="perm-name">@L[$"Permission_{permission.Permission}"]@if (permission.IsMoney) { <span class="perm-money" title="@L["MoneyHint"]">💶</span> }</span>
+                                            <span class="perm-desc">@L[$"PermissionDesc_{permission.Permission}"]</span>
+                                        </th>
+                                        <td class="perm-table__cell"><MudCheckBox T="bool" Value="true" Disabled="true" Dense="true" aria-label="@L["AdminLocked"]" /></td>
+                                        @foreach (var role in matrix.Roles)
+                                        {
+                                            <td class="perm-table__cell">
+                                                <MudCheckBox T="bool" Value="@role.Permissions.Contains(permission.Permission)" Dense="true" Disabled="@Store.IsSaving"
+                                                             ValueChanged="(bool on) => Toggle(role, permission.Permission, on)"
+                                                             aria-label="@($"{SharedLocale[$"Role_{role.Role}"]}: {L[$"Permission_{permission.Permission}"]}")" />
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @* Mobile: one card per role *@
+                <div class="perm-roles">
+                    @foreach (var role in matrix.Roles)
+                    {
+                        <MudExpansionPanels Class="perm-role" Elevation="0">
+                            <MudExpansionPanel>
+                                <TitleContent>
+                                    <div class="perm-role__title">
+                                        <span>@SharedLocale[$"Role_{role.Role}"]</span>
+                                        <span class="perm-role__count">@string.Format(L["PermissionCount"], role.Permissions.Count, matrix.Catalog.Count)</span>
+                                    </div>
+                                </TitleContent>
+                                <ChildContent>
+                                    @foreach (var permission in matrix.Catalog)
+                                    {
+                                        <div class="perm-role__row">
+                                            <MudSwitch T="bool" Value="@role.Permissions.Contains(permission.Permission)" Color="Color.Primary" Disabled="@Store.IsSaving"
+                                                       ValueChanged="(bool on) => Toggle(role, permission.Permission, on)" Label="@L[$"Permission_{permission.Permission}"]" />
+                                            <div class="perm-desc">@L[$"PermissionDesc_{permission.Permission}"]</div>
+                                        </div>
+                                    }
+                                    @if (!IsDefault(role))
+                                    {
+                                        <MudButton Variant="Variant.Text" Size="Size.Small" StartIcon="@Icons.Material.Filled.RestartAlt" Disabled="@Store.IsSaving" OnClick="() => ResetRole(role.Role)">@L["ResetRole"]</MudButton>
+                                    }
+                                </ChildContent>
+                            </MudExpansionPanel>
+                        </MudExpansionPanels>
+                    }
+                </div>
+            </ChildContent>
+        </SectionCard>
+
+        <SectionCard Emoji="🎯" Title="@L["GrantsTitle"]" Subtitle="@L["GrantsSubtitle"]">
+            @if (Store.Grants is not { Count: > 0 } grants)
+            {
+                <div class="perm-empty">@L["GrantsEmpty"]</div>
+            }
+            else
+            {
+                <div class="perm-grants">
+                    @foreach (var grant in grants)
+                    {
+                        <div class="perm-grant perm-grant--@(grant.Effect == PermissionEffect.Deny ? "deny" : "allow")">
+                            <div class="perm-grant__main">
+                                <a class="perm-grant__member" href="/clubs/@ClubId/members/@grant.MemberId">@grant.MemberName</a>
+                                <span class="perm-grant__effect">@L[$"Effect_{grant.Effect}"]</span>
+                                <span>@L[$"Permission_{grant.Permission}"]</span>
+                                @if (grant.ResourceName is not null)
+                                {
+                                    <span class="perm-grant__resource">@L[$"Resource_{grant.ResourceType}"]: @grant.ResourceName</span>
+                                }
+                                @if (!string.IsNullOrEmpty(grant.Note))
+                                {
+                                    <span class="perm-grant__note">“@grant.Note”</span>
+                                }
+                            </div>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="@L["RemoveGrant"]" title="@L["RemoveGrant"]"
+                                           Disabled="@Store.IsSaving" OnClick="() => RemoveGrant(grant)" />
+                        </div>
+                    }
+                </div>
+            }
+            <div class="perm-hint">💡 @L["GrantsHowTo"]</div>
+        </SectionCard>
+    </div>
+}
+
+@code {
+    [Parameter] public int ClubId { get; set; }
+
+    [Inject] private IPermissionsStore Store { get; set; } = null!;
+    [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IStringLocalizer<PermissionsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+
+    /// <summary>Same as the backend policy <c>PermissionManager</c> (support mode reports the role Admin).</summary>
+    private bool CanManage => ClubProfileStore.Roles.Contains(MemberRole.Admin);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.OnPermissionsChanged += OnChanged;
+        ClubProfileStore.OnClubProfileChanged += OnProfileChanged;
+
+        if (ClubProfileStore.IsClubProfileLoaded && CanManage)
+            await Reload();
+    }
+
+    /// <summary>The club profile may arrive after the page was opened (direct link, refresh): load what only an admin may see once it did.</summary>
+    private async void OnProfileChanged()
+    {
+        await InvokeAsync(async () =>
+        {
+            if (CanManage && Store.Matrix is null)
+                await Reload();
+            StateHasChanged();
+        });
+    }
+
+    private async Task Reload()
+    {
+        await Store.LoadMatrix();
+        await Store.LoadGrants(null);
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private static bool IsDefault(RolePermissionsDto role) => role.Permissions.Order().SequenceEqual(role.DefaultPermissions.Order());
+
+    private async Task Toggle(RolePermissionsDto role, Permission permission, bool on)
+    {
+        var permissions = role.Permissions.Where(p => p != permission).ToList();
+        if (on)
+            permissions.Add(permission);
+
+        await Save(await Store.UpdateRole(role.Role, permissions));
+    }
+
+    private async Task ResetRole(MemberRole role) => await Save(await Store.ResetRole(role));
+
+    private async Task ResetAll()
+    {
+        var confirmed = await DialogService.ShowMessageBox(L["ResetAllTitle"], L["ResetAllConfirm"], yesText: L["ResetAll"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed == true)
+            await Save(await Store.ResetAll());
+    }
+
+    private async Task RemoveGrant(PermissionGrantDto grant)
+    {
+        var confirmed = await DialogService.ShowMessageBox(L["RemoveGrant"], string.Format(L["RemoveGrantConfirm"], grant.MemberName), yesText: L["RemoveGrant"], cancelText: SharedLocale["Cancel"]);
+        if (confirmed == true)
+            await Save(await Store.DeleteGrant(grant.Id));
+    }
+
+    private async Task Save(Bookennis.Client.Services.HttpClients.HttpResult result)
+    {
+        if (!result.Success)
+            Snackbar.ShowErrorDetails(result, BackendLocale);
+        else
+            Snackbar.Add(L["Saved"], Severity.Success);
+
+        await Reload();
+    }
+
+    public void Dispose()
+    {
+        Store.OnPermissionsChanged -= OnChanged;
+        ClubProfileStore.OnClubProfileChanged -= OnProfileChanged;
+    }
+}

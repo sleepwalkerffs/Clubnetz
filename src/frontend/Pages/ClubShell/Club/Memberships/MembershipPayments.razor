@@ -248,7 +248,7 @@ else
     private string? search;
     private int visibleCount = PageSize;
 
-    private bool CanManage => MembershipHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.PaymentsManage);
 
     private List<SeasonResult> SeasonsNewestFirst => ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList();
 

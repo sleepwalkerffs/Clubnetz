@@ -486,6 +486,13 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
         seeded.PlayRequestId = playRequest.Id;
         seeded.PlayerGroupId = playerGroup.Id;
 
+        // Permissions: an extra permission taken from the plain member (nothing the other tests rely on)
+        var permissionGrant = new Bookennis.Domain.Permissions.PermissionGrant(club.Id, seeded.Member.MemberId, Bookennis.Domain.Permissions.Permission.OneTimeBadgesManage,
+            null, null, Bookennis.Domain.Permissions.PermissionEffect.Deny, seeded.Admin.MemberId, $"Grant {text}");
+        context.Add(permissionGrant);
+        await context.SaveChangesAsync();
+        seeded.PermissionGrantId = permissionGrant.Id;
+
         // Accounting: the books of the club with a bank account, a category, a cost center, an entry of the plain member with a
         // receipt, and a receipt in the inbox, all with the text of the club
         var fiscalYear = FiscalYear.First(club.Id, 1, today.Year, today);
@@ -665,6 +672,7 @@ public sealed class SeededClub
     public int BoughtBookingId { get; set; }
     public int ClubhouseItemId { get; set; }
     public int ClubhouseTabId { get; set; }
+    public int PermissionGrantId { get; set; }
     public int ClubhouseTabLineId { get; set; }
     public int ClubhouseTabPaymentId { get; set; }
 

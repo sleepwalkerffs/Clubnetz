@@ -34,7 +34,7 @@ public class CourtPurchaseAuthorizationHandler(AppDbContext dbContext, ITenantSe
         if (memberId is null || roles is null)
             return;
 
-        if (!resource.BuyerOnly && (roles.Contains(MemberRole.Admin) || roles.Contains(MemberRole.Treasurer)))
+        if (!resource.BuyerOnly && await Bookennis.Api.Business.Permissions.PermissionEvaluator.Has(dbContext, clubId, memberId.Value, roles, Bookennis.Domain.Permissions.Permission.CourtSalesManage, null, null, CancellationToken.None))
         {
             context.Succeed(requirement);
             return;

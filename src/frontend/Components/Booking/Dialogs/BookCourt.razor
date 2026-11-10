@@ -137,6 +137,8 @@
     [Inject]
     private IBookingStore BookingStore { get; set; } = null!;
     [Inject]
+    private Bookennis.Client.Services.Store.ClubProfile.IClubProfileStore ClubProfileStore { get; set; } = null!;
+    [Inject]
     private IWeatherStore WeatherStore { get; set; } = null!;
     [Inject]
     private ISnackbar snackbar { get; set; } = null!;
@@ -156,23 +158,28 @@
     private List<PlayerResult> FixedPlayerAlternatives => FixedPlayer is null ? [] : [.. MemberChildren, FixedPlayer];
     private List<PlayerResult> EligibleChildren => MemberChildren.Where(c => EligibleChildMemberIds.Contains(c.MemberId)).ToList();
 
-    private bool ShowPlayerSelection => selectedPlayMode.FixedPlayerCount.HasValue || IsBookingOnlyForChildren || CanBookForAnyMember;
+    // A grant can limit booking for others to single play modes: in the others the member books as a player, like everyone
+    private bool ForAnyMember => CanBookForAnyMember
+        && ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.BookingsManageForAnyMember,
+            Bookennis.Shared.Controller.Permissions.PermissionResourceType.PlayMode, selectedPlayMode.Id);
+
+    private bool ShowPlayerSelection => selectedPlayMode.FixedPlayerCount.HasValue || IsBookingOnlyForChildren || ForAnyMember;
 
     // Staff start with themself in the list and may remove themself
-    private List<PlayerResult> InitialPlayers => CanBookForAnyMember && FixedPlayer is not null ? [FixedPlayer] : [];
+    private List<PlayerResult> InitialPlayers => ForAnyMember && FixedPlayer is not null ? [FixedPlayer] : [];
 
     // When booking for children without a FixedPlayerCount, show 1 slot for child selection
-    private int? MaxPlayersForSelection => selectedPlayMode.FixedPlayerCount ?? (IsBookingOnlyForChildren && !CanBookForAnyMember ? 1 : null);
+    private int? MaxPlayersForSelection => selectedPlayMode.FixedPlayerCount ?? (IsBookingOnlyForChildren && !ForAnyMember ? 1 : null);
 
     private PlayerResult? BookingFixedPlayer =>
-        CanBookForAnyMember
+        ForAnyMember
             ? null
             : IsBookingOnlyForChildren
                 ? EligibleChildren.FirstOrDefault()
                 : FixedPlayer;
 
     private List<PlayerResult> BookingFixedPlayerAlternatives =>
-        CanBookForAnyMember
+        ForAnyMember
             ? []
             : IsBookingOnlyForChildren
                 ? EligibleChildren
@@ -204,7 +211,7 @@
     private TimeSpan? SelectedPreset => SummaryDuration is { } duration && DurationPresets.Contains(duration) ? duration : null;
 
     private bool CanSubmit => !submitting && SelectedCourt is not null && Time is not null && SummaryDuration is not null
-        && (!CanBookForAnyMember || PlayerSelectionComponent is not { SelectedPlayers.Count: 0 });
+        && (!ForAnyMember || PlayerSelectionComponent is not { SelectedPlayers.Count: 0 });
 
     protected override void OnParametersSet()
     {

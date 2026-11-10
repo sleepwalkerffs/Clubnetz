@@ -118,7 +118,7 @@
     /// Only a member who is the host or an admin connects the account where the money goes: not in support mode, where there is no
     /// member (the server refuses it too).
     /// </summary>
-    private bool CanConnect => !ClubProfileStore.IsSupportMode && ClubhouseHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanConnect => !ClubProfileStore.IsSupportMode && ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.ClubhouseHost);
 
     protected override async Task OnInitializedAsync()
     {
