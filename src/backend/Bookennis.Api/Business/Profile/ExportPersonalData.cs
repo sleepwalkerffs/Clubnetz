@@ -145,6 +145,15 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                 select new PersonalDataBookingCredit(club.Name, grant.Count, grant.Reason, grant.Note, grant.Metadata.Created)
             ).ToListAsync(cancellationToken);
 
+            // Extra permissions admins gave or took (the role matrix is not personal)
+            var permissionGrants = await (
+                from grant in context.PermissionGrants.IgnoreQueryFilters()
+                join club in context.Clubs.IgnoreQueryFilters() on grant.ClubId equals club.Id
+                where memberIds.Contains(grant.MemberId)
+                orderby grant.Id
+                select new PersonalDataPermissionGrant(club.Name, grant.Permission, grant.ResourceType, grant.ResourceId, grant.Effect, grant.Note, grant.Metadata.Created)
+            ).ToListAsync(cancellationToken);
+
             // What the clubhouse host booked onto the own tabs
             var clubhouseTabs = await (
                 from tab in context.ClubhouseTabs.IgnoreQueryFilters()
@@ -292,7 +301,8 @@ public record ExportPersonalData : IQuery<PersonalDataExport>
                     e.Club, e.Date, e.Text, e.CounterpartyName, e.Status,
                     e.Lines.ConvertAll(l => new PersonalDataAccountingLine(categoryNames.GetValueOrDefault(l.CategoryId, ""), l.AmountCents / 100m)))),
                 accountingProposals,
-                invoices);
+                invoices,
+                permissionGrants);
         }
 
         private static string? NullIfEmpty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
@@ -317,7 +327,11 @@ public record PersonalDataExport(
     List<PersonalDataClubhouseTab> ClubhouseTabs,
     List<PersonalDataAccountingEntry> AccountingEntries,
     List<PersonalDataAccountingProposal> AccountingProposals,
-    List<PersonalDataInvoice> Invoices);
+    List<PersonalDataInvoice> Invoices,
+    List<PersonalDataPermissionGrant> PermissionGrants);
+
+/// <summary>An extra permission (or a taken one) an admin gave the member, see <c>PermissionGrant</c>.</summary>
+public record PersonalDataPermissionGrant(string Club, Bookennis.Domain.Permissions.Permission Permission, Bookennis.Domain.Permissions.PermissionResourceType? ResourceType, int? ResourceId, Bookennis.Domain.Permissions.PermissionEffect Effect, string? Note, DateTime GrantedAt);
 
 public record PersonalDataAccountingProposal(string Club, DateOnly Date, string Text, string? Counterparty, decimal Amount, Bookennis.Domain.Accounting.AccountingProposalStatus Status);
 
