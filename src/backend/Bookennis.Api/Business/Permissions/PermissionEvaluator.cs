@@ -93,4 +93,49 @@ public static class PermissionEvaluator
 
         return result;
     }
+
+    /// <summary>
+    /// The permissions the member has only for some resources, or not for some: so the app offers only the courts or play modes that
+    /// <see cref="Has"/> would allow. Admins have no limits.
+    /// </summary>
+    public static async Task<List<PermissionScope>> GetScopes(AppDbContext context, int clubId, int memberId, IReadOnlyCollection<MemberRole> roles, CancellationToken cancellationToken)
+    {
+        if (roles.Contains(MemberRole.Admin))
+            return [];
+
+        var grants = await context.PermissionGrants
+            .IgnoreQueryFilters()
+            .Where(g => g.ClubId == clubId && g.MemberId == memberId)
+            .Select(g => new { g.Permission, g.ResourceType, g.ResourceId, g.Effect })
+            .ToListAsync(cancellationToken);
+        if (grants.Count == 0)
+            return [];
+
+        var matrix = await GetRoleMatrix(context, clubId, cancellationToken);
+
+        var result = new List<PermissionScope>();
+        foreach (var info in PermissionCatalog.All.Where(i => i.ResourceType is not null))
+        {
+            var own = grants.Where(g => g.Permission == info.Permission).ToList();
+            if (own.Count == 0 || own.Any(g => g.ResourceType is null && g.Effect == PermissionEffect.Deny))
+                continue;
+
+            List<int> IdsWith(PermissionEffect effect) => own
+                .Where(g => g.ResourceType == info.ResourceType && g.Effect == effect && g.ResourceId is not null)
+                .Select(g => g.ResourceId!.Value).Distinct().Order().ToList();
+
+            var denied = IdsWith(PermissionEffect.Deny);
+            var everywhere = own.Any(g => g.ResourceType is null && g.Effect == PermissionEffect.Allow)
+                             || roles.Any(role => matrix.TryGetValue(role, out var permissions) && permissions.Contains(info.Permission));
+            var allowed = everywhere ? null : IdsWith(PermissionEffect.Allow).Except(denied).ToList();
+
+            if (allowed is not null || denied.Count > 0)
+                result.Add(new PermissionScope(info.Permission, info.ResourceType!.Value, allowed, denied));
+        }
+
+        return result;
+    }
 }
+
+/// <summary>A permission that holds only for <paramref name="AllowedIds"/> (null: every resource) and never for <paramref name="DeniedIds"/>.</summary>
+public record PermissionScope(Permission Permission, PermissionResourceType ResourceType, List<int>? AllowedIds, List<int> DeniedIds);

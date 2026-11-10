@@ -26,5 +26,11 @@ public record GetClubProfileResult
     /// or hide things, the server decides.
     /// </summary>
     public List<Bookennis.Shared.Controller.Permissions.Permission> Permissions { get; set; } = [];
+
+    /// <summary>
+    /// Permissions of <see cref="Permissions"/> that hold only for some courts or play modes, or not for some (grants limited to a resource).
+    /// A permission that is not listed holds for every resource.
+    /// </summary>
+    public List<Bookennis.Shared.Controller.Permissions.PermissionScopeDto> PermissionScopes { get; set; } = [];
 }
 

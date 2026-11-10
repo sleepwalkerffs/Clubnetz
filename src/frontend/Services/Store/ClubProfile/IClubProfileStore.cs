@@ -33,6 +33,9 @@ public interface IClubProfileStore : ISemaphoreStore
     /// checking roles: the club admin decides what a role may do. A convenience only, the server decides.
     /// </summary>
     bool HasPermission(Bookennis.Shared.Controller.Permissions.Permission permission);
+
+    /// <summary>Whether the member has the permission for this court or play mode (grants can limit it to single ones). The server decides.</summary>
+    bool HasPermission(Bookennis.Shared.Controller.Permissions.Permission permission, Bookennis.Shared.Controller.Permissions.PermissionResourceType resourceType, int resourceId);
     GetBookingOptionsResult? BookingOptions { get; }
     Task LoadClubProfile(int clubId);
     Task LoadBookingOptions();

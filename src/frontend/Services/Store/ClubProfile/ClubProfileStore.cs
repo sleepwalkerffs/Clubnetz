@@ -19,6 +19,10 @@ public class ClubProfileStore(IClubProfileHttpClient clubProfileHttpClient) : Se
     public bool IsSupportMode => SelectedClub?.IsSupportMode ?? false;
     public bool IsActiveMember => SelectedClub?.IsActiveMember ?? true;
     public bool HasPermission(Bookennis.Shared.Controller.Permissions.Permission permission) => SelectedClub?.Permissions.Contains(permission) ?? false;
+
+    public bool HasPermission(Bookennis.Shared.Controller.Permissions.Permission permission, Bookennis.Shared.Controller.Permissions.PermissionResourceType resourceType, int resourceId)
+        => HasPermission(permission)
+           && SelectedClub!.PermissionScopes.Where(s => s.Permission == permission && s.ResourceType == resourceType).All(s => s.Allows(resourceId));
     public GetBookingOptionsResult? BookingOptions { get; private set; }
 
     public Task LoadClubProfile(int clubId)
@@ -39,6 +43,7 @@ public class ClubProfileStore(IClubProfileHttpClient clubProfileHttpClient) : Se
                     IsSupportMode = memberResponse.Dto.IsSupportMode,
                     IsActiveMember = memberResponse.Dto.IsActiveMember,
                     Permissions = memberResponse.Dto.Permissions,
+                    PermissionScopes = memberResponse.Dto.PermissionScopes,
                 };
 
                 OnClubProfileChanged?.Invoke();

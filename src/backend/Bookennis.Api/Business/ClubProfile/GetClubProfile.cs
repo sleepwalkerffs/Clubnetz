@@ -39,6 +39,14 @@ public record GetClubProfile(int UserId, int? SupportClubId = null) : IQuery<Get
                 var roles = result.Role.Select(r => (MemberRole)r).ToArray();
                 var effective = await PermissionEvaluator.GetEffective(context, clubId, result.MemberId, roles, cancellationToken);
                 result.Permissions = effective.Select(p => (Bookennis.Shared.Controller.Permissions.Permission)p).ToList();
+                var scopes = await PermissionEvaluator.GetScopes(context, clubId, result.MemberId, roles, cancellationToken);
+                result.PermissionScopes = scopes.Select(s => new Bookennis.Shared.Controller.Permissions.PermissionScopeDto
+                {
+                    Permission = (Bookennis.Shared.Controller.Permissions.Permission)s.Permission,
+                    ResourceType = (Bookennis.Shared.Controller.Permissions.PermissionResourceType)s.ResourceType,
+                    AllowedIds = s.AllowedIds,
+                    DeniedIds = s.DeniedIds,
+                }).ToList();
                 return result;
             }
 

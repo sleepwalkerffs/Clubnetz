@@ -28,6 +28,24 @@ public enum PermissionResourceType { Court = 0, PlayMode = 1 }
 
 public enum PermissionEffect { Allow = 0, Deny = 1 }
 
+/// <summary>
+/// A permission the member has only for some resources, or not for some: the app uses it to offer only the courts or play modes the member
+/// may use. The server checks every resource again.
+/// </summary>
+public record PermissionScopeDto
+{
+    public required Permission Permission { get; init; }
+    public required PermissionResourceType ResourceType { get; init; }
+
+    /// <summary>The only resources the member may use; null when the permission holds for every resource except <see cref="DeniedIds"/>.</summary>
+    public List<int>? AllowedIds { get; init; }
+
+    /// <summary>Resources taken away from the member with a deny grant.</summary>
+    public List<int> DeniedIds { get; init; } = [];
+
+    public bool Allows(int resourceId) => !DeniedIds.Contains(resourceId) && (AllowedIds is null || AllowedIds.Contains(resourceId));
+}
+
 public record PermissionDto
 {
     public required Permission Permission { get; init; }

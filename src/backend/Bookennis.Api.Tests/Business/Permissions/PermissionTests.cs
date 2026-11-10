@@ -239,6 +239,41 @@ public class PermissionTests(TestFixture fixture) : TestBase(fixture)
     }
 
     [Fact]
+    public async Task GetScopes_ACourtGrantLimitsToThatCourt_AndADenyRemovesOneFromTheRole()
+    {
+        await SendAsync(new CreatePermissionGrant(TestDataSeed.ClubId, TestDataSeed.UserId, TestDataSeed.Member1Id, Permission.CourtBlockingsManage, PermissionResourceType.Court, TestDataSeed.Court1Id, PermissionEffect.Allow, null));
+
+        var onlyGrant = await QueryAsync(ctx => PermissionEvaluator.GetScopes(ctx, TestDataSeed.ClubId, TestDataSeed.Member1Id, [MemberRole.User], CancellationToken.None));
+
+        onlyGrant.Should().ContainSingle().Which.Should().BeEquivalentTo(
+            new PermissionScope(Permission.CourtBlockingsManage, PermissionResourceType.Court, [TestDataSeed.Court1Id], []));
+
+        // A Maintainer may block every court by role: a deny takes one away, the allow for court 1 adds nothing
+        await SendAsync(new CreatePermissionGrant(TestDataSeed.ClubId, TestDataSeed.UserId, TestDataSeed.Member1Id, Permission.CourtBlockingsManage, PermissionResourceType.Court, TestDataSeed.Court2Id, PermissionEffect.Deny, null));
+
+        var withRole = await QueryAsync(ctx => PermissionEvaluator.GetScopes(ctx, TestDataSeed.ClubId, TestDataSeed.Member1Id, [MemberRole.Maintainer], CancellationToken.None));
+        var asAdmin = await QueryAsync(ctx => PermissionEvaluator.GetScopes(ctx, TestDataSeed.ClubId, TestDataSeed.Member1Id, [MemberRole.Admin], CancellationToken.None));
+
+        withRole.Should().ContainSingle().Which.Should().BeEquivalentTo(
+            new PermissionScope(Permission.CourtBlockingsManage, PermissionResourceType.Court, null, [TestDataSeed.Court2Id]));
+        asAdmin.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetScopes_AGeneralAllowWithACourtDeny_LimitsOnlyThatCourt_AndAGeneralDenyHasNoScope()
+    {
+        await SendAsync(new CreatePermissionGrant(TestDataSeed.ClubId, TestDataSeed.UserId, TestDataSeed.Member1Id, Permission.CourtBlockingsManage, null, null, PermissionEffect.Allow, null));
+        await SendAsync(new CreatePermissionGrant(TestDataSeed.ClubId, TestDataSeed.UserId, TestDataSeed.Member1Id, Permission.CourtBlockingsManage, PermissionResourceType.Court, TestDataSeed.Court2Id, PermissionEffect.Deny, null));
+        await SendAsync(new CreatePermissionGrant(TestDataSeed.ClubId, TestDataSeed.UserId, TestDataSeed.Member1Id, Permission.BookingsManageForAnyMember, null, null, PermissionEffect.Deny, null));
+
+        var scopes = await QueryAsync(ctx => PermissionEvaluator.GetScopes(ctx, TestDataSeed.ClubId, TestDataSeed.Member1Id, [MemberRole.Trainer], CancellationToken.None));
+
+        scopes.Should().ContainSingle().Which.Should().BeEquivalentTo(
+            new PermissionScope(Permission.CourtBlockingsManage, PermissionResourceType.Court, null, [TestDataSeed.Court2Id]),
+            "the general deny of booking for others takes the permission away completely, there is nothing to limit");
+    }
+
+    [Fact]
     public async Task UpdateMemberRoles_TheLastAdminKeepsTheRole()
     {
         var act = () => SendAsync(new UpdateMemberRoles(TestDataSeed.Member2Id, [MemberRole.User]));
