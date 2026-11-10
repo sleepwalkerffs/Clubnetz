@@ -98,7 +98,7 @@ internal sealed class BookingContextBuilder
         if (courts.Count != distinctCourtIds.Count)
             throw new EntityNotFoundException(typeof(Court));
 
-        var mayBookForAnyMember = await BookingRights.MayBookForAnyMember(context, club.Id, userId, cancellationToken);
+        var mayBookForAnyMember = await BookingRights.MayBookForAnyMember(context, club.Id, userId, playModeId, cancellationToken);
         var participants = await LoadParticipants(context, club, playModeId, players, userId, mayBookForAnyMember, excludedBookingId, cancellationToken);
 
         if (participants.Count != players.Count)

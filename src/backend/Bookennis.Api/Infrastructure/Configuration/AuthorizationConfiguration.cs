@@ -18,6 +18,7 @@ public static class AuthorizationConfiguration
 
         services.AddScoped<AuthorizationModelService>();
         services.AddScoped<AuthorizationHandlerService>();
+        services.AddScoped<ResourcePermissionService>();
         services.AddAll<IAuthorizationHandler>([Assembly.GetExecutingAssembly()]);
         // Logs the requests a policy forbids (audit log)
         services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationMiddlewareResultHandler, Audit.AuditingAuthorizationResultHandler>();

@@ -96,7 +96,7 @@ public record BookRecurringCourt(
 
             // Validate first occurrence fully (load participants etc.)
             var firstInterval = request.Interval;
-            var mayBookForAnyMember = await BookingRights.MayBookForAnyMember(context, queryResult.Club.Id, request.UserId, cancellationToken);
+            var mayBookForAnyMember = await BookingRights.MayBookForAnyMember(context, queryResult.Club.Id, request.UserId, request.PlayModeId, cancellationToken);
             var localParticipants = await LoadParticipants(request, queryResult.Club, firstInterval, mayBookForAnyMember, cancellationToken);
 
             if (localParticipants.Count != request.Players.Count)

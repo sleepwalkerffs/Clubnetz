@@ -34,7 +34,7 @@ public class MembershipOrderAuthorizationHandler(AppDbContext dbContext, ITenant
         if (memberId is null || roles is null)
             return;
 
-        if (roles.Contains(MemberRole.Admin) || roles.Contains(MemberRole.Treasurer))
+        if (await Bookennis.Api.Business.Permissions.PermissionEvaluator.Has(dbContext, clubId, memberId.Value, roles, Bookennis.Domain.Permissions.Permission.PaymentsManage, null, null, CancellationToken.None))
         {
             context.Succeed(requirement);
             return;
