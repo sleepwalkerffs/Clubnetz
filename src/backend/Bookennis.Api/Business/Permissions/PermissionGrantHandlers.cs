@@ -119,6 +119,18 @@ public record CreatePermissionGrant(
     }
 }
 
+/// <summary>A grant for one court or play mode goes with it (the grant has no foreign key to it).</summary>
+public static class PermissionGrantCleanup
+{
+    public static async Task RemoveForResource(AppDbContext context, int clubId, PermissionResourceType type, int resourceId, CancellationToken cancellationToken)
+    {
+        var grants = await context.PermissionGrants.IgnoreQueryFilters()
+            .Where(g => g.ClubId == clubId && g.ResourceType == type && g.ResourceId == resourceId)
+            .ToListAsync(cancellationToken);
+        context.PermissionGrants.RemoveRange(grants);
+    }
+}
+
 [SecurityAudit]
 public record DeletePermissionGrant(int ClubId, int GrantId) : ICommand
 {

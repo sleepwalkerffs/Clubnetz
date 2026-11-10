@@ -166,10 +166,21 @@ else
     protected override async Task OnInitializedAsync()
     {
         Store.OnPermissionsChanged += OnChanged;
-        ClubProfileStore.OnClubProfileChanged += OnChanged;
+        ClubProfileStore.OnClubProfileChanged += OnProfileChanged;
 
-        if (CanManage)
+        if (ClubProfileStore.IsClubProfileLoaded && CanManage)
             await Reload();
+    }
+
+    /// <summary>The club profile may arrive after the page was opened (direct link, refresh): load what only an admin may see once it did.</summary>
+    private async void OnProfileChanged()
+    {
+        await InvokeAsync(async () =>
+        {
+            if (CanManage && Store.Matrix is null)
+                await Reload();
+            StateHasChanged();
+        });
     }
 
     private async Task Reload()
@@ -220,6 +231,6 @@ else
     public void Dispose()
     {
         Store.OnPermissionsChanged -= OnChanged;
-        ClubProfileStore.OnClubProfileChanged -= OnChanged;
+        ClubProfileStore.OnClubProfileChanged -= OnProfileChanged;
     }
 }

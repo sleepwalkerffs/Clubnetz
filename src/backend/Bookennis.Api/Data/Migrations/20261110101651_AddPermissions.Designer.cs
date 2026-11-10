@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Bookennis.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261110095435_AddPermissions")]
+    [Migration("20261110101651_AddPermissions")]
     partial class AddPermissions
     {
         /// <inheritdoc />
@@ -2251,6 +2251,9 @@ namespace Bookennis.Api.Data.Migrations
 
                     b.Property<int>("ConcurrentAllowedBookings")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("HasCustomPermissions")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsAtpClub")
                         .HasColumnType("boolean");

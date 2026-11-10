@@ -21,6 +21,13 @@ namespace Bookennis.Api.Data.Migrations
                 startValue: 10L,
                 incrementBy: 10);
 
+            migrationBuilder.AddColumn<bool>(
+                name: "HasCustomPermissions",
+                table: "Clubs",
+                type: "boolean",
+                nullable: false,
+                defaultValue: false);
+
             migrationBuilder.CreateTable(
                 name: "PermissionGrants",
                 columns: table => new
@@ -116,6 +123,10 @@ namespace Bookennis.Api.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "RolePermissions");
+
+            migrationBuilder.DropColumn(
+                name: "HasCustomPermissions",
+                table: "Clubs");
 
             migrationBuilder.DropSequence(
                 name: "PermissionGrants_Id_Sequence");

@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Permissions;
 using Bookennis.Api.Data;
 using Fusonic.Extensions.EntityFrameworkCore;
 
@@ -11,6 +12,7 @@ public record AdminDeleteCourt(int ClubId, int CourtId) : ICommand
         {
             var court = await context.Courts.SingleRequiredAsync(x => x.Id == request.CourtId && x.ClubId == request.ClubId, cancellationToken);
             context.Courts.Remove(court);
+            await PermissionGrantCleanup.RemoveForResource(context, request.ClubId, Bookennis.Domain.Permissions.PermissionResourceType.Court, request.CourtId, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
             return default;
         }

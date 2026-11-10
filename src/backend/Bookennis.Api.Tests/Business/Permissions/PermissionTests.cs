@@ -109,13 +109,35 @@ public class PermissionTests(TestFixture fixture) : TestBase(fixture)
     }
 
     [Fact]
-    public async Task ResetAll_RemovesTheStoredMatrix()
+    public async Task ResetAll_RemovesTheStoredMatrix_AndTheDefaultsApplyAgain()
     {
         await SendAsync(new UpdateRolePermissions(TestDataSeed.ClubId, MemberRole.Maintainer, []));
 
         await SendAsync(new ResetRolePermissions(TestDataSeed.ClubId, null));
 
         (await QueryAsync(ctx => ctx.RolePermissions.CountAsync())).Should().Be(0);
+        (await QueryAsync(ctx => Has(ctx, TestDataSeed.Member1Id, [MemberRole.Maintainer], Permission.MembersView))).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task AMatrixEmptiedOnPurpose_StaysEmpty_InsteadOfFallingBackToTheDefaults()
+    {
+        foreach (var role in PermissionCatalog.EditableRoles)
+            await SendAsync(new UpdateRolePermissions(TestDataSeed.ClubId, role, []));
+
+        (await QueryAsync(ctx => ctx.RolePermissions.CountAsync())).Should().Be(0);
+        (await QueryAsync(ctx => Has(ctx, TestDataSeed.Member1Id, [MemberRole.Treasurer], Permission.AccountingManage))).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeletingAPlayMode_RemovesItsGrants()
+    {
+        var playModeId = await QueryAsync(ctx => Task.FromResult(ctx.TestData().Club.PlayModes.First().Id));
+        await SendAsync(new CreatePermissionGrant(TestDataSeed.ClubId, TestDataSeed.UserId, TestDataSeed.Member1Id, Permission.BookingsManageForAnyMember, PermissionResourceType.PlayMode, playModeId, PermissionEffect.Allow, null));
+
+        await SendAsync(new Bookennis.Api.Business.Clubs.DeletePlayMode(playModeId));
+
+        (await QueryAsync(ctx => ctx.PermissionGrants.CountAsync())).Should().Be(0);
     }
 
     [Fact]

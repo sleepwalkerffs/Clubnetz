@@ -15,7 +15,7 @@ internal static class BookingRights
     /// or they are an application administrator without a member of the club (support mode). An administrator who is a member acts with
     /// the roles of the member. The play mode's allowed roles, enrollment, quotas and every other booking rule still apply.
     /// </summary>
-    public static async Task<bool> MayBookForAnyMember(AppDbContext context, int clubId, int userId, int? playModeId, CancellationToken cancellationToken)
+    public static async Task<bool> MayBookForAnyMember(AppDbContext context, int clubId, int userId, int playModeId, CancellationToken cancellationToken)
     {
         var member = await context.Set<Member>()
             .Where(m => m.UserId == userId && m.ClubId == clubId)
@@ -31,7 +31,7 @@ internal static class BookingRights
 
             return await PermissionEvaluator.Has(
                 context, clubId, member.Id, member.UserRoles, Permission.BookingsManageForAnyMember,
-                playModeId is null ? null : PermissionResourceType.PlayMode, playModeId, cancellationToken);
+                PermissionResourceType.PlayMode, playModeId, cancellationToken);
         }
 
         var administrator = (int)Bookennis.Domain.User.UserRoles.Administrator;

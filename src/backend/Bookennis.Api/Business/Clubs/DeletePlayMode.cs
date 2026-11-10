@@ -13,6 +13,7 @@ public record DeletePlayMode(int PlayModeId) : ICommand
             var club = await context.Clubs.Include(c => c.PlayModes).SingleRequiredAsync(cancellationToken);
 
             club.RemovePlayMode(request.PlayModeId);
+            await Permissions.PermissionGrantCleanup.RemoveForResource(context, club.Id, Bookennis.Domain.Permissions.PermissionResourceType.PlayMode, request.PlayModeId, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
             return default;
         }

@@ -78,6 +78,7 @@ public record ResetRolePermissions(int ClubId, MemberRole? Role) : ICommand
             {
                 var all = await context.RolePermissions.IgnoreQueryFilters().Where(r => r.ClubId == request.ClubId).ToListAsync(cancellationToken);
                 context.RolePermissions.RemoveRange(all);
+                (await context.Clubs.IgnoreQueryFilters().SingleAsync(c => c.Id == request.ClubId, cancellationToken)).SetHasCustomPermissions(false);
             }
             else
             {
@@ -97,11 +98,14 @@ internal static class RolePermissionStorage
 {
     public static async Task Replace(AppDbContext context, int clubId, MemberRole role, IEnumerable<DomainPermission> permissions, CancellationToken cancellationToken)
     {
+        var club = await context.Clubs.IgnoreQueryFilters().SingleAsync(c => c.Id == clubId, cancellationToken);
         var rows = await context.RolePermissions.IgnoreQueryFilters().Where(r => r.ClubId == clubId).ToListAsync(cancellationToken);
 
-        // A club that still uses the defaults gets them stored first, so only this role changes
-        if (rows.Count == 0)
+        // A club that still uses the defaults gets them stored first, so only this role changes. From now on the rows are the matrix, also when none are left.
+        if (!club.HasCustomPermissions)
         {
+            club.SetHasCustomPermissions(true);
+            rows.Clear();
             foreach (var (defaultRole, permission) in PermissionCatalog.DefaultMatrix())
             {
                 var row = new RolePermission(clubId, defaultRole, permission);

@@ -2249,6 +2249,9 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("ConcurrentAllowedBookings")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("HasCustomPermissions")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsAtpClub")
                         .HasColumnType("boolean");
 

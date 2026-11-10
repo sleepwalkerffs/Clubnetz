@@ -17,15 +17,16 @@ public static class PermissionEvaluator
     /// </summary>
     public static async Task<Dictionary<MemberRole, HashSet<Permission>>> GetRoleMatrix(AppDbContext context, int clubId, CancellationToken cancellationToken)
     {
-        var rows = await context.RolePermissions
-            .IgnoreQueryFilters()
-            .Where(r => r.ClubId == clubId)
-            .Select(r => new { r.Role, r.Permission })
-            .ToListAsync(cancellationToken);
+        var isCustom = await context.Clubs.IgnoreQueryFilters().Where(c => c.Id == clubId).Select(c => c.HasCustomPermissions).SingleOrDefaultAsync(cancellationToken);
 
-        var cells = rows.Count == 0
-            ? PermissionCatalog.DefaultMatrix().Select(c => (c.Role, c.Permission))
-            : rows.Select(r => (r.Role, r.Permission));
+        // Rows only count once the admin changed something: a matrix emptied on purpose stays empty
+        var rows = isCustom
+            ? await context.RolePermissions.IgnoreQueryFilters().Where(r => r.ClubId == clubId).Select(r => new { r.Role, r.Permission }).ToListAsync(cancellationToken)
+            : [];
+
+        var cells = isCustom
+            ? rows.Select(r => (r.Role, r.Permission))
+            : PermissionCatalog.DefaultMatrix().Select(c => (c.Role, c.Permission));
 
         return cells.GroupBy(c => c.Role).ToDictionary(g => g.Key, g => g.Select(c => c.Permission).ToHashSet());
     }
