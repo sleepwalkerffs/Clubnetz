@@ -757,8 +757,82 @@
         display: table-cell;
     }
 
+    /* On paper the report reads as a document: no card frames, a clear head, sections separated by headings */
+    .acc-page ::deep .acc-print-head {
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #0F172A;
+    }
+
+    .acc-page ::deep .acc-print-head__club {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .acc-page ::deep .acc-print-head__meta {
+        color: var(--mud-palette-text-secondary);
+    }
+
     .acc-page ::deep .section-card {
-        break-inside: avoid;
+        height: auto;
+        margin-bottom: 28px;
+        padding: 0;
+        border: none;
+        border-radius: 0;
         box-shadow: none;
+        background: none;
+    }
+
+    .acc-page ::deep .section-card__header {
+        margin-bottom: 4px;
+    }
+
+    .acc-page ::deep .section-card__emoji {
+        display: none;
+    }
+
+    .acc-page ::deep .section-card__title {
+        font-size: 1.15rem;
+    }
+
+    .acc-page ::deep .acc-table {
+        font-size: 10pt;
+    }
+
+    .acc-page ::deep .acc-table tr {
+        break-inside: avoid;
+    }
+
+    .acc-page ::deep .acc-table thead {
+        display: table-header-group;
+    }
+
+    .acc-page ::deep .acc-table th {
+        border-bottom: 1px solid #0F172A;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 8pt;
+    }
+
+    .acc-page ::deep .acc-table td {
+        padding: 4px 8px;
+    }
+
+    .acc-page ::deep .acc-table__group td {
+        padding-top: 14px;
+        border-bottom: 1px solid #94A3B8;
+    }
+
+    /* 1.5px so it wins the collapsed border against the 1px line of the row above */
+    .acc-page ::deep .acc-table__sum td {
+        border-top: 1.5px solid #94A3B8;
+        background: none;
+    }
+
+    .acc-page ::deep .acc-table tfoot tr:first-child td {
+        border-top: 2px solid #0F172A;
+    }
+
+    .acc-page ::deep .acc-table__result td {
+        border-bottom: 3px double #0F172A;
     }
 }
