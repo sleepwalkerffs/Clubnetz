@@ -154,7 +154,7 @@ else
     private int? selectedSeasonId;
     private bool seasonsLoaded;
 
-    private bool CanManage => MembershipHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.PaymentsManage);
 
     private List<SeasonResult> SeasonsNewestFirst => ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList();
     private List<SeasonResult> OtherSeasons => SeasonsNewestFirst.Where(s => s.Id != selectedSeasonId).ToList();

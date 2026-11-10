@@ -423,6 +423,21 @@
   <data name="PrivacyPolicyNotAccepted" xml:space="preserve">
     <value>Bitte bestätige, dass du die Datenschutzerklärung gelesen hast.</value>
   </data>
+  <data name="UserIsLastClubAdmin" xml:space="preserve">
+    <value>Diese Person ist die letzte mit Admin-Rechten in {0}. Gib zuerst einem anderen Mitglied Admin-Rechte oder lösche den Verein.</value>
+  </data>
+  <data name="LastAdminCannotBeRemoved" xml:space="preserve">
+    <value>Die letzte Person mit Admin-Rechten kann die Admin-Rolle nicht abgeben. Gib zuerst einem anderen Mitglied Admin-Rechte.</value>
+  </data>
+  <data name="PermissionRoleNotEditable" xml:space="preserve">
+    <value>Die Berechtigungen dieser Rolle lassen sich nicht ändern.</value>
+  </data>
+  <data name="PermissionGrantForAdmin" xml:space="preserve">
+    <value>Admins haben immer alle Berechtigungen, deshalb lassen sich ihnen keine zusätzlichen geben oder nehmen.</value>
+  </data>
+  <data name="PermissionGrantResourceInvalid" xml:space="preserve">
+    <value>Diese Berechtigung lässt sich nicht auf diesen Platz oder diese Spielart beschränken.</value>
+  </data>
   <data name="LastClubAdmin" xml:space="preserve">
     <value>Du bist die letzte Person mit Admin-Rechten in {0}. Gib zuerst einem anderen Mitglied Admin-Rechte.</value>
   </data>

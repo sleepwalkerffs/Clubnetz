@@ -1,0 +1,170 @@
+.permissions-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Mobile first: a card per role, the table only on large screens */
+.perm-table-wrap {
+    display: none;
+}
+
+.perm-roles {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.perm-role__title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.perm-role__count {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--mud-palette-text-secondary);
+}
+
+.perm-role__row {
+    padding: 4px 0 8px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.perm-desc {
+    display: block;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    color: var(--mud-palette-text-secondary);
+}
+
+.perm-name {
+    font-weight: 600;
+}
+
+.perm-money {
+    margin-left: 4px;
+}
+
+.perm-empty,
+.perm-hint {
+    font-size: 0.9rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.perm-hint {
+    margin-top: 12px;
+}
+
+.perm-grants {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.perm-grant {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-left-width: 4px;
+    border-radius: 8px;
+}
+
+.perm-grant--allow {
+    border-left-color: var(--mud-palette-success);
+}
+
+.perm-grant--deny {
+    border-left-color: var(--mud-palette-error);
+}
+
+.perm-grant__main {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    align-items: baseline;
+    min-width: 0;
+}
+
+.perm-grant__member {
+    font-weight: 600;
+}
+
+.perm-grant__effect {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--mud-palette-text-secondary);
+}
+
+.perm-grant__resource,
+.perm-grant__note {
+    font-size: 0.85rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+@media (min-width: 960px) {
+    .perm-roles {
+        display: none;
+    }
+
+    .perm-table-wrap {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .perm-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .perm-table th,
+    .perm-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .perm-table__role,
+    .perm-table__cell {
+        text-align: center !important;
+        white-space: nowrap;
+    }
+
+    .perm-table__role--locked {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .perm-table__area th {
+        background: var(--mud-palette-background-gray);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .perm-table__name {
+        font-weight: 400;
+        min-width: 260px;
+    }
+
+    .perm-table__reset {
+        margin-left: 4px;
+        border: 0;
+        background: transparent;
+        color: var(--mud-palette-primary);
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .perm-table__lock {
+        margin-left: 4px;
+    }
+}

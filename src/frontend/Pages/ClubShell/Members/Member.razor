@@ -144,6 +144,7 @@
                     @if (MemberAdminHelpers.CanEdit(ClubProfileStore.Roles))
                     {
                         <Family MemberId="@member.MemberId" FamilyId="@member.FamilyId" LastName="@member.LastName" ManagedByClub="true" OnChanged="FamilyChanged" />
+                        <MemberPermissionGrants @key="member.MemberId" MemberId="@member.MemberId" IsAdminMember="@member.Roles.Contains(MemberRole.Admin)" />
                     }
                 </div>
             </MudItem>

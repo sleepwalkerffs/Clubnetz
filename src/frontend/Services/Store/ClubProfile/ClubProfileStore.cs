@@ -18,6 +18,7 @@ public class ClubProfileStore(IClubProfileHttpClient clubProfileHttpClient) : Se
     public ClubProfileModel? SelectedClub { get; private set; }
     public bool IsSupportMode => SelectedClub?.IsSupportMode ?? false;
     public bool IsActiveMember => SelectedClub?.IsActiveMember ?? true;
+    public bool HasPermission(Bookennis.Shared.Controller.Permissions.Permission permission) => SelectedClub?.Permissions.Contains(permission) ?? false;
     public GetBookingOptionsResult? BookingOptions { get; private set; }
 
     public Task LoadClubProfile(int clubId)
@@ -36,7 +37,8 @@ public class ClubProfileStore(IClubProfileHttpClient clubProfileHttpClient) : Se
                     MemberRole = memberResponse.Dto.Role,
                     ClubName = memberResponse.Dto.ClubName,
                     IsSupportMode = memberResponse.Dto.IsSupportMode,
-                    IsActiveMember = memberResponse.Dto.IsActiveMember
+                    IsActiveMember = memberResponse.Dto.IsActiveMember,
+                    Permissions = memberResponse.Dto.Permissions,
                 };
 
                 OnClubProfileChanged?.Invoke();

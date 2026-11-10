@@ -304,7 +304,7 @@ else
             : AllowedPlayModes;
 
     private bool CanManageCourtSales
-        => ProfileStore.IsSupportMode || ProfileStore.Roles.Any(r => r is MemberRole.Admin or MemberRole.Treasurer);
+        => ProfileStore.IsSupportMode || ProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.CourtSalesManage);
 
     private bool userIsAllowedToEdit
         => booking is not null

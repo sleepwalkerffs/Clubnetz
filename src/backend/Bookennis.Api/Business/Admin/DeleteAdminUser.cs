@@ -13,7 +13,7 @@ public record DeleteAdminUser(int UserId) : ICommand
 {
     public enum ErrorCode
     {
-        LastClubAdmin = 0,
+        UserIsLastClubAdmin = 0,
     }
 
     public class Handler(AppDbContext context, IAuditContext auditContext) : IRequestHandler<DeleteAdminUser>
@@ -26,7 +26,7 @@ public record DeleteAdminUser(int UserId) : ICommand
             // A club keeps at least one admin: delete the club or hand over the admin role first
             var memberIds = await context.ClubMembers.IgnoreQueryFilters().Where(m => m.UserId == user.Id).Select(m => m.Id).ToListAsync(cancellationToken);
             if (await MemberRemoval.FindClubLosingItsLastAdmin(context, memberIds, cancellationToken) is { } clubName)
-                throw new PreconditionException(ErrorCode.LastClubAdmin, [clubName], $"The user is the last admin of the club {clubName}.");
+                throw new PreconditionException(ErrorCode.UserIsLastClubAdmin, [clubName], $"The user is the last admin of the club {clubName}.");
 
             await UserDeletion.DeleteUser(context, user, cancellationToken);
             auditContext.PseudonymizeAfterCommand(user.Id);

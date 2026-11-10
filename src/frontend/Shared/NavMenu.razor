@@ -113,9 +113,12 @@
             // Members who are not active (not enrolled, no staff role) don't see the other members: no leaderboard, statistics, Wrapped, planner
             var isActive = isSupport || ClubProfileStore.IsActiveMember;
             var isAdmin = isSupport || Has(MemberRole.Admin);
+            // What a role may do is decided by the club admin (permissions), not by the role itself; support mode has every permission
+            bool Can(Bookennis.Shared.Controller.Permissions.Permission permission) => ClubProfileStore.HasPermission(permission);
             var isMaintainer = Has(MemberRole.Maintainer);
             var isSportsDirector = Has(MemberRole.SportsDirector);
-            var isTreasurer = isAdmin || Has(MemberRole.Treasurer);
+            var canManagePayments = Can(Bookennis.Shared.Controller.Permissions.Permission.PaymentsManage);
+            var canManageCourtSales = Can(Bookennis.Shared.Controller.Permissions.Permission.CourtSalesManage);
 
             // My Club is the start page of a club, it is also served under /clubs/{id}
             var clubItems = isSupport
@@ -142,33 +145,34 @@
             }
 
             // The clubhouse host ("Wirt") books food and drinks onto tabs; admins set it up (same as the backend policy ClubhouseHost)
-            if (isAdmin || Has(MemberRole.ClubhouseHost))
+            if (Can(Bookennis.Shared.Controller.Permissions.Permission.ClubhouseHost))
                 yield return new(Locale["Section_Clubhouse"], [new($"{club}/clubhouse", Icons.Material.Filled.LocalBar, Locale["ClubhouseTabs"])]);
 
             var membersAndFees = new List<NavItem>();
-            if (isAdmin || isMaintainer)
+            if (Can(Bookennis.Shared.Controller.Permissions.Permission.MembersView))
                 membersAndFees.Add(new($"{club}/members", Icons.Material.Filled.Groups2, Locale["Members"]));
-            if (isTreasurer)
-            {
+            if (canManageCourtSales)
                 membersAndFees.Add(new($"{club}/court-sales", Icons.Material.Filled.PointOfSale, Locale["CourtSales"]));
+            if (canManagePayments)
+            {
                 membersAndFees.Add(new($"{club}/membership-plans", Icons.Material.Filled.ReceiptLong, Locale["MembershipPlans"]));
                 membersAndFees.Add(new($"{club}/membership-payments", Icons.Material.Filled.Payments, Locale["MembershipPayments"]));
             }
             yield return new(Locale["Section_MembersAndFees"], membersAndFees);
 
             // The books of the club: treasurers and admins keep them, auditors read them (same as the backend policy AccountingReader)
-            if (isTreasurer || Has(MemberRole.Auditor))
+            if (Can(Bookennis.Shared.Controller.Permissions.Permission.AccountingRead))
                 yield return new(Locale["Section_Finances"], [new($"{club}/finances", Icons.Material.Filled.AccountBalance, Locale["Finances"])]);
 
             var courtsAndPlay = new List<NavItem>();
             // The roles that may move any booking (see BookingDetail); the page itself needs a large screen
             if (isAdmin || isSportsDirector || Has(MemberRole.YouthSportsDirector) || isMaintainer || Has(MemberRole.Trainer))
                 courtsAndPlay.Add(new($"{club}/planner", Icons.Material.Filled.ViewTimeline, Locale["Planner"]));
-            if (isAdmin || isMaintainer || isSportsDirector)
+            if (Can(Bookennis.Shared.Controller.Permissions.Permission.CourtBlockingsManage))
                 courtsAndPlay.Add(new($"{club}/court-blockings", Icons.Material.Filled.Lock, Locale["CourtBlockings"]));
-            if (isAdmin || isSportsDirector || Has(MemberRole.YouthSportsDirector))
+            if (Can(Bookennis.Shared.Controller.Permissions.Permission.OneTimeBadgesManage))
                 courtsAndPlay.Add(new($"{club}/badge-settings", Icons.Material.Filled.MilitaryTech, Locale["Badges"]));
-            if (isAdmin || isMaintainer)
+            if (Can(Bookennis.Shared.Controller.Permissions.Permission.StatisticsView))
                 courtsAndPlay.Add(new($"{club}/club-statistics", Icons.Material.Filled.Analytics, Locale["ClubStatistics"]));
             yield return new(Locale["Section_CourtsAndPlay"], courtsAndPlay);
 
@@ -178,6 +182,7 @@
                 [
                     new($"{club}/profile", Icons.Material.Filled.Tune, Locale["ClubSettings"]),
                     new($"{club}/email-templates", Icons.Material.Filled.MarkEmailRead, Locale["EmailTemplates"]),
+                    new($"{club}/permissions", Icons.Material.Filled.AdminPanelSettings, Locale["Permissions"]),
                     new($"{club}/api-keys", Icons.Material.Filled.Key, Locale["ApiKeys"])
                 ]);
             }

@@ -1,0 +1,94 @@
+@using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Localization
+@using Bookennis.Client.Localization.Pages.Permissions
+@using Bookennis.Client.Services.Store.Club
+@using Bookennis.Client.Services.Store.Permissions
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Controller.Permissions
+
+<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@L["Create"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@Store.IsSaving" Title="@L["AddTitle"]">
+    <div class="perm-grant-edit">
+        <MudSelect T="Permission" Variant="Variant.Outlined" Label="@L["Permission"]" @bind-Value="permission" @bind-Value:after="OnPermissionChanged"
+                   HelperText="@L[$"PermissionDesc_{permission}"]">
+            @foreach (var option in Enum.GetValues<Permission>())
+            {
+                <MudSelectItem T="Permission" Value="option">@L[$"Permission_{option}"]</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect T="PermissionEffect" Variant="Variant.Outlined" Label="@L["Effect"]" @bind-Value="effect">
+            <MudSelectItem T="PermissionEffect" Value="PermissionEffect.Allow">@L["Effect_Allow"]</MudSelectItem>
+            <MudSelectItem T="PermissionEffect" Value="PermissionEffect.Deny">@L["Effect_Deny"]</MudSelectItem>
+        </MudSelect>
+
+        @if (ResourceType is { } resourceType)
+        {
+            <MudSelect T="int?" Variant="Variant.Outlined" Label="@L["Scope"]" @bind-Value="resourceId">
+                <MudSelectItem T="int?" Value="@((int?)null)">@L["WholeClub"]</MudSelectItem>
+                @foreach (var (id, name) in Resources(resourceType))
+                {
+                    <MudSelectItem T="int?" Value="@((int?)id)">@L[$"Resource_{resourceType}"]: @name</MudSelectItem>
+                }
+            </MudSelect>
+        }
+
+        <MudTextField T="string" Variant="Variant.Outlined" Label="@L["Note"]" @bind-Value="note" MaxLength="200" Immediate="true" />
+    </div>
+</BaseDialog>
+
+@code {
+    [Parameter] public int MemberId { get; set; }
+
+    [Inject] private IPermissionsStore Store { get; set; } = null!;
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<PermissionsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    private Permission permission = Permission.CourtBlockingsManage;
+    private PermissionEffect effect = PermissionEffect.Allow;
+    private int? resourceId;
+    private string? note;
+
+    /// <summary>The kind of resource the permission can be limited to; <c>null</c> when it only applies to the whole club.</summary>
+    private PermissionResourceType? ResourceType => Store.Matrix?.Catalog.FirstOrDefault(p => p.Permission == permission)?.ResourceType;
+
+    private bool CanSubmit => true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Store.Matrix is null)
+            await Store.LoadMatrix();
+        await Task.WhenAll(ClubStore.LoadCourts(), ClubStore.LoadPlayModes());
+    }
+
+    private void OnPermissionChanged() => resourceId = null;
+
+    private IEnumerable<(int Id, string Name)> Resources(PermissionResourceType type)
+        => type == PermissionResourceType.Court
+            ? ClubStore.Courts.Select(c => (c.CourtId, c.Name))
+            : ClubStore.PlayModes.Select(p => (p.Id, p.Name));
+
+    private async Task<DialogResult?> Submit()
+    {
+        var response = await Store.CreateGrant(new CreatePermissionGrantRequest
+        {
+            MemberId = MemberId,
+            Permission = permission,
+            ResourceType = resourceId is null ? null : ResourceType,
+            ResourceId = resourceId,
+            Effect = effect,
+            Note = note,
+        });
+
+        if (response.Success)
+            return DialogResult.Ok(true);
+
+        Snackbar.ShowErrorDetails(response, BackendLocale);
+        return null;
+    }
+
+    private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
+}

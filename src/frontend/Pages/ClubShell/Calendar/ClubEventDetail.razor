@@ -226,7 +226,7 @@ else
 
     private ClubEventDto? Event => Store.Event?.Id == ClubEventId ? Store.Event : null;
 
-    private bool CanManage => ClubEventHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.EventsManage);
 
     private string EventUrl => ClubEventHelpers.AbsoluteEventUrl(NavigationManager, ClubId, ClubEventId);
 

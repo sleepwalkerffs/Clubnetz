@@ -111,7 +111,7 @@ else
 
     private bool showPast;
 
-    private bool CanManage => CourtBlockingHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.CourtBlockingsManage);
 
     protected override async Task OnInitializedAsync()
     {

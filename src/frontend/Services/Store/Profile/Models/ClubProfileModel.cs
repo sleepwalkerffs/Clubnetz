@@ -14,4 +14,7 @@ public record ClubProfileModel
 
     /// <summary>See <c>GetClubProfileResult.IsActiveMember</c>: enrolled in the active season, parent of an enrolled child, staff or support mode.</summary>
     public bool IsActiveMember { get; init; }
+
+    /// <summary>See <c>GetClubProfileResult.Permissions</c>: what the member may do in the club. A convenience for the UI, the server decides.</summary>
+    public List<Bookennis.Shared.Controller.Permissions.Permission> Permissions { get; init; } = [];
 }

@@ -65,7 +65,7 @@
     private bool showExpired;
     private bool loaded;
 
-    private bool CanManage => NewsHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.AnnouncementsManage);
 
     private List<Bookennis.Shared.Controller.ClubAnnouncements.ClubAnnouncementSummaryDto>? Announcements => loaded ? Store.Announcements : null;
 

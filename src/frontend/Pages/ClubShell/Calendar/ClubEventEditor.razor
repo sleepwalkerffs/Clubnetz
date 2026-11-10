@@ -246,7 +246,7 @@ else
 
     private bool IsNew => ClubEventId is null;
 
-    private bool CanManage => ClubEventHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.EventsManage);
 
     private string BackUrl => IsNew ? ClubEventHelpers.CalendarUrl(ClubId) : ClubEventHelpers.EventUrl(ClubId, ClubEventId!.Value);
 

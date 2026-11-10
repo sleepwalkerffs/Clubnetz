@@ -150,7 +150,7 @@
 
     private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
 
-    private bool CanManage => ClubEventHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.EventsManage);
 
     private ClubEventSummaryDto? NextEvent => Store.UpcomingEvents?.FirstOrDefault();
 

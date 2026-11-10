@@ -118,7 +118,7 @@ else
     private int maxDaysInAdvance = 14;
     private int maxUpcomingBookings = 1;
 
-    private bool CanManage => CourtSalesHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.CourtSalesManage);
 
     protected override async Task OnInitializedAsync()
     {

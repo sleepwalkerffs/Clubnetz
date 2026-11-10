@@ -162,7 +162,7 @@ else
 
     private ClubAnnouncementDto? Announcement => Store.Announcement?.Id == ClubAnnouncementId ? Store.Announcement : null;
 
-    private bool CanManage => NewsHelpers.CanManage(ClubProfileStore.Roles);
+    private bool CanManage => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.AnnouncementsManage);
 
     protected override void OnInitialized()
     {
