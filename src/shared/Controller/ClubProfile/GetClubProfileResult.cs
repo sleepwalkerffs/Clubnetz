@@ -20,5 +20,11 @@ public record GetClubProfileResult
     /// statistics, season review, subscription planner or profiles and trophy cases of others; they can buy court time.
     /// </summary>
     public bool IsActiveMember { get; set; }
+
+    /// <summary>
+    /// What the member may do in the club (role matrix and grants without a resource; Admin and support mode have everything). The app uses it to show
+    /// or hide things, the server decides.
+    /// </summary>
+    public List<Bookennis.Shared.Controller.Permissions.Permission> Permissions { get; set; } = [];
 }
 

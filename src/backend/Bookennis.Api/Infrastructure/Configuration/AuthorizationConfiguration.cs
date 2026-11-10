@@ -53,6 +53,14 @@ public static class AuthorizationConfiguration
                            .RequireAssertion(context => !context.User.IsClubApiKey())
                            .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Admin] }))
 
+                // Permission Manager Policy: only a signed-in admin, never an API key, so a key can't give itself or anybody more rights
+                .AddPolicy(AuthorizationPolicies.PermissionManager, policy =>
+                     policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                           .RequireAuthenticatedUser()
+                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                           .RequireAssertion(context => !context.User.IsClubApiKey())
+                           .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Admin] }))
+
                 // Club Payment Account Manager Policy: money matters. Only a signed-in admin connects the Stripe account, never an API key and not a treasurer.
                 .AddPolicy(AuthorizationPolicies.ClubPaymentAccountManager, policy =>
                      policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
