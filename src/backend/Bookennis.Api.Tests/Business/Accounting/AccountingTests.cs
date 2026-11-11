@@ -514,6 +514,30 @@ public class AccountingTests(TestFixture fixture) : TestBase(fixture)
     }
 
     [Fact]
+    public async Task AnnualReport_IsAPdfOfTheYear()
+    {
+        var basics = await SetUp();
+        await Book(basics, 12_000);
+        await Transfer(basics, 5_000);
+
+        var result = await SendAsync(new GetAnnualReport(ClubId, basics.FiscalYears[0].Id, Now));
+
+        System.Text.Encoding.ASCII.GetString(result.Data, 0, 5).Should().Be("%PDF-");
+        result.FileName.Should().EndWith(" 2026.pdf");
+        System.Text.RegularExpressions.Regex.Match(System.Text.Encoding.Latin1.GetString(result.Data), @"/Count (\d+)").Groups[1].Value.Should().Be("1");
+    }
+
+    [Fact]
+    public async Task AnnualReport_WithoutEntries_IsStillDrawn()
+    {
+        var basics = await SetUp();
+
+        var result = await SendAsync(new GetAnnualReport(ClubId, basics.FiscalYears[0].Id, Now));
+
+        System.Text.Encoding.ASCII.GetString(result.Data, 0, 5).Should().Be("%PDF-");
+    }
+
+    [Fact]
     public async Task Export_ShowsCancelledEntriesWithoutAmounts()
     {
         var basics = await SetUp();

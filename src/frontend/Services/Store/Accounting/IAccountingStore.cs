@@ -47,6 +47,9 @@ public interface IAccountingStore : ISemaphoreStore
     Task<HttpResult<FiscalYearDto>> RecordAudit(int fiscalYearId, RecordAuditModel model);
     Task<HttpResult<FileDownload>> Export(int fiscalYearId);
 
+    /// <summary>The annual report of the year as a PDF, drawn by the server like the invoices.</summary>
+    Task<HttpResult<FileDownload>> GetAnnualReport(int fiscalYearId);
+
     Task<HttpResult<MoneyAccountDto>> SaveMoneyAccount(int? moneyAccountId, SaveMoneyAccountModel model);
     Task<HttpResult> DeleteMoneyAccount(int moneyAccountId);
     Task<HttpResult<AccountingCategoryDto>> SaveCategory(int? categoryId, SaveAccountingCategoryModel model);

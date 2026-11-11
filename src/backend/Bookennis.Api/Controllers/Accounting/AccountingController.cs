@@ -90,6 +90,15 @@ public class AccountingController(IMediator mediator, IUserAccessor userAccessor
         return File(result.Data, ExportAccountingResult.ContentType, result.FileName);
     }
 
+    [HttpGet("fiscal-years/{fiscalYearId:int}/annual-report")]
+    [Authorize(AuthorizationPolicies.AccountingReader)]
+    public async Task<IActionResult> GetAnnualReport(int clubId, int fiscalYearId, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetAnnualReport(clubId, fiscalYearId, DateTimeOffset.UtcNow), cancellationToken);
+        Response.Headers.XContentTypeOptions = "nosniff";
+        return File(result.Data, AnnualReportFile.ContentType, result.FileName);
+    }
+
     // ---------- money accounts, categories, cost centers ----------
 
     [HttpPost("money-accounts")]

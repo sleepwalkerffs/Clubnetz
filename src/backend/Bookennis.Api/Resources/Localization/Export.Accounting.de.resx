@@ -141,4 +141,67 @@
   <data name="Total" xml:space="preserve">
     <value>Summe</value>
   </data>
+  <data name="AnnualReport" xml:space="preserve">
+    <value>Jahresabschluss</value>
+  </data>
+  <data name="AnnualReportSubtitle" xml:space="preserve">
+    <value>Einnahmen, Ausgaben und Geldkonten</value>
+  </data>
+  <data name="FiscalYear" xml:space="preserve">
+    <value>Geschäftsjahr</value>
+  </data>
+  <data name="Period" xml:space="preserve">
+    <value>Zeitraum</value>
+  </data>
+  <data name="StatusLabel" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="StatusOpen" xml:space="preserve">
+    <value>Noch offen</value>
+  </data>
+  <data name="StatusClosed" xml:space="preserve">
+    <value>Abgeschlossen</value>
+  </data>
+  <data name="AuditLabel" xml:space="preserve">
+    <value>Kassenprüfung</value>
+  </data>
+  <data name="NotAudited" xml:space="preserve">
+    <value>Noch nicht geprüft</value>
+  </data>
+  <data name="Audited" xml:space="preserve">
+    <value>Geprüft</value>
+  </data>
+  <data name="AuditedWithRemarks" xml:space="preserve">
+    <value>Geprüft mit Anmerkungen</value>
+  </data>
+  <data name="AuditedBy" xml:space="preserve">
+    <value>Geprüft von {0} am {1}.</value>
+  </data>
+  <data name="Created" xml:space="preserve">
+    <value>Erstellt</value>
+  </data>
+  <data name="IncomeStatementHint" xml:space="preserve">
+    <value>Nach steuerlichen Bereichen, neben dem Vorjahr</value>
+  </data>
+  <data name="MoneyAccountsTitle" xml:space="preserve">
+    <value>Vermögensübersicht</value>
+  </data>
+  <data name="MoneyAccountsHint" xml:space="preserve">
+    <value>Die Geldkonten am Anfang und am Ende des Jahres</value>
+  </data>
+  <data name="Incomes" xml:space="preserve">
+    <value>Einnahmen</value>
+  </data>
+  <data name="Expenses" xml:space="preserve">
+    <value>Ausgaben</value>
+  </data>
+  <data name="Transfers" xml:space="preserve">
+    <value>Umbuchungen</value>
+  </data>
+  <data name="NoEntries" xml:space="preserve">
+    <value>Keine Buchungen in diesem Geschäftsjahr.</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Seite {0} von {1}</value>
+  </data>
 </root>

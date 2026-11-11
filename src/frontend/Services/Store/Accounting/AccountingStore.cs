@@ -147,6 +147,9 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
     public async Task<HttpResult<FileDownload>> Export(int fiscalYearId)
         => (HttpResult<FileDownload>)await Save(async cancellationToken => await httpClient.Export(fiscalYearId, cancellationToken), nameof(Export));
 
+    public async Task<HttpResult<FileDownload>> GetAnnualReport(int fiscalYearId)
+        => (HttpResult<FileDownload>)await Save(async cancellationToken => await httpClient.GetAnnualReport(fiscalYearId, cancellationToken), nameof(GetAnnualReport));
+
     public Task<HttpResult<MoneyAccountDto>> SaveMoneyAccount(int? moneyAccountId, SaveMoneyAccountModel model)
         => SaveAndReload(token => httpClient.SaveMoneyAccount(moneyAccountId, model, token), nameof(SaveMoneyAccount));
 
