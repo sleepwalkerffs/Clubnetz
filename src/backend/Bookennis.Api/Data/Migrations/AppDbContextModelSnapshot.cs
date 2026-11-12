@@ -2394,6 +2394,10 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<bool>("CommentAllowed")
                         .HasColumnType("boolean");
 
+                    b.PrimitiveCollection<int[]>("CourtIds")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
                     b.Property<TimeSpan?>("FixedDuration")
                         .HasColumnType("interval");
 

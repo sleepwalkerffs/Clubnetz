@@ -39,6 +39,17 @@ public class PlayMode : TenantDomainEntity
     public int? MaxBookingsPerSeason { get; private set; }
     public bool AllowRecurring { get; private set; }
 
+    /// <summary>
+    /// The courts the play mode can be booked on. Empty: every court of the club (the default).
+    /// Bookings that already exist on other courts are kept when the list changes.
+    /// </summary>
+    public int[] CourtIds { get; private set; } = [];
+
+    public bool IsAllowedOnCourt(int courtId) => CourtIds.Length == 0 || CourtIds.Contains(courtId);
+
+    /// <summary>Limits the play mode to these courts; an empty list allows every court.</summary>
+    public void RestrictToCourts(IEnumerable<int> courtIds) => CourtIds = courtIds.Distinct().Order().ToArray();
+
     public void Update(MemberRole[] allowedRoles, Color color, int? fixedPlayerCount, bool isChargingBookingSubscription, string name, TimeSpan? fixedDuration, bool canOverbook, bool commentAllowed, int? maxBookingsPerSeason = null, bool allowRecurring = false)
     {
         AllowedRoles = allowedRoles;

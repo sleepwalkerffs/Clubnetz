@@ -49,7 +49,7 @@
                          ColorFunc="@(playMode => BookingColors.ToHex(playMode.Color))" />
         }
 
-        <ChoiceChips TItem="CourtResult" Label="@Locale["Court"]" Items="@Courts" Value="@SelectedCourt"
+        <ChoiceChips TItem="CourtResult" Label="@Locale["Court"]" Items="@CourtsOfPlayMode" Value="@SelectedCourt"
                      ValueChanged="@(court => SelectedCourt = court)" TextFunc="@(court => court.Name)" />
 
         <div>
@@ -198,6 +198,16 @@
     private int RecurrenceIntervalWeeks { get; set; } = 1;
     private DateTime? RecurringEndDate { get; set; }
 
+    /// <summary>The courts the selected play mode can be booked on (<see cref="PlayModeDto.CourtIds"/>).</summary>
+    private List<CourtResult> CourtsOfPlayMode => Courts.Where(court => selectedPlayMode.IsAllowedOnCourt(court.CourtId)).ToList();
+
+    /// <summary>A play mode limited to one court needs no choice.</summary>
+    private void SelectSingleCourt()
+    {
+        if (SelectedCourt is null && CourtsOfPlayMode is [var onlyCourt])
+            SelectedCourt = onlyCourt;
+    }
+
     private TimeSpan? EffectiveEnd => EntireDay
         ? TimeSpan.FromHours(StopHourOfTheDay)
         : selectedPlayMode.FixedDuration is { } fixedDuration ? Time + fixedDuration : EndTime;
@@ -220,13 +230,22 @@
 
         initialized = true;
         Time ??= DateTime.Now.TimeOfDay.Round(TimeSpanRoundingType.HalfHour, MidpointRounding.ToPositiveInfinity);
-        selectedPlayMode = PlayModes.First();
+        // A court chosen in the grid keeps its court: start with a play mode that can be booked there
+        selectedPlayMode = SelectedCourt is { } court
+            ? PlayModes.FirstOrDefault(playMode => playMode.IsAllowedOnCourt(court.CourtId)) ?? PlayModes.First()
+            : PlayModes.First();
+        if (SelectedCourt is not null && !selectedPlayMode.IsAllowedOnCourt(SelectedCourt.CourtId))
+            SelectedCourt = null;
+        SelectSingleCourt();
         EndTime = Time + TimeSpan.FromHours(1);
     }
 
     private void OnPlayModeChanged(PlayModeDto playMode)
     {
         selectedPlayMode = playMode;
+        if (SelectedCourt is not null && !playMode.IsAllowedOnCourt(SelectedCourt.CourtId))
+            SelectedCourt = null;
+        SelectSingleCourt();
         if (!playMode.AllowRecurring)
             IsRecurring = false;
         PlayerSelectionComponent?.ClearSelection();

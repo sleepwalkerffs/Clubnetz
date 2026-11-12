@@ -57,7 +57,7 @@
                              TextFunc="@FormatDuration" />
             }
 
-            <MultiChoiceChips TItem="CourtResult" Label="@L["Field_Courts"]" Items="@Courts" Values="@selectedCourts" ValuesChanged="c => selectedCourts = c"
+            <MultiChoiceChips TItem="CourtResult" Label="@L["Field_Courts"]" Items="@CourtsOfPlayMode" Values="@selectedCourts" ValuesChanged="c => selectedCourts = c"
                               TextFunc="@(court => court.Name)" />
             <div class="create-request__hint">@L["Field_Courts_Hint"]</div>
 
@@ -180,12 +180,24 @@
         candidateItems = Store.Candidates.ConvertAll(c => new FamilyMemberDto { MemberId = c.MemberId, FirstName = c.FirstName, LastName = c.LastName });
 
         if (PlayModes.Count > 0)
+        {
             selectedPlayMode = PlayModes[0];
+            selectedCourts = CourtsOfPlayMode;
+        }
 
         loaded = true;
     }
 
-    private void OnPlayModeChanged(PlayModeDto playMode) => selectedPlayMode = playMode;
+    /// <summary>The courts the selected play mode can be booked on (<see cref="PlayModeDto.CourtIds"/>).</summary>
+    private List<CourtResult> CourtsOfPlayMode => selectedPlayMode is null ? Courts : Courts.Where(c => selectedPlayMode.IsAllowedOnCourt(c.CourtId)).ToList();
+
+    private void OnPlayModeChanged(PlayModeDto playMode)
+    {
+        selectedPlayMode = playMode;
+        // Keep the chosen courts the new play mode allows; none left: all of its courts
+        var kept = selectedCourts.Where(c => playMode.IsAllowedOnCourt(c.CourtId)).ToList();
+        selectedCourts = kept.Count > 0 ? kept : CourtsOfPlayMode;
+    }
 
     private void OnGroupChanged(PlayerGroupDto group)
     {

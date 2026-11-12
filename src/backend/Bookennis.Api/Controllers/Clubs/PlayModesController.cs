@@ -27,7 +27,8 @@ public class PlayModesController(IMediator mediator) : ClubControllerBase
             request.CanOverbook,
             request.CommentAllowed,
             request.MaxBookingsPerSeason,
-            request.AllowRecurring), cancellationToken);
+            request.AllowRecurring,
+            request.CourtIds.ToArray()), cancellationToken);
 
     [HttpPut("{playModeId:int}")]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]
@@ -43,7 +44,14 @@ public class PlayModesController(IMediator mediator) : ClubControllerBase
             request.CanOverbook,
             request.CommentAllowed,
             request.MaxBookingsPerSeason,
-            request.AllowRecurring), cancellationToken);
+            request.AllowRecurring,
+            request.CourtIds.ToArray()), cancellationToken);
+
+    /// <summary>Upcoming bookings of the play mode on courts outside the given ones (they are kept when the play mode is limited).</summary>
+    [HttpPost("{playModeId:int}/court-conflicts")]
+    [Authorize(AuthorizationPolicies.ClubAdministrator)]
+    public Task<PlayModeCourtConflictsResult> GetCourtConflicts([FromRoute] int clubId, int playModeId, PlayModeCourtConflictsRequest request, CancellationToken cancellationToken)
+        => mediator.Send(new GetPlayModeCourtConflicts(clubId, playModeId, request.CourtIds.ToArray()), cancellationToken);
 
     [HttpDelete("{playModeId:int}")]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]

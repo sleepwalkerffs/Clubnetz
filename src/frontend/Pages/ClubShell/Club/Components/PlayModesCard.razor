@@ -37,6 +37,10 @@
                                 {
                                     <span class="fact fact--quota">🎯 @string.Format(L["QuotaFact"], max)</span>
                                 }
+                                @if (playMode.CourtIds.Count > 0)
+                                {
+                                    <span class="fact">📍 @CourtNames(playMode)</span>
+                                }
                             </span>
                             <span class="playmode__flags">
                                 @Flag(playMode.IsChargingBookingSubscription, "💳", L["FlagCharging"])
@@ -64,6 +68,9 @@
 
 @code {
     [Inject] private IClubStore ClubStore { get; set; } = null!;
+
+    private string CourtNames(PlayModeDto playMode)
+        => string.Join(", ", ClubStore.Courts.Where(c => playMode.CourtIds.Contains(c.CourtId)).OrderBy(c => c.SortOrder).Select(c => c.Name));
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;

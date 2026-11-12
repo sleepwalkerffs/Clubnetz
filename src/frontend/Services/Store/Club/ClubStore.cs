@@ -83,6 +83,9 @@ public class ClubStore(IClubsHttpClient clubsHttpClient, IClubProfileStore clubP
         return result;
     }, nameof(UpdatePlayMode));
 
+    public Task<HttpResult<PlayModeCourtConflictsResult>> GetPlayModeCourtConflicts(int playModeId, List<int> courtIds)
+        => clubsHttpClient.GetPlayModeCourtConflicts(clubProfileStore.SelectedClubId, playModeId, new PlayModeCourtConflictsRequest { CourtIds = courtIds });
+
     public Task<HttpResult> DeletePlayMode(int playModeId) => RunInSavingContextAsync(async cancellationToken =>
     {
         var result = await clubsHttpClient.DeletePlayMode(clubProfileStore.SelectedClubId, playModeId, cancellationToken);

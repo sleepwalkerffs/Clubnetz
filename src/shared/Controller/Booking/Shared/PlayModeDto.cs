@@ -15,4 +15,9 @@ public record PlayModeDto
     public required bool CommentAllowed { get; init; }
     public required int? MaxBookingsPerSeason { get; init; }
     public required bool AllowRecurring { get; init; }
+
+    /// <summary>The courts the play mode can be booked on; empty means every court.</summary>
+    public List<int> CourtIds { get; init; } = [];
+
+    public bool IsAllowedOnCourt(int courtId) => CourtIds.Count == 0 || CourtIds.Contains(courtId);
 }
