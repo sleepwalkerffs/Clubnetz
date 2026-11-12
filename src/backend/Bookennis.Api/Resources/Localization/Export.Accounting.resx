@@ -141,4 +141,67 @@
   <data name="Total" xml:space="preserve">
     <value>Total</value>
   </data>
+  <data name="AnnualReport" xml:space="preserve">
+    <value>Annual report</value>
+  </data>
+  <data name="AnnualReportSubtitle" xml:space="preserve">
+    <value>Income, expenses and money accounts</value>
+  </data>
+  <data name="FiscalYear" xml:space="preserve">
+    <value>Fiscal year</value>
+  </data>
+  <data name="Period" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="StatusLabel" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="StatusOpen" xml:space="preserve">
+    <value>Still open</value>
+  </data>
+  <data name="StatusClosed" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="AuditLabel" xml:space="preserve">
+    <value>Audit</value>
+  </data>
+  <data name="NotAudited" xml:space="preserve">
+    <value>Not audited yet</value>
+  </data>
+  <data name="Audited" xml:space="preserve">
+    <value>Audited</value>
+  </data>
+  <data name="AuditedWithRemarks" xml:space="preserve">
+    <value>Audited with remarks</value>
+  </data>
+  <data name="AuditedBy" xml:space="preserve">
+    <value>Audited by {0} on {1}.</value>
+  </data>
+  <data name="Created" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="IncomeStatementHint" xml:space="preserve">
+    <value>Einnahmen-Ausgaben-Rechnung by tax area, next to the year before</value>
+  </data>
+  <data name="MoneyAccountsTitle" xml:space="preserve">
+    <value>Overview of assets</value>
+  </data>
+  <data name="MoneyAccountsHint" xml:space="preserve">
+    <value>The money accounts at the start and the end of the year</value>
+  </data>
+  <data name="Incomes" xml:space="preserve">
+    <value>Income</value>
+  </data>
+  <data name="Expenses" xml:space="preserve">
+    <value>Expenses</value>
+  </data>
+  <data name="Transfers" xml:space="preserve">
+    <value>Transfers</value>
+  </data>
+  <data name="NoEntries" xml:space="preserve">
+    <value>No entries in this fiscal year.</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Page {0} of {1}</value>
+  </data>
 </root>

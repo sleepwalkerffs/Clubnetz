@@ -142,6 +142,36 @@
 
 /* Printing a page (e.g. the annual report of the finances): only the content, without the app bar and the navigation */
 @media print {
+    /* Paper is white: print with the light palette even in dark mode, otherwise the light text and dark lines
+       of the dark theme come out grey and blotchy. Values match PaletteLight in BaseLayout.razor. */
+    :root {
+        --mud-palette-text-primary: #0F172A !important;
+        --mud-palette-text-secondary: #475569 !important;
+        --mud-palette-background: #FFFFFF !important;
+        --mud-palette-background-gray: #F0F5F2 !important;
+        --mud-palette-surface: #FFFFFF !important;
+        --mud-palette-lines-default: #E2E8F0 !important;
+        --mud-palette-lines-inputs: #CBD5E1 !important;
+        --mud-palette-table-lines: #E2E8F0 !important;
+        --mud-palette-divider: #E2E8F0 !important;
+        --mud-palette-primary: #059669 !important;
+        --mud-palette-success: #047857 !important;
+        --mud-palette-error: #B91C1C !important;
+        --bk-dark-green: initial;
+        --bk-dark-amber: initial;
+        --bk-dark-red: initial;
+        --bk-dark-blue: initial;
+        --bk-dark-indigo: initial;
+        --bk-dark-violet: initial;
+        --bk-dark-pink: initial;
+    }
+
+    html,
+    body {
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+    }
+
     .mud-appbar,
     .mud-drawer,
     .mud-drawer-overlay,

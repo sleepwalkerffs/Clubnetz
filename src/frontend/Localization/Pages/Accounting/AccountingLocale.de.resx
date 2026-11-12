@@ -439,22 +439,10 @@
     <value>Überschuss / Fehlbetrag</value>
   </data>
   <data name="Report_Print" xml:space="preserve">
-    <value>Jahresabschluss drucken</value>
+    <value>Jahresabschluss (PDF)</value>
   </data>
   <data name="Report_Export" xml:space="preserve">
     <value>Excel</value>
-  </data>
-  <data name="Report_PrintTitle" xml:space="preserve">
-    <value>Jahresabschluss {0}</value>
-  </data>
-  <data name="Report_PrintOpen" xml:space="preserve">
-    <value>Rechnungsjahr noch offen</value>
-  </data>
-  <data name="Report_PrintClosed" xml:space="preserve">
-    <value>Rechnungsjahr abgeschlossen</value>
-  </data>
-  <data name="Report_PrintAudited" xml:space="preserve">
-    <value>geprüft von {0} am {1}</value>
   </data>
   <data name="Sphere_NonProfit" xml:space="preserve">
     <value>Ideeller Bereich</value>

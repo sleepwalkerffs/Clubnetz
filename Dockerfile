@@ -6,8 +6,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0.401 AS build
 
 # The WebAssembly build tools need Python
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 \
+RUN for attempt in 1 2 3 4 5; do \
+        apt-get -o Acquire::Retries=3 update \
+        && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 \
+        && break; \
+        echo "apt-get failed (attempt $attempt of 5), trying again in 20 s"; sleep 20; \
+    done \
+    && command -v python3 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /source
@@ -30,9 +35,16 @@ RUN dotnet publish src/backend/Bookennis.Api/Bookennis.Api.csproj \
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
-# curl is only there for the health check
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+# curl is only there for the health check.
+# apt-get tries again for a while: the Ubuntu mirrors are sometimes not reachable from the build machines
+# for a few minutes (DNS), and one miss failed the whole deployment.
+RUN for attempt in 1 2 3 4 5; do \
+        apt-get -o Acquire::Retries=3 update \
+        && apt-get -o Acquire::Retries=3 install -y --no-install-recommends curl \
+        && break; \
+        echo "apt-get failed (attempt $attempt of 5), trying again in 20 s"; sleep 20; \
+    done \
+    && command -v curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

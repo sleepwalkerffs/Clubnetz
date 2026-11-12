@@ -22,6 +22,7 @@ public interface IAccountingHttpClient
     public Task<HttpResult<CostCenterReportDto>> GetCostCenterReport(int fiscalYearId, CancellationToken cancellationToken = default);
     public Task<HttpResult<AccountSheetDto>> GetAccountSheet(int fiscalYearId, int moneyAccountId, CancellationToken cancellationToken = default);
     public Task<HttpResult<FileDownload>> Export(int fiscalYearId, CancellationToken cancellationToken = default);
+    public Task<HttpResult<FileDownload>> GetAnnualReport(int fiscalYearId, CancellationToken cancellationToken = default);
 
     public Task<HttpResult<MoneyAccountDto>> SaveMoneyAccount(int? moneyAccountId, SaveMoneyAccountModel model, CancellationToken cancellationToken = default);
     public Task<HttpResult> DeleteMoneyAccount(int moneyAccountId, CancellationToken cancellationToken = default);

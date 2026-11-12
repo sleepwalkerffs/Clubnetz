@@ -439,22 +439,10 @@
     <value>Surplus / deficit</value>
   </data>
   <data name="Report_Print" xml:space="preserve">
-    <value>Print annual report</value>
+    <value>Annual report (PDF)</value>
   </data>
   <data name="Report_Export" xml:space="preserve">
     <value>Excel</value>
-  </data>
-  <data name="Report_PrintTitle" xml:space="preserve">
-    <value>Annual report {0}</value>
-  </data>
-  <data name="Report_PrintOpen" xml:space="preserve">
-    <value>fiscal year still open</value>
-  </data>
-  <data name="Report_PrintClosed" xml:space="preserve">
-    <value>fiscal year closed</value>
-  </data>
-  <data name="Report_PrintAudited" xml:space="preserve">
-    <value>audited by {0} on {1}</value>
   </data>
   <data name="Sphere_NonProfit" xml:space="preserve">
     <value>Non-profit area</value>

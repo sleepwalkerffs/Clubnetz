@@ -2,6 +2,7 @@ using System.Globalization;
 using Bookennis.Domain.Accounting;
 using QRCoder;
 using SkiaSharp;
+using static Bookennis.Api.Business.Accounting.PdfKit;
 
 namespace Bookennis.Api.Business.Accounting;
 
@@ -15,19 +16,6 @@ public record InvoicePdfData(Invoice Invoice, InvoiceSettings Settings, string C
 /// </summary>
 public static class InvoicePdf
 {
-    private const float PageWidth = 595f;
-    private const float PageHeight = 842f;
-    private const float Margin = 50f;
-    private const float Right = PageWidth - Margin;
-
-    private static readonly Lazy<SKTypeface> Regular = new(() => LoadFont("Lato-Regular.ttf"));
-    private static readonly Lazy<SKTypeface> Bold = new(() => LoadFont("Lato-Bold.ttf"));
-
-    private static readonly SKColor Ink = new(0x1F, 0x29, 0x37);
-    private static readonly SKColor Muted = new(0x6B, 0x72, 0x80);
-    private static readonly SKColor Line = new(0xD1, 0xD5, 0xDB);
-    private static readonly SKColor Accent = new(0x05, 0x96, 0x69);
-
     private sealed record Texts(
         string Invoice, string Number, string Date, string Due, string ServicePeriod, string Pos, string Description, string Quantity, string UnitPrice,
         string Amount, string Total, string PayTitle, string PayText, string Reference, string QrCaption, string Draft, string Cancelled, string Paid, string Page, string Zvr);
@@ -50,18 +38,7 @@ public static class InvoicePdf
         var culture = CultureInfo.GetCultureInfo(invoice.German ? "de-AT" : "en-AT");
 
         using var stream = new MemoryStream();
-        var metadata = new SKDocumentPdfMetadata
-        {
-            Title = $"{texts.Invoice} {invoice.Number ?? texts.Draft}",
-            Author = data.ClubName,
-            Creator = "Clubnetz",
-            Producer = "Clubnetz",
-            Creation = DateTime.UtcNow,
-            Modified = DateTime.UtcNow,
-            RasterDpi = 300,
-            EncodingQuality = 95,
-            PdfA = false,
-        };
+        var metadata = Metadata($"{texts.Invoice} {invoice.Number ?? texts.Draft}", data.ClubName);
 
         // Two passes: the first counts the pages for "page 1 of 2"
         var pageCount = Draw(null, data, texts, culture, 0);
@@ -229,8 +206,7 @@ public static class InvoicePdf
             NewPage(header: false);
 
         var boxTop = y - 14;
-        using (var box = new SKPaint { Color = new SKColor(0xF3, 0xF4, 0xF6), IsAntialias = true })
-            canvas.DrawRoundRect(new SKRect(Margin, boxTop, Right, boxTop + qrSize + 24), 8, 8, box);
+        Box(canvas, new SKRect(Margin, boxTop, Right, boxTop + qrSize + 24), Panel);
 
         var textX = Margin + 14;
         y += 2;
@@ -331,63 +307,9 @@ public static class InvoicePdf
         }
     }
 
-    private static void Text(SKCanvas canvas, string text, float x, float y, float size, bool bold = false, SKColor? color = null, SKTextAlign align = SKTextAlign.Left)
-    {
-        using var font = new SKFont(bold ? Bold.Value : Regular.Value, size);
-        using var paint = new SKPaint { Color = color ?? Ink, IsAntialias = true };
-        canvas.DrawText(text, x, y, align, font, paint);
-    }
-
-    private static void Rule(SKCanvas canvas, float y)
-    {
-        using var paint = new SKPaint { Color = Line, StrokeWidth = 0.8f, IsAntialias = true };
-        canvas.DrawLine(Margin, y, Right, y, paint);
-    }
-
-    /// <summary>Breaks <paramref name="text"/> into lines that fit <paramref name="width"/> (long words are cut).</summary>
-    private static List<string> Wrap(string text, float width, float size, bool bold)
-    {
-        using var font = new SKFont(bold ? Bold.Value : Regular.Value, size);
-        var lines = new List<string>();
-        var current = "";
-        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var candidate = current.Length == 0 ? word : current + " " + word;
-            if (font.MeasureText(candidate) <= width)
-            {
-                current = candidate;
-                continue;
-            }
-
-            if (current.Length > 0)
-                lines.Add(current);
-            current = word;
-            while (font.MeasureText(current) > width && current.Length > 1)
-            {
-                var cut = current.Length - 1;
-                while (cut > 1 && font.MeasureText(current[..cut]) > width)
-                    cut--;
-                lines.Add(current[..cut]);
-                current = current[cut..];
-            }
-        }
-
-        if (current.Length > 0 || lines.Count == 0)
-            lines.Add(current);
-        return lines;
-    }
-
     private static string FormatIban(string iban)
     {
         var compact = iban.Replace(" ", "", StringComparison.Ordinal);
         return string.Join(' ', Enumerable.Range(0, (compact.Length + 3) / 4).Select(i => compact.Substring(i * 4, Math.Min(4, compact.Length - i * 4))));
-    }
-
-    private static SKTypeface LoadFont(string name)
-    {
-        using var stream = typeof(InvoicePdf).Assembly.GetManifestResourceStream($"Bookennis.Api.Resources.Fonts.{name}")
-                           ?? throw new InvalidOperationException($"The font {name} is not embedded.");
-        using var data = SKData.Create(stream);
-        return SKTypeface.FromData(data) ?? throw new InvalidOperationException($"The font {name} could not be read.");
     }
 }

@@ -450,23 +450,6 @@
     border-bottom: 3px double var(--mud-palette-lines-inputs);
 }
 
-.acc-page ::deep .print-only {
-    display: none;
-}
-
-.acc-page ::deep .acc-print-head__club {
-    font-size: 0.9rem;
-}
-
-.acc-page ::deep .acc-print-head__title {
-    font-size: 1.5rem;
-    font-weight: 800;
-}
-
-.acc-page ::deep .acc-print-head__meta {
-    font-size: 0.85rem;
-}
-
 /* ---------- settings ---------- */
 
 .acc-page ::deep .acc-years {
@@ -747,10 +730,6 @@
     .acc-page ::deep .no-print,
     .no-print {
         display: none !important;
-    }
-
-    .acc-page ::deep .print-only {
-        display: block;
     }
 
     .acc-page ::deep .acc-table__wide {

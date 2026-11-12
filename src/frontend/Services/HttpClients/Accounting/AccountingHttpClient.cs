@@ -47,6 +47,9 @@ public class AccountingHttpClient(HttpClient httpClient, JsonSerializerOptions j
     public async Task<HttpResult<FileDownload>> Export(int fiscalYearId, CancellationToken cancellationToken = default)
         => await (await httpClient.GetAsync($"fiscal-years/{fiscalYearId}/export", cancellationToken)).AsFileHttpResult(jsonOptions, cancellationToken);
 
+    public async Task<HttpResult<FileDownload>> GetAnnualReport(int fiscalYearId, CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync($"fiscal-years/{fiscalYearId}/annual-report", cancellationToken)).AsFileHttpResult(jsonOptions, cancellationToken);
+
     public async Task<HttpResult<MoneyAccountDto>> SaveMoneyAccount(int? moneyAccountId, SaveMoneyAccountModel model, CancellationToken cancellationToken = default)
         => await (moneyAccountId is { } id
             ? await httpClient.PutAsJsonAsync($"money-accounts/{id}", model, jsonOptions, cancellationToken)
