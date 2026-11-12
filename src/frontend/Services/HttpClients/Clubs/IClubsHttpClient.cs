@@ -9,6 +9,7 @@ public interface IClubsHttpClient
     public Task<HttpResult<GetPlayModesResult>> GetPlayModes(int clubId, CancellationToken cancellationToken = default);
     public Task<HttpResult> AddPlayMode(int clubId, PlayModeRequest request, CancellationToken cancellationToken = default);
     public Task<HttpResult> UpdatePlayMode(int clubId, int playModeId, PlayModeRequest request, CancellationToken cancellationToken = default);
+    public Task<HttpResult<PlayModeCourtConflictsResult>> GetPlayModeCourtConflicts(int clubId, int playModeId, PlayModeCourtConflictsRequest request, CancellationToken cancellationToken = default);
     public Task<HttpResult> DeletePlayMode(int clubId, int playModeId, CancellationToken cancellationToken = default);
     public Task<HttpResult<GetPlayersResult>> GetPlayers(int clubId, CancellationToken cancellationToken = default);
     public Task<HttpResult<GetCourtsResult>> GetCourts(int clubId, CancellationToken cancellationToken = default);

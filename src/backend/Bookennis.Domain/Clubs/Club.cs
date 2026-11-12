@@ -117,8 +117,9 @@ public class Club : DomainEntity, IAggregateRoot
     public static bool IsValidWebsiteUrl(string url)
         => Uri.TryCreate(url, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 
-    public void AddPlayMode(PlayModeDto playMode)
-        => playModes.Add(new PlayMode(
+    public PlayMode AddPlayMode(PlayModeDto playMode)
+    {
+        var added = new PlayMode(
             this,
             playMode.AllowedRoles,
             playMode.Color,
@@ -129,8 +130,10 @@ public class Club : DomainEntity, IAggregateRoot
             playMode.CanOverbook,
             playMode.CommentAllowed,
             playMode.MaxBookingsPerSeason,
-            playMode.AllowRecurring)
-        );
+            playMode.AllowRecurring);
+        playModes.Add(added);
+        return added;
+    }
 
     public void UpdatePlayMode(int playModeId, PlayModeDto dto)
     {

@@ -40,6 +40,9 @@ public class BookingDomainService : IBookingDomainService
 
         /// <summary>The club does not sell slots in prime time (<see cref="PrimeTimeSettings.RestrictGuests"/>).</summary>
         CannotBuyWithinPrimeTime = 18,
+
+        /// <summary>The play mode is limited to other courts (<see cref="PlayMode.CourtIds"/>).</summary>
+        PlayModeNotAllowedOnCourt = 19,
     }
 
     public Booking BookCourt(Context context, DateTimeOffsetInterval offsetInterval, string timeZoneInfoId, string? comment)
@@ -64,6 +67,10 @@ public class BookingDomainService : IBookingDomainService
 
         if (offsetInterval.From >= offsetInterval.To)
             throw new PreconditionException(ErrorCode.InvalidTime, "Cannot play this amount of time");
+
+        // The play mode is limited to some courts: this holds for everyone, also for staff and overbooking play modes
+        if (!context.PlayMode.IsAllowedOnCourt(context.Court.Id))
+            throw new PreconditionException(ErrorCode.PlayModeNotAllowedOnCourt, [context.PlayMode.Name, context.Court.Name], $"{context.PlayMode.Name} cannot be played on {context.Court.Name}");
 
         // Opening hours and prime time are wall-clock times of the club, so the booking is compared in the club's local time
         var localFrom = ClubTimeZone.ToLocal(offsetInterval.From);

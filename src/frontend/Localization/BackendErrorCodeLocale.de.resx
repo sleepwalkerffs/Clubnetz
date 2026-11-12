@@ -996,4 +996,7 @@
   <data name="ClubLocationInvalid" xml:space="preserve">
     <value>Die Koordinaten sind ungültig: Der Breitengrad muss zwischen -90 und 90 liegen, der Längengrad zwischen -180 und 180.</value>
   </data>
+  <data name="PlayModeNotAllowedOnCourt" xml:space="preserve">
+    <value>{0} kann auf {1} nicht gebucht werden. Wähle einen anderen Platz oder eine andere Spielart.</value>
+  </data>
 </root>

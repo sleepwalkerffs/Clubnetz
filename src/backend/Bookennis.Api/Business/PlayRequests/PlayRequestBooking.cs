@@ -20,6 +20,7 @@ internal static class PlayRequestBooking
         nameof(BookingDomainService.ErrorCode.CourtOccupied),
         nameof(BookingDomainService.ErrorCode.CourtBlocked),
         nameof(BookingDomainService.ErrorCode.CourtInactive),
+        nameof(BookingDomainService.ErrorCode.PlayModeNotAllowedOnCourt),
     ];
 
     /// <summary>

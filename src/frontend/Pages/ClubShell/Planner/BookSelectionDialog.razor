@@ -186,7 +186,8 @@
 
     protected override void OnInitialized()
     {
-        selectedPlayMode = PlayModes.First();
+        // Start with a play mode that can be booked on every selected court; the dry run shows the slots another one can't take
+        selectedPlayMode = PlayModes.FirstOrDefault(playMode => Slots.All(slot => playMode.IsAllowedOnCourt(slot.CourtId))) ?? PlayModes.First();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

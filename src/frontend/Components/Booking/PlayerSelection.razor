@@ -129,15 +129,20 @@
 
     private int FreeSlots => MaxPlayers is { } max ? Math.Max(max - SelectedPlayers.Count, 0) : 0;
 
+    /// <summary>The selection was cleared at least once, so re-applying <see cref="InitialPlayers"/> changes what the parent saw.</summary>
+    private bool ClearedOnce;
+
     public void ClearSelection()
     {
         selectedPlayers.Clear();
         initialized = false;
+        ClearedOnce = true;
         StateHasChanged();
     }
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
+        var reinitialized = false;
         if (FixedPlayer != lastFixedPlayerParameter)
         {
             lastFixedPlayerParameter = FixedPlayer;
@@ -148,6 +153,7 @@
         {
             selectedPlayers = [.. InitialPlayers];
             initialized = true;
+            reinitialized = ClearedOnce;
         }
 
         // A smaller player count (e.g. after changing the play mode) drops the surplus players
@@ -157,6 +163,10 @@
             if (selectedPlayers.Count > allowed)
                 selectedPlayers = selectedPlayers.Take(allowed).ToList();
         }
+
+        // After ClearSelection the parent rendered with no players (e.g. its submit button disabled); tell it they are back
+        if (reinitialized)
+            await OnSelectionChanged.InvokeAsync();
     }
 
     private async Task RemovePlayer(PlayerResult player)

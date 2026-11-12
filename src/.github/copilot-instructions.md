@@ -490,6 +490,14 @@ Some play modes have a `MaxBookingsPerSeason` (int?) limit. Members can track th
 - Quotas are always shown for activated seasons (even when `UsedBookings = 0`).
 - Progress bar color: Primary (< 75%), Warning (75–99%), Error (≥ 100%).
 
+## Play Modes on Courts
+
+- `PlayMode.CourtIds` (Postgres `integer[]`): the courts a play mode can be booked on. **Empty = every court** (the default). `IsAllowedOnCourt(courtId)` on the entity and on `PlayModeDto` (Shared, for the FE).
+- `BookingDomainService` rejects other courts with `ErrorCode.PlayModeNotAllowedOnCourt` (details: play mode name, court name), early in the checks. It holds for everyone (admins, staff, overbooking modes, bought slots, planner, recurring, play requests). `PlayRequestBooking` treats it like an occupied court and tries the next court.
+- Admin: section "Courts" in `EditPlayModeDialog` (switch "every court" + court chips). `AddPlayMode`/`UpdatePlayMode` take `CourtIds` and check they are courts of the club (`PlayModeCourts.EnsureCourtsOfClub`, `EntityNotFoundException`). The admin-panel play mode handlers don't touch the courts. `AdminDeleteCourt` removes the court from the lists.
+- **Existing bookings are kept** when a play mode is limited: `POST PlayModes/{id}/court-conflicts` (`GetPlayModeCourtConflicts`, `ClubAdministrator`) counts upcoming bookings on other courts; the dialog shows the count and the button turns into "Save anyway".
+- FE booking dialogs only offer the allowed courts (`BookCourt`, `BookingDetail` edit, `CreatePlayRequestDialog`); the planner starts with a play mode that fits all selected courts and the dry run shows the rest. Tests: `BookingDomainServicePlayModeCourtTests`, `PlayModeCourtsTests`, `PlayModeCourtsSecurityTests`.
+
 ## Subscription Planner (Abo-Planer)
 
 ### Overview

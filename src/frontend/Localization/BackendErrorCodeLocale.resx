@@ -996,4 +996,7 @@
   <data name="ClubLocationInvalid" xml:space="preserve">
     <value>The coordinates are not valid: the latitude must be between -90 and 90, the longitude between -180 and 180.</value>
   </data>
+  <data name="PlayModeNotAllowedOnCourt" xml:space="preserve">
+    <value>{0} can't be booked on {1}. Choose another court or play mode.</value>
+  </data>
 </root>

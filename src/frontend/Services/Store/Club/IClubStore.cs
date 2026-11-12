@@ -25,6 +25,9 @@ public interface IClubStore : ISemaphoreStore
     public Task<HttpResult> AddPlayMode(PlayModeRequest request);
     public Task<HttpResult> UpdatePlayMode(int playModeId, PlayModeRequest request);
     public Task<HttpResult> DeletePlayMode(int playModeId);
+
+    /// <summary>Upcoming bookings of the play mode on courts outside <paramref name="courtIds"/> (they are kept when it is limited).</summary>
+    public Task<HttpResult<PlayModeCourtConflictsResult>> GetPlayModeCourtConflicts(int playModeId, List<int> courtIds);
     public Task LoadCourts();
     public Task<HttpResult> UpdateCourt(int courtId, string courtName, string alias, DateTimeOffsetInterval? inactive, int sortOrder, bool isIndoor);
     public void ClearCourts();

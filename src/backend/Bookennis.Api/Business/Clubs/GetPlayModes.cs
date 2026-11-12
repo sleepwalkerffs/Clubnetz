@@ -29,6 +29,7 @@ public record GetPlayModes() : ICommand<GetPlayModesResult>
                     CommentAllowed = x.CommentAllowed,
                     MaxBookingsPerSeason = x.MaxBookingsPerSeason,
                     AllowRecurring = x.AllowRecurring,
+                    CourtIds = x.CourtIds.ToList(),
                 }).ToList()
             };
         }
