@@ -28,167 +28,174 @@
     var season = ClubStore.Seasons.FirstOrDefault(s => s.Id == selectedSeasonId);
 }
 
-<div class="badge-page">
-    <AdminHero Emoji="🏅" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Title"]" Subtitle="@L["Subtitle"]">
-        <Chips>
-            <span class="hero-chip">🪜 @L.Count("TiersChip", tiers.Count)</span>
-            <span class="hero-chip">✨ @L.Count("OneTimeChip", oneTimeBadges.Count)</span>
-            <span class="hero-chip">🎉 @L.Count("AwardsChip", tiers.Sum(t => t.EarnedCount) + oneTimeBadges.Sum(b => b.Awardees.Count))</span>
-        </Chips>
-        <Aside>
-            <div class="badge-aside__caption">@L["SeasonCaption"]</div>
-            <div class="badge-aside__value">@(season is null ? "–" : string.Format(L["SeasonName"], MemberAdminHelpers.SeasonLabel(season)))</div>
-            @if (tiers.LastOrDefault(t => t.EarnedCount > 0) is { } topEarned)
-            {
-                <div class="badge-aside__text">@string.Format(L["TopEarned"], topEarned.Name, topEarned.EarnedCount)</div>
-            }
-            else
-            {
-                <div class="badge-aside__text">@L["NothingEarnedYet"]</div>
-            }
-        </Aside>
-    </AdminHero>
+@if (!canManageOneTimeBadges)
+{
+    <MudAlert Severity="Severity.Info">@L["NoAccess"]</MudAlert>
+}
+else
+{
+    <div class="badge-page">
+        <AdminHero Emoji="🏅" Eyebrow="@ClubProfileStore.SelectedClub?.ClubName" Title="@L["Title"]" Subtitle="@L["Subtitle"]">
+            <Chips>
+                <span class="hero-chip">🪜 @L.Count("TiersChip", tiers.Count)</span>
+                <span class="hero-chip">✨ @L.Count("OneTimeChip", oneTimeBadges.Count)</span>
+                <span class="hero-chip">🎉 @L.Count("AwardsChip", tiers.Sum(t => t.EarnedCount) + oneTimeBadges.Sum(b => b.Awardees.Count))</span>
+            </Chips>
+            <Aside>
+                <div class="badge-aside__caption">@L["SeasonCaption"]</div>
+                <div class="badge-aside__value">@(season is null ? "–" : string.Format(L["SeasonName"], MemberAdminHelpers.SeasonLabel(season)))</div>
+                @if (tiers.LastOrDefault(t => t.EarnedCount > 0) is { } topEarned)
+                {
+                    <div class="badge-aside__text">@string.Format(L["TopEarned"], topEarned.Name, topEarned.EarnedCount)</div>
+                }
+                else
+                {
+                    <div class="badge-aside__text">@L["NothingEarnedYet"]</div>
+                }
+            </Aside>
+        </AdminHero>
 
-    @if (ClubStore.Seasons.Count > 0)
-    {
-        <ChoiceChips TItem="SeasonResult" Items="@SeasonsNewestFirst" Value="@season" ValueChanged="@(s => OnSeasonChanged(s.Id))"
-                     TextFunc="@(s => string.Format(L["SeasonName"], MemberAdminHelpers.SeasonLabel(s)))" ColorFunc="@(s => s.IsActive ? "#059669" : null)" />
-    }
-    else
-    {
-        <MudAlert Severity="Severity.Info">@L["NoSeasons"]</MudAlert>
-    }
+        @if (ClubStore.Seasons.Count > 0)
+        {
+            <ChoiceChips TItem="SeasonResult" Items="@SeasonsNewestFirst" Value="@season" ValueChanged="@(s => OnSeasonChanged(s.Id))"
+                         TextFunc="@(s => string.Format(L["SeasonName"], MemberAdminHelpers.SeasonLabel(s)))" ColorFunc="@(s => s.IsActive ? "#059669" : null)" />
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info">@L["NoSeasons"]</MudAlert>
+        }
 
-    <SectionCard Emoji="🪜" Title="@L["TiersTitle"]" Subtitle="@L["TiersSubtitle"]">
-        <Actions>
-            @if (isAdmin && selectedSeasonId is not null)
-            {
-                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-label="@L["CopyTiers"]" title="@L["CopyTiers"]"
-                               OnClick="OpenCopyTiersDialog" Disabled="@(tiers.Count > 0)" />
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenTierDialog(null)">@L["Add"]</MudButton>
-            }
-        </Actions>
-        <ChildContent>
-            @if (tiers.Count == 0)
-            {
-                <div class="badge-empty">
-                    <div class="badge-empty__emoji" aria-hidden="true">🪜</div>
-                    <div class="badge-empty__title">@L["NoTiers"]</div>
-                    <div class="badge-empty__text">@L["NoTiersText"]</div>
-                    @if (isAdmin && selectedSeasonId is not null)
-                    {
-                        <div class="badge-empty__actions">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenTierDialog(null)">@L["AddTier"]</MudButton>
-                            @if (ClubStore.Seasons.Count > 1)
-                            {
-                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="OpenCopyTiersDialog">@L["CopyTiers"]</MudButton>
-                            }
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                var maxEarned = Math.Max(1, tiers.Max(t => t.EarnedCount));
-                <div class="ladder">
-                    @for (var i = 0; i < tiers.Count; i++)
-                    {
-                        var tier = tiers[i];
-                        @if (i > 0)
+        <SectionCard Emoji="🪜" Title="@L["TiersTitle"]" Subtitle="@L["TiersSubtitle"]">
+            <Actions>
+                @if (isAdmin && selectedSeasonId is not null)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-label="@L["CopyTiers"]" title="@L["CopyTiers"]"
+                                   OnClick="OpenCopyTiersDialog" Disabled="@(tiers.Count > 0)" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenTierDialog(null)">@L["Add"]</MudButton>
+                }
+            </Actions>
+            <ChildContent>
+                @if (tiers.Count == 0)
+                {
+                    <div class="badge-empty">
+                        <div class="badge-empty__emoji" aria-hidden="true">🪜</div>
+                        <div class="badge-empty__title">@L["NoTiers"]</div>
+                        <div class="badge-empty__text">@L["NoTiersText"]</div>
+                        @if (isAdmin && selectedSeasonId is not null)
                         {
-                            <div class="ladder__step" aria-hidden="true">
-                                <span class="ladder__step-line"></span>
-                                <span class="ladder__step-text">+@(tier.MatchesRequired - tiers[i - 1].MatchesRequired)</span>
+                            <div class="badge-empty__actions">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenTierDialog(null)">@L["AddTier"]</MudButton>
+                                @if (ClubStore.Seasons.Count > 1)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="OpenCopyTiersDialog">@L["CopyTiers"]</MudButton>
+                                }
                             </div>
                         }
-                        <div class="ladder__item">
-                            <TrophyTile Name="@tier.Name" ImageUrl="@tier.ImageUrl" Level="@tier.Level" OnClick="() => OpenTierDetail(tier)">
-                                <span>🎾 @string.Format(L["MatchesRule"], tier.MatchesRequired)</span>
-                                <span class="earned-bar" title="@string.Format(L["EarnedBy"], tier.EarnedCount)">
-                                    <span style="width: @((tier.EarnedCount * 100.0 / maxEarned).ToString("0.#", CultureInfo.InvariantCulture))%"></span>
-                                </span>
-                                <span><strong>@tier.EarnedCount</strong> @L["Earned"]</span>
-                            </TrophyTile>
-                            @if (isAdmin)
+                    </div>
+                }
+                else
+                {
+                    var maxEarned = Math.Max(1, tiers.Max(t => t.EarnedCount));
+                    <div class="ladder">
+                        @for (var i = 0; i < tiers.Count; i++)
+                        {
+                            var tier = tiers[i];
+                            @if (i > 0)
                             {
-                                @RenderActions($"tier-{tier.Id}", () => OpenTierDialog(tier), e => OnTierImageSelected(e, tier.Id), () => DeleteTier(tier))
+                                <div class="ladder__step" aria-hidden="true">
+                                    <span class="ladder__step-line"></span>
+                                    <span class="ladder__step-text">+@(tier.MatchesRequired - tiers[i - 1].MatchesRequired)</span>
+                                </div>
                             }
-                        </div>
-                    }
-                </div>
-            }
-        </ChildContent>
-    </SectionCard>
-
-    <SectionCard Emoji="✨" Title="@L["OneTimeTitle"]" Subtitle="@L["OneTimeSubtitle"]">
-        <Actions>
-            @if (canManageOneTimeBadges && selectedSeasonId is not null)
-            {
-                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-label="@L["CopyOneTime"]" title="@L["CopyOneTime"]"
-                               OnClick="OpenCopyOneTimeBadgesDialog" Disabled="@(oneTimeBadges.Count > 0)" />
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenOneTimeDialog(null)">@L["Add"]</MudButton>
-            }
-        </Actions>
-        <ChildContent>
-            @if (oneTimeBadges.Count == 0)
-            {
-                <div class="badge-empty">
-                    <div class="badge-empty__emoji" aria-hidden="true">✨</div>
-                    <div class="badge-empty__title">@L["NoOneTime"]</div>
-                    <div class="badge-empty__text">@L["NoOneTimeText"]</div>
-                    @if (canManageOneTimeBadges && selectedSeasonId is not null)
-                    {
-                        <div class="badge-empty__actions">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenOneTimeDialog(null)">@L["AddOneTimeBadge"]</MudButton>
-                            @if (ClubStore.Seasons.Count > 1)
-                            {
-                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="OpenCopyOneTimeBadgesDialog">@L["CopyOneTime"]</MudButton>
-                            }
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="specials">
-                    @foreach (var badge in oneTimeBadges.OrderBy(b => b.Name))
-                    {
-                        <div class="specials__item">
-                            <TrophyTile Name="@badge.Name" ImageUrl="@badge.ImageUrl" OnClick="() => OpenOneTimeDetail(badge)">
-                                @if (badge.Awardees.Count == 0)
-                                {
-                                    <span class="awardees__none">@L["NotAwardedYet"]</span>
-                                }
-                                else
-                                {
-                                    <span class="awardees">
-                                        @foreach (var awardee in badge.Awardees.Take(4))
-                                        {
-                                            <UserAvatar FirstName="@awardee.FirstName" LastName="@awardee.LastName" Size="Size.Small" Color="Color.Secondary" AvatarClass="awardees__avatar" />
-                                        }
-                                        @if (badge.Awardees.Count > 4)
-                                        {
-                                            <span class="awardees__more">+@(badge.Awardees.Count - 4)</span>
-                                        }
+                            <div class="ladder__item">
+                                <TrophyTile Name="@tier.Name" ImageUrl="@tier.ImageUrl" Level="@tier.Level" OnClick="() => OpenTierDetail(tier)">
+                                    <span>🎾 @string.Format(L["MatchesRule"], tier.MatchesRequired)</span>
+                                    <span class="earned-bar" title="@string.Format(L["EarnedBy"], tier.EarnedCount)">
+                                        <span style="width: @((tier.EarnedCount * 100.0 / maxEarned).ToString("0.#", CultureInfo.InvariantCulture))%"></span>
                                     </span>
-                                    <span>@string.Format(L["AwardedTo"], badge.Awardees.Count)</span>
+                                    <span><strong>@tier.EarnedCount</strong> @L["Earned"]</span>
+                                </TrophyTile>
+                                @if (isAdmin)
+                                {
+                                    @RenderActions($"tier-{tier.Id}", () => OpenTierDialog(tier), e => OnTierImageSelected(e, tier.Id), () => DeleteTier(tier))
                                 }
-                            </TrophyTile>
-                            @if (canManageOneTimeBadges)
-                            {
-                                <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Small" StartIcon="@Icons.Material.Filled.EmojiEvents"
-                                           OnClick="() => OpenAwardDialog(badge)" FullWidth="true" Class="specials__award">
-                                    @L["Award"]
-                                </MudButton>
-                                @RenderActions($"onetime-{badge.Id}", () => OpenOneTimeDialog(badge), e => OnOneTimeBadgeImageSelected(e, badge.Id), () => DeleteOneTimeBadge(badge))
-                            }
-                        </div>
-                    }
-                </div>
-            }
-        </ChildContent>
-    </SectionCard>
-</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </ChildContent>
+        </SectionCard>
+
+        <SectionCard Emoji="✨" Title="@L["OneTimeTitle"]" Subtitle="@L["OneTimeSubtitle"]">
+            <Actions>
+                @if (canManageOneTimeBadges && selectedSeasonId is not null)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" aria-label="@L["CopyOneTime"]" title="@L["CopyOneTime"]"
+                                   OnClick="OpenCopyOneTimeBadgesDialog" Disabled="@(oneTimeBadges.Count > 0)" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenOneTimeDialog(null)">@L["Add"]</MudButton>
+                }
+            </Actions>
+            <ChildContent>
+                @if (oneTimeBadges.Count == 0)
+                {
+                    <div class="badge-empty">
+                        <div class="badge-empty__emoji" aria-hidden="true">✨</div>
+                        <div class="badge-empty__title">@L["NoOneTime"]</div>
+                        <div class="badge-empty__text">@L["NoOneTimeText"]</div>
+                        @if (canManageOneTimeBadges && selectedSeasonId is not null)
+                        {
+                            <div class="badge-empty__actions">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="() => OpenOneTimeDialog(null)">@L["AddOneTimeBadge"]</MudButton>
+                                @if (ClubStore.Seasons.Count > 1)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="OpenCopyOneTimeBadgesDialog">@L["CopyOneTime"]</MudButton>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="specials">
+                        @foreach (var badge in oneTimeBadges.OrderBy(b => b.Name))
+                        {
+                            <div class="specials__item">
+                                <TrophyTile Name="@badge.Name" ImageUrl="@badge.ImageUrl" OnClick="() => OpenOneTimeDetail(badge)">
+                                    @if (badge.Awardees.Count == 0)
+                                    {
+                                        <span class="awardees__none">@L["NotAwardedYet"]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="awardees">
+                                            @foreach (var awardee in badge.Awardees.Take(4))
+                                            {
+                                                <UserAvatar FirstName="@awardee.FirstName" LastName="@awardee.LastName" Size="Size.Small" Color="Color.Secondary" AvatarClass="awardees__avatar" />
+                                            }
+                                            @if (badge.Awardees.Count > 4)
+                                            {
+                                                <span class="awardees__more">+@(badge.Awardees.Count - 4)</span>
+                                            }
+                                        </span>
+                                        <span>@string.Format(L["AwardedTo"], badge.Awardees.Count)</span>
+                                    }
+                                </TrophyTile>
+                                @if (canManageOneTimeBadges)
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Small" StartIcon="@Icons.Material.Filled.EmojiEvents"
+                                               OnClick="() => OpenAwardDialog(badge)" FullWidth="true" Class="specials__award">
+                                        @L["Award"]
+                                    </MudButton>
+                                    @RenderActions($"onetime-{badge.Id}", () => OpenOneTimeDialog(badge), e => OnOneTimeBadgeImageSelected(e, badge.Id), () => DeleteOneTimeBadge(badge))
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </ChildContent>
+        </SectionCard>
+    </div>
+}
 
 @code {
     [Parameter] public int ClubId { get; set; }

@@ -1,3 +1,4 @@
+using Bookennis.Api.Infrastructure.Utils;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Exceptions;
@@ -39,7 +40,7 @@ public record UploadOneTimeBadgeImage(int ClubId, int OneTimeBadgeId, IFormFile 
             using var ms = new MemoryStream();
             await inputStream.CopyToAsync(ms, cancellationToken);
 
-            using var original = SKBitmap.Decode(ms.ToArray())
+            using var original = UploadedImage.Decode(ms.ToArray())
                 ?? throw new PreconditionException(ErrorCode.CouldNotDecodeImage, "Could not decode the uploaded image.");
 
             var (targetWidth, targetHeight) = ComputeTargetSize(original.Width, original.Height, MaxDimension);

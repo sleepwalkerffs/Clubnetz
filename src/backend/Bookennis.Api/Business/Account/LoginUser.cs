@@ -41,8 +41,18 @@ public record LoginUser([Required, EmailAddress] string Email, [Required] string
 
             // Identity checks the email confirmation before the password. Only tell the user to confirm the email if the password was
             // right, otherwise this would reveal that the address is registered.
-            if (result.IsNotAllowed && await userManager.CheckPasswordAsync(user, request.Password))
-                throw new PreconditionException(ErrorCode.NotAllowed, "User is not allowed");
+            if (result.IsNotAllowed)
+            {
+                // Identity checks the confirmation before the lockout and counts no failure here: without this, the password of an
+                // unconfirmed account could be guessed without ever locking it
+                if (await userManager.IsLockedOutAsync(user))
+                    throw new PreconditionException(ErrorCode.LockedOut, "User is locked out");
+
+                if (await userManager.CheckPasswordAsync(user, request.Password))
+                    throw new PreconditionException(ErrorCode.NotAllowed, "User is not allowed");
+
+                await userManager.AccessFailedAsync(user);
+            }
 
             throw InvalidCredentials();
         }

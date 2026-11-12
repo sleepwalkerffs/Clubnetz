@@ -1,4 +1,5 @@
 using Bookennis.Api.Data;
+using Bookennis.Api.Infrastructure.Tenant;
 using Bookennis.Domain.Members;
 using Bookennis.Shared.Controller.MemberBadges;
 using Bookennis.Shared.Controller.OneTimeBadges;
@@ -8,13 +9,22 @@ namespace Bookennis.Api.Business.Badges;
 
 public record GetTrophyCase(int RequestingUserId, int TargetMemberId) : IQuery<GetTrophyCaseResult>
 {
-    public class Handler(AppDbContext context) : IRequestHandler<GetTrophyCase, GetTrophyCaseResult>
+    public class Handler(AppDbContext context, ITenantService tenantService) : IRequestHandler<GetTrophyCase, GetTrophyCaseResult>
     {
         public async Task<GetTrophyCaseResult> Handle(GetTrophyCase request, CancellationToken cancellationToken)
         {
-            var targetMember = await context.Set<Member>()
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(m => m.Id == request.TargetMemberId, cancellationToken);
+            // IgnoreQueryFilters switches the tenant filter off, so the club is checked here: a member of the current club,
+            // or of another ATP club when the current club is one (like GetMemberProfile)
+            var currentClubId = tenantService.GetTenantId();
+            var targetMember = await (
+                from member in context.Set<Member>().IgnoreQueryFilters()
+                join club in context.Clubs.IgnoreQueryFilters() on member.ClubId equals club.Id
+                where member.Id == request.TargetMemberId
+                   && (currentClubId == null
+                       || member.ClubId == currentClubId
+                       || (club.IsAtpClub && context.Clubs.Any(current => current.Id == currentClubId && current.IsAtpClub)))
+                select member
+            ).FirstOrDefaultAsync(cancellationToken);
 
             if (targetMember is null)
                 return new GetTrophyCaseResult { IsOwnProfile = false, IsPublic = false, Clubs = [], ProfilePictureUrl = null, DisplayBadgeImageUrl = null, DisplayBadgeLevel = null };

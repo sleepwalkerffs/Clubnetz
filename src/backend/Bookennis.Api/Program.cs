@@ -49,13 +49,14 @@ builder.Services.AddRazorPages();
 var app = builder.Build();
 SimpleInjectorUseOptionsAspNetCoreExtensions.UseSimpleInjector(app, container);
 
-// Must run first so the headers are applied to every response, including ones later
+// First of all: the client IP and the scheme come from the reverse proxy (X-Forwarded-For/-Proto), needed for the per-IP
+// rate limits and for knowing that a request was HTTPS (secure cookies, HSTS)
+app.UseForwardedHeaders();
+
+// Before everything else so the headers are applied to every response, including ones later
 // middleware (e.g. static files) may short-circuit. Also covers HSTS for HTTPS
 // responses, so the app doesn't need its own app.UseHsts() call.
 app.UseSecurityHeaders();
-
-// Resolves the client IP from X-Forwarded-For (Azure App Service), needed for the per-IP rate limits
-app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 // The OpenAPI document of what a club API key can do is public. The document with all endpoints only exists in Development.

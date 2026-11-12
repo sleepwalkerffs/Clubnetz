@@ -64,6 +64,11 @@ public static class ControllerRoutingConfiguration
             .Configure<IOptions<AuthorizationOptions>>((options, authorization) =>
                 options.DocInclusionPredicate((documentName, api) => documentName != ClubApiDocument.Name || ClubApiDocument.Includes(api, authorization.Value)));
 
-        services.AddCors(options => options.AddDefaultPolicy(policy => policy.WithOrigins("https://localhost:7026").AllowAnyMethod().AllowAnyHeader().AllowCredentials()));
+        // The client served by its own dev server; in production the client comes from the same origin and needs no CORS
+        services.AddCors(options =>
+        {
+            if (builder.Environment.IsDevelopment())
+                options.AddDefaultPolicy(policy => policy.WithOrigins("https://localhost:7026").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+        });
     }
 }

@@ -19,6 +19,9 @@ public static class AuthorizationPolicies
     public const string Member = nameof(Member);
     public const string ClubMember = nameof(ClubMember);
     public const string ClubTreasurer = nameof(ClubTreasurer);
+
+    /// <summary>A club member (role User) signed in with the cookie: ordering and paying memberships, never with a club API key.</summary>
+    public const string MembershipMember = nameof(MembershipMember);
     /// <summary>Connects and disconnects the Stripe account of the club: a signed-in Admin. Not accepted for requests made with an API key.</summary>
     public const string ClubPaymentAccountManager = nameof(ClubPaymentAccountManager);
     public const string OneTimeBadgeManager = nameof(OneTimeBadgeManager);

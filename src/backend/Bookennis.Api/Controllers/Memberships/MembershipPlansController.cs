@@ -14,7 +14,7 @@ public class MembershipPlansController(IMediator mediator, IAuthorizationService
 {
     /// <summary>The plans of a season in the order members see them. Treasurers also get the plans only they can assign.</summary>
     [HttpGet]
-    [Authorize(AuthorizationPolicies.ClubMember)]
+    [Authorize(AuthorizationPolicies.MembershipMember)]
     public async Task<GetMembershipPlansResult> GetMembershipPlans(int clubId, [FromQuery] int seasonId, CancellationToken cancellationToken)
         => await mediator.Send(new GetMembershipPlans(clubId, seasonId, await CanManage()), cancellationToken);
 

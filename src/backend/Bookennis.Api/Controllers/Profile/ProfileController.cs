@@ -84,7 +84,7 @@ public class ProfileController(IMediator mediator, IUserAccessor userAccessor) :
     [HttpGet("picture/{userId:int}")]
     public async Task<IActionResult> GetProfilePicture(int userId, CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetProfilePicture(userId), cancellationToken);
+        var result = await mediator.Send(new GetProfilePicture(userId, userAccessor.GetUserId(), User.IsAdministrator()), cancellationToken);
         if (result is null)
             return NotFound();
 
