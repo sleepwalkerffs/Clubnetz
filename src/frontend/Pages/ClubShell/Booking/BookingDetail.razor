@@ -121,10 +121,10 @@ else
                     @if (EditAllowedPlayModes.Count > 1)
                     {
                         <ChoiceChips TItem="PlayModeDto" Label="@Locale["PlayMode"]" Items="@EditAllowedPlayModes" Value="@editPlayMode"
-                                     ValueChanged="@(playMode => editPlayMode = playMode)" TextFunc="@(playMode => playMode.Name)"
+                                     ValueChanged="OnEditPlayModeChanged" TextFunc="@(playMode => playMode.Name)"
                                      ColorFunc="@(playMode => BookingColors.ToHex(playMode.Color))" />
                     }
-                    <ChoiceChips TItem="CourtResult" Label="@Locale["Court"]" Items="@ClubStore.Courts" Value="@editCourt"
+                    <ChoiceChips TItem="CourtResult" Label="@Locale["Court"]" Items="@EditCourts" Value="@editCourt"
                                  ValueChanged="@(court => editCourt = court)" TextFunc="@(court => court.Name)" />
 
                     <div class="detail-edit__times">
@@ -297,6 +297,17 @@ else
 
     private List<PlayModeDto> AllowedPlayModes =>
         ClubStore.PlayModes.Where(mode => mode.AllowedRoles.Any(ProfileStore.Roles.Contains)).ToList();
+
+    /// <summary>The courts the chosen play mode can be booked on (<see cref="PlayModeDto.CourtIds"/>).</summary>
+    private List<CourtResult> EditCourts => ClubStore.Courts.Where(court => editPlayMode?.IsAllowedOnCourt(court.CourtId) ?? true).ToList();
+
+    /// <summary>A play mode limited to other courts moves the booking to the first court it allows.</summary>
+    private void OnEditPlayModeChanged(PlayModeDto playMode)
+    {
+        editPlayMode = playMode;
+        if (editCourt is not null && !playMode.IsAllowedOnCourt(editCourt.CourtId))
+            editCourt = EditCourts.FirstOrDefault();
+    }
 
     private List<PlayModeDto> EditAllowedPlayModes =>
         editRecurringScope == RecurringEditScope.ThisAndFollowing

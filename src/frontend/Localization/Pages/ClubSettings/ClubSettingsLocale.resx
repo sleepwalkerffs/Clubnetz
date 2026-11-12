@@ -463,4 +463,28 @@
   <data name="WeatherSource" xml:space="preserve">
     <value>Forecast by MET Norway (yr.no), fetched by Clubnetz every 30 minutes. The browsers of your members never contact the weather service.</value>
   </data>
+  <data name="SectionCourts" xml:space="preserve">
+    <value>Courts</value>
+  </data>
+  <data name="PlayModeCourtsHint" xml:space="preserve">
+    <value>By default the play mode can be booked on every court. Limit it to single courts, e.g. training on court 7 only. The limit applies to everyone, admins included.</value>
+  </data>
+  <data name="PlayModeAllCourts" xml:space="preserve">
+    <value>Bookable on every court</value>
+  </data>
+  <data name="PlayModeCourts" xml:space="preserve">
+    <value>Only on these courts</value>
+  </data>
+  <data name="PlayModeCourtRequired" xml:space="preserve">
+    <value>Choose at least one court.</value>
+  </data>
+  <data name="PlayModeCourtConflictOne" xml:space="preserve">
+    <value>1 upcoming booking of this play mode is on another court. It stays as it is; the limit only applies to new bookings and changes.</value>
+  </data>
+  <data name="PlayModeCourtConflicts" xml:space="preserve">
+    <value>{0} upcoming bookings of this play mode are on other courts. They stay as they are; the limit only applies to new bookings and changes.</value>
+  </data>
+  <data name="SaveDespiteCourtConflicts" xml:space="preserve">
+    <value>Save anyway</value>
+  </data>
 </root>

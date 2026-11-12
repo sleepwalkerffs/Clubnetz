@@ -463,4 +463,28 @@
   <data name="WeatherSource" xml:space="preserve">
     <value>Vorhersage von MET Norway (yr.no), von Clubnetz alle 30 Minuten abgerufen. Die Browser eurer Mitglieder kontaktieren den Wetterdienst nie.</value>
   </data>
+  <data name="SectionCourts" xml:space="preserve">
+    <value>Plätze</value>
+  </data>
+  <data name="PlayModeCourtsHint" xml:space="preserve">
+    <value>Standardmäßig kann die Spielart auf jedem Platz gebucht werden. Beschränke sie auf einzelne Plätze, z. B. Training nur auf Platz 7. Die Beschränkung gilt für alle, auch für Admins.</value>
+  </data>
+  <data name="PlayModeAllCourts" xml:space="preserve">
+    <value>Auf jedem Platz buchbar</value>
+  </data>
+  <data name="PlayModeCourts" xml:space="preserve">
+    <value>Nur auf diesen Plätzen</value>
+  </data>
+  <data name="PlayModeCourtRequired" xml:space="preserve">
+    <value>Wähle mindestens einen Platz.</value>
+  </data>
+  <data name="PlayModeCourtConflictOne" xml:space="preserve">
+    <value>1 kommende Buchung dieser Spielart liegt auf einem anderen Platz. Sie bleibt bestehen; die Beschränkung gilt nur für neue Buchungen und Änderungen.</value>
+  </data>
+  <data name="PlayModeCourtConflicts" xml:space="preserve">
+    <value>{0} kommende Buchungen dieser Spielart liegen auf anderen Plätzen. Sie bleiben bestehen; die Beschränkung gilt nur für neue Buchungen und Änderungen.</value>
+  </data>
+  <data name="SaveDespiteCourtConflicts" xml:space="preserve">
+    <value>Trotzdem speichern</value>
+  </data>
 </root>

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Clubs;
 
-public record AddPlayMode(string Name, MemberRole[] AllowedRoles, int ColorArgb, int? FixedPlayerCount, bool IsChargingBookingSubscription, TimeSpan? FixedDuration, bool CanOverbook, bool CommentAllowed, int? MaxBookingsPerSeason = null, bool AllowRecurring = false) : ICommand
+public record AddPlayMode(string Name, MemberRole[] AllowedRoles, int ColorArgb, int? FixedPlayerCount, bool IsChargingBookingSubscription, TimeSpan? FixedDuration, bool CanOverbook, bool CommentAllowed, int? MaxBookingsPerSeason = null, bool AllowRecurring = false, int[]? CourtIds = null) : ICommand
 {
     public class Handler(AppDbContext context) : IRequestHandler<AddPlayMode>
     {
@@ -14,7 +14,9 @@ public record AddPlayMode(string Name, MemberRole[] AllowedRoles, int ColorArgb,
         {
             var club = await context.Clubs.Include(c => c.PlayModes).SingleRequiredAsync(cancellationToken);
 
-            club.AddPlayMode(new Club.PlayModeDto(
+            await PlayModeCourts.EnsureCourtsOfClub(context, club.Id, request.CourtIds, cancellationToken);
+
+            var playMode = club.AddPlayMode(new Club.PlayModeDto(
                 request.AllowedRoles,
                 System.Drawing.Color.FromArgb(request.ColorArgb),
                 request.FixedPlayerCount,
@@ -25,6 +27,7 @@ public record AddPlayMode(string Name, MemberRole[] AllowedRoles, int ColorArgb,
                 request.CommentAllowed,
                 request.MaxBookingsPerSeason,
                 request.AllowRecurring));
+            playMode.RestrictToCourts(request.CourtIds ?? []);
 
             await context.SaveChangesAsync(cancellationToken);
             return default;

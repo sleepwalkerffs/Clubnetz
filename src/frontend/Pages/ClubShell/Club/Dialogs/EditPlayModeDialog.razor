@@ -10,7 +10,7 @@
 @using Bookennis.Shared.Controller.Shared
 @using MudBlazor.Utilities
 
-<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@(confirmedConflicts > 0 ? L["SaveDespiteCourtConflicts"] : SharedLocale["Save"])" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
             Loading="@ClubStore.IsSaving" Title="@(Name.Length > 0 ? Name : L["AddPlayMode"])">
     <div class="pm-edit">
         <div class="pm-edit__preview" style="--pm-color: @color">
@@ -95,6 +95,25 @@
                 <div class="pm-edit__warning">⚠️ @L["RoleRequired"]</div>
             }
         </section>
+
+        <section class="pm-edit__section">
+            <h3 class="pm-edit__title">📍 @L["SectionCourts"]</h3>
+            <p class="pm-edit__hint">@L["PlayModeCourtsHint"]</p>
+            <MudSwitch T="bool" Value="@AllCourts" ValueChanged="OnAllCourtsChanged" Color="Color.Primary" Label="@L["PlayModeAllCourts"]" />
+            @if (!AllCourts)
+            {
+                <MultiChoiceChips TItem="CourtResult" Items="@ClubStore.Courts" Values="@SelectedCourts" ValuesChanged="OnCourtsChanged"
+                                  TextFunc="@(court => court.Name)" Label="@L["PlayModeCourts"]" />
+                @if (SelectedCourts.Count == 0)
+                {
+                    <div class="pm-edit__warning">⚠️ @L["PlayModeCourtRequired"]</div>
+                }
+            }
+            @if (confirmedConflicts > 0)
+            {
+                <div class="pm-edit__warning" role="alert">⚠️ @string.Format(L[confirmedConflicts == 1 ? "PlayModeCourtConflictOne" : "PlayModeCourtConflicts"], confirmedConflicts)</div>
+            }
+        </section>
     </div>
 </BaseDialog>
 
@@ -121,10 +140,18 @@
     private bool CommentAllowed;
     private bool AllowRecurring;
     private int? MaxBookingsPerSeason;
+    private bool AllCourts = true;
+    private List<CourtResult> SelectedCourts = [];
 
-    private bool CanSubmit => !string.IsNullOrWhiteSpace(Name) && SelectedRoles.Count > 0 && (!HasFixedDuration || FixedDuration is { TotalMinutes: > 0 }) && (!HasFixedPlayerCount || FixedPlayerCount >= 1);
+    /// <summary>Upcoming bookings on other courts the admin was warned about for the current selection; saving again confirms.</summary>
+    private int confirmedConflicts;
 
-    protected override void OnInitialized()
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(Name) && SelectedRoles.Count > 0 && (!HasFixedDuration || FixedDuration is { TotalMinutes: > 0 }) && (!HasFixedPlayerCount || FixedPlayerCount >= 1)
+        && (AllCourts || SelectedCourts.Count > 0);
+
+    private List<int> CourtIds => AllCourts ? [] : SelectedCourts.Select(c => c.CourtId).Order().ToList();
+
+    protected override async Task OnInitializedAsync()
     {
         if (PlayMode is null)
             return;
@@ -141,6 +168,23 @@
         CommentAllowed = PlayMode.CommentAllowed;
         AllowRecurring = PlayMode.AllowRecurring;
         MaxBookingsPerSeason = PlayMode.MaxBookingsPerSeason;
+        AllCourts = PlayMode.CourtIds.Count == 0;
+
+        if (ClubStore.Courts.Count == 0)
+            await ClubStore.LoadCourts();
+        SelectedCourts = ClubStore.Courts.Where(c => PlayMode.CourtIds.Contains(c.CourtId)).ToList();
+    }
+
+    private void OnAllCourtsChanged(bool value)
+    {
+        AllCourts = value;
+        confirmedConflicts = 0;
+    }
+
+    private void OnCourtsChanged(IReadOnlyCollection<CourtResult> courts)
+    {
+        SelectedCourts = courts.ToList();
+        confirmedConflicts = 0;
     }
 
     private RenderFragment Toggle(string emoji, string title, string hint, bool value, Action<bool> setter) => __builder =>
@@ -166,11 +210,32 @@
         CommentAllowed = CommentAllowed,
         AllowRecurring = AllowRecurring,
         MaxBookingsPerSeason = MaxBookingsPerSeason,
+        CourtIds = CourtIds,
     };
 
     private async Task<DialogResult?> Submit()
     {
         var request = BuildRequest();
+
+        // Bookings on the courts that are taken away are kept: the admin is told how many and saves again to confirm
+        if (PlayMode is not null && request.CourtIds.Count > 0 && confirmedConflicts == 0)
+        {
+            var conflicts = await ClubStore.GetPlayModeCourtConflicts(PlayMode.Id, request.CourtIds);
+            if (!conflicts.Success)
+            {
+                Snackbar.ShowErrorDetails(conflicts, BackendLocale);
+                return null;
+            }
+
+            if (conflicts.Dto is { UpcomingBookingsOnOtherCourts: > 0 } found)
+            {
+                confirmedConflicts = found.UpcomingBookingsOnOtherCourts;
+                // The submit button belongs to BaseDialog: render this dialog again for the warning and the new caption
+                StateHasChanged();
+                return null;
+            }
+        }
+
         var result = PlayMode is not null
             ? await ClubStore.UpdatePlayMode(PlayMode.Id, request)
             : await ClubStore.AddPlayMode(request);

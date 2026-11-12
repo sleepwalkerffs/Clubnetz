@@ -18,6 +18,9 @@ public class ClubsHttpClient(HttpClient httpClient, JsonSerializerOptions jsonOp
     public async Task<HttpResult> AddPlayMode(int clubId, PlayModeRequest request, CancellationToken cancellationToken = default)
         => await (await httpClient.PostAsJsonAsync("PlayModes", request, jsonOptions, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
 
+    public async Task<HttpResult<PlayModeCourtConflictsResult>> GetPlayModeCourtConflicts(int clubId, int playModeId, PlayModeCourtConflictsRequest request, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsJsonAsync($"PlayModes/{playModeId}/court-conflicts", request, jsonOptions, cancellationToken)).AsHttpResult<PlayModeCourtConflictsResult>(jsonOptions, cancellationToken);
+
     public async Task<HttpResult> UpdatePlayMode(int clubId, int playModeId, PlayModeRequest request, CancellationToken cancellationToken = default)
         => await (await httpClient.PutAsJsonAsync($"PlayModes/{playModeId}", request, jsonOptions, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
 
