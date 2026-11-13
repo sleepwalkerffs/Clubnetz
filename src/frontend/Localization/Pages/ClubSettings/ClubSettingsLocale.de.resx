@@ -463,6 +463,9 @@
   <data name="WeatherSource" xml:space="preserve">
     <value>Vorhersage von MET Norway (yr.no), von Clubnetz alle 30 Minuten abgerufen. Die Browser eurer Mitglieder kontaktieren den Wetterdienst nie.</value>
   </data>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Nur Admins des Vereins können die Vereinseinstellungen ändern.</value>
+  </data>
   <data name="SectionCourts" xml:space="preserve">
     <value>Plätze</value>
   </data>

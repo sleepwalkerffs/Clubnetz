@@ -202,4 +202,7 @@
   <data name="AwardsChipOne" xml:space="preserve">
     <value>Earned once</value>
   </data>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Only those who manage the badges of the club see this page.</value>
+  </data>
 </root>

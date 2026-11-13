@@ -39,11 +39,10 @@ public class ClubApiKeySecurityTests(ApiSecurityFixture app)
         // Season review (Wrapped) of the key's creator; releasing it is an admin action like the rest of the club setup.
         "Wrapped",
 
-        // Membership fees: plans, the orders of the key's creator, the treasurer's list and the status of the Stripe account.
-        // Connecting and disconnecting the Stripe account (PaymentAccount) is not open to keys, and neither are court sales (CourtSales)
-        // and the tabs of the clubhouse host (Clubhouse). Play requests and the groups of players (PlayRequests, PlayerGroups) are
-        // personal (who plays with whom) and cookie only as well.
-        "MembershipPlans", "Memberships", "MembershipPayments", "Payments",
+        // Not open to keys: everything with money (membership fees, plans and their prices, payments, the Stripe account, court sales,
+        // the tabs of the clubhouse host: MembershipPlans, Memberships, MembershipPayments, Payments, PaymentAccount, CourtSales, Clubhouse).
+        // A key can leak through an integration and must never hand out free memberships or change prices. Play requests and the groups
+        // of players (PlayRequests, PlayerGroups) are personal (who plays with whom) and cookie only as well.
     ];
 
     /// <summary>Ids that don't exist, for calling write endpoints with a working key without changing the seeded data.</summary>

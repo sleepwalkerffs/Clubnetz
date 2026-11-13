@@ -463,6 +463,9 @@
   <data name="WeatherSource" xml:space="preserve">
     <value>Forecast by MET Norway (yr.no), fetched by Clubnetz every 30 minutes. The browsers of your members never contact the weather service.</value>
   </data>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Only club admins can change the club settings.</value>
+  </data>
   <data name="SectionCourts" xml:space="preserve">
     <value>Courts</value>
   </data>

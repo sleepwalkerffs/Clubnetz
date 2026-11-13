@@ -202,4 +202,7 @@
   <data name="AwardsChipOne" xml:space="preserve">
     <value>Einmal verliehen</value>
   </data>
+  <data name="NoAccess" xml:space="preserve">
+    <value>Nur wer die Abzeichen des Vereins verwaltet, sieht diese Seite.</value>
+  </data>
 </root>

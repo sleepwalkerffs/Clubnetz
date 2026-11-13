@@ -69,5 +69,6 @@ public static class ServicesConfiguration
         container.Register<CourtPurchaseHoldReleaseJob>();
         container.Register<ClubhouseTabPaymentJob>();
         container.Register<WeatherRefreshJob>();
+        container.Register<Bookennis.Api.Business.Accounting.AccountingAutomationJob>();
     }
 }

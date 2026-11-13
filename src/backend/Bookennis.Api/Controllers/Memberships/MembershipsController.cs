@@ -15,7 +15,7 @@ namespace Bookennis.Api.Controllers.Memberships;
 /// An order is only open to the people it is about (<see cref="AuthorizationPolicies.OwnsMembershipOrder"/>): its payer,
 /// the members it covers and the parents of a covered child. Treasurers manage all orders with <c>MembershipPayments</c>.
 /// </summary>
-[Authorize(AuthorizationPolicies.ClubMember)]
+[Authorize(AuthorizationPolicies.MembershipMember)]
 public class MembershipsController(IMediator mediator, IUserAccessor userAccessor, IAuthorizationService authorizationService) : ClubControllerBase
 {
     /// <summary>The plans of a season with who they can be ordered for, and the orders that exist. Without a season: the running one, else the next.</summary>

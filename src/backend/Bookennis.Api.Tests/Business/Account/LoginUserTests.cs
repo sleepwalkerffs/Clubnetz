@@ -83,6 +83,20 @@ public class LoginUserTests
         var act = () => CreateHandler().Handle(new LoginUser("user@bookennis.com", "wrong", false), CancellationToken.None);
 
         (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(LoginUser.ErrorCode.InvalidCredentials));
+        await userManager.Received(1).AccessFailedAsync(user);
+    }
+
+    [Fact]
+    public async Task UnconfirmedEmail_LockedOut_ThrowsLockedOutEvenWithTheRightPassword()
+    {
+        signInManager.CheckPasswordSignInAsync(user, "Secret-123", true).Returns(SignInResult.NotAllowed);
+        userManager.IsLockedOutAsync(user).Returns(true);
+        userManager.CheckPasswordAsync(user, "Secret-123").Returns(true);
+
+        var act = () => CreateHandler().Handle(new LoginUser("user@bookennis.com", "Secret-123", false), CancellationToken.None);
+
+        (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(LoginUser.ErrorCode.LockedOut));
+        await userManager.DidNotReceive().CheckPasswordAsync(user, Arg.Any<string>());
     }
 
     [Fact]

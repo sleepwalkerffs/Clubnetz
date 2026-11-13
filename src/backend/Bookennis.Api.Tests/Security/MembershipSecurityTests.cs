@@ -393,12 +393,11 @@ public class MembershipSecurityTests(ApiSecurityFixture app)
 
         (await app.Db(c => c.ClubPaymentAccounts.IgnoreQueryFilters().CountAsync(x => x.ClubId == app.ClubA.Id && x.StripeAccountId == "acct_security_test"))).Should().Be(1);
 
-        // The treasurer and a key may look at the status, which never includes the id of the Stripe account
-        foreach (var status in new[] { await Send(HttpMethod.Get, account, app.TreasurerOfA), await Send(HttpMethod.Get, account, null, key: key) })
-        {
-            status.Status.Should().Be(HttpStatusCode.OK);
-            status.Body.Should().Contain("\"isConnected\":true").And.NotContain("acct_security_test");
-        }
+        // The treasurer may look at the status, which never includes the id of the Stripe account; a key not even that (money is cookie only)
+        var status = await Send(HttpMethod.Get, account, app.TreasurerOfA);
+        status.Status.Should().Be(HttpStatusCode.OK);
+        status.Body.Should().Contain("\"isConnected\":true").And.NotContain("acct_security_test");
+        (await Send(HttpMethod.Get, account, null, key: key)).Status.Should().Be(HttpStatusCode.Unauthorized);
 
         // The admin disconnects
         (await Send(HttpMethod.Delete, account, app.ClubA.Admin)).Status.Should().Be(HttpStatusCode.OK);

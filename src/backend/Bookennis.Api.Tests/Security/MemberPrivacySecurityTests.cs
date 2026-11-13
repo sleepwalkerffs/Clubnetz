@@ -1,4 +1,6 @@
 using System.Net;
+using Bookennis.Domain.User;
+using Microsoft.EntityFrameworkCore;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Xunit;
@@ -131,6 +133,44 @@ public class MemberPrivacySecurityTests(ApiSecurityFixture app)
             var response = await Get(url, key: key);
             response.Status.Should().Be(HttpStatusCode.NotFound, url);
             response.Body.Should().NotContain(ApiSecurityFixture.Canary, url);
+        }
+    }
+
+    [Fact]
+    public async Task ClubsThatDoNotShareTheirPlayers_ShowNoTrophyCaseOfTheOtherClub()
+    {
+        var cookie = await app.Login(app.EnrolledMemberOfA);
+
+        var response = await Get($"/api/Clubs/{app.ClubA.Id}/MemberBadges/Members/{app.ClubB.Member.MemberId}/trophy-case", cookie);
+
+        response.Body.Should().NotContain(ApiSecurityFixture.Canary);
+        response.Body.Should().Contain("\"clubs\":[]", "a member of another club is treated like one that does not exist");
+    }
+
+    [Fact]
+    public async Task ProfilePicture_IsOnlyShownToMembersOfASharedClub()
+    {
+        var owner = app.ClubB.Member;
+        await app.Db(async context =>
+        {
+            context.UserProfilePictures.Add(new UserProfilePicture(owner.UserId, [1, 2, 3], "image/jpeg"));
+            await context.SaveChangesAsync();
+        });
+        try
+        {
+            var url = $"/api/Profile/picture/{owner.UserId}";
+
+            var stranger = await Get(url, await app.Login(app.MemberOfA));
+            var clubMate = await Get(url, await app.Login(app.ClubB.Admin));
+            var self = await Get(url, await app.Login(owner));
+
+            stranger.Status.Should().Be(HttpStatusCode.NotFound, "no club in common");
+            clubMate.Status.Should().Be(HttpStatusCode.OK);
+            self.Status.Should().Be(HttpStatusCode.OK);
+        }
+        finally
+        {
+            await app.Db(context => context.UserProfilePictures.Where(p => p.UserId == owner.UserId).ExecuteDeleteAsync());
         }
     }
 }

@@ -12,7 +12,11 @@
 
 <PageTitle>@SharedLocale["Settings"]: @ClubProfileStore.SelectedClub?.ClubName</PageTitle>
 
-@if (!loaded)
+@if (!CanManage)
+{
+    <MudAlert Severity="Severity.Info">@L["NoAccess"]</MudAlert>
+}
+else if (!loaded)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
 }
@@ -93,6 +97,9 @@ else
 }
 
 @code {
+    /// <summary>The settings are for the club admins (support mode counts as admin), like the link in the menu.</summary>
+    private bool CanManage => ClubProfileStore.IsSupportMode || ClubProfileStore.Roles.Contains(Bookennis.Shared.Controller.Shared.MemberRole.Admin);
+
     [Parameter] public int ClubId { get; set; }
 
     [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;

@@ -70,12 +70,21 @@ public static class AuthorizationConfiguration
                            .RequireAssertion(context => !context.User.IsClubApiKey())
                            .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.Admin] }))
 
-                // Club Treasurer Policy
+                // Club Treasurer Policy: membership fees, plans (prices) and payments are money, so never open to a club API key
                 .AddPolicy(AuthorizationPolicies.ClubTreasurer, policy =>
-                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
                           .RequireAuthenticatedUser()
                           .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
                           .AddRequirements(new PermissionRequirement(Permission.PaymentsManage)))
+
+                // A member ordering or paying a membership: cookie only like every other purchase
+                .AddPolicy(AuthorizationPolicies.MembershipMember, policy =>
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
+                          .RequireAuthenticatedUser()
+                          .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
+                          .RequireAssertion(context => !context.User.IsClubApiKey())
+                          .AddRequirements(new ClubAssignmentRequirement { LimitToMemberRoles = [MemberRole.User] }))
 
                 // One-Time Badge Manager Policy
                 .AddPolicy(AuthorizationPolicies.OneTimeBadgeManager, policy =>
@@ -244,8 +253,9 @@ public static class AuthorizationConfiguration
                             .AddRequirements(new FamilyAccessRequirement { ParentsOnly = true }))
                // Membership Order Policy
                .AddPolicy(AuthorizationPolicies.OwnsMembershipOrder, policy =>
-                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.CookieOrClubApiKey)
+                    policy.AddAuthenticationSchemes(CustomAuthenticationSchemes.Cookie)
                             .RequireAuthenticatedUser()
+                            .RequireAssertion(context => !context.User.IsClubApiKey())
                             .RequireRole([nameof(UserRoles.User), nameof(UserRoles.Administrator)])
                             .AddRequirements(new OwnsMembershipOrderRequirement()))
                // Subscription Planner Policy
