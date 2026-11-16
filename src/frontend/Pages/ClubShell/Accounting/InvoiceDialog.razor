@@ -16,7 +16,7 @@
                          ToStringFunc="@(m => m?.Name ?? "")" DebounceInterval="300" ResetValueOnEmptyText="true" Clearable="true"
                          Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@L["Invoice_MemberHint"]" />
         <div class="invoice-form__row">
-            <MudTextField T="string" @bind-Value="name" Label="@L["Invoice_Name"]" Placeholder="Autohaus Muster GmbH" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="120" Immediate="true" Required="true" />
+            <MudTextField T="string" @bind-Value="name" Label="@L["Invoice_Name"]" Placeholder="@(AccountingHelpers.IsUnitedStates ? "Main Street Sports LLC" : "Autohaus Muster GmbH")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="120" Immediate="true" Required="true" />
             <MudTextField T="string" @bind-Value="email" Label="@L["Invoice_Email"]" InputType="InputType.Email" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="254" />
         </div>
         <MudTextField T="string" @bind-Value="address" Label="@L["Invoice_Address"]" Lines="3" AutoGrow="true" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="300" />
@@ -145,7 +145,8 @@
         else
         {
             dueDate = DateTime.Today.AddDays(term);
-            lines[0].CategoryId = Categories(null).FirstOrDefault(c => c.Number == "4400")?.Id;
+            // Sponsoring: 4400 in the Austrian chart, 4510 in the US one
+            lines[0].CategoryId = Categories(null).FirstOrDefault(c => c.Number == (AccountingHelpers.IsUnitedStates ? "4510" : "4400"))?.Id;
         }
     }
 

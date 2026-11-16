@@ -223,14 +223,18 @@ public static class InvoicePdf
         if (y + qrSize + 20 > bottomLimit)
             NewPage(header: false);
 
+        // Without the QR code (other currencies, US accounts) the box is as high as its text
+        var payText = Wrap(string.Format(culture, texts.PayText, Day(invoice.DueDate)), right - Margin - qrSize - 50, 9.5f, bold: false);
+        var payLines = 2 + (data.Account.Iban is null ? 2 : settings.Bic is null ? 1 : 2);
         var boxTop = y - 14;
-        Box(canvas, new SKRect(Margin, boxTop, right, boxTop + qrSize + 24), Panel);
+        var boxHeight = data.HasQrCode ? qrSize + 24 : 14 + 2 + 16 + payText.Count * 13 + 3 + payLines * 13 + 4;
+        Box(canvas, new SKRect(Margin, boxTop, right, boxTop + boxHeight), Panel);
 
         var textX = Margin + 14;
         y += 2;
         Text(canvas, texts.PayTitle, textX, y, 11, bold: true, Ink);
         y += 16;
-        foreach (var part in Wrap(string.Format(culture, texts.PayText, Day(invoice.DueDate)), right - Margin - qrSize - 50, 9.5f, bold: false))
+        foreach (var part in payText)
         {
             Text(canvas, part, textX, y, 9.5f, color: Ink);
             y += 13;

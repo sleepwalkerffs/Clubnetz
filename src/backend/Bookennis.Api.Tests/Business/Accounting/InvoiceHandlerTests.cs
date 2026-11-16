@@ -192,6 +192,7 @@ public class InvoiceHandlerTests(TestFixture fixture) : TestBase(fixture)
         int.Parse(pages.Groups[1].Value, CultureInfo.InvariantCulture).Should().BeGreaterThan(1, "30 lines don't fit on one page");
         issuedPdf.FileName.Should().Be("Rechnung-RE2026-0001.pdf");
         issuedPdf.Data.Length.Should().BeGreaterThan(5_000);
+        Encoding.Latin1.GetString(issuedPdf.Data).Should().MatchRegex(@"/MediaBox \[0 0 59[45](\.\d+)? 84[12](\.\d+)?\]", "an Austrian club prints on A4");
     }
 
     [Fact]

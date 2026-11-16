@@ -74,6 +74,7 @@
         else
         {
             moneyAccountId = Accounts.FirstOrDefault(AccountingHelpers.HasBankDetails)?.Id;
+            prefix = AccountingHelpers.IsUnitedStates ? "INV" : "RE";
             footer = L[AccountingHelpers.Regional("InvoiceSettings_FooterDefault")];
         }
     }

@@ -26,6 +26,8 @@ public sealed class RegionalCulture : CultureInfo
             dateFormat.ShortTimePattern = "h:mm tt";
             dateFormat.LongTimePattern = "h:mm:ss tt";
             dateFormat.ShortDatePattern = "M/d/yyyy";
+            // "/" in a pattern is the date separator of the culture: a German reader (de-AT base) would get "11.16.2026"
+            dateFormat.DateSeparator = "/";
             dateFormat.MonthDayPattern = german ? "d. MMMM" : "MMMM d";
             dateFormat.AMDesignator = "AM";
             dateFormat.PMDesignator = "PM";

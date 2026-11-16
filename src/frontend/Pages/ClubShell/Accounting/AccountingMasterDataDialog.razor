@@ -26,7 +26,7 @@
                     @* A US bank account has an account number and an ABA routing number; an account in Europe an IBAN *@
                     @if (UsBankDetails)
                     {
-                        <div class="master-form__row">
+                        <div class="master-form__row master-form__row--even">
                             <MudTextField T="string" @bind-Value="accountNumber" Label="@L["Accounts_AccountNumber"]" HelperText="@L["Accounts_AccountNumberHint"]" Variant="Variant.Outlined" Margin="Margin.Dense"
                                           MaxLength="25" InputMode="InputMode.numeric" />
                             <MudTextField T="string" @bind-Value="routingNumber" Label="@L["Accounts_RoutingNumber"]" HelperText="@L["Accounts_RoutingNumberHint"]" Variant="Variant.Outlined" Margin="Margin.Dense"
