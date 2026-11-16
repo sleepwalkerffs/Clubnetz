@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Admin;
 
-public record UpdateAdminClub(int ClubId, string Name, TimeOnlyInterval OpeningHours, TimeOnlyInterval PrimeTimeHours, PrimeTimeSettings PrimeTimeSettings, int? BookingGracePeriodInMinutes, bool IsAtpClub) : ICommand
+public record UpdateAdminClub(int ClubId, string Name, TimeOnlyInterval OpeningHours, TimeOnlyInterval PrimeTimeHours, PrimeTimeSettings PrimeTimeSettings, int? BookingGracePeriodInMinutes, bool IsAtpClub, Domain.User.Country? Country = null, string? TimeZoneId = null, string? Currency = null) : ICommand
 {
     public class Handler(AppDbContext context) : IRequestHandler<UpdateAdminClub>
     {
@@ -15,6 +15,7 @@ public record UpdateAdminClub(int ClubId, string Name, TimeOnlyInterval OpeningH
                 ?? throw new Fusonic.Extensions.Common.Entities.EntityNotFoundException(typeof(Domain.Clubs.Club), request.ClubId);
 
             club.Update(request.Name, request.OpeningHours, request.PrimeTimeHours, request.BookingGracePeriodInMinutes, request.IsAtpClub, request.PrimeTimeSettings);
+            club.SetRegion(request.Country ?? club.Country, request.TimeZoneId ?? club.TimeZoneId, request.Currency ?? club.Currency);
             await context.SaveChangesAsync(cancellationToken);
             return default;
         }

@@ -48,6 +48,9 @@ public record GetAdminClub(int ClubId) : IQuery<AdminClubDetailResult>
                 BookingGracePeriodInMinutes = club.BookingGracePeriodInMinutes,
                 ConcurrentAllowedBookings = club.ConcurrentAllowedBookings,
                 IsAtpClub = club.IsAtpClub,
+                TimeZoneId = club.TimeZoneId,
+                Country = (Country)club.Country,
+                Currency = club.Currency,
                 PlayModes = club.PlayModes.OrderBy(p => p.Id).Select(p => new PlayModeDto
                 {
                     Id = p.Id,

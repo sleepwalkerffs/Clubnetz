@@ -13,6 +13,9 @@ public record AdminClubDetailResult
     public required int? BookingGracePeriodInMinutes { get; init; }
     public required int ConcurrentAllowedBookings { get; init; }
     public required bool IsAtpClub { get; init; }
+    public required string TimeZoneId { get; init; }
+    public required Country Country { get; init; }
+    public required string Currency { get; init; }
     public required List<PlayModeDto> PlayModes { get; init; }
     public required List<AdminSeasonResult> Seasons { get; init; }
     public int MemberCount { get; init; }

@@ -346,9 +346,9 @@ internal sealed class AccountingProposalCollector(AppDbContext context, IStripeG
     };
 
     private static DateTimeOffset StartOfDay(DateOnly date)
-        => new(TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(TimeOnly.MinValue), ClubTimeZone.Instance), TimeSpan.Zero);
+        => new(TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(TimeOnly.MinValue), ClubTimeZone.Default /* TODO(us-clubs): club time zone */), TimeSpan.Zero);
 
-    private static DateOnly LocalDate(DateTimeOffset value) => DateOnly.FromDateTime(ClubTimeZone.ToLocal(value));
+    private static DateOnly LocalDate(DateTimeOffset value) => DateOnly.FromDateTime(ClubTimeZone.ToLocal(value, ClubTimeZone.Default /* TODO(us-clubs): club time zone */));
 
     private static string Date(DateOnly date) => date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
 
@@ -414,7 +414,7 @@ internal sealed class AccountingProposalCollector(AppDbContext context, IStripeG
         foreach (var purchase in purchases)
         {
             var member = purchase.MemberId is { } memberId ? names.GetValueOrDefault(memberId) : null;
-            var start = ClubTimeZone.ToLocal(purchase.Interval.From);
+            var start = ClubTimeZone.ToLocal(purchase.Interval.From, ClubTimeZone.Default /* TODO(us-clubs): club time zone */);
             var text = $"{(German ? "Platzbuchung" : "Court booking")} {purchase.CourtName} {start.ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)}";
             candidates.Add(new Candidate(AccountingProposal.Key("court-purchase", purchase.Id),
                 new AccountingProposal.ProposalData(LocalDate(purchase.PaidAt!.Value), text, AccountingEntryKind.Booking, account, null, source.CategoryId, purchase.AmountDueCents, purchase.MemberId, member)));

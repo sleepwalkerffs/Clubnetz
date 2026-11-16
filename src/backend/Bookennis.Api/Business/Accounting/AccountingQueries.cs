@@ -43,7 +43,7 @@ internal static class AccountingQueries
             .SingleOrDefaultAsync(y => y.ClubId == year.ClubId && y.StartDate == year.EndDate.AddDays(1), cancellationToken);
 
     /// <summary>The local day of the club (Austria): what "today" means for fiscal years.</summary>
-    public static DateOnly Today(DateTimeOffset now) => DateOnly.FromDateTime(ClubTimeZone.ToLocal(now));
+    public static DateOnly Today(DateTimeOffset now) => DateOnly.FromDateTime(ClubTimeZone.ToLocal(now, ClubTimeZone.Default /* TODO(us-clubs): club time zone */));
 
     /// <summary>"First Last" of members of the club, for the names shown in the accounting (never more than the name).</summary>
     public static async Task<Dictionary<int, string>> MemberNames(this AppDbContext context, int clubId, IEnumerable<int?> memberIds, CancellationToken cancellationToken)

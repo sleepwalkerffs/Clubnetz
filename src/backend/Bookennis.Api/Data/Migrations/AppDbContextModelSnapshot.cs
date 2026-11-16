@@ -2249,6 +2249,14 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("ConcurrentAllowedBookings")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Country")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
                     b.Property<bool>("HasCustomPermissions")
                         .HasColumnType("boolean");
 
@@ -2270,6 +2278,11 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<string>("ReplyToEmail")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("WebsiteUrl")
                         .HasMaxLength(500)

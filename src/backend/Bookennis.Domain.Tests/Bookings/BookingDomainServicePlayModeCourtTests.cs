@@ -72,7 +72,7 @@ public class BookingDomainServicePlayModeCourtTests
             date = date.AddDays(1);
 
         var local = date.ToDateTime(new TimeOnly(10, 0));
-        var from = new DateTimeOffset(local, ClubTimeZone.Instance.GetUtcOffset(local));
+        var from = new DateTimeOffset(local, ClubTimeZone.Default /* TODO(us-clubs): club time zone */.GetUtcOffset(local));
         return new DateTimeOffsetInterval(from, from.AddHours(1));
     }
 

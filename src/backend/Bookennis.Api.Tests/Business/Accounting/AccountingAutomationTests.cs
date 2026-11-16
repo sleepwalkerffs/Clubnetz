@@ -27,7 +27,7 @@ public class AccountingAutomationTests(TestFixture fixture) : TestBase(fixture)
     private static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
     private static readonly DateOnly Today = LocalDate(Now);
 
-    private static DateOnly LocalDate(DateTimeOffset value) => DateOnly.FromDateTime(Bookennis.Domain.Clubs.ClubTimeZone.ToLocal(value));
+    private static DateOnly LocalDate(DateTimeOffset value) => DateOnly.FromDateTime(Bookennis.Domain.Clubs.ClubTimeZone.ToLocal(value, Bookennis.Domain.Clubs.ClubTimeZone.Default /* TODO(us-clubs): club time zone */));
 
     private sealed record Books(AccountingDto Basics, int Bank, int Cash, int Online, int Card, int Fees, int Courts, int Canteen, int Membership);
 

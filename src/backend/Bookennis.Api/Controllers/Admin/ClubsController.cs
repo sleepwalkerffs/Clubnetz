@@ -24,7 +24,7 @@ public class ClubsController(IMediator mediator) : ControllerBase
 
     [HttpPost]
     public Task<int> CreateClub(CreateClubRequest request, CancellationToken cancellationToken)
-        => mediator.Send(new CreateAdminClub(request.Name, request.OpeningHours, request.PrimeTimeHours, request.BookingGracePeriodInMinutes), cancellationToken);
+        => mediator.Send(new CreateAdminClub(request.Name, request.OpeningHours, request.PrimeTimeHours, request.BookingGracePeriodInMinutes, (Country)request.Country, request.TimeZoneId, request.Currency), cancellationToken);
 
     [HttpPut("{clubId:int}")]
     public Task UpdateClub(int clubId, UpdateAdminClubRequest request, CancellationToken cancellationToken)
@@ -42,7 +42,10 @@ public class ClubsController(IMediator mediator) : ControllerBase
                     request.PrimeTimeSettings.RestrictGuests,
                     request.PrimeTimeSettings.ChildAgeThreshold),
                 request.BookingGracePeriodInMinutes,
-                request.IsAtpClub),
+                request.IsAtpClub,
+                (Country)request.Country,
+                request.TimeZoneId,
+                request.Currency),
             cancellationToken);
 
     [HttpDelete("{clubId:int}")]

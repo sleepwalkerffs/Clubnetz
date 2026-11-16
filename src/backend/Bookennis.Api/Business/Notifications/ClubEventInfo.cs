@@ -25,7 +25,7 @@ public sealed record ClubEventInfo(
     /// Club events have club-local dates and times without a time zone (wall-clock times, see <see cref="ClubTimeZone"/>),
     /// so the club's time zone is used to tell when an event starts and to show deadlines.
     /// </summary>
-    public static readonly TimeZoneInfo TimeZone = ClubTimeZone.Instance;
+    public static readonly TimeZoneInfo TimeZone = ClubTimeZone.Default /* TODO(us-clubs): club time zone */;
 
     public DateTimeOffset? LocalRegistrationDeadline
         => RegistrationDeadline is { } deadline ? TimeZoneInfo.ConvertTime(deadline, TimeZone) : null;

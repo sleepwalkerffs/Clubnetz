@@ -999,4 +999,13 @@
   <data name="PlayModeNotAllowedOnCourt" xml:space="preserve">
     <value>{0} can't be booked on {1}. Choose another court or play mode.</value>
   </data>
+  <data name="ClubInvalidTimeZone" xml:space="preserve">
+    <value>The time zone is not known.</value>
+  </data>
+  <data name="ClubUnsupportedCurrency" xml:space="preserve">
+    <value>This currency is not supported.</value>
+  </data>
+  <data name="ClubUnknownCountry" xml:space="preserve">
+    <value>This country is not supported.</value>
+  </data>
 </root>

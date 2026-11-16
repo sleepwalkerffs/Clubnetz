@@ -999,4 +999,13 @@
   <data name="PlayModeNotAllowedOnCourt" xml:space="preserve">
     <value>{0} kann auf {1} nicht gebucht werden. Wähle einen anderen Platz oder eine andere Spielart.</value>
   </data>
+  <data name="ClubInvalidTimeZone" xml:space="preserve">
+    <value>Die Zeitzone ist unbekannt.</value>
+  </data>
+  <data name="ClubUnsupportedCurrency" xml:space="preserve">
+    <value>Diese Währung wird nicht unterstützt.</value>
+  </data>
+  <data name="ClubUnknownCountry" xml:space="preserve">
+    <value>Dieses Land wird nicht unterstützt.</value>
+  </data>
 </root>

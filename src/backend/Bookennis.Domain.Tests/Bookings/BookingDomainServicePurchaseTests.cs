@@ -146,7 +146,7 @@ public class BookingDomainServicePurchaseTests
     private static DateTimeOffsetInterval At(DateOnly date, int hour, int minute)
     {
         var local = date.ToDateTime(new TimeOnly(hour, minute));
-        var from = new DateTimeOffset(local, ClubTimeZone.Instance.GetUtcOffset(local));
+        var from = new DateTimeOffset(local, ClubTimeZone.Default /* TODO(us-clubs): club time zone */.GetUtcOffset(local));
         return new DateTimeOffsetInterval(from, from.AddHours(1));
     }
 

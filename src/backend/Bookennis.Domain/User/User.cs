@@ -22,7 +22,8 @@ public enum Country
 {
     Austria,
     Germany,
-    Switzerland
+    Switzerland,
+    UnitedStates
 }
 
 public class User : IdentityUser<int>, IEntity

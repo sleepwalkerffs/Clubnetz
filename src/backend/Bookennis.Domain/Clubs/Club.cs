@@ -1,7 +1,9 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 using Bookennis.Domain.Base;
+using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Members;
+using Bookennis.Domain.User;
 using Bookennis.Domain.Weather;
 using Bookennis.Global;
 using Bookennis.Global.Intervals;
@@ -80,6 +82,43 @@ public class Club : DomainEntity, IAggregateRoot
     }
 
     public void SetIsAtpClub(bool isAtpClub) => IsAtpClub = isAtpClub;
+
+    /// <summary>IANA id of the club's time zone: opening hours, prime time, club events and "today" are local times of it.</summary>
+    public string TimeZoneId { get; private set; } = ClubTimeZone.DefaultId;
+
+    /// <summary>The country of the club: how dates, times and amounts are written (12-hour clock in the United States) and where its Stripe account is.</summary>
+    public Country Country { get; private set; } = Country.Austria;
+
+    /// <summary>ISO 4217 code in lower case ("eur", "usd", "chf"): what membership plans, court time and the clubhouse charge, and the currency of the accounting.</summary>
+    public string Currency { get; private set; } = DefaultCurrency;
+
+    public const string DefaultCurrency = "eur";
+    public static readonly IReadOnlyList<string> SupportedCurrencies = ["eur", "usd", "chf"];
+
+    public TimeZoneInfo TimeZone => ClubTimeZone.Get(TimeZoneId);
+
+    public enum RegionErrorCode
+    {
+        ClubInvalidTimeZone = 0,
+        ClubUnsupportedCurrency = 1,
+        ClubUnknownCountry = 2,
+    }
+
+    /// <summary>Where the club is. Prices that were set before keep the currency they were set in.</summary>
+    public void SetRegion(Country country, string timeZoneId, string currency)
+    {
+        currency = currency.Trim().ToLowerInvariant();
+        if (!ClubTimeZone.IsValid(timeZoneId))
+            throw new PreconditionException(RegionErrorCode.ClubInvalidTimeZone, "Unknown time zone.");
+        if (!SupportedCurrencies.Contains(currency))
+            throw new PreconditionException(RegionErrorCode.ClubUnsupportedCurrency, "Unsupported currency.");
+        if (!Enum.IsDefined(country))
+            throw new PreconditionException(RegionErrorCode.ClubUnknownCountry, "Unknown country.");
+
+        Country = country;
+        TimeZoneId = timeZoneId.Trim();
+        Currency = currency;
+    }
 
     public void UpdateWorkingHours(TimeOnlyInterval openingHours, TimeOnlyInterval primeTimeHours)
     {

@@ -6,7 +6,7 @@ using Bookennis.Global.Intervals;
 
 namespace Bookennis.Api.Business.Admin;
 
-public record CreateAdminClub(string Name, TimeOnlyInterval OpeningHours, TimeOnlyInterval PrimeTimeHours, int? BookingGracePeriodInMinutes) : ICommand<int>
+public record CreateAdminClub(string Name, TimeOnlyInterval OpeningHours, TimeOnlyInterval PrimeTimeHours, int? BookingGracePeriodInMinutes, Domain.User.Country Country = Domain.User.Country.Austria, string TimeZoneId = ClubTimeZone.DefaultId, string Currency = Club.DefaultCurrency) : ICommand<int>
 {
     public class Handler(AppDbContext context) : IRequestHandler<CreateAdminClub, int>
     {
@@ -28,6 +28,7 @@ public record CreateAdminClub(string Name, TimeOnlyInterval OpeningHours, TimeOn
                 request.BookingGracePeriodInMinutes
             );
 
+            club.SetRegion(request.Country, request.TimeZoneId, request.Currency);
             context.Clubs.Add(club);
             await context.SaveChangesAsync(cancellationToken);
             return club.Id;

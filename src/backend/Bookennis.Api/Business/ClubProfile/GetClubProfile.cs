@@ -26,6 +26,9 @@ public record GetClubProfile(int UserId, int? SupportClubId = null) : IQuery<Get
                                 select new GetClubProfileResult
                                 {
                                     ClubName = club.Name,
+                                    TimeZoneId = club.TimeZoneId,
+                                    Country = (Bookennis.Shared.Controller.Shared.Country)club.Country,
+                                    Currency = club.Currency,
                                     MemberId = member.Id,
                                     Role = member.UserRoles.Select(x => (Bookennis.Shared.Controller.Shared.MemberRole)x).ToArray(),
                                 }).FirstOrDefaultAsync(cancellationToken);
@@ -57,6 +60,9 @@ public record GetClubProfile(int UserId, int? SupportClubId = null) : IQuery<Get
                     .Select(club => new GetClubProfileResult
                     {
                         ClubName = club.Name,
+                        TimeZoneId = club.TimeZoneId,
+                        Country = (Bookennis.Shared.Controller.Shared.Country)club.Country,
+                        Currency = club.Currency,
                         MemberId = 0,
                         Role = new[] { Bookennis.Shared.Controller.Shared.MemberRole.Admin },
                         IsSupportMode = true,

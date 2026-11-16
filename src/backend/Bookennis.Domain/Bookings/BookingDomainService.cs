@@ -73,8 +73,8 @@ public class BookingDomainService : IBookingDomainService
             throw new PreconditionException(ErrorCode.PlayModeNotAllowedOnCourt, [context.PlayMode.Name, context.Court.Name], $"{context.PlayMode.Name} cannot be played on {context.Court.Name}");
 
         // Opening hours and prime time are wall-clock times of the club, so the booking is compared in the club's local time
-        var localFrom = ClubTimeZone.ToLocal(offsetInterval.From);
-        var localTo = ClubTimeZone.ToLocal(offsetInterval.To);
+        var localFrom = ClubTimeZone.ToLocal(offsetInterval.From, context.TimeZone);
+        var localTo = ClubTimeZone.ToLocal(offsetInterval.To, context.TimeZone);
 
         if (TimeOnly.FromDateTime(localFrom) < context.OpeningHours.From || TimeOnly.FromDateTime(localTo) > context.OpeningHours.To)
         {
@@ -148,6 +148,9 @@ public class BookingDomainService : IBookingDomainService
         public required int ClubId { get; init; }
         public required Court Court { get; init; }
         public required TimeOnlyInterval OpeningHours { get; init; }
+
+        /// <summary>The club's time zone (<see cref="Club.TimeZone"/>): opening hours and prime time are wall-clock times of it.</summary>
+        public TimeZoneInfo TimeZone { get; init; } = ClubTimeZone.Default;
         public required PrimeTimeSettings PrimeTimeSettings { get; init; }
         public required MemberRole[] BookingMemberRole { get; init; }
         public required List<PlayerContext> Participants { get; init; }
