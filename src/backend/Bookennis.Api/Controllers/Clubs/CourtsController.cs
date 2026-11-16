@@ -12,6 +12,11 @@ public class CourtsController(IMediator mediator) : ClubControllerBase
     [HttpGet]
     public Task<GetCourtsResult> GetCourts(CancellationToken cancellationToken) => mediator.Send(new GetCourts(), cancellationToken);
 
+    [HttpPost]
+    [Authorize(AuthorizationPolicies.ClubAdministrator)]
+    public Task<int> AddCourt(AddCourtRequest request, CancellationToken cancellationToken)
+        => mediator.Send(new AddCourt(request.Name, request.Alias, request.IsIndoor), cancellationToken);
+
     [HttpPatch("{courtId:int}/Update")]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]
     public Task EditCourt(int courtId, UpdateCourtRequest updateCourt, CancellationToken cancellationToken)

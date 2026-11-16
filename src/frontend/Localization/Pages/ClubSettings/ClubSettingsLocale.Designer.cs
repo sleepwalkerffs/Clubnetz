@@ -70,6 +70,15 @@ namespace Bookennis.Client.Localization.Pages.ClubSettings {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to New court.
+        /// </summary>
+        public static string AddCourt {
+            get {
+                return ResourceManager.GetString("AddCourt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New play mode.
         /// </summary>
         public static string AddPlayMode {

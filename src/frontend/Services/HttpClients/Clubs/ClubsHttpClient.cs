@@ -33,6 +33,9 @@ public class ClubsHttpClient(HttpClient httpClient, JsonSerializerOptions jsonOp
     public async Task<HttpResult<GetPlayersResult>> GetPlayers(int clubId, CancellationToken cancellationToken)
         => await (await httpClient.GetAsync("Players", cancellationToken)).AsHttpResult<GetPlayersResult>(jsonOptions, cancellationToken);
 
+    public async Task<HttpResult<int>> AddCourt(AddCourtRequest request, CancellationToken cancellationToken = default)
+        => await (await httpClient.PostAsJsonAsync("Courts", request, jsonOptions, cancellationToken)).AsHttpResult<int>(jsonOptions, cancellationToken);
+
     public async Task<HttpResult> UpdateCourt(int courtId, UpdateCourtRequest request, CancellationToken cancellationToken = default)
         => await (await httpClient.PatchAsJsonAsync($"Courts/{courtId}/Update", request, jsonOptions, cancellationToken)).AsHttpResult(jsonOptions, cancellationToken);
 

@@ -10,6 +10,10 @@
 @implements IDisposable
 
 <SectionCard Emoji="🎾" Title="@L["CourtsTitle"]" Subtitle="@string.Format(L["CourtsSubtitle"], ClubStore.Courts.Count)">
+    <Actions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="Add">@L["Add"]</MudButton>
+    </Actions>
+    <ChildContent>
     @if (ClubStore.Courts.Count == 0)
     {
         <div class="courts__empty">@L["NoCourts"]</div>
@@ -43,6 +47,7 @@
         </div>
         <div class="courts__hint">💡 @L["CourtsHint"]</div>
     }
+    </ChildContent>
 </SectionCard>
 
 @code {
@@ -74,6 +79,13 @@
         }
 
         return new CourtStatus("open", L["CourtOpen"]);
+    }
+
+    private async Task Add()
+    {
+        var dialog = await DialogService.ShowAsync<EditCourtDialog>(L["AddCourt"], new DialogParameters<EditCourtDialog>(),
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
+        await dialog.Result;
     }
 
     private async Task Edit(CourtResult court)

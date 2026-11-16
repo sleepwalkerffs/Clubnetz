@@ -13,6 +13,7 @@ public interface IClubsHttpClient
     public Task<HttpResult> DeletePlayMode(int clubId, int playModeId, CancellationToken cancellationToken = default);
     public Task<HttpResult<GetPlayersResult>> GetPlayers(int clubId, CancellationToken cancellationToken = default);
     public Task<HttpResult<GetCourtsResult>> GetCourts(int clubId, CancellationToken cancellationToken = default);
+    public Task<HttpResult<int>> AddCourt(AddCourtRequest request, CancellationToken cancellationToken = default);
     public Task<HttpResult> UpdateCourt(int courtId, UpdateCourtRequest request, CancellationToken cancellationToken = default);
     public Task<HttpResult<GetSeasonsResult>> GetSeasons(int clubId, CancellationToken cancellationToken = default);
     public Task<HttpResult<int>> AddSeason(int clubId, SeasonRequest request, CancellationToken cancellationToken = default);
