@@ -1,4 +1,5 @@
 using Bookennis.Api.Business.ClubEvents;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Global.Intervals;
 using Bookennis.Shared.Controller.Wrapped;
@@ -13,7 +14,7 @@ public record GetWrappedSeasons(int UserId, int ClubId, bool CanManage) : IQuery
     {
         public async Task<GetWrappedSeasonsResult> Handle(GetWrappedSeasons request, CancellationToken cancellationToken)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = await context.GetClubToday(request.ClubId, cancellationToken);
 
             var seasons = await context.Seasons
                 .Where(s => s.ClubId == request.ClubId && s.Period.From <= today)

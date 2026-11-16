@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Globalization;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Members;
@@ -43,19 +44,19 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
                     b.Interval.To,
                     b.CourtId,
                     b.PlayModeId,
-                    b.TimeZoneInfoId,
                     b.RecurringBookingSeriesId,
                     b.Metadata.Created,
                     PlayerIds = context.BookingPlayers.Where(bp => bp.BookingEntryId == b.Id).Select(bp => bp.MemberId).ToList(),
                 })
                 .ToListAsync(cancellationToken);
 
-            var localTime = new LocalTimeConverter();
+            // Days, hours and weeks are those of the club: its time zone and the first day of its week
+            var region = ClubRegion.Of(club);
             var allBookings = bookingRows
                 .Select(b => new BookingData(
                     b.Id,
-                    localTime.ToLocal(b.From, b.TimeZoneInfoId),
-                    localTime.ToLocal(b.To, b.TimeZoneInfoId),
+                    region.ToLocal(b.From),
+                    region.ToLocal(b.To),
                     (b.To - b.From).TotalHours,
                     b.CourtId,
                     b.PlayModeId,
@@ -64,13 +65,8 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
                     b.PlayerIds))
                 .ToList();
 
-            // "Today" is the local date of the club, derived from the time zone most bookings are made in
-            var clubTimeZoneId = bookingRows
-                .GroupBy(b => b.TimeZoneInfoId)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.Key)
-                .FirstOrDefault() ?? TimeZoneInfo.Utc.Id;
-            var today = request.Today ?? DateOnly.FromDateTime(localTime.ToLocal(DateTimeOffset.UtcNow, clubTimeZoneId));
+            // "Today" is the local date of the club
+            var today = request.Today ?? region.Today();
 
             var memberSeasons = await context.MemberSeasons
                 .Where(ms => context.Set<Member>().IgnoreQueryFilters().Any(m => m.Id == ms.MemberId && m.ClubId == request.ClubId && m.MemberType == MemberType.ClubMember))
@@ -114,7 +110,8 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
                 primeTime.IsEnabled,
                 LocalHour(primeTime.PrimeTimeHours.From, false),
                 LocalHour(primeTime.PrimeTimeHours.To, true),
-                primeTime.ApplicableWeekdays);
+                primeTime.ApplicableWeekdays,
+                region.WeekDays);
 
             var seasonResults = new List<ClubSeasonStatisticsResult>();
             var seasonSummaries = new List<ClubSeasonSummary>();
@@ -233,7 +230,7 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
                 Occupancy = calculator.Calculate(playedBookings, days),
                 Seasons = seasonSummaries,
                 PlayModeUsage = BuildPlayModeUsage(playedBookings, playModes),
-                WeekdayActivity = BuildWeekdayActivity(playedBookings),
+                WeekdayActivity = BuildWeekdayActivity(playedBookings, calculator),
                 TopPlayers = BuildTopPlayers(playedBookings, players),
                 TopMatchPlayers = BuildTopPlayers(Matches(playedBookings, matchPlayModeIds), players),
                 BookingBehavior = BuildBookingBehavior(playedBookings, calculator),
@@ -419,8 +416,8 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
                 Days5To10Hours = perDay.Count(d => d.Value.Hours is >= 5 and < 10),
                 DaysOver10Hours = perDay.Count(d => d.Value.Hours >= 10),
                 PlayModeUsage = BuildPlayModeUsage(bookings, playModes),
-                WeekdayActivity = BuildWeekdayActivity(bookings),
-                WeeklyActivity = BuildWeeklyActivity(bookings, seasonStart, effectiveEnd),
+                WeekdayActivity = BuildWeekdayActivity(bookings, calculator),
+                WeeklyActivity = BuildWeeklyActivity(bookings, seasonStart, effectiveEnd, calculator),
                 BookingBehavior = BuildBookingBehavior(bookings, calculator),
                 MatchBookingBehavior = BuildBookingBehavior(Matches(bookings, matchPlayModeIds), calculator),
             };
@@ -443,10 +440,10 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
                 .OrderByDescending(p => p.Hours)
                 .ToList();
 
-        private static List<WeekdayActivityEntry> BuildWeekdayActivity(List<BookingData> bookings)
+        private static List<WeekdayActivityEntry> BuildWeekdayActivity(List<BookingData> bookings, OccupancyCalculator calculator)
         {
             var byWeekday = bookings.GroupBy(b => b.From.DayOfWeek).ToDictionary(g => g.Key);
-            return OccupancyCalculator.WeekdaysMondayFirst
+            return calculator.WeekDays
                 .Select(day => new WeekdayActivityEntry
                 {
                     DayOfWeek = day,
@@ -456,14 +453,15 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
                 .ToList();
         }
 
-        private static List<WeeklyActivityEntry> BuildWeeklyActivity(List<BookingData> bookings, DateOnly seasonStart, DateOnly effectiveEnd)
+        private static List<WeeklyActivityEntry> BuildWeeklyActivity(List<BookingData> bookings, DateOnly seasonStart, DateOnly effectiveEnd, OccupancyCalculator calculator)
         {
+            Func<DateOnly, DateOnly> weekStart = calculator.StartOfWeek;
             var weeks = new List<WeeklyActivityEntry>();
             if (effectiveEnd < seasonStart)
                 return weeks;
 
-            var byWeek = bookings.GroupBy(b => WeekStart(DateOnly.FromDateTime(b.From))).ToDictionary(g => g.Key);
-            for (var week = WeekStart(seasonStart); week <= effectiveEnd; week = week.AddDays(7))
+            var byWeek = bookings.GroupBy(b => weekStart(DateOnly.FromDateTime(b.From))).ToDictionary(g => g.Key);
+            for (var week = weekStart(seasonStart); week <= effectiveEnd; week = week.AddDays(7))
             {
                 byWeek.TryGetValue(week, out var group);
                 weeks.Add(new WeeklyActivityEntry
@@ -477,8 +475,6 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
 
             return weeks;
         }
-
-        private static DateOnly WeekStart(DateOnly date) => date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
 
         private static List<LeadTimeBucket> BuildLeadTimes(List<BookingData> bookings)
         {
@@ -584,10 +580,14 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
         bool primeTimeEnabled,
         int primeTimeFrom,
         int primeTimeTo,
-        DayOfWeek[] primeTimeWeekdays)
+        DayOfWeek[] primeTimeWeekdays,
+        IReadOnlyList<DayOfWeek> weekDays)
     {
-        public static readonly DayOfWeek[] WeekdaysMondayFirst =
-            [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday];
+        /// <summary>The days of a week in the order of the club's calendar (Sunday first in the United States).</summary>
+        public IReadOnlyList<DayOfWeek> WeekDays => weekDays;
+
+        /// <summary>The first day of the club's week that contains <paramref name="date"/>.</summary>
+        public DateOnly StartOfWeek(DateOnly date) => date.AddDays(-(((int)date.DayOfWeek - (int)weekDays[0] + 7) % 7));
 
         public int OpeningHourFrom => openingHourFrom;
         public int OpeningHourTo => openingHourTo;
@@ -630,7 +630,7 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
                 };
             }).ToList();
 
-            var weekdayHeatmaps = WeekdaysMondayFirst.Select(weekday =>
+            var weekdayHeatmaps = weekDays.Select(weekday =>
             {
                 var capacity = (double)days.Count(d => d.DayOfWeek == weekday) * courts.Count;
                 var hours = Hours()

@@ -1,4 +1,6 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
+using Bookennis.Api.Infrastructure;
 using Bookennis.Shared.Controller.MemberBadges;
 using Bookennis.Shared.Controller.OneTimeBadges;
 using Microsoft.EntityFrameworkCore;
@@ -7,12 +9,14 @@ namespace Bookennis.Api.Business.Badges;
 
 public record GetMemberBadgeProgress(int MemberId, int ClubId) : IQuery<GetMemberBadgeProgressResult>
 {
-    public class Handler(AppDbContext context, IBadgeProgressionService badgeProgressionService) : IRequestHandler<GetMemberBadgeProgress, GetMemberBadgeProgressResult>
+    public class Handler(AppDbContext context, IBadgeProgressionService badgeProgressionService, IUserLanguageAccessor languageAccessor) : IRequestHandler<GetMemberBadgeProgress, GetMemberBadgeProgressResult>
     {
         public async Task<GetMemberBadgeProgressResult> Handle(GetMemberBadgeProgress request, CancellationToken cancellationToken)
         {
-            // Find the active season for this club
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            // Find the active season for this club (today is the local day of the club)
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
+            var culture = region.Culture(languageAccessor.GetCultureInfo());
+            var today = region.Today();
             var season = await context.Seasons
                 .Where(s => s.ClubId == request.ClubId)
                 .Where(s => s.Period.From <= today && s.Period.To >= today)
@@ -51,11 +55,14 @@ public record GetMemberBadgeProgress(int MemberId, int ClubId) : IQuery<GetMembe
             var matchCount = 0;
             if (chargingPlayModeIds.Count > 0)
             {
+                // The season from the start of its first to the end of its last local day of the club
+                var seasonStart = region.StartOfDay(season.Period.From).ToUniversalTime();
+                var seasonEnd = region.StartOfDay(season.Period.To.AddDays(1)).ToUniversalTime();
                 matchCount = await context.BookingPlayers
                     .Where(bp => bp.MemberId == request.MemberId)
                     .Where(bp => chargingPlayModeIds.Contains(bp.Booking.PlayModeId))
-                    .Where(bp => bp.Booking.Interval.From >= season.Period.From.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc))
-                    .Where(bp => bp.Booking.Interval.To <= season.Period.To.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc))
+                    .Where(bp => bp.Booking.Interval.From >= seasonStart)
+                    .Where(bp => bp.Booking.Interval.To <= seasonEnd)
                     .Where(bp => bp.Booking.Interval.To < DateTimeOffset.UtcNow)
                     .CountAsync(cancellationToken);
             }
@@ -82,7 +89,7 @@ public record GetMemberBadgeProgress(int MemberId, int ClubId) : IQuery<GetMembe
                         : null,
                     EarnedAt = mb.EarnedAt,
                     SeasonId = season.Id,
-                    SeasonLabel = $"{season.Period.From:dd.MM.yyyy} - {season.Period.To:dd.MM.yyyy}",
+                    SeasonLabel = BadgeSeasonLabel.Of(season.Period.From, season.Period.To, culture),
                     SeasonFrom = season.Period.From
                 }
             ).ToListAsync(cancellationToken);
@@ -103,7 +110,7 @@ public record GetMemberBadgeProgress(int MemberId, int ClubId) : IQuery<GetMembe
                         : null,
                     AwardedAt = motb.AwardedAt,
                     SeasonId = season.Id,
-                    SeasonLabel = $"{season.Period.From:dd.MM.yyyy} - {season.Period.To:dd.MM.yyyy}",
+                    SeasonLabel = BadgeSeasonLabel.Of(season.Period.From, season.Period.To, culture),
                     SeasonFrom = season.Period.From
                 }
             ).ToListAsync(cancellationToken);

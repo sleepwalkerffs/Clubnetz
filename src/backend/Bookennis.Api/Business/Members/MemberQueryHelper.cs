@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +8,7 @@ public static class MemberQueryHelper
 {
     public static async Task<HashSet<int>> GetNewMemberIds(AppDbContext context, CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = await context.GetTenantToday(cancellationToken);
 
         var activeSeason = await context.Seasons
             .Where(s => s.Period.From <= today && today <= s.Period.To)

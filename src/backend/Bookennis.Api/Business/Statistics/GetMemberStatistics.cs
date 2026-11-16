@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Members;
@@ -9,7 +10,7 @@ namespace Bookennis.Api.Business.Statistics;
 
 public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStatisticsResult>
 {
-    // From/To are in the local time of the booking; DurationHours comes from the UTC interval (correct across DST changes)
+    // From/To are in the local time of the club; DurationHours comes from the UTC interval (correct across DST changes)
     private sealed record BookingData(int Id, DateTime From, DateTime To, double DurationHours, int CourtId, int PlayModeId)
     {
         public DateOnly Date => DateOnly.FromDateTime(From);
@@ -30,7 +31,8 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
     {
         public async Task<GetMemberStatisticsResult> Handle(GetMemberStatistics request, CancellationToken cancellationToken)
         {
-            var localTime = new LocalTimeConverter();
+            // Days, hours and weeks are those of the club (its time zone and the first day of its week)
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
 
             var memberIds = await context.Set<Member>()
                 .IgnoreQueryFilters()
@@ -62,14 +64,14 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
                 from booking in context.Bookings
                 where chargingPlayModeIds.Contains(booking.PlayModeId)
                 where context.BookingPlayers.Any(bp => bp.BookingEntryId == booking.Id && memberIds.Contains(bp.MemberId))
-                select new { booking.Id, booking.Interval.From, booking.Interval.To, booking.TimeZoneInfoId, booking.CourtId, booking.PlayModeId }
+                select new { booking.Id, booking.Interval.From, booking.Interval.To, booking.CourtId, booking.PlayModeId }
             ).ToListAsync(cancellationToken);
 
             var bookings = bookingRows
                 .Select(b => new BookingData(
                     b.Id,
-                    localTime.ToLocal(b.From, b.TimeZoneInfoId),
-                    localTime.ToLocal(b.To, b.TimeZoneInfoId),
+                    region.ToLocal(b.From),
+                    region.ToLocal(b.To),
                     (b.To - b.From).TotalHours,
                     b.CourtId,
                     b.PlayModeId))
@@ -126,11 +128,11 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
                 var memberId = memberForClub.Id;
                 var quotaRows = await context.BookingPlayers
                     .Where(bp => bp.MemberId == memberId && accessiblePlayModeIds.Contains(bp.Booking.PlayModeId))
-                    .Select(bp => new { bp.Booking.PlayModeId, bp.Booking.Interval.From, bp.Booking.TimeZoneInfoId })
+                    .Select(bp => new { bp.Booking.PlayModeId, bp.Booking.Interval.From })
                     .ToListAsync(cancellationToken);
 
                 quotaBookings = quotaRows
-                    .Select(x => (x.PlayModeId, DateOnly.FromDateTime(localTime.ToLocal(x.From, x.TimeZoneInfoId))))
+                    .Select(x => (x.PlayModeId, region.LocalDate(x.From)))
                     .ToList();
             }
             // -------------------------
@@ -138,11 +140,11 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
             // --- Club comparison (anonymous): bookings of all members of the club ---
             var clubBookingRows = await context.BookingPlayers
                 .Where(bp => bp.Booking.ClubId == request.ClubId && chargingPlayModeIds.Contains(bp.Booking.PlayModeId))
-                .Select(bp => new { bp.MemberId, bp.Booking.Interval.From, bp.Booking.TimeZoneInfoId })
+                .Select(bp => new { bp.MemberId, bp.Booking.Interval.From })
                 .ToListAsync(cancellationToken);
 
             var clubBookings = clubBookingRows
-                .Select(x => new MemberBookingData(x.MemberId, DateOnly.FromDateTime(localTime.ToLocal(x.From, x.TimeZoneInfoId))))
+                .Select(x => new MemberBookingData(x.MemberId, region.LocalDate(x.From)))
                 .ToList();
 
             var seasonIds = seasons.Select(s => s.Id).ToList();
@@ -152,7 +154,7 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
                 .ToListAsync(cancellationToken);
             // -------------------------
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = region.Today();
 
             var seasonStats = new List<SeasonStatisticsResult>();
             foreach (var season in seasons)
@@ -167,7 +169,7 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
                         .Where(b => IsInSeason(b.Date, season))
                         .ToList();
 
-                    data = BuildStatisticsData(seasonBookings, allPlayers, courts, playModeNames, today);
+                    data = BuildStatisticsData(seasonBookings, allPlayers, courts, playModeNames, today, region.StartOfWeek);
 
                     var enrolledMemberIds = enrollments
                         .Where(e => e.SeasonId == season.Id)
@@ -198,7 +200,7 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
                 });
             }
 
-            var allTimeData = BuildStatisticsData(bookings, allPlayers, courts, playModeNames, today);
+            var allTimeData = BuildStatisticsData(bookings, allPlayers, courts, playModeNames, today, region.StartOfWeek);
 
             return new GetMemberStatisticsResult
             {
@@ -242,7 +244,8 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
             List<PlayerData> allPlayers,
             Dictionary<int, CourtInfo> courts,
             Dictionary<int, string> playModeNames,
-            DateOnly today)
+            DateOnly today,
+            Func<DateOnly, DateOnly> startOfWeek)
         {
             var bookingIds = filteredBookings.Select(b => b.Id).ToHashSet();
 
@@ -311,10 +314,10 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
             }
 
             var playDates = filteredBookings.Select(b => b.Date).Distinct().Order().ToList();
-            var weeks = playDates.Select(CalendarWeeks.GetMonday).ToHashSet();
+            var weeks = playDates.Select(startOfWeek).ToHashSet();
 
             var bestWeek = filteredBookings
-                .GroupBy(b => CalendarWeeks.GetMonday(b.Date))
+                .GroupBy(b => startOfWeek(b.Date))
                 .OrderByDescending(g => g.Count())
                 .ThenBy(g => g.Key)
                 .Select(g => new WeekRecord { WeekStart = g.Key, Count = g.Count() })
@@ -346,7 +349,7 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
                 HourCounts = [.. hourCounts],
                 PlayerType = GetPlayerType(filteredBookings.Count, weekdayCounts, hourCounts),
                 LongestWeekStreak = GetLongestWeekStreak(weeks),
-                CurrentWeekStreak = GetCurrentWeekStreak(weeks, today),
+                CurrentWeekStreak = GetCurrentWeekStreak(weeks, startOfWeek(today)),
                 LongestBreakDays = playDates.Count < 2 ? null : playDates.Zip(playDates.Skip(1), (a, b) => b.DayNumber - a.DayNumber).Max(),
                 BestWeek = bestWeek,
                 BusiestMonth = busiestMonth,
@@ -399,10 +402,11 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
             return longest;
         }
 
-        private static int GetCurrentWeekStreak(HashSet<DateOnly> weeks, DateOnly today)
+        /// <summary><paramref name="currentWeek"/>: the first day of the club's week that contains today.</summary>
+        private static int GetCurrentWeekStreak(HashSet<DateOnly> weeks, DateOnly currentWeek)
         {
             // The streak is still alive when nothing was played yet in the current week
-            var monday = CalendarWeeks.GetMonday(today);
+            var monday = currentWeek;
             if (!weeks.Contains(monday))
                 monday = monday.AddDays(-7);
 

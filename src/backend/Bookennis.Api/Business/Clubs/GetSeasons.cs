@@ -10,7 +10,7 @@ public record GetSeasons() : IQuery<GetSeasonsResult>
     {
         public async Task<GetSeasonsResult> Handle(GetSeasons request, CancellationToken cancellationToken)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = await context.GetTenantToday(cancellationToken);
 
             var seasons = await context.Seasons
                 .OrderByDescending(s => s.Period.From)

@@ -1,5 +1,6 @@
 using Bookennis.Api.Business.ClubEvents;
 using Bookennis.Api.Business.Statistics;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Exceptions;
@@ -30,7 +31,9 @@ public record GetSeasonWrapped(int UserId, int ClubId, int SeasonId, bool CanMan
     {
         public async Task<SeasonWrappedResult> Handle(GetSeasonWrapped request, CancellationToken cancellationToken)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            // The local day and the weeks of the club
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
+            var today = region.Today();
 
             var season = await context.Seasons
                 .AsNoTracking()
@@ -80,7 +83,7 @@ public record GetSeasonWrapped(int UserId, int ClubId, int SeasonId, bool CanMan
             }
 
             var playDates = ownBookings.Select(b => b.Date).Distinct().Order().ToList();
-            var weeks = playDates.Select(CalendarWeeks.GetMonday).ToHashSet();
+            var weeks = playDates.Select(region.StartOfWeek).ToHashSet();
             var (rank, betterThan) = GetRank(memberId, ownBookings.Count, clubBookings, enrolledMemberIds);
 
             return new SeasonWrappedResult
@@ -115,7 +118,7 @@ public record GetSeasonWrapped(int UserId, int ClubId, int SeasonId, bool CanMan
                     .Select(g => new MonthRecord { Year = g.Key.Year, Month = g.Key.Month, Count = g.Count() })
                     .FirstOrDefault(),
                 BestWeek = ownBookings
-                    .GroupBy(b => CalendarWeeks.GetMonday(b.Date))
+                    .GroupBy(b => region.StartOfWeek(b.Date))
                     .OrderByDescending(g => g.Count())
                     .ThenBy(g => g.Key)
                     .Select(g => new WeekRecord { WeekStart = g.Key, Count = g.Count() })

@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Members;
 using Microsoft.EntityFrameworkCore;
@@ -27,11 +28,16 @@ public class BadgeProgressionService(AppDbContext context) : IBadgeProgressionSe
         if (season is null)
             return;
 
+        // The season from the start of its first to the end of its last local day of the club
+        var region = await context.GetClubRegion(clubId, cancellationToken);
+        var seasonStart = region.StartOfDay(season.Period.From).ToUniversalTime();
+        var seasonEnd = region.StartOfDay(season.Period.To.AddDays(1)).ToUniversalTime();
+
         var matchCount = await context.BookingPlayers
             .Where(bp => bp.MemberId == memberId)
             .Where(bp => chargingPlayModeIds.Contains(bp.Booking.PlayModeId))
-            .Where(bp => bp.Booking.Interval.From >= season.Period.From.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc))
-            .Where(bp => bp.Booking.Interval.To <= season.Period.To.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc))
+            .Where(bp => bp.Booking.Interval.From >= seasonStart)
+            .Where(bp => bp.Booking.Interval.To <= seasonEnd)
             .Where(bp => bp.Booking.Interval.To < DateTimeOffset.UtcNow)
             .CountAsync(cancellationToken);
 

@@ -13,7 +13,6 @@ public record GetAdminOverview : IQuery<AdminOverviewResult>
     {
         public async Task<AdminOverviewResult> Handle(GetAdminOverview request, CancellationToken cancellationToken)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var now = DateTimeOffset.UtcNow;
             var since = now.AddDays(-AdminClubQueryExtensions.ActivityDays);
             var sinceUtc = since.UtcDateTime;
@@ -39,7 +38,7 @@ public record GetAdminOverview : IQuery<AdminOverviewResult>
             return new AdminOverviewResult
             {
                 ClubCount = await context.Clubs.CountAsync(cancellationToken),
-                ClubsWithoutActiveSeason = await context.Clubs.CountAsync(c => !c.Seasons.Any(s => s.Period.From <= today && today <= s.Period.To), cancellationToken),
+                ClubsWithoutActiveSeason = await context.Clubs.CountAsync(cancellationToken) - (await context.ClubsWithActiveSeason(cancellationToken)).Count,
                 UserCount = await users.CountAsync(cancellationToken),
                 UnconfirmedUserCount = await users.CountAsync(u => !u.EmailConfirmed, cancellationToken),
                 NewUsersLast30Days = await users.CountAsync(u => u.Metadata.Created >= sinceUtc, cancellationToken),

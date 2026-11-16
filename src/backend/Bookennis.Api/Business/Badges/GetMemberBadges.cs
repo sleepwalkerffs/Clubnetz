@@ -1,4 +1,6 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
+using Bookennis.Api.Infrastructure;
 using Bookennis.Shared.Controller.MemberBadges;
 using Bookennis.Shared.Controller.OneTimeBadges;
 using Microsoft.EntityFrameworkCore;
@@ -7,10 +9,13 @@ namespace Bookennis.Api.Business.Badges;
 
 public record GetMemberBadges(int MemberId, int ClubId, int? SeasonId) : IQuery<GetMemberBadgesResult>
 {
-    public class Handler(AppDbContext context) : IRequestHandler<GetMemberBadges, GetMemberBadgesResult>
+    public class Handler(AppDbContext context, IUserLanguageAccessor languageAccessor) : IRequestHandler<GetMemberBadges, GetMemberBadgesResult>
     {
         public async Task<GetMemberBadgesResult> Handle(GetMemberBadges request, CancellationToken cancellationToken)
         {
+            // The season labels are written the club's way
+            var culture = (await context.GetClubRegion(request.ClubId, cancellationToken)).Culture(languageAccessor.GetCultureInfo());
+
             var query = from mb in context.MemberBadges
                         join bt in context.BadgeTiers on mb.BadgeTierId equals bt.Id
                         join s in context.Seasons on mb.SeasonId equals s.Id
@@ -33,7 +38,7 @@ public record GetMemberBadges(int MemberId, int ClubId, int? SeasonId) : IQuery<
                     : null,
                 EarnedAt = x.mb.EarnedAt,
                 SeasonId = x.s.Id,
-                SeasonLabel = $"{x.s.Period.From:dd.MM.yyyy} - {x.s.Period.To:dd.MM.yyyy}",
+                SeasonLabel = BadgeSeasonLabel.Of(x.s.Period.From, x.s.Period.To, culture),
                 SeasonFrom = x.s.Period.From
             }).ToListAsync(cancellationToken);
 
@@ -58,7 +63,7 @@ public record GetMemberBadges(int MemberId, int ClubId, int? SeasonId) : IQuery<
                     : null,
                 AwardedAt = x.motb.AwardedAt,
                 SeasonId = x.s.Id,
-                SeasonLabel = $"{x.s.Period.From:dd.MM.yyyy} - {x.s.Period.To:dd.MM.yyyy}",
+                SeasonLabel = BadgeSeasonLabel.Of(x.s.Period.From, x.s.Period.To, culture),
                 SeasonFrom = x.s.Period.From
             }).ToListAsync(cancellationToken);
 

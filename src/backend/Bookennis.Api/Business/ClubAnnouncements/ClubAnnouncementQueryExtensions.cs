@@ -13,10 +13,10 @@ public static class ClubAnnouncementQueryExtensions
             .Include(a => a.Attachments)
             .SingleRequiredAsync(a => a.Id == clubAnnouncementId && a.ClubId == clubId, cancellationToken);
 
-    /// <summary>Expired announcements do not exist for members who can not manage them.</summary>
-    public static void EnsureVisible(this ClubAnnouncement announcement, bool canManage)
+    /// <summary>Expired announcements do not exist for members who can not manage them. <paramref name="today"/> is the local day of the club.</summary>
+    public static void EnsureVisible(this ClubAnnouncement announcement, bool canManage, DateOnly today)
     {
-        if (!canManage && announcement.IsExpired(ClubAnnouncementMapper.Today))
+        if (!canManage && announcement.IsExpired(today))
             throw new EntityNotFoundException(typeof(ClubAnnouncement));
     }
 }

@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Families;
 using Bookennis.Domain.Members;
@@ -85,7 +86,7 @@ public static class MemberFilterQuery
 
         if (filter.AgeGroups is { Length: > 0 } ageGroups)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = await context.GetTenantToday(cancellationToken);
             var kids = ageGroups.Contains(AgeGroup.Kids);
             var teenagers = ageGroups.Contains(AgeGroup.Teenagers);
             var adults = ageGroups.Contains(AgeGroup.Adults);

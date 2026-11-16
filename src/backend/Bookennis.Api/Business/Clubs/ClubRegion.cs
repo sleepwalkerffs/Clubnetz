@@ -48,6 +48,15 @@ public sealed record ClubRegion(int ClubId, string TimeZoneId, Country Country, 
     /// <summary>The language of <paramref name="culture"/> (e.g. of the request) with the conventions of the club.</summary>
     public RegionalCulture Culture(CultureInfo culture) => RegionalCulture.For(culture.TwoLetterISOLanguageName == "de", SharedCountry, Currency);
 
+    /// <summary>The first day of a week in the club's country: Sunday in the United States, Monday in Europe.</summary>
+    public DayOfWeek FirstDayOfWeek { get; } = RegionalCulture.For(false, (global::Bookennis.Shared.Controller.Shared.Country)Country).DateTimeFormat.FirstDayOfWeek;
+
+    /// <summary>The days of a week in the order of the club's calendar.</summary>
+    public IReadOnlyList<DayOfWeek> WeekDays => Enumerable.Range(0, 7).Select(i => (DayOfWeek)(((int)FirstDayOfWeek + i) % 7)).ToList();
+
+    /// <summary>The first day of the club's week that contains <paramref name="date"/>.</summary>
+    public DateOnly StartOfWeek(DateOnly date) => date.AddDays(-(((int)date.DayOfWeek - (int)FirstDayOfWeek + 7) % 7));
+
     /// <summary>
     /// For texts made per language (push notifications, <c>IPushNotificationService.Notify</c>): <paramref name="create"/> gets the
     /// club's culture in the language it is asked for.

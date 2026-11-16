@@ -2,6 +2,7 @@ using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Data;
 using Bookennis.Api.Tests.Business.ClubEvents;
 using Bookennis.Domain.ClubEvents;
+using Bookennis.Domain.Clubs;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using NSubstitute;
@@ -89,9 +90,9 @@ public class SendClubEventRemindersTests(TestFixture fixture) : TestBase(fixture
     }
 
     /// <summary>An event that starts the given time from now, in the club-local time of the events.</summary>
-    private static ClubEvent.EventData StartingIn(TimeSpan timeSpan)
+    private static ClubEvent.EventData StartingIn(TimeSpan timeSpan, TimeZoneInfo? timeZone = null)
     {
-        var localStart = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow.Add(timeSpan), ClubEventInfo.TimeZone).DateTime;
+        var localStart = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow.Add(timeSpan), timeZone ?? ClubTimeZone.Default).DateTime;
         return ClubEventSeed.Data(DateOnly.FromDateTime(localStart)) with { StartTime = TimeOnly.FromDateTime(localStart), EndTime = null };
     }
 

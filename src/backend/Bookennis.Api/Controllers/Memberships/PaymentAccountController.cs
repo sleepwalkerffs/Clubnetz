@@ -31,6 +31,7 @@ public class PaymentAccountController(IMediator mediator) : ClubControllerBase
     {
         Country.Germany => "DE",
         Country.Switzerland => "CH",
+        Country.UnitedStates => "US",
         _ => "AT",
     };
 }

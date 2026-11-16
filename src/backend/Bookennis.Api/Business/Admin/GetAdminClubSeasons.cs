@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Shared.Controller.Admin;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,7 @@ public record GetAdminClubSeasons(int ClubId) : IQuery<List<AdminSeasonResult>>
     {
         public async Task<List<AdminSeasonResult>> Handle(GetAdminClubSeasons request, CancellationToken cancellationToken)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = await context.GetClubToday(request.ClubId, cancellationToken);
 
             return await context.Seasons
                 .Where(s => s.ClubId == request.ClubId)
