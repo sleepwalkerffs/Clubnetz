@@ -33,7 +33,7 @@
                 <div class="heatmap__corner"></div>
                 @foreach (var hour in hours)
                 {
-                    <div class="heatmap__hour @(IsPrimeHour(hour) ? "heatmap__hour--prime" : null)">@hour</div>
+                    <div class="heatmap__hour @(IsPrimeHour(hour) ? "heatmap__hour--prime" : null)">@(RegionalCulture.Current.UsesTwelveHourClock ? RegionalCulture.Current.HourLabel(hour) : hour.ToString(CultureInfo.InvariantCulture))</div>
                 }
                 <div class="heatmap__hour heatmap__hour--avg">Ø</div>
 

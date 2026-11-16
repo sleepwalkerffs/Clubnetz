@@ -1268,4 +1268,16 @@ Ashburn, VA 20147</value>
   <data name="InvoiceSettings_FooterDefault_Us" xml:space="preserve">
     <value>Thank you for supporting our club!</value>
   </data>
+  <data name="Bank_Subtitle_Us" xml:space="preserve">
+    <value>Import the CSV export of your online banking and match each line with its entry</value>
+  </data>
+  <data name="Csv_Iban_Us" xml:space="preserve">
+    <value>Account number of the other party</value>
+  </data>
+  <data name="Rules_MatchIban_Us" xml:space="preserve">
+    <value>Account number of the other party</value>
+  </data>
+  <data name="Rules_Hint_Us" xml:space="preserve">
+    <value>A line a rule fits gets its category with one click, e.g. “USTA” → USTA and league fees.</value>
+  </data>
 </root>

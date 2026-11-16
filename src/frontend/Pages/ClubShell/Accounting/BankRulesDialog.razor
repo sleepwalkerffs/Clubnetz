@@ -10,14 +10,14 @@
 <BaseDialog SubmitFunc="Close" SubmitCaption="@SharedLocale["Close"]" CancelFunc="Close" CancelCaption="@SharedLocale["Cancel"]" ShowCancel="false" Loading="@Store.IsSaving"
             CanSubmit="@(editing is null)" Title="@L["Rules_Title"]">
     <div class="rules-form">
-        <div class="rules-form__hint">@L["Rules_Hint"]</div>
+        <div class="rules-form__hint">@L[AccountingHelpers.Regional("Rules_Hint")]</div>
 
         @if (editing is not null)
         {
             <div class="rules-form__edit">
                 <div class="rules-form__row">
                     <MudTextField T="string" @bind-Value="editing.MatchText" Label="@L["Rules_MatchText"]" Placeholder="ÖTV" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="100" Immediate="true" />
-                    <MudTextField T="string" @bind-Value="editing.MatchIban" Label="@L["Rules_MatchIban"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="42" Immediate="true" />
+                    <MudTextField T="string" @bind-Value="editing.MatchIban" Label="@L[AccountingHelpers.Regional("Rules_MatchIban")]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="42" Immediate="true" />
                 </div>
                 <div class="rules-form__row">
                     <MudSelect T="BankRuleDirection" @bind-Value="editing.Direction" Label="@L["Rules_Direction"]" Variant="Variant.Outlined" Margin="Margin.Dense">

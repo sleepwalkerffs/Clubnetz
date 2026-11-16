@@ -98,16 +98,16 @@
             </MudGrid>
             <MudGrid>
                 <MudItem xs="12" sm="6">
-                    <MudTimePicker @bind-Time="openStart" AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["OpeningStart"]" Variant="Variant.Outlined" />
+                    <MudTimePicker @bind-Time="openStart" AmPm="@NewClubUsesTwelveHourClock" Label="@L["OpeningStart"]" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudTimePicker @bind-Time="openEnd" AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["OpeningEnd"]" Variant="Variant.Outlined" />
+                    <MudTimePicker @bind-Time="openEnd" AmPm="@NewClubUsesTwelveHourClock" Label="@L["OpeningEnd"]" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudTimePicker @bind-Time="primeStart" AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["PrimeTimeStart"]" Variant="Variant.Outlined" />
+                    <MudTimePicker @bind-Time="primeStart" AmPm="@NewClubUsesTwelveHourClock" Label="@L["PrimeTimeStart"]" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudTimePicker @bind-Time="primeEnd" AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["PrimeTimeEnd"]" Variant="Variant.Outlined" />
+                    <MudTimePicker @bind-Time="primeEnd" AmPm="@NewClubUsesTwelveHourClock" Label="@L["PrimeTimeEnd"]" Variant="Variant.Outlined" />
                 </MudItem>
             </MudGrid>
         </div>
@@ -133,6 +133,8 @@
     private TimeSpan? primeStart = new TimeSpan(17, 0, 0);
     private TimeSpan? primeEnd = new TimeSpan(21, 0, 0);
     private Country newCountry = Country.Austria;
+    // The hours are entered on the clock of the new club
+    private bool NewClubUsesTwelveHourClock => newCountry == Country.UnitedStates;
     private string newTimeZoneId = RegionalCulture.DefaultTimeZoneOf(Country.Austria);
     private string newCurrency = RegionalCulture.DefaultCurrencyOf(Country.Austria);
 
