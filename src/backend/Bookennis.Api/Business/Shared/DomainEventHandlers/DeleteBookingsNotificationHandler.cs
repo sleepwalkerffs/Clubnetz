@@ -2,6 +2,7 @@ using Bookennis.Api.Business.ClubEmails;
 using Bookennis.Api.Business.Events;
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Business.Push;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Bookennis.Api.Infrastructure.User;
@@ -64,9 +65,11 @@ public abstract class DeleteBookingsNotificationHandler<T>(
                 .ToListAsync(cancellationToken);
             var recipients = await EmailRecipients.ForMembers(context, NotificationType.BookingDeleted, playerIds, exceptUserIds: null, cancellationToken);
 
+            // In the club's time zone and the way the club writes it
+            var region = await context.GetClubRegion(intersectingBooking.Booking.ClubId, cancellationToken);
             foreach (var recipient in recipients)
             {
-                var culture = recipient.Language.ToCultureInfo();
+                var culture = recipient.Language.ToCultureInfo(region);
                 var reasonTemplate = Texts.ResourceManager.GetString(intersectingBooking.ReasonKey, culture) ?? intersectingBooking.ReasonKey;
                 var reason = intersectingBooking.ReasonFormatArg is not null
                     ? string.Format(reasonTemplate, intersectingBooking.ReasonFormatArg)
@@ -76,7 +79,7 @@ public abstract class DeleteBookingsNotificationHandler<T>(
                 var variables = new BookingDeletedEmailVariables(
                     member,
                     new BookingVariables(
-                        intersectingBooking.Booking.Interval.From.AddTimeZoneInfo(intersectingBooking.Booking.TimeZoneInfoId).ToString(culture),
+                        culture.DateAndTime(region.ToLocalOffset(intersectingBooking.Booking.Interval.From)),
                         intersectingBooking.CourtName,
                         deletedBy,
                         reason));

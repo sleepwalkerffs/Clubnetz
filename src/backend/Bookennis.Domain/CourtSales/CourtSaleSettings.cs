@@ -46,7 +46,10 @@ public class CourtSaleSettings : TenantDomainEntity, IAggregateRoot
     /// <summary>The play mode of the bookings that are bought. Required to switch the sale on.</summary>
     public int? PlayModeId { get; private set; }
 
-    /// <summary>The prices are local times of this time zone. Decided by the club, never by the browser of the buyer.</summary>
+    /// <summary>
+    /// The prices are local times of this time zone. It is always the club's time zone (<c>Club.TimeZoneId</c>, see <see cref="FollowClubTimeZone"/>),
+    /// never the browser of the buyer; the column stays for the rows written before.
+    /// </summary>
     public string TimeZoneId { get; private set; }
 
     public int MaxBookingMinutes { get; private set; }
@@ -79,6 +82,14 @@ public class CourtSaleSettings : TenantDomainEntity, IAggregateRoot
         MaxBookingMinutes = data.MaxBookingMinutes;
         MaxDaysInAdvance = data.MaxDaysInAdvance;
         MaxUpcomingBookings = data.MaxUpcomingBookings;
+    }
+
+    /// <summary>The prices are local times of the club: the settings follow the club's time zone (<c>Club.TimeZoneId</c>).</summary>
+    public void FollowClubTimeZone(string timeZoneId)
+    {
+        var timeZone = FindTimeZone(timeZoneId);
+        if (TimeZoneId != timeZone.Id)
+            TimeZoneId = timeZone.Id;
     }
 
     /// <summary>The play mode was deleted: nothing can be sold until another one is chosen.</summary>

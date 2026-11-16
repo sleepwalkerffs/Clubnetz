@@ -29,7 +29,7 @@ public record SendClubEventEmailBatch(int ClubId, int ClubEventId, ClubEmailType
             foreach (var recipient in request.Recipients)
             {
                 var member = new MemberVariables(recipient.FirstName, recipient.LastName);
-                var variables = new ClubEventEmailVariables(member, clubEvent.ToVariables(recipient.Language.ToCultureInfo(), appSettings));
+                var variables = new ClubEventEmailVariables(member, clubEvent.ToVariables(recipient.Language.ToCultureInfo(clubEvent.Region), appSettings));
 
                 await mediator.Send(
                     new SendClubEmail(request.ClubId, request.Type, recipient.Email, member.FullName, recipient.Language, variables),

@@ -1,4 +1,5 @@
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.ClubEvents;
 using Bookennis.Shared.Controller.ClubEvents;
@@ -20,7 +21,7 @@ public record UpdateClubEvent(int ClubId, int UserId, int ClubEventId, ClubEvent
 
             var myMemberId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken);
             var members = await ClubEventMapper.LoadMemberInfos(context, clubEvent, cancellationToken);
-            return ClubEventMapper.ToDto(renderer, clubEvent, members, myMemberId, DateTimeOffset.UtcNow);
+            return ClubEventMapper.ToDto(renderer, clubEvent, members, myMemberId, DateTimeOffset.UtcNow, (await context.GetClubRegion(request.ClubId, cancellationToken)).TimeZone);
         }
     }
 }

@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Memberships;
@@ -24,7 +25,8 @@ public record CreateMembershipPlan(int ClubId, int SeasonId, MembershipPlan.Plan
                 .Where(p => p.ClubId == request.ClubId && p.SeasonId == season.Id)
                 .MaxAsync(p => (int?)p.SortOrder, cancellationToken) ?? 0;
 
-            var plan = new MembershipPlan(request.ClubId, season.Id, request.Data, lastSortOrder + 1);
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
+            var plan = new MembershipPlan(request.ClubId, season.Id, request.Data, lastSortOrder + 1, region.Currency);
             await context.EnsurePlanNameIsFree(plan, cancellationToken);
 
             context.MembershipPlans.Add(plan);

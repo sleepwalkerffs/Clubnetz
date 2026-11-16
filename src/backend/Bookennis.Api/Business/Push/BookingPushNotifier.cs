@@ -1,4 +1,5 @@
 using System.Globalization;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure.User;
 using Bookennis.Domain.Notifications;
@@ -42,11 +43,11 @@ public class BookingPushNotifier(AppDbContext context, IPushNotificationService 
 
         await pushNotificationService.Notify(
             recipients,
-            culture => new PushNotification(
+            booking.Region.InCulture(culture => new PushNotification(
                 PushTexts.Get(culture, "BookingAdded_Title", PushTexts.DateAndTime(culture, booking.LocalStart)),
                 Body(culture, booking.CourtName, actorName, "BookedBy"),
                 $"/clubs/{booking.ClubId}/booking/{booking.Id}",
-                Tag: $"booking-{booking.Id}"),
+                Tag: $"booking-{booking.Id}")),
             cancellationToken);
     }
 
@@ -71,14 +72,15 @@ public class BookingPushNotifier(AppDbContext context, IPushNotificationService 
 
         var (actorUserId, actorName) = await GetActor(cancellationToken);
         var recipients = await PushRecipients.ForMembers(context, NotificationType.BookingAdded, series.PlayerIds, actorUserId, cancellationToken);
+        var region = await context.GetClubRegion(series.ClubId, cancellationToken);
 
         await pushNotificationService.Notify(
             recipients,
-            culture => new PushNotification(
+            region.InCulture(culture => new PushNotification(
                 PushTexts.Get(culture, "RecurringBookingAdded_Title", culture.DateTimeFormat.GetDayName(series.DayOfWeek), PushTexts.Time(culture, series.StartTime)),
                 Body(culture, series.CourtName, actorName, "BookedBy"),
                 $"/clubs/{series.ClubId}/my-club",
-                Tag: $"booking-series-{seriesId}"),
+                Tag: $"booking-series-{seriesId}")),
             cancellationToken);
     }
 
@@ -93,11 +95,11 @@ public class BookingPushNotifier(AppDbContext context, IPushNotificationService 
 
         await pushNotificationService.Notify(
             recipients,
-            culture => new PushNotification(
+            booking.Region.InCulture(culture => new PushNotification(
                 PushTexts.Get(culture, "BookingDeleted_Title", PushTexts.DateAndTime(culture, booking.LocalStart)),
                 Body(culture, booking.CourtName, actorName, "CancelledBy"),
                 $"/clubs/{booking.ClubId}/my-club",
-                Tag: $"booking-{booking.Id}"),
+                Tag: $"booking-{booking.Id}")),
             cancellationToken);
     }
 
@@ -112,11 +114,11 @@ public class BookingPushNotifier(AppDbContext context, IPushNotificationService 
 
         await pushNotificationService.Notify(
             recipients,
-            culture => new PushNotification(
+            booking.Region.InCulture(culture => new PushNotification(
                 PushTexts.Get(culture, "RecurringBookingDeleted_Title", PushTexts.Date(culture, DateOnly.FromDateTime(booking.LocalStart.DateTime))),
                 Body(culture, booking.CourtName, actorName, "CancelledBy"),
                 $"/clubs/{booking.ClubId}/my-club",
-                Tag: $"booking-series-{booking.RecurringBookingSeriesId}"),
+                Tag: $"booking-series-{booking.RecurringBookingSeriesId}")),
             cancellationToken);
     }
 
@@ -131,16 +133,18 @@ public class BookingPushNotifier(AppDbContext context, IPushNotificationService 
                 b.Id,
                 b.ClubId,
                 b.Interval.From,
-                b.TimeZoneInfoId,
                 b.RecurringBookingSeriesId,
                 CourtName = court.Name,
                 PlayerIds = b.Players.Select(p => p.MemberId).ToList()
             }
         ).SingleOrDefaultAsync(cancellationToken);
 
-        return booking is null
-            ? null
-            : new BookingInfo(booking.Id, booking.ClubId, booking.From.AddTimeZoneInfo(booking.TimeZoneInfoId), booking.RecurringBookingSeriesId, booking.CourtName, booking.PlayerIds);
+        if (booking is null)
+            return null;
+
+        // Shown in the club's time zone, also for bookings that stored the browser's
+        var region = await context.GetClubRegion(booking.ClubId, cancellationToken);
+        return new BookingInfo(booking.Id, booking.ClubId, region, region.ToLocalOffset(booking.From), booking.RecurringBookingSeriesId, booking.CourtName, booking.PlayerIds);
     }
 
     /// <summary>The signed-in user who made the change. Nobody if the change comes from a background job.</summary>
@@ -156,5 +160,5 @@ public class BookingPushNotifier(AppDbContext context, IPushNotificationService 
     private static string Body(CultureInfo culture, string courtName, string? actorName, string actorKey)
         => actorName is null ? courtName : $"{courtName} · {PushTexts.Get(culture, actorKey, actorName)}";
 
-    private sealed record BookingInfo(int Id, int ClubId, DateTimeOffset LocalStart, int? RecurringBookingSeriesId, string CourtName, List<int> PlayerIds);
+    private sealed record BookingInfo(int Id, int ClubId, ClubRegion Region, DateTimeOffset LocalStart, int? RecurringBookingSeriesId, string CourtName, List<int> PlayerIds);
 }

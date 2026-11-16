@@ -1,4 +1,5 @@
 using Bookennis.Api.Business.ClubEvents;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Memberships;
@@ -52,9 +53,9 @@ public record RecordMembershipPayment(
 
             var order = new MembershipOrder(plan, payerMemberId, memberIds, request.Note);
             if (order.IsFree)
-                order.ConfirmFree(MembershipPayments.PaidAt(request.PaidOn));
+                order.ConfirmFree(MembershipPayments.PaidAt(request.PaidOn, await context.GetClubToday(request.ClubId, cancellationToken)));
             else
-                order.MarkPaid(MembershipPayments.ManualMethod(request.Method), MembershipPayments.PaidAt(request.PaidOn), treasurerMemberId);
+                order.MarkPaid(MembershipPayments.ManualMethod(request.Method), MembershipPayments.PaidAt(request.PaidOn, await context.GetClubToday(request.ClubId, cancellationToken)), treasurerMemberId);
 
             // The order needs its id before the enrollments can point to it
             context.MembershipOrders.Add(order);

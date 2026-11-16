@@ -13,7 +13,7 @@ public record CreateCourtBlocking(int ClubId, CourtBlocking.BlockingData Data, b
     {
         public async Task<int> Handle(CreateCourtBlocking request, CancellationToken cancellationToken)
         {
-            var blocking = new CourtBlocking(request.ClubId, request.Data);
+            var blocking = new CourtBlocking(request.ClubId, await request.Data.InClubTimeZone(context, request.ClubId, cancellationToken));
 
             await context.EnsureCourtsBelongToClub(request.ClubId, request.Data.CourtIds, cancellationToken);
             await context.EnsureConflictsAreConfirmed(blocking, request.DeleteConflictingBookings, cancellationToken);

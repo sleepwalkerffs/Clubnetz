@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.Push;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Notifications;
@@ -34,11 +35,11 @@ public class PlayRequestPushNotifier(AppDbContext context, IPushNotificationServ
         var recipients = await PushRecipients.ForMembers(context, NotificationType.PlayRequest, info.InviteeIds, info.RequesterUserId, cancellationToken);
         await pushNotificationService.Notify(
             recipients,
-            culture => new PushNotification(
+            info.Region.InCulture(culture => new PushNotification(
                 PushTexts.Get(culture, "PlayRequest_Title", info.RequesterName),
                 PushTexts.Get(culture, "PlayRequest_Body", info.PlayModeName, PushTexts.DateAndTime(culture, info.LocalStart)),
                 Url(info),
-                Tag: Tag(playRequestId)),
+                Tag: Tag(playRequestId))),
             cancellationToken);
     }
 
@@ -61,11 +62,11 @@ public class PlayRequestPushNotifier(AppDbContext context, IPushNotificationServ
         var recipients = await PushRecipients.ForMembers(context, NotificationType.PlayRequest, [info.RequesterId], acceptor.Id, cancellationToken);
         await pushNotificationService.Notify(
             recipients,
-            culture => new PushNotification(
+            info.Region.InCulture(culture => new PushNotification(
                 PushTexts.Get(culture, "PlayRequestAccepted_Title", acceptor.FullName),
                 PushTexts.Get(culture, "PlayRequestAccepted_Body", PushTexts.DateAndTime(culture, info.LocalStart), info.OpenSpots),
                 Url(info),
-                Tag: Tag(playRequestId)),
+                Tag: Tag(playRequestId))),
             cancellationToken);
     }
 
@@ -78,11 +79,11 @@ public class PlayRequestPushNotifier(AppDbContext context, IPushNotificationServ
         var recipients = await PushRecipients.ForMembers(context, NotificationType.PlayRequest, info.AskedIds, info.RequesterUserId, cancellationToken);
         await pushNotificationService.Notify(
             recipients,
-            culture => new PushNotification(
+            info.Region.InCulture(culture => new PushNotification(
                 PushTexts.Get(culture, "PlayRequestCancelled_Title", info.RequesterName),
                 PushTexts.Get(culture, "PlayRequestCancelled_Body", PushTexts.DateAndTime(culture, info.LocalStart)),
                 Url(info),
-                Tag: Tag(playRequestId)),
+                Tag: Tag(playRequestId))),
             cancellationToken);
     }
 
@@ -102,7 +103,6 @@ public class PlayRequestPushNotifier(AppDbContext context, IPushNotificationServ
             {
                 r.ClubId,
                 r.StartsAt,
-                r.TimeZoneInfoId,
                 r.PlayersNeeded,
                 RequesterId = r.RequesterMemberId,
                 RequesterUserId = user.Id,
@@ -115,10 +115,13 @@ public class PlayRequestPushNotifier(AppDbContext context, IPushNotificationServ
         if (request is null)
             return null;
 
+        // Shown in the club's time zone
+        var region = await context.GetClubRegion(request.ClubId, cancellationToken);
         var accepted = request.Invitees.Count(i => i.Status == PlayRequestInviteeStatus.Accepted);
         return new Info(
             request.ClubId,
-            request.StartsAt.AddTimeZoneInfo(request.TimeZoneInfoId),
+            region,
+            region.ToLocalOffset(request.StartsAt),
             request.RequesterId,
             request.RequesterUserId,
             request.RequesterName,
@@ -130,6 +133,7 @@ public class PlayRequestPushNotifier(AppDbContext context, IPushNotificationServ
 
     private sealed record Info(
         int ClubId,
+        ClubRegion Region,
         DateTimeOffset LocalStart,
         int RequesterId,
         int RequesterUserId,

@@ -1,5 +1,6 @@
 using Bookennis.Api.Business.ClubEvents;
 using Bookennis.Api.Business.Payments;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Memberships;
 using Bookennis.Shared.Controller.Memberships;
@@ -52,7 +53,7 @@ public record GetMembershipOptions(int ClubId, int UserId, int? SeasonId) : IQue
                          && (orderableIds.Contains(o.PayerMemberId ?? 0) || o.Members.Any(m => orderableIds.Contains(m.MemberId))))
                 .ToListAsync(cancellationToken);
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = await context.GetClubToday(request.ClubId, cancellationToken);
 
             return new GetMembershipOptionsResult
             {

@@ -18,7 +18,8 @@ public record ExportMembershipPayments(int ClubId, int SeasonId) : IQuery<Export
         public async Task<ExportMembershipPaymentsResult> Handle(ExportMembershipPayments request, CancellationToken cancellationToken)
         {
             var overview = await MembershipPaymentsOverview.Load(context, request.ClubId, request.SeasonId, cancellationToken);
-            var exporter = new MembershipPaymentsExcelExporter(languageAccessor.GetCultureInfo());
+            // Dates as the club writes them, the days in the club's time zone
+            var exporter = new MembershipPaymentsExcelExporter(overview.Region.Culture(languageAccessor.GetCultureInfo()), overview.Region.TimeZone);
 
             return new ExportMembershipPaymentsResult(exporter.Export(overview), $"{exporter.FileName} {overview.Season.Period.From.Year}.xlsx");
         }
@@ -34,7 +35,8 @@ public record ExportMembershipPaymentsResult(byte[] Data, string FileName)
 /// Two sheets: one row per member (who has which plan and whether it is paid) and one row per order (the money).
 /// The amount of an order that covers several members is only written in the row of its payer, so the column can be summed up.
 /// </summary>
-public class MembershipPaymentsExcelExporter(CultureInfo culture)
+/// <remarks><c>culture</c>: the club's culture in the language of the reader; <c>timeZone</c>: the club's time zone (the day of a payment).</remarks>
+public class MembershipPaymentsExcelExporter(CultureInfo culture, TimeZoneInfo? timeZone = null)
 {
     private static readonly ResourceManager Texts = new("Bookennis.Api.Resources.Localization.Export.MembershipPayments", typeof(MembershipPaymentsExcelExporter).Assembly);
     private static readonly XLColor HeaderColor = XLColor.FromHtml("#E2E8F0");
@@ -127,13 +129,13 @@ public class MembershipPaymentsExcelExporter(CultureInfo culture)
     private static bool IsActive(MembershipOrderStatus status)
         => status is not (MembershipOrderStatus.Cancelled or MembershipOrderStatus.Failed or MembershipOrderStatus.Refunded);
 
-    // Date only: the time zone of the club is unknown here
+    // Date only: the local day of the club
     private void WriteDate(IXLCell cell, DateTimeOffset? date)
     {
         if (date is null)
             return;
 
-        cell.Value = date.Value.UtcDateTime.Date;
+        cell.Value = Domain.Clubs.ClubTimeZone.ToLocal(date.Value, timeZone ?? Domain.Clubs.ClubTimeZone.Default).Date;
         cell.Style.DateFormat.Format = culture.DateTimeFormat.ShortDatePattern;
     }
 

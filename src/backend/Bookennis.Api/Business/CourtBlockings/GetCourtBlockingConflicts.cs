@@ -14,7 +14,7 @@ public record GetCourtBlockingConflicts(int ClubId, CourtBlocking.BlockingData D
         public async Task<GetCourtBlockingConflictsResult> Handle(GetCourtBlockingConflicts request, CancellationToken cancellationToken)
         {
             // Not added to the context, it only calculates the blocked time windows
-            var blocking = new CourtBlocking(request.ClubId, request.Data);
+            var blocking = new CourtBlocking(request.ClubId, await request.Data.InClubTimeZone(context, request.ClubId, cancellationToken));
 
             var conflicts = await context.GetConflictingBookings(blocking, DateTimeOffset.UtcNow, cancellationToken);
             var bookingIds = conflicts.ConvertAll(b => b.Id);

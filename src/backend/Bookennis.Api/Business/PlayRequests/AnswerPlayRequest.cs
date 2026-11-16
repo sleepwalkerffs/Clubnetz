@@ -52,7 +52,7 @@ public record AcceptPlayRequest(int ClubId, int UserId, int PlayRequestId) : ICo
                 var partial = await BookingContextBuilder.Load(
                     context, playRequest.PlayModeId, playRequest.CourtIds, playRequest.PlayerMemberIds(), request.UserId, [interval], cancellationToken);
                 await PlayRequestBooking.BookFirstFreeCourt(
-                    partial, bookingService, playRequest.CourtIds, interval, playRequest.TimeZoneInfoId,
+                    partial, bookingService, playRequest.CourtIds, interval,
                     playRequest.PlayersNeeded, validateAsIfFull: true, cancellationToken);
 
                 await context.SaveChangesAsync(cancellationToken);
@@ -64,7 +64,7 @@ public record AcceptPlayRequest(int ClubId, int UserId, int PlayRequestId) : ICo
                 context, playRequest.PlayModeId, playRequest.CourtIds, playRequest.PlayerMemberIds(), request.UserId, [interval], cancellationToken);
 
             var booking = context.Add(await PlayRequestBooking.BookFirstFreeCourt(
-                builder, bookingService, playRequest.CourtIds, interval, playRequest.TimeZoneInfoId,
+                builder, bookingService, playRequest.CourtIds, interval,
                 playRequest.PlayersNeeded, validateAsIfFull: false, cancellationToken)).Entity;
             await context.SaveChangesAsync(cancellationToken);
 

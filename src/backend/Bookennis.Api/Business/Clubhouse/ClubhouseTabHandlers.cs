@@ -1,6 +1,7 @@
 using Bookennis.Api.Business.ClubEvents;
 using Bookennis.Api.Business.Clubhouse.SumUp;
 using Bookennis.Api.Business.Members;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubhouse;
 using Bookennis.Domain.Exceptions;
@@ -28,9 +29,10 @@ public record GetClubhouseBoard(int ClubId, DateTimeOffset Now) : IQuery<Clubhou
     {
         public async Task<ClubhouseBoardResult> Handle(GetClubhouseBoard request, CancellationToken cancellationToken)
         {
-            var today = ClubhouseQueries.LocalDate(request.Now);
-            var dayStart = ClubhouseQueries.LocalMidnight(today);
-            var dayEnd = ClubhouseQueries.LocalMidnight(today.AddDays(1));
+            var timeZone = (await context.GetClubRegion(request.ClubId, cancellationToken)).TimeZone;
+            var today = ClubhouseQueries.LocalDate(request.Now, timeZone);
+            var dayStart = ClubhouseQueries.LocalMidnight(today, timeZone);
+            var dayEnd = ClubhouseQueries.LocalMidnight(today.AddDays(1), timeZone);
 
             var openTabs = await context.ClubhouseTabs.AsNoTracking()
                 .Include(t => t.Lines)
@@ -159,7 +161,8 @@ public record OpenClubhouseTab(int ClubId, int UserId, int? MemberId, string? Gu
 
             // Support mode has no member
             var hostId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken);
-            var tab = new ClubhouseTab(request.ClubId, request.MemberId, request.MemberId is null ? request.GuestName : null, hostId, DateTimeOffset.UtcNow);
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
+            var tab = new ClubhouseTab(request.ClubId, request.MemberId, request.MemberId is null ? request.GuestName : null, hostId, DateTimeOffset.UtcNow, region.Currency);
             context.ClubhouseTabs.Add(tab);
 
             try
@@ -297,14 +300,15 @@ public record GetClubhouseTabs(int ClubId, DateOnly? From, DateOnly? To, DateTim
     {
         public async Task<GetClubhouseTabsResult> Handle(GetClubhouseTabs request, CancellationToken cancellationToken)
         {
-            var from = ClubhouseQueries.LocalMidnight(request.From ?? ClubhouseQueries.LocalDate(request.Now).AddDays(-DefaultDays));
+            var timeZone = (await context.GetClubRegion(request.ClubId, cancellationToken)).TimeZone;
+            var from = ClubhouseQueries.LocalMidnight(request.From ?? ClubhouseQueries.LocalDate(request.Now, timeZone).AddDays(-DefaultDays), timeZone);
             var query = context.ClubhouseTabs.AsNoTracking()
                 .Include(t => t.Lines)
                 .Where(t => t.ClubId == request.ClubId && t.Status == ClubhouseTabStatus.Paid && t.PaidAt >= from);
 
             if (request.To is { } to)
             {
-                var end = ClubhouseQueries.LocalMidnight(to.AddDays(1));
+                var end = ClubhouseQueries.LocalMidnight(to.AddDays(1), timeZone);
                 query = query.Where(t => t.PaidAt < end);
             }
 

@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.Push;
 using Bookennis.Api.Config;
 using Bookennis.Api.Data;
@@ -19,32 +20,42 @@ public sealed record ClubEventInfo(
     TimeOnly? StartTime,
     TimeOnly? EndTime,
     string? Location,
-    DateTimeOffset? RegistrationDeadline)
+    DateTimeOffset? RegistrationDeadline,
+    ClubRegion Region)
 {
     /// <summary>
     /// Club events have club-local dates and times without a time zone (wall-clock times, see <see cref="ClubTimeZone"/>),
-    /// so the club's time zone is used to tell when an event starts and to show deadlines.
+    /// so the time zone of the event's club is used to tell when an event starts and to show deadlines.
     /// </summary>
-    public static readonly TimeZoneInfo TimeZone = ClubTimeZone.Default /* TODO(us-clubs): club time zone */;
+    public TimeZoneInfo TimeZone => Region.TimeZone;
 
     public DateTimeOffset? LocalRegistrationDeadline
-        => RegistrationDeadline is { } deadline ? TimeZoneInfo.ConvertTime(deadline, TimeZone) : null;
+        => RegistrationDeadline is { } deadline ? Region.ToLocalOffset(deadline) : null;
 
     public static async Task<ClubEventInfo?> Get(AppDbContext context, int clubEventId, int? clubId, CancellationToken cancellationToken)
-        => await (
+    {
+        var info = await (
             from e in context.ClubEvents.IgnoreQueryFilters()
             join club in context.Clubs.IgnoreQueryFilters() on e.ClubId equals club.Id
             where e.Id == clubEventId && (clubId == null || e.ClubId == clubId)
-            select new ClubEventInfo(e.Id, e.ClubId, club.Name, e.Title, e.StartDate, e.EndDate, e.StartTime, e.EndTime, e.Location, e.RegistrationDeadline)
+            select new { e.Id, e.ClubId, ClubName = club.Name, e.Title, e.StartDate, e.EndDate, e.StartTime, e.EndTime, e.Location, e.RegistrationDeadline, club.TimeZoneId, club.Country, club.Currency }
         ).SingleOrDefaultAsync(cancellationToken);
 
-    /// <summary>Short date and start time for push notifications, e.g. "Sa 3. Oktober, 09:00".</summary>
+        return info is null
+            ? null
+            : new ClubEventInfo(
+                info.Id, info.ClubId, info.ClubName, info.Title, info.StartDate, info.EndDate, info.StartTime, info.EndTime, info.Location, info.RegistrationDeadline,
+                new ClubRegion(info.ClubId, info.TimeZoneId, info.Country, info.Currency));
+    }
+
+    /// <summary>Short date and start time for push notifications, e.g. "Sa 3. Oktober, 09:00" (pass the club's culture).</summary>
     public string PushDate(CultureInfo culture)
     {
         var when = PushTexts.Date(culture, StartDate);
         return StartTime is { } startTime ? $"{when}, {PushTexts.Time(culture, startTime)}" : when;
     }
 
+    /// <summary>Pass the club's culture (<see cref="ClubRegion.Culture(Domain.User.Language)"/>).</summary>
     public EventVariables ToVariables(CultureInfo culture, AppSettings appSettings)
     {
         var date = NotificationTexts.Date(culture, StartDate);

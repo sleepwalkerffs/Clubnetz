@@ -31,7 +31,8 @@ public static class ClubEventMapper
             .ToDictionaryAsync(m => m.MemberId, cancellationToken);
     }
 
-    public static ClubEventDto ToDto(IClubEmailRenderer renderer, ClubEvent clubEvent, IReadOnlyDictionary<int, MemberInfo> members, int? myMemberId, DateTimeOffset now)
+    /// <remarks><c>timeZone</c>: The club's time zone: the event is over after its last local day.</remarks>
+    public static ClubEventDto ToDto(IClubEmailRenderer renderer, ClubEvent clubEvent, IReadOnlyDictionary<int, MemberInfo> members, int? myMemberId, DateTimeOffset now, TimeZoneInfo? timeZone = null)
     {
         var quantitiesByOption = clubEvent.Registrations
             .SelectMany(r => r.Answers)
@@ -78,9 +79,9 @@ public static class ClubEventMapper
             RegistrationDeadline = clubEvent.RegistrationDeadline,
             NotifyMembers = clubEvent.NotifyMembers,
             CreatedByName = creator is null ? null : $"{creator.FirstName} {creator.LastName}",
-            IsRegistrationOpen = clubEvent.IsRegistrationOpen(now),
+            IsRegistrationOpen = clubEvent.IsRegistrationOpen(now, timeZone),
             IsDeadlinePassed = clubEvent.IsDeadlinePassed(now),
-            IsOver = clubEvent.IsOver(now),
+            IsOver = clubEvent.IsOver(now, timeZone),
             IsFull = clubEvent.IsFull,
             TotalHeadCount = clubEvent.TotalHeadCount,
             Questions = clubEvent.Questions

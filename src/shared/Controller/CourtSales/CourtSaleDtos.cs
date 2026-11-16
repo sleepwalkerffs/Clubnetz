@@ -96,7 +96,7 @@ public record CourtSaleSettingsDto
     /// <summary>The play mode of the bought bookings. Required to switch the sale on.</summary>
     public required int? PlayModeId { get; init; }
 
-    /// <summary>IANA id (e.g. "Europe/Vienna"): the times of the price rules are local times of this zone.</summary>
+    /// <summary>IANA id of the club's time zone (<c>Club.TimeZoneId</c>, e.g. "Europe/Vienna"): the times of the price rules are local times of it.</summary>
     public required string TimeZoneId { get; init; }
 
     /// <summary>30-240, a multiple of 30.</summary>
@@ -117,6 +117,8 @@ public record UpdateCourtSaleSettingsModel
 {
     public bool IsEnabled { get; init; }
     public int? PlayModeId { get; init; }
+
+    /// <summary>Ignored, kept for older clients: court sales always use the club's time zone (<c>Club.TimeZoneId</c>).</summary>
     public string? TimeZoneId { get; init; }
     public int MaxBookingMinutes { get; init; }
     public int MaxDaysInAdvance { get; init; }

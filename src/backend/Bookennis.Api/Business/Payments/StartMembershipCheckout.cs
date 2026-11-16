@@ -4,6 +4,7 @@ using Bookennis.Api.Business.Members;
 using Bookennis.Api.Business.Memberships;
 using Bookennis.Api.Business.Payments.Stripe;
 using Bookennis.Api.Config;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Bookennis.Domain.Exceptions;
@@ -53,7 +54,7 @@ public record StartMembershipCheckout(int ClubId, int UserId, int MembershipOrde
                 throw new PreconditionException(MembershipEligibility.ErrorCode.AlreadyHasMembership, "A member already has a membership in this season.");
 
             var previousSessionId = order.StripeCheckoutSessionId;
-            var culture = languageAccessor.GetCultureInfo();
+            var culture = (await context.GetClubRegion(request.ClubId, cancellationToken)).Culture(languageAccessor.GetCultureInfo());
             var payerEmail = await context.Users.Where(u => u.Id == request.UserId).Select(u => u.Email).FirstOrDefaultAsync(cancellationToken);
             var memberNames = string.Join(", ", order.Members.Select(m => people.Find(m.MemberId)).Where(p => p is not null).Select(p => $"{p!.FirstName} {p.LastName}"));
 

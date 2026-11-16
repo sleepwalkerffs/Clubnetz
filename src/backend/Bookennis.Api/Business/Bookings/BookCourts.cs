@@ -16,9 +16,10 @@ namespace Bookennis.Api.Business.Bookings;
 /// (<see cref="BookingContextBuilder"/>); the earlier slots of the batch count like existing bookings.
 /// Nothing is saved unless every slot is valid. A dry run only reports the result.
 /// </summary>
+/// <remarks><c>TimeZoneInfoId</c>: Ignored: bookings are stored with the club's time zone (<c>Club.TimeZoneId</c>).</remarks>
 public record BookCourts(
     [Required] List<BookingSlotModel> Slots,
-    [Required] string TimeZoneInfoId,
+    string? TimeZoneInfoId,
     [Required] int PlayModeId,
     [Required] List<int> Players,
     string? Comment,
@@ -80,7 +81,7 @@ public record BookCourts(
                         throw new PreconditionException(ErrorCode.BookingSlotsOverlap, [(overlapping.Index + 1).ToString()], "The slot overlaps another slot on the same court");
 
                     var bookingContext = await builder.BuildContext(slot.CourtId, interval, pendingIntervals, cancellationToken);
-                    var booking = bookingService.BookCourt(bookingContext, interval, request.TimeZoneInfoId, request.Comment);
+                    var booking = bookingService.BookCourt(bookingContext, interval, builder.Region.TimeZoneId, request.Comment);
 
                     bookings.Add(booking);
                     pendingIntervals.Add(interval);

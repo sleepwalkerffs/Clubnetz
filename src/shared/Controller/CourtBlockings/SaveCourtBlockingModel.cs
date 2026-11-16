@@ -2,7 +2,7 @@ namespace Bookennis.Shared.Controller.CourtBlockings;
 
 /// <summary>
 /// Create and update model of a court blocking. The blocking lasts from the start date and time until the end date and time
-/// (local times in <see cref="TimeZoneInfoId"/>, both times <c>null</c> for all day) and is optionally repeated every n weeks.
+/// (local times of the club, both times <c>null</c> for all day) and is optionally repeated every n weeks.
 /// Texts are validated by the domain, so empty texts result in a localized error instead of a generic bad request.
 /// The times are <see cref="TimeSpan"/>s for historical reasons (the client once converted <see cref="TimeOnly"/> to UTC); they are local times.
 /// </summary>
@@ -14,6 +14,7 @@ public record SaveCourtBlockingModel
     public DateOnly EndDate { get; init; }
     public TimeSpan? StartTime { get; init; }
     public TimeSpan? EndTime { get; init; }
+    /// <summary>Ignored, kept for older clients: the times are local times of the club's time zone (<c>Club.TimeZoneId</c>).</summary>
     public string? TimeZoneInfoId { get; init; }
     public int? RecurrenceIntervalWeeks { get; init; }
 

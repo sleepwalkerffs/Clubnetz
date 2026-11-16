@@ -60,10 +60,12 @@ public class MembershipPlan : TenantDomainEntity, IAggregateRoot
     private MembershipPlan() { }
 #pragma warning restore CS8618
 
-    public MembershipPlan(int clubId, int seasonId, PlanData data, int sortOrder)
+    /// <remarks><c>currency</c>: The club's currency (<c>Club.Currency</c>); a plan keeps the currency it was created in.</remarks>
+    public MembershipPlan(int clubId, int seasonId, PlanData data, int sortOrder, string currency = DefaultCurrency)
     {
         ClubId = clubId;
         SeasonId = seasonId;
+        Currency = currency.ToLowerInvariant();
         SortOrder = sortOrder;
         Update(data);
     }

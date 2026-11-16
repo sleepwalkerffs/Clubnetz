@@ -1,6 +1,7 @@
 using Bookennis.Api.Business.CourtBlockings;
 using Bookennis.Api.Business.Payments;
 using Bookennis.Api.Business.Payments.Stripe;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.CourtSales;
@@ -217,7 +218,8 @@ public class CourtPurchaseSettlement(AppDbContext context, IStripeGateway gatewa
             return false;
 
         // A copy of the interval: EF can't share an owned value between two entities
-        var booking = new Booking(purchase.ClubId, purchase.CourtId, playModeId, new DateTimeOffsetInterval(interval.From, interval.To), settings.TimeZoneId, [memberId]);
+        var region = await context.GetClubRegion(purchase.ClubId, cancellationToken);
+        var booking = new Booking(purchase.ClubId, purchase.CourtId, playModeId, new DateTimeOffsetInterval(interval.From, interval.To), region.TimeZoneId, [memberId]);
         context.Bookings.Add(booking);
         purchase.AttachBooking(booking.Id);
         return true;
