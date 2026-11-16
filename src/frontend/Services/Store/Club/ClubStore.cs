@@ -107,6 +107,21 @@ public class ClubStore(IClubsHttpClient clubsHttpClient, IClubProfileStore clubP
         }
     }, nameof(LoadCourts));
 
+    public Task<HttpResult> AddCourt(string courtName, string alias, bool isIndoor) => RunInSavingContextAsync(async cancellationToken =>
+    {
+        var result = await clubsHttpClient.AddCourt(new AddCourtRequest(courtName, alias, isIndoor), cancellationToken);
+        if (result.Success)
+        {
+            // The server picks the sort order, so reload the list instead of guessing it
+            var courts = await clubsHttpClient.GetCourts(clubProfileStore.SelectedClubId, cancellationToken);
+            if (courts is { Success: true, Dto: not null })
+                Courts = courts.Dto.Courts;
+            OnCourtsDataChanged?.Invoke();
+        }
+
+        return (HttpResult)result;
+    }, nameof(AddCourt));
+
     public Task<HttpResult> UpdateCourt(int courtId, string courtName, string alias, DateTimeOffsetInterval? inactive, int sortOrder, bool isIndoor) => RunInSavingContextAsync(async cancellationToken =>
     {
         var result = await clubsHttpClient.UpdateCourt(courtId, new UpdateCourtRequest(courtName, alias, inactive, sortOrder, isIndoor), cancellationToken);

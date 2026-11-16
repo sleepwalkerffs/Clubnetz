@@ -235,6 +235,9 @@
   <data name="FlagComment" xml:space="preserve">
     <value>Kommentar</value>
   </data>
+  <data name="AddCourt" xml:space="preserve">
+    <value>Neuer Platz</value>
+  </data>
   <data name="AddPlayMode" xml:space="preserve">
     <value>Neuer Spielmodus</value>
   </data>

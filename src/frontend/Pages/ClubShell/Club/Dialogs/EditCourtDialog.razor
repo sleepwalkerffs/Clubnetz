@@ -8,8 +8,8 @@
 @using Bookennis.Global.Intervals
 @using Bookennis.Shared.Controller.Club
 
-<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@SharedLocale["Update"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
-            Loading="@ClubStore.IsSaving" Title="@Court.Name">
+<BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@(IsNew ? L["Add"] : SharedLocale["Update"])" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
+            Loading="@ClubStore.IsSaving" Title="@(IsNew ? L["AddCourt"] : Court!.Name)">
     <div class="court-edit">
         <section>
             <h3 class="court-edit__title">✏️ @L["CourtNaming"]</h3>
@@ -26,6 +26,8 @@
             <p class="court-edit__hint">@L["IndoorCourtHint"]</p>
         </section>
 
+        @if (!IsNew)
+        {
         <section class="court-edit__closure @(closed ? "court-edit__closure--on" : null)">
             <MudSwitch T="bool" @bind-Value="closed" Color="Color.Error" Label="@L["CourtClosure"]" />
             <p class="court-edit__hint">@L["CourtClosureHint"]</p>
@@ -41,11 +43,13 @@
                 }
             }
         </section>
+        }
     </div>
 </BaseDialog>
 
 @code {
-    [Parameter] public required CourtResult Court { get; set; }
+    /// <summary>The court to edit, or null to add a new one.</summary>
+    [Parameter] public CourtResult? Court { get; set; }
 
     [Inject] private IClubStore ClubStore { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
@@ -63,8 +67,13 @@
     private bool CanSubmit => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Alias)
                               && (!closed || From is { } from && To is { } to && to > from);
 
+    private bool IsNew => Court is null;
+
     protected override void OnInitialized()
     {
+        if (Court is null)
+            return;
+
         From = Court.Inactive?.From;
         To = Court.Inactive?.To;
         closed = Court.Inactive is not null;
@@ -76,14 +85,16 @@
     private async Task<DialogResult?> Submit()
     {
         var inactive = closed && From is not null && To is not null ? new DateTimeOffsetInterval(From.Value, To.Value) : null;
-        var result = await ClubStore.UpdateCourt(Court.CourtId, Name.Trim(), Alias.Trim(), inactive, Court.SortOrder, isIndoor);
+        var result = Court is null
+            ? await ClubStore.AddCourt(Name.Trim(), Alias.Trim(), isIndoor)
+            : await ClubStore.UpdateCourt(Court.CourtId, Name.Trim(), Alias.Trim(), inactive, Court.SortOrder, isIndoor);
         if (!result.Success)
         {
             Snackbar.ShowErrorDetails(result, BackendLocale);
             return null;
         }
 
-        return DialogResult.Ok(Court);
+        return DialogResult.Ok(true);
     }
 
     private Task<DialogResult?> Cancel() => Task.FromResult<DialogResult?>(DialogResult.Cancel());
