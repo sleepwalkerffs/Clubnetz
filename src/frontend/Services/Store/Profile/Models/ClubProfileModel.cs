@@ -15,6 +15,15 @@ public record ClubProfileModel
     /// <summary>See <c>GetClubProfileResult.IsActiveMember</c>: enrolled in the active season, parent of an enrolled child, staff or support mode.</summary>
     public bool IsActiveMember { get; init; }
 
+    /// <summary>IANA id of the club's time zone: the app runs on it (see <c>ClubRegion</c>).</summary>
+    public string TimeZoneId { get; init; } = "Europe/Vienna";
+
+    /// <summary>The club's country: how dates, times and amounts are written.</summary>
+    public Country Country { get; init; }
+
+    /// <summary>ISO 4217 code in lower case, e.g. "eur" or "usd".</summary>
+    public string Currency { get; init; } = "eur";
+
     /// <summary>See <c>GetClubProfileResult.Permissions</c>: what the member may do in the club. A convenience for the UI, the server decides.</summary>
     public List<Bookennis.Shared.Controller.Permissions.Permission> Permissions { get; init; } = [];
 

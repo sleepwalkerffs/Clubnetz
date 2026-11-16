@@ -55,8 +55,15 @@
     [Inject]
     private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
 
+    [Inject]
+    private IJSRuntime JsRuntime { get; set; } = null!;
+
     protected override async Task OnInitializedAsync()
     {
+        // The time zone and formats of the last club, before any page renders (the club profile sets them again once it has
+        // loaded). Not in Program.cs: Blazor refuses a culture changed before RunAsync unless all globalization data is loaded.
+        ClubRegion.ApplyStored(JsRuntime);
+
         await base.OnInitializedAsync();
 
         AuthenticationStateProvider.AuthenticationStateChanged += AuthStateChanged;
