@@ -3,6 +3,7 @@ using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Config;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubhouse;
+using Bookennis.Domain.Clubs;
 using Bookennis.Shared.Controller.Clubhouse;
 using Fusonic.Extensions.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -14,12 +15,6 @@ namespace Bookennis.Api.Business.Clubhouse;
 
 public static class ClubhouseQueries
 {
-    /// <summary>
-    /// The days of the host ("today", the history) are local days of this time zone, the one of the club calendar (all supported
-    /// countries share it).
-    /// </summary>
-    public static TimeZoneInfo TimeZone => ClubEventInfo.TimeZone;
-
     public static Task<ClubhouseTab> GetClubhouseTab(this AppDbContext context, int clubId, int tabId, CancellationToken cancellationToken)
         => context.ClubhouseTabs.Include(t => t.Lines).SingleRequiredAsync(t => t.Id == tabId && t.ClubId == clubId, cancellationToken);
 
@@ -54,14 +49,14 @@ public static class ClubhouseQueries
     /// <summary>The webhook SumUp posts to when the status of a checkout changes.</summary>
     public static string SumUpWebhookUrl(this AppSettings appSettings) => $"{appSettings.AppUri.AbsoluteUri.TrimEnd('/')}/api/SumUp/Webhook";
 
-    /// <summary>Midnight (UTC) at the start of a local day of <see cref="TimeZone"/>.</summary>
-    public static DateTimeOffset LocalMidnight(DateOnly date)
-    {
-        var local = date.ToDateTime(TimeOnly.MinValue);
-        return new DateTimeOffset(local, TimeZone.GetUtcOffset(local)).ToUniversalTime();
-    }
+    /// <summary>
+    /// Midnight (UTC) at the start of a local day of the club. The days of the host ("today", the history) are local days of the
+    /// club's time zone (<c>Club.TimeZoneId</c>).
+    /// </summary>
+    public static DateTimeOffset LocalMidnight(DateOnly date, TimeZoneInfo timeZone) => ClubTimeZone.StartOfDay(date, timeZone).ToUniversalTime();
 
-    public static DateOnly LocalDate(DateTimeOffset moment) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(moment, TimeZone).DateTime);
+    /// <summary>The local day of the club at <paramref name="moment"/>.</summary>
+    public static DateOnly LocalDate(DateTimeOffset moment, TimeZoneInfo timeZone) => ClubTimeZone.Today(timeZone, moment);
 
     public static ClubhouseItemDto ToDto(this ClubhouseItem item) => new()
     {

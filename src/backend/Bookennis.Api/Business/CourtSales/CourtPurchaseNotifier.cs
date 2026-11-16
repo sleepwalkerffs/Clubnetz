@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.Members;
 using Bookennis.Api.Business.Memberships;
 using Bookennis.Api.Business.Notifications;
@@ -103,7 +104,7 @@ public class CourtPurchaseNotifier(AppDbContext context, IMediator mediator, App
 
         foreach (var recipient in recipients.DistinctBy(r => r.Email!.ToLowerInvariant()))
         {
-            var culture = recipient.Language.ToCultureInfo();
+            var culture = recipient.Language.ToCultureInfo(details.Region);
             var member = new MemberVariables(recipient.FirstName, recipient.LastName);
             var variables = new CourtPurchaseNeedsAttentionEmailVariables(
                 member,
@@ -138,9 +139,9 @@ public class CourtPurchaseNotifier(AppDbContext context, IMediator mediator, App
             return;
 
         var details = await LoadDetails(purchase, cancellationToken);
-        var culture = recipient.Language.ToCultureInfo();
+        var culture = recipient.Language.ToCultureInfo(details.Region);
         var member = new MemberVariables(recipient.FirstName, recipient.LastName);
-        var date = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(purchase.Interval.From, details.TimeZone).DateTime);
+        var date = details.Region.LocalDate(purchase.Interval.From);
         var url = $"{AppUrl}/clubs/{purchase.ClubId}/booking?date={date:yyyy-MM-dd}";
         var purchaseVariables = details.ToVariables(purchase, culture, url);
         var variables = createVariables?.Invoke(member, purchaseVariables, culture) ?? new CourtPurchaseEmailVariables(member, purchaseVariables);
@@ -166,25 +167,22 @@ public class CourtPurchaseNotifier(AppDbContext context, IMediator mediator, App
             ).FirstOrDefaultAsync(cancellationToken)
             : null;
 
-        var timeZoneId = await context.CourtSaleSettings.IgnoreQueryFilters()
-            .Where(s => s.ClubId == purchase.ClubId)
-            .Select(s => s.TimeZoneId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        return new PurchaseDetails(court ?? "", buyer, CourtSaleSettings.FindTimeZone(timeZoneId ?? CourtSaleSettings.DefaultTimeZoneId));
+        // The times are local times of the club, the amounts are written the club's way
+        var region = await context.GetClubRegion(purchase.ClubId, cancellationToken);
+        return new PurchaseDetails(court ?? "", buyer, region);
     }
 
-    private sealed record PurchaseDetails(string CourtName, string? BuyerName, TimeZoneInfo TimeZone)
+    private sealed record PurchaseDetails(string CourtName, string? BuyerName, ClubRegion Region)
     {
         public CourtPurchaseVariables ToVariables(CourtPurchase purchase, CultureInfo culture, string url)
         {
-            var from = TimeZoneInfo.ConvertTime(purchase.Interval.From, TimeZone);
-            var to = TimeZoneInfo.ConvertTime(purchase.Interval.To, TimeZone);
+            var from = Region.ToLocalOffset(purchase.Interval.From);
+            var to = Region.ToLocalOffset(purchase.Interval.To);
             return new CourtPurchaseVariables(
                 CourtName,
                 NotificationTexts.Date(culture, DateOnly.FromDateTime(from.DateTime)),
                 $"{NotificationTexts.Time(culture, TimeOnly.FromDateTime(from.DateTime))} – {NotificationTexts.Time(culture, TimeOnly.FromDateTime(to.DateTime))}",
-                MembershipTexts.Amount(purchase.PriceCents, culture),
+                MembershipTexts.Amount(purchase.PriceCents, culture, purchase.Currency),
                 CourtPurchaseTexts.Paid(purchase, culture),
                 url);
         }
@@ -201,10 +199,10 @@ public static class CourtPurchaseTexts
         _ => NotificationTexts.Get(culture, "CourtPurchase_Credits_Many", count),
     };
 
-    /// <summary>How the slot was paid, e.g. "€28.00 online", "1 booking credit", "1 booking credit + €8.00 online", "free".</summary>
+    /// <summary>How the slot was paid, e.g. "€28.00 online", "1 booking credit", "1 booking credit + $8.00 online", "free" (pass the club's culture).</summary>
     public static string Paid(CourtPurchase purchase, CultureInfo culture)
     {
-        var online = MembershipTexts.Amount(purchase.AmountDueCents, culture);
+        var online = MembershipTexts.Amount(purchase.AmountDueCents, culture, purchase.Currency);
         return purchase switch
         {
             { CreditUsed: true, AmountDueCents: 0 } => NotificationTexts.Get(culture, "CourtPurchase_Paid_Credit"),

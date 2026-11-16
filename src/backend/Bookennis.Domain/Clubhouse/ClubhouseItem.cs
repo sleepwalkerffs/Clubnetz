@@ -31,10 +31,11 @@ public class ClubhouseItem : TenantDomainEntity, IAggregateRoot
     private ClubhouseItem() { }
 #pragma warning restore CS8618
 
-    public ClubhouseItem(int clubId, ItemData data)
+    /// <summary>An item priced in <paramref name="currency"/>, the club's currency (<c>Club.Currency</c>).</summary>
+    public ClubhouseItem(int clubId, ItemData data, string currency = DefaultCurrency)
     {
         ClubId = clubId;
-        Currency = DefaultCurrency;
+        Currency = currency.ToLowerInvariant();
         Update(data);
     }
 

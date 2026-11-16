@@ -1,8 +1,11 @@
+using System.Globalization;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.CourtSales;
 using System.ComponentModel.DataAnnotations;
 using Bookennis.Api.Business.CourtBlockings;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Bookings;
+using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Members;
 using Bookennis.Global.Intervals;
@@ -14,10 +17,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Bookings;
 
+/// <remarks><c>TimeZoneInfoId</c>: Ignored: the series is planned in the club's time zone (<c>Club.TimeZoneId</c>).</remarks>
 public record BookRecurringCourt(
     [Required] int CourtId,
     [Required] DateTimeOffsetInterval Interval,
-    [Required] string TimeZoneInfoId,
+    string? TimeZoneInfoId,
     [Required] int PlayModeId,
     [Required] List<int> Players,
     [Required] int RecurrenceIntervalWeeks,
@@ -59,8 +63,12 @@ public record BookRecurringCourt(
             if (!queryResult.PlayMode.AllowRecurring)
                 throw new PreconditionException(ErrorCode.PlayModeDoesNotAllowRecurring, "Play mode does not allow recurring bookings");
 
+            // The series is planned in the club's time zone (never the browser's): "today", the weekday and the times of the occurrences
+            var region = ClubRegion.Of(queryResult.Club);
+            var tz = region.TimeZone;
+
             // Determine series end date
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = region.Today();
             var activeSeason = await context.Seasons
                 .Where(s => s.ClubId == queryResult.Club.Id && s.Period.From <= today && today <= s.Period.To)
                 .AsNoTracking()
@@ -76,7 +84,6 @@ public record BookRecurringCourt(
                 .ToListAsync(cancellationToken);
 
             // Calculate all occurrence dates
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(request.TimeZoneInfoId);
             var firstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(request.Interval.From.UtcDateTime, tz));
             var dayOfWeek = firstDate.DayOfWeek;
             var startTime = TimeOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(request.Interval.From.UtcDateTime, tz));
@@ -97,7 +104,7 @@ public record BookRecurringCourt(
             // Validate first occurrence fully (load participants etc.)
             var firstInterval = request.Interval;
             var mayBookForAnyMember = await BookingRights.MayBookForAnyMember(context, queryResult.Club.Id, request.UserId, request.PlayModeId, cancellationToken);
-            var localParticipants = await LoadParticipants(request, queryResult.Club, firstInterval, mayBookForAnyMember, cancellationToken);
+            var localParticipants = await LoadParticipants(request, queryResult.Club, region, activeSeason, firstInterval, mayBookForAnyMember, cancellationToken);
 
             if (localParticipants.Count != request.Players.Count)
                 throw new EntityNotFoundException("Player does not exist");
@@ -119,6 +126,8 @@ public record BookRecurringCourt(
                 ClubId = queryResult.Club.Id,
                 Court = queryResult.Court,
                 OpeningHours = queryResult.Club.OpeningHours,
+                TimeZone = tz,
+                FormatTime = region.Culture(CultureInfo.CurrentCulture).Time,
                 PrimeTimeSettings = queryResult.Club.PrimeTimeSettings,
                 BookingMemberRole = [MemberRole.User],
                 Participants = localParticipants.ConvertAll(i => new BookingDomainService.Context.PlayerContext
@@ -141,7 +150,7 @@ public record BookRecurringCourt(
             };
 
             // Validate first occurrence via domain service
-            bookingService.BookCourt(bookingContext, firstInterval, request.TimeZoneInfoId, request.Comment);
+            bookingService.BookCourt(bookingContext, firstInterval, region.TimeZoneId, request.Comment);
 
             // Create the recurring series
             var series = new RecurringBookingSeries(
@@ -151,7 +160,7 @@ public record BookRecurringCourt(
                 dayOfWeek,
                 startTime,
                 endTime,
-                request.TimeZoneInfoId,
+                region.TimeZoneId,
                 request.RecurrenceIntervalWeeks,
                 firstDate,
                 request.EndDate,
@@ -165,7 +174,7 @@ public record BookRecurringCourt(
             var createdBookings = new List<Booking>();
             foreach (var date in occurrenceDates)
             {
-                var occurrenceStart = new DateTimeOffset(date.ToDateTime(startTime), tz.GetUtcOffset(date.ToDateTime(startTime)));
+                var occurrenceStart = ClubTimeZone.At(date, startTime, tz);
                 var occurrenceEnd = occurrenceStart.Add(duration);
                 var occurrenceInterval = new DateTimeOffsetInterval(occurrenceStart.ToUniversalTime(), occurrenceEnd.ToUniversalTime());
 
@@ -187,7 +196,7 @@ public record BookRecurringCourt(
                     request.CourtId,
                     request.PlayModeId,
                     occurrenceInterval,
-                    request.TimeZoneInfoId,
+                    region.TimeZoneId,
                     request.Players,
                     request.Comment,
                     series.Id);
@@ -201,13 +210,22 @@ public record BookRecurringCourt(
             return new BookCourtResult { Id = createdBookings.First().Id };
         }
 
-        private async Task<List<ParticipantInfo>> LoadParticipants(BookRecurringCourt request, Domain.Clubs.Club club, DateTimeOffsetInterval interval, bool mayBookForAnyMember, CancellationToken cancellationToken)
+        private async Task<List<ParticipantInfo>> LoadParticipants(BookRecurringCourt request, Domain.Clubs.Club club, ClubRegion region, Domain.Clubs.Season activeSeason, DateTimeOffsetInterval interval, bool mayBookForAnyMember, CancellationToken cancellationToken)
         {
+            // Local day of the club: the day of the booking, the age of the children and the season
+            var today = region.Today();
+            var childAgeThreshold = club.PrimeTimeSettings.ChildAgeThreshold;
+            var day = region.LocalDate(interval.From);
+            var dayStart = region.StartOfDay(day).ToUniversalTime();
+            var dayEnd = region.StartOfDay(day.AddDays(1)).ToUniversalTime();
+            var seasonStart = region.StartOfDay(activeSeason.Period.From).ToUniversalTime();
+            var seasonEnd = region.StartOfDay(activeSeason.Period.To.AddDays(1)).ToUniversalTime();
+
             return await (
                 from member in context.Set<Member>()
                 join user in context.Users on member.UserId equals user.Id
 
-                let isChild = user.Birthday.AddYears(club.PrimeTimeSettings.ChildAgeThreshold) > DateOnly.FromDateTime(DateTime.UtcNow)
+                let isChild = user.Birthday.AddYears(childAgeThreshold) > today
 
                 let upcomingBookingsCount = (
                     from bookingPlayer in context.BookingPlayers
@@ -226,18 +244,14 @@ public record BookRecurringCourt(
                 let bookingsOnThatDay = (
                     from bookingPlayer in context.BookingPlayers
                     join playMode in context.PlayModes on bookingPlayer.Booking.PlayModeId equals playMode.Id
-                    where playMode.IsChargingBookingSubscription && bookingPlayer.MemberId == member.Id && bookingPlayer.Booking.Interval.To.Date == interval.From.Date
+                    where playMode.IsChargingBookingSubscription && bookingPlayer.MemberId == member.Id && bookingPlayer.Booking.Interval.To >= dayStart && bookingPlayer.Booking.Interval.To < dayEnd
                     select bookingPlayer.Id
                 ).Count()
 
                 let playModeBookingsInSeasonCount = (
                     from bookingPlayer in context.BookingPlayers
                     where bookingPlayer.MemberId == member.Id && bookingPlayer.Booking.PlayModeId == request.PlayModeId
-                    join season in context.Seasons on club.Id equals season.ClubId
-                    let today = DateOnly.FromDateTime(DateTime.UtcNow)
-                    where season.Period.From <= today && today <= season.Period.To
-                    where DateOnly.FromDateTime(bookingPlayer.Booking.Interval.From.DateTime) >= season.Period.From
-                        && DateOnly.FromDateTime(bookingPlayer.Booking.Interval.To.DateTime) <= season.Period.To
+                    where bookingPlayer.Booking.Interval.From >= seasonStart && bookingPlayer.Booking.Interval.To <= seasonEnd
                     select bookingPlayer.Id
                 ).Count()
 

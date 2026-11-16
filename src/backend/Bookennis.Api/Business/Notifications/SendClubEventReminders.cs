@@ -1,4 +1,6 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
+using Bookennis.Domain.Clubs;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Notifications;
@@ -30,7 +32,8 @@ public record SendClubEventReminders : ICommand
 
         private async Task SendEventReminders(DateTimeOffset now, DateTimeOffset until, CancellationToken cancellationToken)
         {
-            // The start is a club-local date and time, so the candidates are narrowed down by date and checked exactly below
+            // The start is a local date and time of the event's club, so the candidates are narrowed down by date (wide enough for
+            // every time zone) and checked exactly in the club's time zone below
             var today = DateOnly.FromDateTime(now.UtcDateTime);
             var candidates = await context.ClubEvents
                 .IgnoreQueryFilters()
@@ -38,10 +41,11 @@ public record SendClubEventReminders : ICommand
                 .OrderBy(e => e.StartDate)
                 .ToListAsync(cancellationToken);
 
+            var regions = await context.GetClubRegions(candidates.Select(e => e.ClubId).Distinct().ToList(), cancellationToken);
+
             foreach (var clubEvent in candidates)
             {
-                var localStart = clubEvent.StartDate.ToDateTime(clubEvent.StartTime ?? AllDayStart);
-                var start = new DateTimeOffset(localStart, ClubEventInfo.TimeZone.GetUtcOffset(localStart));
+                var start = ClubTimeZone.At(clubEvent.StartDate, clubEvent.StartTime ?? AllDayStart, regions[clubEvent.ClubId].TimeZone);
                 if (start <= now || start > until)
                     continue;
 
@@ -59,7 +63,8 @@ public record SendClubEventReminders : ICommand
 
         private async Task SendDeadlineReminders(DateTimeOffset now, DateTimeOffset until, CancellationToken cancellationToken)
         {
-            var today = DateOnly.FromDateTime(now.UtcDateTime);
+            // The day before the UTC day: the events that are not over in the club's time zone, wherever the club is
+            var earliestLastDay = DateOnly.FromDateTime(now.UtcDateTime).AddDays(-1);
             var dueEvents = await context.ClubEvents
                 .IgnoreQueryFilters()
                 .Include(e => e.Registrations)
@@ -67,12 +72,17 @@ public record SendClubEventReminders : ICommand
                             && e.RegistrationEnabled
                             && e.RegistrationDeadline > now
                             && e.RegistrationDeadline <= until
-                            && (e.EndDate ?? e.StartDate) >= today)
+                            && (e.EndDate ?? e.StartDate) >= earliestLastDay)
                 .OrderBy(e => e.RegistrationDeadline)
                 .ToListAsync(cancellationToken);
 
+            var regions = await context.GetClubRegions(dueEvents.Select(e => e.ClubId).Distinct().ToList(), cancellationToken);
+
             foreach (var clubEvent in dueEvents)
             {
+                if (clubEvent.IsOver(now, regions[clubEvent.ClubId].TimeZone))
+                    continue;
+
                 clubEvent.MarkDeadlineReminderSent();
 
                 // Not for events the members were not told about, events nobody can register for anymore

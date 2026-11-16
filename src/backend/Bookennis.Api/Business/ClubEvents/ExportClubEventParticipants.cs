@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -16,9 +17,11 @@ public record ExportClubEventParticipants(int ClubId, int UserId, int ClubEventI
         {
             var clubEvent = await context.ClubEvents.AsNoTracking().GetEventWithDetails(request.ClubId, request.ClubEventId, cancellationToken);
             var members = await ClubEventMapper.LoadMemberInfos(context, clubEvent, cancellationToken);
-            var dto = ClubEventMapper.ToDto(renderer, clubEvent, members, null, DateTimeOffset.UtcNow);
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
+            var dto = ClubEventMapper.ToDto(renderer, clubEvent, members, null, DateTimeOffset.UtcNow, region.TimeZone);
 
-            var data = new ClubEventExcelExporter(languageAccessor.GetCultureInfo()).Export(dto);
+            // Dates and times as the club writes them, in the club's time zone
+            var data = new ClubEventExcelExporter(region.Culture(languageAccessor.GetCultureInfo()), region.TimeZone).Export(dto);
 
             return new ExportClubEventParticipantsResult(data, $"{ToFileName(dto.Title)} {dto.StartDate:yyyy-MM-dd}.xlsx");
         }

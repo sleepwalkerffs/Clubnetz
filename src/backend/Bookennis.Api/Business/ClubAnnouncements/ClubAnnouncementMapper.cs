@@ -1,4 +1,5 @@
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.ClubAnnouncements;
 using Bookennis.Domain.Members;
@@ -12,8 +13,8 @@ public static class ClubAnnouncementMapper
 {
     public const int ExcerptLength = 220;
 
-    /// <summary>The day that decides whether an announcement is expired.</summary>
-    public static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
+    /// <summary>The day that decides whether an announcement is expired: the local day of the club.</summary>
+    public static Task<DateOnly> GetToday(AppDbContext context, int clubId, CancellationToken cancellationToken) => context.GetClubToday(clubId, cancellationToken);
 
     public static ClubAnnouncement.AnnouncementData ToData(SaveClubAnnouncementModel model)
         => new(model.Title ?? "", model.Body ?? "", model.IsPinned, model.ExpiresOn);
@@ -43,7 +44,7 @@ public static class ClubAnnouncementMapper
             IsPinned = announcement.IsPinned,
             PublishedAt = announcement.PublishedAt,
             ExpiresOn = announcement.ExpiresOn,
-            IsExpired = announcement.IsExpired(Today),
+            IsExpired = announcement.IsExpired(await GetToday(context, announcement.ClubId, cancellationToken)),
             CreatedByName = createdByName,
             Attachments = announcement.Attachments
                 .OrderBy(a => a.Id)

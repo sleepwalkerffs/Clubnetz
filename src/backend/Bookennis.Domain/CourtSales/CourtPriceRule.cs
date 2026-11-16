@@ -6,7 +6,7 @@ namespace Bookennis.Domain.CourtSales;
 
 /// <summary>
 /// The price of a court per hour on some weekdays between two local times (in <see cref="CourtSaleSettings.TimeZoneId"/>),
-/// e.g. Mon-Fri 08:00-12:00 = 20 €/h. Without courts the rule is for all courts. Rules of a club never overlap,
+/// e.g. Mon-Fri 08:00-12:00 = 20 €/h (in the club's currency). Without courts the rule is for all courts. Rules of a club never overlap,
 /// so every minute has at most one price; a minute without a rule is not for sale.
 /// </summary>
 [Guid("5E9B2C71-0A4D-4F3E-8C16-7D2A9B4E1F08")]
@@ -27,10 +27,11 @@ public class CourtPriceRule : TenantDomainEntity, IAggregateRoot
     private CourtPriceRule() { }
 #pragma warning restore CS8618
 
-    public CourtPriceRule(int clubId, RuleData data)
+    /// <summary>A rule priced in <paramref name="currency"/>, the club's currency (<c>Club.Currency</c>); it keeps it when the club changes its currency.</summary>
+    public CourtPriceRule(int clubId, RuleData data, string currency = DefaultCurrency)
     {
         ClubId = clubId;
-        Currency = DefaultCurrency;
+        Currency = currency.ToLowerInvariant();
         CourtIds = [];
         Weekdays = [];
         Update(data);
@@ -96,15 +97,19 @@ public class CourtPriceRule : TenantDomainEntity, IAggregateRoot
         && (IsForAllCourts || other.IsForAllCourts || CourtIds.Intersect(other.CourtIds).Any())
         && StartMinute < other.EndMinute && other.StartMinute < EndMinute;
 
-    /// <summary>Throws <see cref="CourtSaleErrorCode.CourtPriceRulesOverlap"/> when the rule overlaps one of the other rules of the club.</summary>
-    public void EnsureNoOverlap(IEnumerable<CourtPriceRule> otherRules)
+    /// <summary>
+    /// Throws <see cref="CourtSaleErrorCode.CourtPriceRulesOverlap"/> when the rule overlaps one of the other rules of the club.
+    /// <paramref name="formatTime"/> writes the times of the other rule in the error (the club's clock, "HH:mm" when not given).
+    /// </summary>
+    public void EnsureNoOverlap(IEnumerable<CourtPriceRule> otherRules, Func<TimeOnly, string>? formatTime = null)
     {
+        formatTime ??= time => time.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture);
         var overlapping = otherRules.FirstOrDefault(other => !ReferenceEquals(other, this) && (other.Id == 0 || other.Id != Id) && Overlaps(other));
         if (overlapping is not null)
         {
             throw new PreconditionException(
                 CourtSaleErrorCode.CourtPriceRulesOverlap,
-                [overlapping.Name ?? "", overlapping.From.ToString("HH:mm"), overlapping.To.ToString("HH:mm")],
+                [overlapping.Name ?? "", formatTime(overlapping.From), formatTime(overlapping.To)],
                 "The price rule overlaps another rule.");
         }
     }

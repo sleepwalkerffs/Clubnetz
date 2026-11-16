@@ -13,7 +13,7 @@ public record GetClubAnnouncement(int ClubId, int ClubAnnouncementId, bool CanMa
         {
             var announcement = await context.ClubAnnouncements.AsNoTracking()
                 .GetAnnouncementWithAttachments(request.ClubId, request.ClubAnnouncementId, cancellationToken);
-            announcement.EnsureVisible(request.CanManage);
+            announcement.EnsureVisible(request.CanManage, await ClubAnnouncementMapper.GetToday(context, request.ClubId, cancellationToken));
 
             return await ClubAnnouncementMapper.ToDto(context, renderer, announcement, request.CanManage, cancellationToken);
         }

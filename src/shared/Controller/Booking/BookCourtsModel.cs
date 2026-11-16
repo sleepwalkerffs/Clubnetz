@@ -8,9 +8,10 @@ namespace Bookennis.Shared.Controller.Booking;
 /// With <see cref="DryRun"/> nothing is saved and the result tells which slots would fail and which bookings an overbooking play mode would remove.
 /// With <see cref="ExpectedBookingIdsToRemove"/> (the bookings the user confirmed after a dry run) the save is rejected when an overbooking play mode would remove other bookings than these.
 /// </summary>
+/// <remarks><c>TimeZoneInfoId</c>: Ignored, kept for older clients: the server uses the club's time zone (<c>Club.TimeZoneId</c>).</remarks>
 public record BookCourtsModel(
     [Required] List<BookingSlotModel> Slots,
-    [Required] string TimeZoneInfoId,
+    string? TimeZoneInfoId,
     [Required] int PlayModeId,
     [Required] List<int> Players,
     string? Comment,

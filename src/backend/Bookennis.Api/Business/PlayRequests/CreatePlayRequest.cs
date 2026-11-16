@@ -1,5 +1,6 @@
 using Bookennis.Api.Business.Bookings;
 using Bookennis.Api.Business.ClubEvents;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.Members;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Bookings;
@@ -15,12 +16,13 @@ namespace Bookennis.Api.Business.PlayRequests;
 /// A member looks for players. Nothing is blocked. The request is only created when the requester could book the slot themself
 /// (a request that is doomed from the start would only waste the time of the players who were asked).
 /// </summary>
+/// <remarks><c>TimeZoneInfoId</c>: Ignored: play requests are stored with the club's time zone (<c>Club.TimeZoneId</c>).</remarks>
 public record CreatePlayRequest(
     int ClubId,
     int UserId,
     int PlayModeId,
     DateTimeOffsetInterval Interval,
-    string TimeZoneInfoId,
+    string? TimeZoneInfoId,
     List<int> CourtIds,
     int? PlayersNeeded,
     List<int> InviteeMemberIds,
@@ -48,13 +50,16 @@ public record CreatePlayRequest(
             if (!activeIds.Contains(requesterId) || askedIds.Any(id => id != requesterId && !activeIds.Contains(id)))
                 throw new PreconditionException(PlayRequest.ErrorCode.PlayRequestMemberNotActive, "Only active members of the club can play together");
 
+            // The times of the request are local times of the club, whatever the browser's time zone is
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
+
             var playRequest = PlayRequest.Create(
                 request.ClubId,
                 requesterId,
                 new PlayRequest.RequestData(
                     request.PlayModeId,
                     request.Interval,
-                    request.TimeZoneInfoId,
+                    region.TimeZoneId,
                     request.CourtIds,
                     playersNeeded,
                     askedIds,
@@ -66,7 +71,7 @@ public record CreatePlayRequest(
             var builder = await BookingContextBuilder.Load(
                 context, request.PlayModeId, playRequest.CourtIds, [requesterId], request.UserId, [request.Interval], cancellationToken);
             await PlayRequestBooking.BookFirstFreeCourt(
-                builder, bookingService, playRequest.CourtIds, request.Interval, request.TimeZoneInfoId,
+                builder, bookingService, playRequest.CourtIds, request.Interval,
                 playersNeeded, validateAsIfFull: true, cancellationToken);
 
             context.Add(playRequest);

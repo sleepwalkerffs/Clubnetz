@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Members;
@@ -25,11 +26,11 @@ public static class ActiveMembership
 
     public static bool IsStaff(IEnumerable<MemberRole> roles) => roles.Any(StaffRoles.Contains);
 
-    /// <summary>The season of the club whose period contains today (UTC date, like the booking rules).</summary>
-    public static Task<Season?> GetActiveSeason(this AppDbContext context, int clubId, CancellationToken cancellationToken)
+    /// <summary>The season of the club whose period contains today (the local day of the club, like the booking rules).</summary>
+    public static async Task<Season?> GetActiveSeason(this AppDbContext context, int clubId, CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        return context.Seasons
+        var today = await context.GetClubToday(clubId, cancellationToken);
+        return await context.Seasons
             .Where(s => s.ClubId == clubId && s.Period.From <= today && today <= s.Period.To)
             .OrderByDescending(s => s.Period.From)
             .AsNoTracking()

@@ -13,7 +13,7 @@ namespace Bookennis.Api.Tests.Business.Push;
 public class BookingPushNotifierTests(TestFixture fixture) : TestBase(fixture)
 {
     // 3 October 2037 is a Saturday
-    private static readonly DateTimeOffset Start = new(2037, 10, 3, 18, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset Start = new(2037, 10, 3, 16, 0, 0, TimeSpan.Zero); // 18:00 in Vienna, the time zone of the club
 
     [Fact]
     public async Task BookingAdded_NotifiesTheOtherPlayersButNotTheBooker()

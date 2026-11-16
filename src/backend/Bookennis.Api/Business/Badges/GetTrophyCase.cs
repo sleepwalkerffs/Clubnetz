@@ -1,4 +1,6 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
+using Bookennis.Api.Infrastructure;
 using Bookennis.Api.Infrastructure.Tenant;
 using Bookennis.Domain.Members;
 using Bookennis.Shared.Controller.MemberBadges;
@@ -9,7 +11,7 @@ namespace Bookennis.Api.Business.Badges;
 
 public record GetTrophyCase(int RequestingUserId, int TargetMemberId) : IQuery<GetTrophyCaseResult>
 {
-    public class Handler(AppDbContext context, ITenantService tenantService) : IRequestHandler<GetTrophyCase, GetTrophyCaseResult>
+    public class Handler(AppDbContext context, ITenantService tenantService, IUserLanguageAccessor languageAccessor) : IRequestHandler<GetTrophyCase, GetTrophyCaseResult>
     {
         public async Task<GetTrophyCaseResult> Handle(GetTrophyCase request, CancellationToken cancellationToken)
         {
@@ -42,6 +44,9 @@ public record GetTrophyCase(int RequestingUserId, int TargetMemberId) : IQuery<G
 
             if (!isOwnProfile && !isPublic)
                 return new GetTrophyCaseResult { IsOwnProfile = false, IsPublic = false, Clubs = [], ProfilePictureUrl = profilePictureUrl, DisplayBadgeImageUrl = null, DisplayBadgeLevel = null };
+
+            // The season labels are written the way of the club the trophy case is looked at in (also for the badges of other ATP clubs)
+            var culture = (await context.GetTenantRegion(cancellationToken)).Culture(languageAccessor.GetCultureInfo());
 
             // Get all member IDs for the target user (across clubs)
             var userMemberIds = await context.Set<Member>()
@@ -76,7 +81,7 @@ public record GetTrophyCase(int RequestingUserId, int TargetMemberId) : IQuery<G
                             : null,
                         EarnedAt = mb.EarnedAt,
                         SeasonId = s.Id,
-                        SeasonLabel = $"{s.Period.From:dd.MM.yyyy} - {s.Period.To:dd.MM.yyyy}",
+                        SeasonLabel = BadgeSeasonLabel.Of(s.Period.From, s.Period.To, culture),
                         SeasonFrom = s.Period.From
                     }
                 }
@@ -107,7 +112,7 @@ public record GetTrophyCase(int RequestingUserId, int TargetMemberId) : IQuery<G
                             : null,
                         AwardedAt = motb.AwardedAt,
                         SeasonId = s.Id,
-                        SeasonLabel = $"{s.Period.From:dd.MM.yyyy} - {s.Period.To:dd.MM.yyyy}",
+                        SeasonLabel = BadgeSeasonLabel.Of(s.Period.From, s.Period.To, culture),
                         SeasonFrom = s.Period.From
                     }
                 }
@@ -136,7 +141,7 @@ public record GetTrophyCase(int RequestingUserId, int TargetMemberId) : IQuery<G
                         {
                             SeasonId = seasonKey.SeasonId,
                             SeasonFrom = seasonKey.SeasonFrom,
-                            SeasonLabel = $"{seasonKey.SeasonFrom:dd.MM.yyyy} - {seasonKey.SeasonTo:dd.MM.yyyy}",
+                            SeasonLabel = BadgeSeasonLabel.Of(seasonKey.SeasonFrom, seasonKey.SeasonTo, culture),
                             Badges = clubBadges.Where(b => b.SeasonId == seasonKey.SeasonId).Select(b => b.Badge).ToList(),
                             OneTimeBadges = clubOneTimeBadges.Where(b => b.SeasonId == seasonKey.SeasonId).Select(b => b.Badge).ToList()
                         }).ToList()

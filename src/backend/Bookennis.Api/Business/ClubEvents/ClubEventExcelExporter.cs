@@ -6,7 +6,9 @@ using ClosedXML.Excel;
 namespace Bookennis.Api.Business.ClubEvents;
 
 /// <summary>Renders the registrations of a club event as an Excel workbook (one row per registration, a column per option, plus a summary sheet).</summary>
-public class ClubEventExcelExporter(CultureInfo culture)
+/// <remarks><c>culture</c>: The club's culture (<see cref="Bookennis.Shared.Utils.RegionalCulture"/>) in the language of the reader.</remarks>
+/// <remarks><c>timeZone</c>: The club's time zone, for the day of a registration (<see cref="Domain.Clubs.ClubTimeZone.Default"/> when not given).</remarks>
+public class ClubEventExcelExporter(CultureInfo culture, TimeZoneInfo? timeZone = null)
 {
     private static readonly ResourceManager Texts = new("Bookennis.Api.Resources.Localization.Export.ClubEvent", typeof(ClubEventExcelExporter).Assembly);
 
@@ -61,8 +63,8 @@ public class ClubEventExcelExporter(CultureInfo culture)
             }
 
             sheet.Cell(row, 3 + options.Count).Value = registration.Comment ?? "";
-            // Date only: the club's time zone is unknown here
-            sheet.Cell(row, 4 + options.Count).Value = registration.RegisteredAt.UtcDateTime.Date;
+            // The local day of the club
+            sheet.Cell(row, 4 + options.Count).Value = Domain.Clubs.ClubTimeZone.ToLocal(registration.RegisteredAt, timeZone ?? Domain.Clubs.ClubTimeZone.Default).Date;
             sheet.Cell(row, 4 + options.Count).Style.DateFormat.Format = culture.DateTimeFormat.ShortDatePattern;
             row++;
         }

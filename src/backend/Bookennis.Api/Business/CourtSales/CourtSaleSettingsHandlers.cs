@@ -1,6 +1,8 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.CourtBlockings;
 using Bookennis.Api.Business.Payments;
 using Bookennis.Api.Data;
+using Bookennis.Api.Infrastructure;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.CourtSales;
 using Bookennis.Domain.Exceptions;
@@ -61,8 +63,10 @@ public record UpdateCourtSaleSettings(int ClubId, UpdateCourtSaleSettingsModel M
                 context.CourtSaleSettings.Add(settings);
             }
 
+            // The prices are local times of the club: the time zone the client sends is ignored
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
             settings.Update(new CourtSaleSettings.SettingsData(
-                model.IsEnabled, model.PlayModeId, model.TimeZoneId, model.MaxBookingMinutes, model.MaxDaysInAdvance, model.MaxUpcomingBookings));
+                model.IsEnabled, model.PlayModeId, region.TimeZoneId, model.MaxBookingMinutes, model.MaxDaysInAdvance, model.MaxUpcomingBookings));
 
             await context.SaveChangesAsync(cancellationToken);
             return GetCourtSaleSettings.Handler.ToDto(settings, await payments.CanAcceptPayments(request.ClubId, cancellationToken));
@@ -91,15 +95,17 @@ public record GetCourtPriceRules(int ClubId) : IQuery<List<CourtPriceRuleDto>>
 /// <summary>Adds a price rule. It must not overlap another rule of the club (<see cref="CourtSaleErrorCode.CourtPriceRulesOverlap"/>).</summary>
 public record CreateCourtPriceRule(int ClubId, SaveCourtPriceRuleModel Model) : ICommand<CourtPriceRuleDto>
 {
-    public class Handler(AppDbContext context) : IRequestHandler<CreateCourtPriceRule, CourtPriceRuleDto>
+    public class Handler(AppDbContext context, IUserLanguageAccessor languageAccessor) : IRequestHandler<CreateCourtPriceRule, CourtPriceRuleDto>
     {
         public async Task<CourtPriceRuleDto> Handle(CreateCourtPriceRule request, CancellationToken cancellationToken)
         {
             var data = request.Model.ToRuleData();
             await context.EnsureCourtsBelongToClub(request.ClubId, data.CourtIds, cancellationToken);
 
-            var rule = new CourtPriceRule(request.ClubId, data);
-            rule.EnsureNoOverlap(await context.GetCourtPriceRules(request.ClubId, cancellationToken));
+            // A new rule charges the club's currency; the times of an overlapping rule are written with the club's clock
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
+            var rule = new CourtPriceRule(request.ClubId, data, region.Currency);
+            rule.EnsureNoOverlap(await context.GetCourtPriceRules(request.ClubId, cancellationToken), region.Culture(languageAccessor.GetCultureInfo()).Time);
 
             context.CourtPriceRules.Add(rule);
             await context.SaveChangesAsync(cancellationToken);
@@ -111,7 +117,7 @@ public record CreateCourtPriceRule(int ClubId, SaveCourtPriceRuleModel Model) : 
 /// <summary>Changes a price rule. Purchases that were made keep their price.</summary>
 public record UpdateCourtPriceRule(int ClubId, int RuleId, SaveCourtPriceRuleModel Model) : ICommand<CourtPriceRuleDto>
 {
-    public class Handler(AppDbContext context) : IRequestHandler<UpdateCourtPriceRule, CourtPriceRuleDto>
+    public class Handler(AppDbContext context, IUserLanguageAccessor languageAccessor) : IRequestHandler<UpdateCourtPriceRule, CourtPriceRuleDto>
     {
         public async Task<CourtPriceRuleDto> Handle(UpdateCourtPriceRule request, CancellationToken cancellationToken)
         {
@@ -122,7 +128,8 @@ public record UpdateCourtPriceRule(int ClubId, int RuleId, SaveCourtPriceRuleMod
             var rule = rules.FirstOrDefault(r => r.Id == request.RuleId) ?? throw new EntityNotFoundException(typeof(CourtPriceRule));
 
             rule.Update(data);
-            rule.EnsureNoOverlap(rules);
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
+            rule.EnsureNoOverlap(rules, region.Culture(languageAccessor.GetCultureInfo()).Time);
 
             await context.SaveChangesAsync(cancellationToken);
             return rule.ToDto();

@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Shared.Controller.Members;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +12,7 @@ public record GetMembersSummary : IQuery<GetMembersSummaryResult>
     {
         public async Task<GetMembersSummaryResult> Handle(GetMembersSummary request, CancellationToken cancellationToken)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = await context.GetTenantToday(cancellationToken);
 
             var activeSeason = await context.Seasons
                 .Where(s => s.Period.From <= today && today <= s.Period.To)

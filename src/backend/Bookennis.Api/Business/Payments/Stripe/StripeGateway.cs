@@ -26,6 +26,9 @@ public class StripeGateway(AppSettings appSettings) : IStripeGateway
     // Accounts are created with the Accounts v2 API: Stripe refuses v1 for new Connect platforms.
     public async Task<string> CreateAccount(StripeAccountData data, CancellationToken cancellationToken)
     {
+        // Cards everywhere; SEPA direct debit only exists for accounts in Europe. A US account also asks for transfers to its
+        // Stripe balance, which Stripe wants together with card payments there.
+        var isUnitedStates = string.Equals(data.Country, "US", StringComparison.OrdinalIgnoreCase);
         var options = new V2Core.AccountCreateOptions
         {
             DisplayName = data.ClubName,
@@ -45,9 +48,21 @@ public class StripeGateway(AppSettings appSettings) : IStripeGateway
                     Capabilities = new V2Core.AccountCreateConfigurationMerchantCapabilitiesOptions
                     {
                         CardPayments = new V2Core.AccountCreateConfigurationMerchantCapabilitiesCardPaymentsOptions { Requested = true },
-                        SepaDebitPayments = new V2Core.AccountCreateConfigurationMerchantCapabilitiesSepaDebitPaymentsOptions { Requested = true },
+                        SepaDebitPayments = isUnitedStates ? null : new V2Core.AccountCreateConfigurationMerchantCapabilitiesSepaDebitPaymentsOptions { Requested = true },
                     },
                 },
+                Recipient = isUnitedStates
+                    ? new V2Core.AccountCreateConfigurationRecipientOptions
+                    {
+                        Capabilities = new V2Core.AccountCreateConfigurationRecipientCapabilitiesOptions
+                        {
+                            StripeBalance = new V2Core.AccountCreateConfigurationRecipientCapabilitiesStripeBalanceOptions
+                            {
+                                StripeTransfers = new V2Core.AccountCreateConfigurationRecipientCapabilitiesStripeBalanceStripeTransfersOptions { Requested = true },
+                            },
+                        },
+                    }
+                    : null,
             },
             Metadata = new Dictionary<string, string> { [ClubIdMetadataKey] = data.ClubId.ToString(CultureInfo.InvariantCulture) },
         };

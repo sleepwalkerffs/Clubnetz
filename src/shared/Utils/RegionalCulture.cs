@@ -42,8 +42,11 @@ public sealed class RegionalCulture : CultureInfo
         }
 
         numberFormat.CurrencySymbol = CurrencySymbol(Currency);
-        if (IsUnitedStates && !german)
+        if (!german)
         {
+            // English amounts are always written the English way: "$1.00", "€1.00" (en-AT has German separators in some ICU versions)
+            numberFormat.CurrencyDecimalSeparator = ".";
+            numberFormat.CurrencyGroupSeparator = ",";
             numberFormat.CurrencyPositivePattern = 0; // $1.00
             numberFormat.CurrencyNegativePattern = 1; // -$1.00
         }
@@ -52,6 +55,8 @@ public sealed class RegionalCulture : CultureInfo
             numberFormat.CurrencyPositivePattern = 2; // € 1,00
             numberFormat.CurrencyNegativePattern = 12; // € -1,00
         }
+
+        SeparateLetterSymbol(numberFormat);
 
         numberFormat.CurrencyDecimalDigits = 2;
         DateTimeFormat = dateFormat;
@@ -211,7 +216,24 @@ public sealed class RegionalCulture : CultureInfo
 
         var format = (NumberFormatInfo)NumberFormat.Clone();
         format.CurrencySymbol = CurrencySymbol(currency);
+        if (!IsGerman)
+        {
+            format.CurrencyPositivePattern = 0;
+            format.CurrencyNegativePattern = 1;
+        }
+
+        SeparateLetterSymbol(format);
         return amount.ToString("C", format);
+    }
+
+    /// <summary>A symbol of letters ("CHF") is never glued to the amount: "CHF 1.00", not "CHF1.00".</summary>
+    private static void SeparateLetterSymbol(NumberFormatInfo format)
+    {
+        if (format.CurrencySymbol.Length > 1 && format.CurrencyPositivePattern == 0)
+        {
+            format.CurrencyPositivePattern = 2;
+            format.CurrencyNegativePattern = 12;
+        }
     }
 
     /// <summary>The days of a week in the order of the club's calendar.</summary>

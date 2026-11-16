@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Memberships;
@@ -18,7 +19,7 @@ public static class MembershipQueryExtensions
         if (seasonId is not null)
             return await context.Seasons.SingleRequiredAsync(s => s.Id == seasonId && s.ClubId == clubId, cancellationToken);
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = await context.GetClubToday(clubId, cancellationToken);
         return await context.Seasons
             .Where(s => s.ClubId == clubId && s.Period.To >= today)
             .OrderBy(s => s.Period.From)

@@ -3,20 +3,26 @@ using System.Reflection;
 using Bookennis.Api.Infrastructure;
 using Bookennis.Domain.Clubs.EmailTemplates;
 using Bookennis.Domain.User;
+using Bookennis.Shared.Utils;
 using Fluid;
 
 namespace Bookennis.Api.Business.ClubEmails;
 
 public record ClubEmailVariable(string Name, string SampleValue);
 
-public record ClubEmailDefinition(ClubEmailType Type, Type VariablesType, Func<Language, ClubEmailVariables> CreateSample)
+/// <remarks><c>Sample</c>: Sample variables in a language, with dates, times and amounts written like the club (<see cref="RegionalCulture"/>).</remarks>
+public record ClubEmailDefinition(ClubEmailType Type, Type VariablesType, Func<Language, RegionalCulture, ClubEmailVariables> Sample)
 {
     /// <summary>All variable paths usable in the template (e.g. <c>member.first_name</c>).</summary>
     public IReadOnlyList<string> VariablePaths { get; } = ClubEmailCatalog.GetVariablePaths(VariablesType).ToList();
 
-    public IReadOnlyList<ClubEmailVariable> GetVariables(Language language, ClubVariables club)
+    /// <summary>Sample variables in <paramref name="language"/>, written like the club (<paramref name="culture"/>; an Austrian club when <c>null</c>).</summary>
+    public ClubEmailVariables CreateSample(Language language, RegionalCulture? culture = null)
+        => Sample(language, culture ?? RegionalCulture.For(language == Language.German, global::Bookennis.Shared.Controller.Shared.Country.Austria));
+
+    public IReadOnlyList<ClubEmailVariable> GetVariables(Language language, ClubVariables club, RegionalCulture? culture = null)
     {
-        var sample = CreateSample(language) with { Club = club };
+        var sample = CreateSample(language, culture) with { Club = club };
         return VariablePaths
             .Select(path => new ClubEmailVariable(path, ClubEmailCatalog.GetValue(sample, path)?.ToString() ?? string.Empty))
             .ToList();
@@ -30,11 +36,11 @@ public static class ClubEmailCatalog
     public static IReadOnlyList<ClubEmailDefinition> All { get; } =
     [
         new(ClubEmailType.Welcome, typeof(WelcomeEmailVariables),
-            language => new WelcomeEmailVariables(SampleMember, SampleSeason(language))),
+            (language, culture) => new WelcomeEmailVariables(SampleMember, SampleSeason(culture))),
         new(ClubEmailType.SeasonActivated, typeof(SeasonActivatedEmailVariables),
-            language => new SeasonActivatedEmailVariables(SampleMember, SampleSeason(language))),
+            (language, culture) => new SeasonActivatedEmailVariables(SampleMember, SampleSeason(culture))),
         new(ClubEmailType.BadgeAwarded, typeof(BadgeAwardedEmailVariables),
-            language => new BadgeAwardedEmailVariables(
+            (language, culture) => new BadgeAwardedEmailVariables(
                 SampleMember,
                 new BadgeVariables(
                     "Gold",
@@ -43,15 +49,15 @@ public static class ClubEmailCatalog
                     false),
                 "https://www.example.com/trophy-case")),
         new(ClubEmailType.BookingDeleted, typeof(BookingDeletedEmailVariables),
-            language => new BookingDeletedEmailVariables(
+            (language, culture) => new BookingDeletedEmailVariables(
                 SampleMember,
                 new BookingVariables(
-                    new DateTime(2025, 6, 14, 18, 0, 0).ToString(language.ToCultureInfo()),
+                    culture.DateAndTime(new DateTime(2025, 6, 14, 18, 0, 0)),
                     "1",
                     "Erika Muster",
                     language == Language.German ? "gelöscht da der Platz gesperrt wurde" : "setting the court inactive"))),
         new(ClubEmailType.Announcement, typeof(AnnouncementEmailVariables),
-            language => new AnnouncementEmailVariables(
+            (language, culture) => new AnnouncementEmailVariables(
                 SampleMember,
                 new AnnouncementVariables(
                     language == Language.German ? "Sommerfest am 12. Juli" : "Summer party on July 12",
@@ -60,59 +66,59 @@ public static class ClubEmailCatalog
                         : "All members are warmly invited to our **summer party**.\n\n- Start: 5 pm\n- Food and drinks are provided"),
                     "https://www.example.com/clubs/1/news/1"))),
         new(ClubEmailType.BookingAdded, typeof(BookingAddedEmailVariables),
-            language => new BookingAddedEmailVariables(SampleMember, SampleBooking(language), "Erika Muster")),
+            (language, culture) => new BookingAddedEmailVariables(SampleMember, SampleBooking(culture), "Erika Muster")),
         new(ClubEmailType.BookingReminder, typeof(BookingReminderEmailVariables),
-            language => new BookingReminderEmailVariables(SampleMember, SampleBooking(language))),
+            (language, culture) => new BookingReminderEmailVariables(SampleMember, SampleBooking(culture))),
         new(ClubEmailType.ClubEventCreated, typeof(ClubEventEmailVariables),
-            language => new ClubEventEmailVariables(SampleMember, SampleEvent(language))),
+            (language, culture) => new ClubEventEmailVariables(SampleMember, SampleEvent(culture))),
         new(ClubEmailType.ClubEventReminder, typeof(ClubEventEmailVariables),
-            language => new ClubEventEmailVariables(SampleMember, SampleEvent(language))),
+            (language, culture) => new ClubEventEmailVariables(SampleMember, SampleEvent(culture))),
         new(ClubEmailType.ClubEventRegistrationDeadline, typeof(ClubEventEmailVariables),
-            language => new ClubEventEmailVariables(SampleMember, SampleEvent(language))),
+            (language, culture) => new ClubEventEmailVariables(SampleMember, SampleEvent(culture))),
         new(ClubEmailType.MembershipPaymentReceived, typeof(MembershipEmailVariables),
-            language => new MembershipEmailVariables(SampleMember, SampleMembership(language, paid: true))),
+            (language, culture) => new MembershipEmailVariables(SampleMember, SampleMembership(culture, paid: true))),
         new(ClubEmailType.MembershipApproved, typeof(MembershipEmailVariables),
-            language => new MembershipEmailVariables(SampleMember, SampleMembership(language, paid: false))),
+            (language, culture) => new MembershipEmailVariables(SampleMember, SampleMembership(culture, paid: false))),
         new(ClubEmailType.MembershipPaymentFailed, typeof(MembershipEmailVariables),
-            language => new MembershipEmailVariables(SampleMember, SampleMembership(language, paid: false))),
+            (language, culture) => new MembershipEmailVariables(SampleMember, SampleMembership(culture, paid: false))),
         new(ClubEmailType.MembershipNeedsAttention, typeof(MembershipNeedsAttentionEmailVariables),
-            language => new MembershipNeedsAttentionEmailVariables(
+            (language, culture) => new MembershipNeedsAttentionEmailVariables(
                 SampleMember,
-                SampleMembership(language, paid: false),
+                SampleMembership(culture, paid: false),
                 language == Language.German ? "Ein Mitglied möchte einen Tarif, den ihr bestätigen müsst." : "A member asks for a plan that you have to confirm.",
                 "Erika Muster")),
         new(ClubEmailType.CourtPurchaseConfirmed, typeof(CourtPurchaseEmailVariables),
-            language => new CourtPurchaseEmailVariables(SampleMember, SampleCourtPurchase(language))),
+            (language, culture) => new CourtPurchaseEmailVariables(SampleMember, SampleCourtPurchase(culture))),
         new(ClubEmailType.CourtPurchaseFailed, typeof(CourtPurchaseEmailVariables),
-            language => new CourtPurchaseEmailVariables(SampleMember, SampleCourtPurchase(language))),
+            (language, culture) => new CourtPurchaseEmailVariables(SampleMember, SampleCourtPurchase(culture))),
         new(ClubEmailType.CourtPurchaseNeedsAttention, typeof(CourtPurchaseNeedsAttentionEmailVariables),
-            language => new CourtPurchaseNeedsAttentionEmailVariables(
+            (language, culture) => new CourtPurchaseNeedsAttentionEmailVariables(
                 SampleMember,
-                SampleCourtPurchase(language),
+                SampleCourtPurchase(culture),
                 language == Language.German
                     ? "Die Zahlung wurde in Stripe erstattet. Die Buchung wurde entfernt, falls sie noch nicht vorbei war."
                     : "The payment was refunded in Stripe. The booking was removed if it was not over yet.",
                 "Erika Muster")),
         new(ClubEmailType.CourtPurchaseCompensated, typeof(CourtPurchaseCompensatedEmailVariables),
-            language => new CourtPurchaseCompensatedEmailVariables(
+            (language, culture) => new CourtPurchaseCompensatedEmailVariables(
                 SampleMember,
-                SampleCourtPurchase(language),
+                SampleCourtPurchase(culture),
                 language == Language.German ? "Der Platz wird für ein Training gebraucht." : "The court is needed for a training.",
                 language == Language.German ? "1 Buchungsguthaben" : "1 booking credit")),
         new(ClubEmailType.ClubhouseTabPaid, typeof(ClubhouseTabPaidEmailVariables),
-            language => new ClubhouseTabPaidEmailVariables(SampleMember, SampleClubhouseTab(language))),
+            (language, culture) => new ClubhouseTabPaidEmailVariables(SampleMember, SampleClubhouseTab(culture))),
         new(ClubEmailType.ClubhouseTabNeedsAttention, typeof(ClubhouseTabNeedsAttentionEmailVariables),
-            language => new ClubhouseTabNeedsAttentionEmailVariables(
+            (language, culture) => new ClubhouseTabNeedsAttentionEmailVariables(
                 SampleMember,
-                SampleClubhouseTab(language),
+                SampleClubhouseTab(culture),
                 language == Language.German
                     ? "Die Rechnung war schon bezahlt, als die Online-Zahlung ankam. Bitte erstatte eine der beiden Zahlungen."
                     : "The tab was already paid when the online payment arrived. Please refund one of the two payments.",
                 "Erika Muster")),
         new(ClubEmailType.Invoice, typeof(InvoiceEmailVariables),
-            language => new InvoiceEmailVariables(SampleMember, SampleInvoice(language, 0))),
+            (language, culture) => new InvoiceEmailVariables(SampleMember, SampleInvoice(language, 0))),
         new(ClubEmailType.InvoiceReminder, typeof(InvoiceEmailVariables),
-            language => new InvoiceEmailVariables(SampleMember, SampleInvoice(language, 1)))
+            (language, culture) => new InvoiceEmailVariables(SampleMember, SampleInvoice(language, 1)))
     ];
 
     private static InvoiceVariables SampleInvoice(Language language, int reminders)
@@ -127,42 +133,41 @@ public static class ClubEmailCatalog
 
     private static MemberVariables SampleMember => new("Max", "Muster");
 
-    private static BookingDetailsVariables SampleBooking(Language language)
+    private static BookingDetailsVariables SampleBooking(RegionalCulture culture)
         => new(
-            new DateOnly(2025, 6, 14).ToString("D", language.ToCultureInfo()),
-            "18:00 – 19:00",
+            new DateOnly(2025, 6, 14).ToString("D", culture),
+            $"{culture.Time(new TimeOnly(18, 0))} – {culture.Time(new TimeOnly(19, 0))}",
             "1",
-            language == Language.German ? "Einzel" : "Singles",
+            culture.IsGerman ? "Einzel" : "Singles",
             "Max Muster, Erika Muster",
             "https://www.example.com/clubs/1/booking/1");
 
-    private static EventVariables SampleEvent(Language language)
+    private static EventVariables SampleEvent(RegionalCulture culture)
     {
-        var culture = language.ToCultureInfo();
         return new EventVariables(
-            language == Language.German ? "Sommerfest" : "Summer party",
+            culture.IsGerman ? "Sommerfest" : "Summer party",
             new DateOnly(2025, 7, 12).ToString("D", culture),
-            "17:00 – 22:00",
-            language == Language.German ? "Clubhaus" : "Clubhouse",
-            $"{new DateOnly(2025, 7, 5).ToString("D", culture)}, 18:00",
+            $"{culture.Time(new TimeOnly(17, 0))} – {culture.Time(new TimeOnly(22, 0))}",
+            culture.IsGerman ? "Clubhaus" : "Clubhouse",
+            $"{new DateOnly(2025, 7, 5).ToString("D", culture)}, {culture.Time(new TimeOnly(18, 0))}",
             "https://www.example.com/clubs/1/calendar/1");
     }
 
-    private static MembershipVariables SampleMembership(Language language, bool paid)
+    private static MembershipVariables SampleMembership(RegionalCulture culture, bool paid)
     {
-        var culture = language.ToCultureInfo();
+        var language = culture.IsGerman ? Language.German : Language.English;
         return new MembershipVariables(
             language == Language.German ? "Familie" : "Family",
-            SampleSeason(language).Period,
+            SampleSeason(culture).Period,
             Memberships.MembershipTexts.Amount(21500, culture),
             "Max Muster, Erika Muster, Mia Muster",
             paid ? (language == Language.German ? "Online-Zahlung" : "Online payment") : "",
             "https://www.example.com/clubs/1/membership");
     }
 
-    private static ClubhouseTabVariables SampleClubhouseTab(Language language)
+    private static ClubhouseTabVariables SampleClubhouseTab(RegionalCulture culture)
     {
-        var culture = language.ToCultureInfo();
+        var language = culture.IsGerman ? Language.German : Language.English;
         return new ClubhouseTabVariables(
             Memberships.MembershipTexts.Amount(1650, culture),
             new DateOnly(2025, 6, 14).ToString("D", culture),
@@ -171,25 +176,25 @@ public static class ClubEmailCatalog
             "https://www.example.com/clubs/1/my-club");
     }
 
-    private static CourtPurchaseVariables SampleCourtPurchase(Language language)
+    private static CourtPurchaseVariables SampleCourtPurchase(RegionalCulture culture)
     {
-        var culture = language.ToCultureInfo();
+        var language = culture.IsGerman ? Language.German : Language.English;
         var price = Memberships.MembershipTexts.Amount(2800, culture);
         return new CourtPurchaseVariables(
             language == Language.German ? "Platz 2" : "Court 2",
             new DateOnly(2025, 6, 14).ToString("D", culture),
-            "17:00 – 18:00",
+            $"{culture.Time(new TimeOnly(17, 0))} – {culture.Time(new TimeOnly(18, 0))}",
             price,
             language == Language.German ? $"{price} online" : $"{price} online",
             "https://www.example.com/clubs/1/booking");
     }
 
-    private static SeasonVariables SampleSeason(Language language)
+    private static SeasonVariables SampleSeason(RegionalCulture culture)
     {
-        var culture = language.ToCultureInfo();
         return FormatSeason(new DateOnly(2025, 4, 1), new DateOnly(2025, 10, 31), culture);
     }
 
+    /// <summary>The period of a season in the short date of the club's culture: "01.04.2025" or "4/1/2025".</summary>
     public static SeasonVariables FormatSeason(DateOnly from, DateOnly to, CultureInfo culture)
         => new(from.ToString(culture.DateTimeFormat.ShortDatePattern, culture), to.ToString(culture.DateTimeFormat.ShortDatePattern, culture));
 

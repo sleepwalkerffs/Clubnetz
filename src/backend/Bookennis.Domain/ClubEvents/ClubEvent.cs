@@ -1,4 +1,5 @@
 using Bookennis.Domain.Base;
+using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Exceptions;
 
 namespace Bookennis.Domain.ClubEvents;
@@ -121,13 +122,16 @@ public class ClubEvent : TenantDomainEntity, IAggregateRoot
 
     public bool IsFull => MaxParticipants.HasValue && TotalHeadCount >= MaxParticipants.Value;
 
-    /// <summary>The event is over once its last day has passed.</summary>
-    public bool IsOver(DateTimeOffset now) => DateOnly.FromDateTime(now.UtcDateTime) > LastDate;
+    /// <summary>
+    /// The event is over once its last day has passed in the club (<paramref name="timeZone"/>, the club's time zone;
+    /// <see cref="ClubTimeZone.Default"/> when not given).
+    /// </summary>
+    public bool IsOver(DateTimeOffset now, TimeZoneInfo? timeZone = null) => ClubTimeZone.Today(timeZone ?? ClubTimeZone.Default, now) > LastDate;
 
     public bool IsDeadlinePassed(DateTimeOffset now) => RegistrationDeadline.HasValue && now > RegistrationDeadline.Value;
 
     /// <summary>Whether registrations can currently be created, changed or withdrawn (capacity is not considered).</summary>
-    public bool IsRegistrationOpen(DateTimeOffset now) => RegistrationEnabled && !IsDeadlinePassed(now) && !IsOver(now);
+    public bool IsRegistrationOpen(DateTimeOffset now, TimeZoneInfo? timeZone = null) => RegistrationEnabled && !IsDeadlinePassed(now) && !IsOver(now, timeZone);
 
     /// <summary>
     /// Replaces all event data including the questions. Questions and options are synced by id; answers to removed options are deleted.
@@ -186,9 +190,10 @@ public class ClubEvent : TenantDomainEntity, IAggregateRoot
     public void MarkDeadlineReminderSent() => DeadlineReminderSentAt = DateTimeOffset.UtcNow;
 
     /// <summary>Creates the member's registration or replaces an existing one.</summary>
-    public ClubEventRegistration Register(int memberId, int headCount, IReadOnlyCollection<AnswerData> answers, string? comment, DateTimeOffset now)
+    /// <remarks><c>timeZone</c>: The club's time zone: the event is over after its last local day.</remarks>
+    public ClubEventRegistration Register(int memberId, int headCount, IReadOnlyCollection<AnswerData> answers, string? comment, DateTimeOffset now, TimeZoneInfo? timeZone = null)
     {
-        EnsureRegistrationOpen(now);
+        EnsureRegistrationOpen(now, timeZone);
 
         if (headCount is < 1 or > MaxHeadCount)
             throw new PreconditionException(ErrorCode.ClubEventInvalidHeadCount, $"The head count must be between 1 and {MaxHeadCount}.");
@@ -219,12 +224,12 @@ public class ClubEvent : TenantDomainEntity, IAggregateRoot
         return existing;
     }
 
-    public void Unregister(int memberId, DateTimeOffset now)
+    public void Unregister(int memberId, DateTimeOffset now, TimeZoneInfo? timeZone = null)
     {
         var registration = registrations.FirstOrDefault(r => r.MemberId == memberId)
                            ?? throw new PreconditionException(ErrorCode.ClubEventNotRegistered, "You are not registered for this event.");
 
-        if (IsDeadlinePassed(now) || IsOver(now))
+        if (IsDeadlinePassed(now) || IsOver(now, timeZone))
             throw new PreconditionException(ErrorCode.ClubEventRegistrationClosed, "The registration is closed.");
 
         registrations.Remove(registration);
@@ -239,12 +244,12 @@ public class ClubEvent : TenantDomainEntity, IAggregateRoot
         registrations.Remove(registration);
     }
 
-    private void EnsureRegistrationOpen(DateTimeOffset now)
+    private void EnsureRegistrationOpen(DateTimeOffset now, TimeZoneInfo? timeZone)
     {
         if (!RegistrationEnabled)
             throw new PreconditionException(ErrorCode.ClubEventRegistrationDisabled, "This event does not accept registrations.");
 
-        if (IsDeadlinePassed(now) || IsOver(now))
+        if (IsDeadlinePassed(now) || IsOver(now, timeZone))
             throw new PreconditionException(ErrorCode.ClubEventRegistrationClosed, "The registration is closed.");
     }
 

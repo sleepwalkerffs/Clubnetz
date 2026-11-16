@@ -8,11 +8,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Bookings;
 
+/// <remarks><c>TimeZoneInfoId</c>: Ignored: bookings are stored with the club's time zone (<c>Club.TimeZoneId</c>).</remarks>
 public record EditBooking(
     [Required] int BookingEntryId,
     [Required] int CourtId,
     [Required] DateTimeOffsetInterval Interval,
-    [Required] string TimeZoneInfoId,
+    string? TimeZoneInfoId,
     [Required] int PlayModeId,
     [Required] List<int> Players,
     string? Comment,
@@ -51,7 +52,7 @@ public record EditBooking(
             var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, [], cancellationToken)
                 with { SkipPastBookingValidation = hasElevatedRole };
 
-            bookingService.EditBooking(bookingContext, existingBooking, request.Interval, request.TimeZoneInfoId, request.Comment);
+            bookingService.EditBooking(bookingContext, existingBooking, request.Interval, builder.Region.TimeZoneId, request.Comment);
 
             await context.SaveChangesAsync(cancellationToken);
         }

@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Config;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
@@ -7,7 +8,6 @@ using Bookennis.Api.Infrastructure.User;
 using Bookennis.Domain.Clubs.EmailTemplates;
 using Bookennis.Domain.Members;
 using Bookennis.Domain.Notifications;
-using Bookennis.Global;
 using Fusonic.Extensions.Common.Security;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,7 +48,7 @@ public class BookingEmailNotifier(AppDbContext context, IMediator mediator, IUse
 
         foreach (var recipient in recipients)
         {
-            var culture = recipient.Language.ToCultureInfo();
+            var culture = recipient.Language.ToCultureInfo(booking.Region);
             var member = new MemberVariables(recipient.FirstName, recipient.LastName);
             var variables = new BookingAddedEmailVariables(
                 member,
@@ -92,10 +92,11 @@ public class BookingEmailNotifier(AppDbContext context, IMediator mediator, IUse
 
         var players = await BookingEmailQueries.GetPlayerNames(context, series.PlayerIds, cancellationToken);
         var appUri = appSettings.AppUri.AbsoluteUri.TrimEnd('/');
+        var region = await context.GetClubRegion(series.ClubId, cancellationToken);
 
         foreach (var recipient in recipients)
         {
-            var culture = recipient.Language.ToCultureInfo();
+            var culture = recipient.Language.ToCultureInfo(region);
             var member = new MemberVariables(recipient.FirstName, recipient.LastName);
             var dayName = culture.DateTimeFormat.GetDayName(series.DayOfWeek);
             var startDate = NotificationTexts.Date(culture, series.StartDate);
@@ -136,12 +137,12 @@ public class BookingEmailNotifier(AppDbContext context, IMediator mediator, IUse
 
         foreach (var recipient in recipients)
         {
-            var culture = recipient.Language.ToCultureInfo();
+            var culture = recipient.Language.ToCultureInfo(booking.Region);
             var member = new MemberVariables(recipient.FirstName, recipient.LastName);
             var variables = new BookingDeletedEmailVariables(
                 member,
                 new BookingVariables(
-                    booking.LocalStart.ToString(culture),
+                    culture.DateAndTime(booking.LocalStart),
                     booking.CourtName,
                     actorName ?? NotificationTexts.Get(culture, "Someone"),
                     NotificationTexts.Get(culture, reasonKey)));
@@ -165,10 +166,11 @@ public class BookingEmailNotifier(AppDbContext context, IMediator mediator, IUse
     private static int[]? Except(int? userId) => userId is null ? null : [userId.Value];
 }
 
-/// <summary>What the booking emails show of a booking.</summary>
+/// <summary>What the booking emails show of a booking; the times are local times of the club (<paramref name="Region"/>).</summary>
 public sealed record BookingEmailInfo(
     int Id,
     int ClubId,
+    ClubRegion Region,
     DateTimeOffset LocalStart,
     DateTimeOffset LocalEnd,
     int? RecurringBookingSeriesId,
@@ -177,6 +179,7 @@ public sealed record BookingEmailInfo(
     string Players,
     List<int> PlayerIds)
 {
+    /// <summary>Pass the club's culture (<see cref="ClubRegion.Culture(Domain.User.Language)"/>).</summary>
     public BookingDetailsVariables ToVariables(CultureInfo culture, AppSettings appSettings)
         => new(
             NotificationTexts.Date(culture, DateOnly.FromDateTime(LocalStart.DateTime)),
@@ -203,7 +206,6 @@ public static class BookingEmailQueries
                 b.ClubId,
                 b.Interval.From,
                 b.Interval.To,
-                b.TimeZoneInfoId,
                 b.RecurringBookingSeriesId,
                 CourtName = court.Name,
                 PlayModeName = playMode.Name,
@@ -214,11 +216,14 @@ public static class BookingEmailQueries
         if (booking is null)
             return null;
 
+        // Shown in the club's time zone, also for bookings that stored the browser's
+        var region = await context.GetClubRegion(booking.ClubId, cancellationToken);
         return new BookingEmailInfo(
             booking.Id,
             booking.ClubId,
-            booking.From.AddTimeZoneInfo(booking.TimeZoneInfoId),
-            booking.To.AddTimeZoneInfo(booking.TimeZoneInfoId),
+            region,
+            region.ToLocalOffset(booking.From),
+            region.ToLocalOffset(booking.To),
             booking.RecurringBookingSeriesId,
             booking.CourtName,
             booking.PlayModeName,

@@ -73,8 +73,8 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             // Book court 1 at 9-10 for 5 out of 10 days
             for (int day = 1; day <= 5; day++)
             {
-                var from = new DateTimeOffset(2025, 6, day, 9, 0, 0, TimeSpan.Zero);
-                ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), TimeZoneInfo.Utc.Id));
+                var from = new DateTimeOffset(2025, 6, day, 9, 0, 0, Summer).ToUniversalTime();
+                ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), ViennaTimeZoneId));
             }
 
             await ctx.SaveChangesAsync();
@@ -197,11 +197,11 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
 
             // 2 bookings of 1.5 hours each
-            var from1 = new DateTimeOffset(2025, 6, 1, 10, 0, 0, TimeSpan.Zero);
-            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from1, from1.AddMinutes(90)), TimeZoneInfo.Utc.Id));
+            var from1 = new DateTimeOffset(2025, 6, 1, 10, 0, 0, Summer).ToUniversalTime();
+            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from1, from1.AddMinutes(90)), ViennaTimeZoneId));
 
-            var from2 = new DateTimeOffset(2025, 6, 2, 14, 0, 0, TimeSpan.Zero);
-            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from2, from2.AddMinutes(90)), TimeZoneInfo.Utc.Id));
+            var from2 = new DateTimeOffset(2025, 6, 2, 14, 0, 0, Summer).ToUniversalTime();
+            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from2, from2.AddMinutes(90)), ViennaTimeZoneId));
 
             await ctx.SaveChangesAsync();
         });
@@ -233,8 +233,8 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             // Bookings on 3 distinct days (June 1, 2, 3)
             for (int day = 1; day <= 3; day++)
             {
-                var from = new DateTimeOffset(2025, 6, day, 10, 0, 0, TimeSpan.Zero);
-                ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), TimeZoneInfo.Utc.Id));
+                var from = new DateTimeOffset(2025, 6, day, 10, 0, 0, Summer).ToUniversalTime();
+                ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), ViennaTimeZoneId));
             }
 
             await ctx.SaveChangesAsync();
@@ -269,12 +269,12 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
 
             // Booking in season 1
-            var from1 = new DateTimeOffset(2024, 6, 1, 10, 0, 0, TimeSpan.Zero);
-            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from1, from1.AddHours(1)), TimeZoneInfo.Utc.Id));
+            var from1 = new DateTimeOffset(2024, 6, 1, 10, 0, 0, Summer).ToUniversalTime();
+            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from1, from1.AddHours(1)), ViennaTimeZoneId));
 
             // Booking in season 2
-            var from2 = new DateTimeOffset(2025, 6, 1, 10, 0, 0, TimeSpan.Zero);
-            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from2, from2.AddHours(1)), TimeZoneInfo.Utc.Id));
+            var from2 = new DateTimeOffset(2025, 6, 1, 10, 0, 0, Summer).ToUniversalTime();
+            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from2, from2.AddHours(1)), ViennaTimeZoneId));
 
             await ctx.SaveChangesAsync();
         });
@@ -318,13 +318,13 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
         });
 
         bookingService.BookCourt(Arg.Any<BookingDomainService.Context>(), Arg.Any<DateTimeOffsetInterval>(), Arg.Any<string>(), Arg.Any<string?>())
-            .Returns(callInfo => new Booking(clubId, courtId, playModeId, callInfo.Arg<DateTimeOffsetInterval>(), TimeZoneInfo.Utc.Id, [memberId]));
+            .Returns(callInfo => new Booking(clubId, courtId, playModeId, callInfo.Arg<DateTimeOffsetInterval>(), ViennaTimeZoneId, [memberId]));
 
         var now = DateTimeOffset.UtcNow;
         var from = new DateTimeOffset(now.Year, now.Month, now.Day, 10, 0, 0, TimeSpan.Zero).AddDays(1);
         var endDate = DateOnly.FromDateTime(from.DateTime).AddDays(21); // 4 weekly occurrences
 
-        await SendAsync(new BookRecurringCourt(courtId, new DateTimeOffsetInterval(from, from.AddHours(1)), TimeZoneInfo.Utc.Id, playModeId,
+        await SendAsync(new BookRecurringCourt(courtId, new DateTimeOffsetInterval(from, from.AddHours(1)), ViennaTimeZoneId, playModeId,
             [memberId], RecurrenceIntervalWeeks: 1, EndDate: endDate, Comment: null, userId));
 
         var occurrenceCount = await QueryAsync(ctx => ctx.Bookings.CountAsync(b => b.RecurringBookingSeriesId != null));
@@ -364,7 +364,7 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
 
             // Recurring booking: 2 hours every Monday (June 2 and June 9)
-            var seriesId = await AddWeeklySeries(ctx, clubId, court1Id, playMode.Id, TimeZoneInfo.Utc.Id,
+            var seriesId = await AddWeeklySeries(ctx, clubId, court1Id, playMode.Id, ViennaTimeZoneId,
                 new DateOnly(2025, 6, 2), new DateOnly(2025, 6, 10), new TimeOnly(10, 0), TimeSpan.FromHours(2));
 
             // An individually edited occurrence still counts
@@ -372,8 +372,8 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             excluded.ExcludeFromSeries();
 
             // Single booking on June 2 as well
-            var from = new DateTimeOffset(2025, 6, 2, 14, 0, 0, TimeSpan.Zero);
-            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), TimeZoneInfo.Utc.Id));
+            var from = new DateTimeOffset(2025, 6, 2, 14, 0, 0, Summer).ToUniversalTime();
+            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), ViennaTimeZoneId));
 
             await ctx.SaveChangesAsync();
         });
@@ -470,13 +470,13 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             // Court 1 at 9-10 on June 1 to 5
             for (var day = 1; day <= 5; day++)
             {
-                var from = new DateTimeOffset(2025, 6, day, 9, 0, 0, TimeSpan.Zero);
-                ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), TimeZoneInfo.Utc.Id));
+                var from = new DateTimeOffset(2025, 6, day, 9, 0, 0, Summer).ToUniversalTime();
+                ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), ViennaTimeZoneId));
             }
 
             // Booking after "today" is not played yet
-            var future = new DateTimeOffset(2025, 6, 20, 9, 0, 0, TimeSpan.Zero);
-            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(future, future.AddHours(1)), TimeZoneInfo.Utc.Id));
+            var future = new DateTimeOffset(2025, 6, 20, 9, 0, 0, Summer).ToUniversalTime();
+            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(future, future.AddHours(1)), ViennaTimeZoneId));
             await ctx.SaveChangesAsync();
         });
 
@@ -536,13 +536,13 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             ctx.Add(new Season(clubId, new DateOnlyInterval(new DateOnly(2025, 6, 2), new DateOnly(2025, 6, 2))));
             await ctx.SaveChangesAsync();
 
-            var from = new DateTimeOffset(2025, 6, 2, 9, 30, 0, TimeSpan.Zero);
-            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), TimeZoneInfo.Utc.Id));
+            var from = new DateTimeOffset(2025, 6, 2, 9, 30, 0, Summer).ToUniversalTime();
+            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), ViennaTimeZoneId));
 
             // Two overlapping bookings at 14-15 (overbooking) only fill the slot once
-            var overbooked = new DateTimeOffset(2025, 6, 2, 14, 0, 0, TimeSpan.Zero);
-            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(overbooked, overbooked.AddHours(1)), TimeZoneInfo.Utc.Id));
-            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(overbooked, overbooked.AddHours(1)), TimeZoneInfo.Utc.Id));
+            var overbooked = new DateTimeOffset(2025, 6, 2, 14, 0, 0, Summer).ToUniversalTime();
+            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(overbooked, overbooked.AddHours(1)), ViennaTimeZoneId));
+            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(overbooked, overbooked.AddHours(1)), ViennaTimeZoneId));
             await ctx.SaveChangesAsync();
         });
 
@@ -575,8 +575,8 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             ctx.Add(new Season(clubId, new DateOnlyInterval(new DateOnly(2025, 6, 2), new DateOnly(2025, 6, 2))));
             await ctx.SaveChangesAsync();
 
-            var from = new DateTimeOffset(2025, 6, 2, 17, 0, 0, TimeSpan.Zero);
-            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(2)), TimeZoneInfo.Utc.Id));
+            var from = new DateTimeOffset(2025, 6, 2, 17, 0, 0, Summer).ToUniversalTime();
+            ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(2)), ViennaTimeZoneId));
             await ctx.SaveChangesAsync();
         });
 
@@ -621,8 +621,8 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             // Member 1 plays twice in season 2, member 2 never
             for (var day = 1; day <= 2; day++)
             {
-                var from = new DateTimeOffset(2025, 6, day, 10, 0, 0, TimeSpan.Zero);
-                ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1.5)), TimeZoneInfo.Utc.Id, [member1Id]));
+                var from = new DateTimeOffset(2025, 6, day, 10, 0, 0, Summer).ToUniversalTime();
+                ctx.Add(new Booking(clubId, court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1.5)), ViennaTimeZoneId, [member1Id]));
             }
 
             await ctx.SaveChangesAsync();
@@ -671,13 +671,13 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             ctx.Add(new Season(clubId, new DateOnlyInterval(new DateOnly(2025, 6, 1), new DateOnly(2025, 6, 30))));
             await ctx.SaveChangesAsync();
 
-            var sameDay = new Booking(clubId, court1Id, playMode.Id, OneHour(new DateTimeOffset(2025, 6, 10, 18, 0, 0, TimeSpan.Zero)), TimeZoneInfo.Utc.Id);
-            var twoDays = new Booking(clubId, court1Id, playMode.Id, OneHour(new DateTimeOffset(2025, 6, 12, 18, 0, 0, TimeSpan.Zero)), TimeZoneInfo.Utc.Id);
-            var twoWeeks = new Booking(clubId, court1Id, playMode.Id, OneHour(new DateTimeOffset(2025, 6, 24, 18, 0, 0, TimeSpan.Zero)), TimeZoneInfo.Utc.Id);
+            var sameDay = new Booking(clubId, court1Id, playMode.Id, OneHour(new DateTimeOffset(2025, 6, 10, 18, 0, 0, Summer).ToUniversalTime()), ViennaTimeZoneId);
+            var twoDays = new Booking(clubId, court1Id, playMode.Id, OneHour(new DateTimeOffset(2025, 6, 12, 18, 0, 0, Summer).ToUniversalTime()), ViennaTimeZoneId);
+            var twoWeeks = new Booking(clubId, court1Id, playMode.Id, OneHour(new DateTimeOffset(2025, 6, 24, 18, 0, 0, Summer).ToUniversalTime()), ViennaTimeZoneId);
             ctx.AddRange(sameDay, twoDays, twoWeeks);
             await ctx.SaveChangesAsync();
 
-            await AddWeeklySeries(ctx, clubId, court1Id, playMode.Id, TimeZoneInfo.Utc.Id,
+            await AddWeeklySeries(ctx, clubId, court1Id, playMode.Id, ViennaTimeZoneId,
                 new DateOnly(2025, 6, 3), new DateOnly(2025, 6, 10), new TimeOnly(10, 0), TimeSpan.FromHours(1));
 
             // The creation date is set when saving, so it is overwritten afterwards
@@ -746,12 +746,12 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
             var training = club.PlayModes.Single(pm => pm.Name == "Training");
 
             // Member 1 plays one match, member 2 trains a lot (during prime time on a Monday)
-            var matchFrom = new DateTimeOffset(2025, 6, 7, 10, 0, 0, TimeSpan.Zero);
-            ctx.Add(new Booking(clubId, court1Id, match.Id, new DateTimeOffsetInterval(matchFrom, matchFrom.AddHours(1)), TimeZoneInfo.Utc.Id, [member1Id]));
+            var matchFrom = new DateTimeOffset(2025, 6, 7, 10, 0, 0, Summer).ToUniversalTime();
+            ctx.Add(new Booking(clubId, court1Id, match.Id, new DateTimeOffsetInterval(matchFrom, matchFrom.AddHours(1)), ViennaTimeZoneId, [member1Id]));
             for (var day = 2; day <= 4; day++)
             {
-                var from = new DateTimeOffset(2025, 6, day, 18, 0, 0, TimeSpan.Zero);
-                ctx.Add(new Booking(clubId, court1Id, training.Id, new DateTimeOffsetInterval(from, from.AddHours(2)), TimeZoneInfo.Utc.Id, [member2Id]));
+                var from = new DateTimeOffset(2025, 6, day, 18, 0, 0, Summer).ToUniversalTime();
+                ctx.Add(new Booking(clubId, court1Id, training.Id, new DateTimeOffsetInterval(from, from.AddHours(2)), ViennaTimeZoneId, [member2Id]));
             }
 
             await ctx.SaveChangesAsync();
@@ -775,6 +775,9 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
     }
 
     private const string ViennaTimeZoneId = "Europe/Vienna";
+
+    /// <summary>The offset of the club (Vienna) in summer: the times of the tests are local times of the club.</summary>
+    private static readonly TimeSpan Summer = TimeSpan.FromHours(2);
 
     // Creates a weekly series and its occurrences the same way BookRecurringCourt does
     private static async Task<int> AddWeeklySeries(

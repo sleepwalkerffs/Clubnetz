@@ -1,5 +1,6 @@
 using Bookennis.Api.Business.ClubEmails;
 using Bookennis.Api.Business.Events;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Bookennis.Domain.Clubs.EmailTemplates;
@@ -48,7 +49,7 @@ public class SendMemberSeasonActivatedEmailHandler(
                 .AnyAsync(ms => ms.MemberId == memberId && ms.SeasonId == previousSeason.Id, cancellationToken);
         }
 
-        var culture = memberInfo.Language.ToCultureInfo();
+        var culture = memberInfo.Language.ToCultureInfo(await context.GetClubRegion(memberInfo.ClubId, cancellationToken));
         var memberVariables = new MemberVariables(memberInfo.FirstName, memberInfo.LastName);
         var season = ClubEmailCatalog.FormatSeason(activatedSeason.Period.From, activatedSeason.Period.To, culture);
 

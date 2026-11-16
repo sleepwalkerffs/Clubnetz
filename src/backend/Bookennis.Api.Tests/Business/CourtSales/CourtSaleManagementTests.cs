@@ -41,7 +41,7 @@ public class CourtSaleManagementTests(TestFixture fixture) : CourtSaleTestBase(f
         var saved = await SendAsync(new UpdateCourtSaleSettings(TestDataSeed.ClubId, new UpdateCourtSaleSettingsModel { IsEnabled = true, PlayModeId = playModeId, TimeZoneId = "Europe/Berlin", MaxBookingMinutes = 90, MaxDaysInAdvance = 7, MaxUpcomingBookings = 2 }));
         var changed = await SendAsync(new UpdateCourtSaleSettings(TestDataSeed.ClubId, new UpdateCourtSaleSettingsModel { IsEnabled = false, PlayModeId = playModeId, TimeZoneId = "Europe/Vienna", MaxBookingMinutes = 60, MaxDaysInAdvance = 0, MaxUpcomingBookings = 1 }));
 
-        saved.Should().BeEquivalentTo(new { IsEnabled = true, PlayModeId = (int?)playModeId, TimeZoneId = "Europe/Berlin", MaxBookingMinutes = 90, IsOnlinePaymentAvailable = true }, o => o.ExcludingMissingMembers());
+        saved.Should().BeEquivalentTo(new { IsEnabled = true, PlayModeId = (int?)playModeId, TimeZoneId = "Europe/Vienna" /* the club's, the model's is ignored */, MaxBookingMinutes = 90, IsOnlinePaymentAvailable = true }, o => o.ExcludingMissingMembers());
         changed.IsEnabled.Should().BeFalse();
         (await QueryAsync(ctx => ctx.CourtSaleSettings.CountAsync())).Should().Be(1);
     }

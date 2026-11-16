@@ -1,4 +1,5 @@
 using Bookennis.Api.Business.ClubEvents;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure.Exceptions;
 using Bookennis.Domain.Exceptions;
@@ -44,7 +45,7 @@ public record CreateMembershipOrder(int ClubId, int UserId, int MembershipPlanId
 
             var order = new MembershipOrder(plan, memberId, memberIds);
 
-            var reasons = people.Check(plan, DateOnly.FromDateTime(DateTime.UtcNow), members);
+            var reasons = people.Check(plan, await context.GetClubToday(request.ClubId, cancellationToken), members);
             if (reasons.Count > 0)
                 throw new PreconditionException(reasons[0], $"The plan can't be chosen: {string.Join(", ", reasons)}.");
 

@@ -1,11 +1,11 @@
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Config;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Bookennis.Domain.Clubs.EmailTemplates;
 using Bookennis.Domain.Notifications;
-using Bookennis.Global;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Push;
@@ -40,6 +40,9 @@ public record SendBookingReminders : ICommand
                 }
             ).ToListAsync(cancellationToken);
 
+            // The times are written in the time zone and the way of each club
+            var regions = await context.GetClubRegions(dueBookings.Select(d => d.Booking.ClubId).Distinct().ToList(), cancellationToken);
+
             foreach (var due in dueBookings)
             {
                 var booking = due.Booking;
@@ -50,15 +53,20 @@ public record SendBookingReminders : ICommand
                     continue;
 
                 var recipients = await PushRecipients.ForMembers(context, NotificationType.BookingReminder, due.PlayerIds, exceptUserId: null, cancellationToken);
-                var localStart = booking.Interval.From.AddTimeZoneInfo(booking.TimeZoneInfoId);
+                var region = regions[booking.ClubId];
+                var localStart = region.ToLocal(booking.Interval.From);
 
                 await pushNotificationService.Notify(
                     recipients,
-                    culture => new PushNotification(
-                        PushTexts.Get(culture, "BookingReminder_Title", PushTexts.Time(culture, TimeOnly.FromDateTime(localStart.DateTime))),
-                        $"{due.CourtName} · {due.ClubName}",
-                        $"/clubs/{booking.ClubId}/booking/{booking.Id}",
-                        Tag: $"booking-{booking.Id}"),
+                    language =>
+                    {
+                        var culture = region.Culture(language);
+                        return new PushNotification(
+                            PushTexts.Get(culture, "BookingReminder_Title", PushTexts.Time(culture, TimeOnly.FromDateTime(localStart))),
+                            $"{due.CourtName} · {due.ClubName}",
+                            $"/clubs/{booking.ClubId}/booking/{booking.Id}",
+                            Tag: $"booking-{booking.Id}");
+                    },
                     cancellationToken);
 
                 await SendEmails(booking.Id, cancellationToken);
@@ -79,7 +87,7 @@ public record SendBookingReminders : ICommand
             foreach (var recipient in recipients)
             {
                 var member = new MemberVariables(recipient.FirstName, recipient.LastName);
-                var variables = new BookingReminderEmailVariables(member, booking.ToVariables(recipient.Language.ToCultureInfo(), appSettings));
+                var variables = new BookingReminderEmailVariables(member, booking.ToVariables(recipient.Language.ToCultureInfo(booking.Region), appSettings));
 
                 await mediator.Send(
                     new SendClubEmail(booking.ClubId, ClubEmailType.BookingReminder, recipient.Email, member.FullName, recipient.Language, variables),

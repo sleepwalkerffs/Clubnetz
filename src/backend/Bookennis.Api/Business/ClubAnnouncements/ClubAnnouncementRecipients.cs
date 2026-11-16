@@ -42,7 +42,7 @@ public static class ClubAnnouncementRecipients
             case ClubAnnouncementAudience.AllMembers:
                 break;
             case ClubAnnouncementAudience.ActiveSeasonMembers:
-                var today = ClubAnnouncementMapper.Today;
+                var today = await ClubAnnouncementMapper.GetToday(context, clubId, cancellationToken);
                 var activeSeasonId = await context.Seasons
                     .Where(s => s.ClubId == clubId && s.Period.From <= today && today <= s.Period.To)
                     .OrderByDescending(s => s.Period.From)

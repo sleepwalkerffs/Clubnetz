@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.Courts;
@@ -22,6 +23,13 @@ public static class CourtBlockingQueryExtensions
         model.TimeZoneInfoId,
         model.RecurrenceIntervalWeeks,
         model.RecurrenceEndDate);
+
+    /// <summary>
+    /// The times of a blocking are local times of the club: whatever time zone the browser sent (<see cref="SaveCourtBlockingModel.TimeZoneInfoId"/>)
+    /// is replaced by the club's.
+    /// </summary>
+    public static async Task<CourtBlocking.BlockingData> InClubTimeZone(this CourtBlocking.BlockingData data, AppDbContext context, int clubId, CancellationToken cancellationToken)
+        => data with { TimeZoneInfoId = (await context.GetClubRegion(clubId, cancellationToken)).TimeZoneId };
 
     private static TimeOnly? ToTimeOnly(TimeSpan? time)
     {

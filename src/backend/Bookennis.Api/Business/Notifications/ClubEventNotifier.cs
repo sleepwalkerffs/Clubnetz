@@ -102,7 +102,7 @@ public class ClubEventNotifier(AppDbContext context, IPushNotificationService pu
     {
         await pushNotificationService.Notify(
             pushRecipients,
-            culture =>
+            clubEvent.Region.InCulture(culture =>
             {
                 string?[] details = emailType == ClubEmailType.ClubEventRegistrationDeadline
                     ? [PushTexts.Get(culture, "ClubEventDeadline_Body", PushTexts.DateAndTime(culture, clubEvent.LocalRegistrationDeadline!.Value)), clubEvent.ClubName]
@@ -113,7 +113,7 @@ public class ClubEventNotifier(AppDbContext context, IPushNotificationService pu
                     string.Join(" · ", details.Where(d => !string.IsNullOrWhiteSpace(d))),
                     $"/clubs/{clubEvent.ClubId}/calendar/{clubEvent.Id}",
                     Tag: $"club-event-{clubEvent.Id}");
-            },
+            }),
             cancellationToken);
 
         foreach (var batch in emailRecipients.Chunk(EmailBatchSize))

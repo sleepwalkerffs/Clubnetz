@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.CourtSales;
 using Bookennis.Domain.Exceptions;
@@ -43,9 +44,16 @@ public enum CourtPurchaseErrorCode
 
 public static class CourtSaleQueries
 {
-    /// <summary>The settings of the club, or the defaults (switched off) when it never saved any. Not tracked when new.</summary>
+    /// <summary>
+    /// The settings of the club, or the defaults (switched off) when it never saved any. Not tracked when new.
+    /// Their time zone is the club's (<c>Club.TimeZoneId</c>), also for settings saved before it was a setting of the club.
+    /// </summary>
     public static async Task<CourtSaleSettings> GetCourtSaleSettings(this AppDbContext context, int clubId, CancellationToken cancellationToken)
-        => await context.CourtSaleSettings.FirstOrDefaultAsync(s => s.ClubId == clubId, cancellationToken) ?? new CourtSaleSettings(clubId);
+    {
+        var settings = await context.CourtSaleSettings.FirstOrDefaultAsync(s => s.ClubId == clubId, cancellationToken) ?? new CourtSaleSettings(clubId);
+        settings.FollowClubTimeZone((await context.GetClubRegion(clubId, cancellationToken)).TimeZoneId);
+        return settings;
+    }
 
     /// <summary>The club sells court time: switched on with a play mode that still exists.</summary>
     public static bool IsSelling(this CourtSaleSettings settings) => settings.IsEnabled && settings.PlayModeId is not null;

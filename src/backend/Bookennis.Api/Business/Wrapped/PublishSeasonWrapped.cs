@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Fusonic.Extensions.EntityFrameworkCore;
 
@@ -12,7 +13,7 @@ public record PublishSeasonWrapped(int ClubId, int SeasonId) : ICommand
         {
             var season = await context.Seasons.SingleRequiredAsync(s => s.Id == request.SeasonId && s.ClubId == request.ClubId, cancellationToken);
 
-            season.PublishWrapped(DateTimeOffset.UtcNow, DateOnly.FromDateTime(DateTime.UtcNow));
+            season.PublishWrapped(DateTimeOffset.UtcNow, await context.GetClubToday(season.ClubId, cancellationToken));
 
             await context.SaveChangesAsync(cancellationToken);
             return default;

@@ -47,7 +47,7 @@ public class ClubhouseTab : TenantDomainEntity, IAggregateRoot
 #pragma warning restore CS8618
 
     /// <summary>A tab for a member of the club (<paramref name="memberId"/>) or for a guest from outside (<paramref name="guestName"/>).</summary>
-    public ClubhouseTab(int clubId, int? memberId, string? guestName, int? openedByMemberId, DateTimeOffset now)
+    public ClubhouseTab(int clubId, int? memberId, string? guestName, int? openedByMemberId, DateTimeOffset now, string currency = ClubhouseItem.DefaultCurrency)
     {
         var name = string.IsNullOrWhiteSpace(guestName) ? null : guestName.Trim();
         if ((memberId is null) == (name is null) || name?.Length > MaxGuestNameLength)
@@ -58,7 +58,7 @@ public class ClubhouseTab : TenantDomainEntity, IAggregateRoot
         GuestName = name;
         OpenedByMemberId = openedByMemberId;
         OpenedAt = now;
-        Currency = ClubhouseItem.DefaultCurrency;
+        Currency = currency.ToLowerInvariant();
         Status = ClubhouseTabStatus.Open;
     }
 

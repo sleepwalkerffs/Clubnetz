@@ -132,6 +132,12 @@ public class AppDbContext : IdentityDbContext<User, UserRole, int>
         base.OnModelCreating(builder);
     }
 
+    /// <summary>The club of the request (<c>null</c> outside a club route).</summary>
+    public int? TenantId => tenantService.GetTenantId();
+
+    /// <summary>Time zone, country and currency of the clubs read in this context (<c>ClubRegionQueries.GetClubRegion</c>), so a request reads them once.</summary>
+    internal Dictionary<int, Business.Clubs.ClubRegion> ClubRegionCache { get; } = new();
+
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default) =>
         await DbContextHelpers.WrapSaveChanges(this, domainEventDispatcher, () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken), userAccessor, cancellationToken, auditContext);
 

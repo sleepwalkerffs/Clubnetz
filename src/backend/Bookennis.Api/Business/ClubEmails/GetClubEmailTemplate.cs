@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs.EmailTemplates;
 using Bookennis.Domain.User;
@@ -24,6 +25,9 @@ public record GetClubEmailTemplate(int ClubId, ClubEmailType Type) : IQuery<GetC
                 .AsNoTracking()
                 .SingleRequiredAsync(cancellationToken);
 
+            // The samples show dates, times and amounts the way the club's emails write them
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
+
             var templates = await context.ClubEmailTemplates
                 .Where(t => t.ClubId == request.ClubId && t.Type == request.Type)
                 .Select(t => new { t.Language, t.Subject, t.Body })
@@ -45,7 +49,7 @@ public record GetClubEmailTemplate(int ClubId, ClubEmailType Type) : IQuery<GetC
                             Body = custom?.Body ?? defaultTemplate.Body,
                             DefaultSubject = defaultTemplate.Subject,
                             DefaultBody = defaultTemplate.Body,
-                            Variables = definition.GetVariables(language, club)
+                            Variables = definition.GetVariables(language, club, region.Culture(language))
                                 .Select(v => new ClubEmailVariableDto { Name = v.Name, SampleValue = v.SampleValue })
                                 .ToList()
                         };
