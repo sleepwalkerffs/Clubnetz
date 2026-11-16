@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -112,7 +112,7 @@
     <value>Zeitzone der Preise</value>
   </data>
   <data name="Settings_TimeZoneHint" xml:space="preserve">
-    <value>Die Uhrzeiten der Preise sind Ortszeiten dieser Zone</value>
+    <value>Die Uhrzeiten der Preise sind Ortszeiten der Zeitzone des Vereins. Der Support kann sie ändern.</value>
   </data>
   <data name="Settings_MaxMinutes" xml:space="preserve">
     <value>Längste buchbare Zeit</value>
@@ -145,7 +145,7 @@
     <value>Noch keine Preise</value>
   </data>
   <data name="Rules_EmptyHint" xml:space="preserve">
-    <value>Füge z. B. Mo–Fr 08:00–12:00 um € 20 pro Stunde hinzu.</value>
+    <value>Füge z. B. einen Stundenpreis für Vormittage unter der Woche hinzu.</value>
   </data>
   <data name="Rules_Note" xml:space="preserve">
     <value>Preise dürfen sich nicht überschneiden. Eine Zeit über zwei Preise wird minutengenau berechnet; die Primetime kann in den Vereinseinstellungen für gekaufte Zeiten gesperrt werden.</value>
@@ -193,7 +193,7 @@
     <value>Bestimmte Plätze</value>
   </data>
   <data name="Rule_Hint" xml:space="preserve">
-    <value>Die Uhrzeiten sind Ortszeiten des Vereins, zur vollen oder halben Stunde. 24:00 ist Mitternacht.</value>
+    <value>Die Uhrzeiten sind Ortszeiten des Vereins, zur vollen oder halben Stunde. Mitternacht als Ende ist das Ende des Tages.</value>
   </data>
   <data name="Rule_Saved" xml:space="preserve">
     <value>Preis gespeichert</value>

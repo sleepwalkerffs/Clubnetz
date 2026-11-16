@@ -24,7 +24,7 @@
             <div class="weather-tip__time">@string.Format(L["Period"], Period.From.ToLocalTime().ToString("t", CultureInfo.CurrentCulture), Period.To.ToLocalTime().ToString("t", CultureInfo.CurrentCulture))</div>
             @if (Period.TemperatureCelsius is { } temperature)
             {
-                <div>🌡️ @string.Format(L["Temperature"], temperature.ToString("0.#", CultureInfo.CurrentCulture))</div>
+                <div>🌡️ @WeatherSymbols.TemperatureWithUnit(temperature)</div>
             }
             @if (Period.PrecipitationProbability is { } probability)
             {
@@ -36,7 +36,7 @@
             }
             @if (Period.WindSpeedMs is { } wind)
             {
-                <div>💨 @string.Format(L["Wind"], WeatherSymbols.WindKmh(wind))</div>
+                <div>💨 @string.Format(L["Wind"], WeatherSymbols.Wind(wind))</div>
             }
             @if (Period.Hours > 1)
             {

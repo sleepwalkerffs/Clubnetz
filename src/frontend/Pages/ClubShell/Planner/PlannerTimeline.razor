@@ -405,6 +405,9 @@
             nameColumnWidth = NameColumnWidth,
             headerHeight = HeaderHeight,
             now = Ms(DateTimeOffset.Now),
+            // The drag labels are written in the club's time zone and clock, not the browser's (see ClubRegion)
+            timeZone = TimeZoneInfo.Local.Id,
+            hour12 = RegionalCulture.Current.UsesTwelveHourClock,
             allowPast = AllowPast,
             canSelect = CanSelect,
             busy = Busy,

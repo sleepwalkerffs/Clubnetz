@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -868,7 +868,7 @@
     <value>Gib einen Text mit höchstens {0} Zeichen ein.</value>
   </data>
   <data name="AccountingAmountInvalid" xml:space="preserve">
-    <value>Gib einen Betrag ungleich 0 und höchstens € {0} ein.</value>
+    <value>Gib einen Betrag ungleich 0 und höchstens {0} ein.</value>
   </data>
   <data name="AccountingLinesInvalid" xml:space="preserve">
     <value>Eine Einnahme oder Ausgabe braucht 1 bis {0} Zeilen.</value>
@@ -943,7 +943,7 @@
     <value>Die Bankzeile wurde schon zugeordnet oder ignoriert.</value>
   </data>
   <data name="AccountingBankTransactionAmountMismatch" xml:space="preserve">
-    <value>Die Buchung muss genau € {0} auf diesem Konto buchen.</value>
+    <value>Die Buchung muss genau {0} auf diesem Konto buchen.</value>
   </data>
   <data name="AccountingBankRuleInvalid" xml:space="preserve">
     <value>Eine Regel braucht einen Text oder eine IBAN, nach der sie sucht.</value>

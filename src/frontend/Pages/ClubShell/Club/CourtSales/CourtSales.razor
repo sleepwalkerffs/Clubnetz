@@ -99,9 +99,6 @@ else
     private static readonly SalesPeriod[] Periods = Enum.GetValues<SalesPeriod>();
     private static readonly int[] BookingMinuteOptions = [30, 60, 90, 120, 150, 180, 210, 240];
 
-    /// <summary>The time zones offered; the one saved is always added.</summary>
-    private static readonly string[] TimeZones = ["Europe/Vienna", "Europe/Berlin", "Europe/Zurich", "Europe/Rome", "Europe/Paris", "Europe/Amsterdam", "Europe/London", "UTC"];
-
     private SalesTab tab = SalesTab.Prices;
     private SalesPeriod period = SalesPeriod.Upcoming;
     private SalesFilter filter = SalesFilter.All;
@@ -113,7 +110,6 @@ else
     // The settings form
     private bool isEnabled;
     private int? playModeId;
-    private string timeZoneId = "Europe/Vienna";
     private int maxBookingMinutes = 120;
     private int maxDaysInAdvance = 14;
     private int maxUpcomingBookings = 1;
@@ -159,17 +155,17 @@ else
 
         isEnabled = settings.IsEnabled;
         playModeId = settings.PlayModeId;
-        timeZoneId = settings.TimeZoneId;
         maxBookingMinutes = settings.MaxBookingMinutes;
         maxDaysInAdvance = settings.MaxDaysInAdvance;
         maxUpcomingBookings = settings.MaxUpcomingBookings;
     }
 
     private bool IsDirty => Store.Settings is { } s
-                            && (s.IsEnabled != isEnabled || s.PlayModeId != playModeId || s.TimeZoneId != timeZoneId || s.MaxBookingMinutes != maxBookingMinutes
+                            && (s.IsEnabled != isEnabled || s.PlayModeId != playModeId || s.MaxBookingMinutes != maxBookingMinutes
                                 || s.MaxDaysInAdvance != maxDaysInAdvance || s.MaxUpcomingBookings != maxUpcomingBookings);
 
-    private IEnumerable<string> TimeZoneOptions => TimeZones.Contains(timeZoneId) ? TimeZones : TimeZones.Prepend(timeZoneId);
+    /// <summary>The prices are local times of the club's time zone (set by support); the server keeps the settings on it.</summary>
+    private string ClubTimeZoneId => ClubProfileStore.SelectedClub?.TimeZoneId ?? "Europe/Vienna";
 
     private async Task SaveSettings()
     {
@@ -177,7 +173,7 @@ else
         {
             IsEnabled = isEnabled,
             PlayModeId = playModeId,
-            TimeZoneId = timeZoneId,
+            TimeZoneId = ClubTimeZoneId,
             MaxBookingMinutes = maxBookingMinutes,
             MaxDaysInAdvance = maxDaysInAdvance,
             MaxUpcomingBookings = maxUpcomingBookings,
@@ -251,12 +247,8 @@ else
                             <MudSelectItem T="int?" Value="@mode.Id">@mode.Name</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudSelect T="string" @bind-Value="timeZoneId" Label="@L["Settings_TimeZone"]" HelperText="@L["Settings_TimeZoneHint"]" Variant="Variant.Outlined" Margin="Margin.Dense">
-                        @foreach (var zone in TimeZoneOptions)
-                        {
-                            <MudSelectItem T="string" Value="@zone">@zone</MudSelectItem>
-                        }
-                    </MudSelect>
+                    <MudTextField T="string" Value="@RegionNames.TimeZone(SharedLocale, ClubTimeZoneId)" ReadOnly="true" Label="@L["Settings_TimeZone"]"
+                                  HelperText="@L["Settings_TimeZoneHint"]" Variant="Variant.Outlined" Margin="Margin.Dense" />
                     <MudSelect T="int" @bind-Value="maxBookingMinutes" Label="@L["Settings_MaxMinutes"]" Variant="Variant.Outlined" Margin="Margin.Dense">
                         @foreach (var minutes in BookingMinuteOptions)
                         {

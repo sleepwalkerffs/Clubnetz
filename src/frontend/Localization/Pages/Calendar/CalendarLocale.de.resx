@@ -412,7 +412,7 @@
     <value>Anmeldeschluss (optional)</value>
   </data>
   <data name="DeadlineHint" xml:space="preserve">
-    <value>Ohne Uhrzeit endet sie um 23:59</value>
+    <value>Ohne Uhrzeit endet sie am Ende des Tages</value>
   </data>
   <data name="DeadlineTimeLabel" xml:space="preserve">
     <value>Uhrzeit</value>

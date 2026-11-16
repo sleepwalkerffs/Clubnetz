@@ -137,13 +137,13 @@
     <value>Afternoon Ace</value>
   </data>
   <data name="PlayerType_AfternoonAce_Description" xml:space="preserve">
-    <value>You love playing between 12:00 and 17:00.</value>
+    <value>You love playing in the afternoon, between noon and five.</value>
   </data>
   <data name="PlayerType_NightOwl" xml:space="preserve">
     <value>Night Owl</value>
   </data>
   <data name="PlayerType_NightOwl_Description" xml:space="preserve">
-    <value>Most of your matches start after 17:00.</value>
+    <value>Most of your matches start in the evening, after five.</value>
   </data>
   <data name="PlayerType_WeekendWarrior" xml:space="preserve">
     <value>Weekend Warrior</value>
