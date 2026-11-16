@@ -204,4 +204,13 @@
   <data name="Page" xml:space="preserve">
     <value>Page {0} of {1}</value>
   </data>
+  <data name="BankAccount" xml:space="preserve">
+    <value>Bank account</value>
+  </data>
+  <data name="AccountNumber" xml:space="preserve">
+    <value>Account</value>
+  </data>
+  <data name="IncomeStatementHintNoSpheres" xml:space="preserve">
+    <value>Income and expenses by category, next to the year before</value>
+  </data>
 </root>

@@ -63,6 +63,8 @@ public class MoneyAccountEntityConfiguration : IEntityTypeConfiguration<MoneyAcc
         builder.ConfigureTenantRelation();
         builder.Property(x => x.Name).HasMaxLength(MoneyAccount.MaxNameLength);
         builder.Property(x => x.Iban).HasMaxLength(34);
+        builder.Property(x => x.AccountNumber).HasMaxLength(UsBankAccount.MaxLength);
+        builder.Property(x => x.RoutingNumber).HasMaxLength(AbaRoutingNumber.Length);
         builder.HasIndex(x => new { x.ClubId, x.Name }).IsUnique();
     }
 }

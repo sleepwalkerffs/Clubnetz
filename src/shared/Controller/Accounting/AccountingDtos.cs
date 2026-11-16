@@ -1,3 +1,5 @@
+using Bookennis.Shared.Controller.Shared;
+
 namespace Bookennis.Shared.Controller.Accounting;
 
 /// <summary>Keep in sync with <c>Bookennis.Domain.Accounting.FiscalYearStatus</c>.</summary>
@@ -83,6 +85,18 @@ public record AccountingDto
 
     /// <summary>Auditor: may record the audit of a closed fiscal year.</summary>
     public required bool CanAudit { get; init; }
+
+    /// <summary>
+    /// The country of the club: a US club has bank accounts with account and routing number instead of an IBAN, no tax spheres and
+    /// US formats.
+    /// </summary>
+    public Country Country { get; init; }
+
+    /// <summary>ISO 4217 code in lower case ("eur", "usd"): the currency of every amount of the accounting.</summary>
+    public string Currency { get; init; } = "eur";
+
+    /// <summary>IANA id of the club's time zone.</summary>
+    public string TimeZoneId { get; init; } = "Europe/Vienna";
 }
 
 public record FiscalYearDto
@@ -125,6 +139,12 @@ public record MoneyAccountDto
 
     /// <summary>Without spaces.</summary>
     public string? Iban { get; init; }
+
+    /// <summary>A US bank account: its number (digits only), always with <see cref="RoutingNumber"/>.</summary>
+    public string? AccountNumber { get; init; }
+
+    /// <summary>The 9-digit ABA routing number of <see cref="AccountNumber"/>.</summary>
+    public string? RoutingNumber { get; init; }
 
     public required bool IsArchived { get; init; }
     public required int SortOrder { get; init; }
@@ -170,6 +190,11 @@ public record SaveMoneyAccountModel
     public string? Name { get; init; }
     public MoneyAccountKind Kind { get; init; }
     public string? Iban { get; init; }
+
+    /// <summary>A US bank account: 4-17 digits, with <see cref="RoutingNumber"/> (9 digits, ABA check digit).</summary>
+    public string? AccountNumber { get; init; }
+
+    public string? RoutingNumber { get; init; }
     public int SortOrder { get; init; }
     public bool IsArchived { get; init; }
 }

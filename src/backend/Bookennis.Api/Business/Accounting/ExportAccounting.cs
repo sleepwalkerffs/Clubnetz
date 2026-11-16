@@ -4,6 +4,7 @@ using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Bookennis.Domain.Accounting;
 using Bookennis.Shared.Controller.Accounting;
+using Bookennis.Shared.Utils;
 using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using AccountingCategoryKind = Bookennis.Domain.Accounting.AccountingCategoryKind;
@@ -42,7 +43,7 @@ public record ExportAccounting(int ClubId, int FiscalYearId) : IQuery<ExportAcco
                 await mediator.Send(new GetAccountingSummary(request.ClubId, year.Id), cancellationToken),
                 await mediator.Send(new GetIncomeStatement(request.ClubId, year.Id), cancellationToken));
 
-            var exporter = new AccountingExcelExporter(languageAccessor.GetCultureInfo());
+            var exporter = new AccountingExcelExporter(languageAccessor.GetCultureInfo(), await context.GetAccountingRegion(request.ClubId, cancellationToken));
             var fileYear = year.Label.Replace('/', '-');
             return new ExportAccountingResult(exporter.Export(data), $"{exporter.FileName} {fileYear}.xlsx");
         }
@@ -66,9 +67,10 @@ public record AccountingExportData(
 
 /// <summary>
 /// Three sheets: the journal (one row per line, transfers in one row with their own amount column, cancelled entries struck through), the income/expense statement by tax
-/// sphere and the overview of the money accounts. Amounts are numbers, so the sheets can be summed up.
+/// sphere (a US club has none: one list) and the overview of the money accounts. Amounts are numbers (in the currency of the club, named in the headers), so the sheets
+/// can be summed up; dates in the formats of the club's country.
 /// </summary>
-public class AccountingExcelExporter(CultureInfo culture)
+public class AccountingExcelExporter(CultureInfo culture, AccountingRegion region)
 {
     private static readonly ResourceManager Texts = new("Bookennis.Api.Resources.Localization.Export.Accounting", typeof(AccountingExcelExporter).Assembly);
     private static readonly XLColor HeaderColor = XLColor.FromHtml("#E2E8F0");
@@ -76,6 +78,13 @@ public class AccountingExcelExporter(CultureInfo culture)
     private const string AmountFormat = "#,##0.00";
 
     public string FileName => T("FileName");
+
+    private readonly RegionalCulture format = region.Culture(culture.TwoLetterISOLanguageName == "de");
+
+    /// <summary>"Income (USD)": the amounts are plain numbers, the header says what they are (euros, as always, are not named).</summary>
+    private string AmountHeader(string key) => WithCurrency(T(key));
+
+    private string WithCurrency(string header) => region.IsEuro ? header : $"{header} ({region.Currency.ToUpperInvariant()})";
 
     public byte[] Export(AccountingExportData data)
     {
@@ -93,7 +102,7 @@ public class AccountingExcelExporter(CultureInfo culture)
     private void AddJournal(XLWorkbook workbook, AccountingExportData data)
     {
         var sheet = workbook.Worksheets.Add(SheetName("SheetJournal"));
-        var headers = new List<string> { T("Number"), T("Date"), T("Text"), T("Counterparty"), T("MoneyAccount"), T("Category"), T("CategoryNumber"), T("CostCenter"), T("Income"), T("Expense"), T("TransferAmount"), T("Receipts"), T("Status") };
+        var headers = new List<string> { T("Number"), T("Date"), T("Text"), T("Counterparty"), T("MoneyAccount"), T("Category"), T("CategoryNumber"), T("CostCenter"), AmountHeader("Income"), AmountHeader("Expense"), AmountHeader("TransferAmount"), T("Receipts"), T("Status") };
         WriteHeader(sheet, headers);
 
         var row = 1;
@@ -134,7 +143,7 @@ public class AccountingExcelExporter(CultureInfo culture)
     {
         sheet.Cell(row, 1).Value = entry.Number;
         sheet.Cell(row, 2).Value = entry.Date.ToDateTime(TimeOnly.MinValue);
-        sheet.Cell(row, 2).Style.DateFormat.Format = culture.DateTimeFormat.ShortDatePattern;
+        sheet.Cell(row, 2).Style.DateFormat.Format = format.DateTimeFormat.ShortDatePattern;
         sheet.Cell(row, 3).Value = entry.Text;
         sheet.Cell(row, 4).Value = entry.CounterpartyName ?? "";
         sheet.Cell(row, 5).Value = data.Accounts[entry.MoneyAccountId].Name;
@@ -149,21 +158,33 @@ public class AccountingExcelExporter(CultureInfo culture)
         var statement = data.IncomeStatement;
         var sheet = workbook.Worksheets.Add(SheetName("SheetIncomeStatement"));
         var hasPrevious = statement.PreviousFiscalYearId is not null;
-        var headers = new List<string> { T("CategoryNumber"), T("Category"), data.Year.Label };
+        var headers = new List<string> { T("CategoryNumber"), T("Category"), WithCurrency(data.Year.Label) };
         if (hasPrevious)
             headers.Add(T("PreviousYear"));
         WriteHeader(sheet, headers);
 
+        // A US club has no tax spheres: one list of income and expenses, without the result of each sphere
+        IEnumerable<(global::Bookennis.Shared.Controller.Accounting.IncomeStatementSphereDto? Sphere, List<global::Bookennis.Shared.Controller.Accounting.IncomeStatementCategoryDto> Lines)> groups = region.IsUnitedStates
+            ? [(null, statement.Spheres.SelectMany(s => s.Categories)
+                .OrderBy(c => data.Categories[c.CategoryId].Number is null).ThenBy(c => data.Categories[c.CategoryId].Number, StringComparer.Ordinal)
+                .ThenBy(c => data.Categories[c.CategoryId].Name, StringComparer.CurrentCulture).ToList())]
+            : statement.Spheres.Select(s => ((global::Bookennis.Shared.Controller.Accounting.IncomeStatementSphereDto?)s, s.Categories));
+
         var row = 1;
-        foreach (var sphere in statement.Spheres)
+        foreach (var (sphere, lines) in groups)
         {
             row += 2;
-            sheet.Cell(row, 1).Value = T($"Sphere_{sphere.TaxSphere}");
-            sheet.Cell(row, 1).Style.Font.Bold = true;
+            if (sphere is not null)
+            {
+                sheet.Cell(row, 1).Value = T($"Sphere_{sphere.TaxSphere}");
+                sheet.Cell(row, 1).Style.Font.Bold = true;
+            }
+            else
+                row--;
 
             foreach (var kind in new[] { global::Bookennis.Shared.Controller.Accounting.AccountingCategoryKind.Income, global::Bookennis.Shared.Controller.Accounting.AccountingCategoryKind.Expense })
             {
-                foreach (var line in sphere.Categories.Where(c => c.Kind == kind))
+                foreach (var line in lines.Where(c => c.Kind == kind))
                 {
                     row++;
                     var category = data.Categories[line.CategoryId];
@@ -174,6 +195,9 @@ public class AccountingExcelExporter(CultureInfo culture)
                         WriteAmount(sheet.Cell(row, 4), line.PreviousAmountCents ?? 0);
                 }
             }
+
+            if (sphere is null)
+                continue;
 
             row++;
             sheet.Cell(row, 2).Value = T("SphereResult");
@@ -206,7 +230,11 @@ public class AccountingExcelExporter(CultureInfo culture)
     private void AddMoneyAccounts(XLWorkbook workbook, AccountingExportData data)
     {
         var sheet = workbook.Worksheets.Add(SheetName("SheetMoneyAccounts"));
-        var headers = new List<string> { T("MoneyAccount"), T("Iban"), T("Opening"), T("Income"), T("Expense"), T("TransfersIn"), T("TransfersOut"), T("Closing") };
+        var headers = new List<string>
+        {
+            T("MoneyAccount"), T(region.IsUnitedStates ? "BankAccount" : "Iban"), AmountHeader("Opening"), AmountHeader("Income"), AmountHeader("Expense"),
+            AmountHeader("TransfersIn"), AmountHeader("TransfersOut"), AmountHeader("Closing"),
+        };
         WriteHeader(sheet, headers);
 
         var row = 1;
@@ -215,7 +243,8 @@ public class AccountingExcelExporter(CultureInfo culture)
             row++;
             var account = data.Accounts[balance.MoneyAccountId];
             sheet.Cell(row, 1).Value = account.Name;
-            sheet.Cell(row, 2).Value = account.Iban is { } iban ? IbanNumber.Format(iban) : "";
+            sheet.Cell(row, 2).Value = account.Iban is { } iban ? IbanNumber.Format(iban)
+                : account.AccountNumber is { } number ? $"{UsBankAccount.Masked(number)} · {account.RoutingNumber}" : "";
             WriteAmount(sheet.Cell(row, 3), balance.OpeningCents);
             WriteAmount(sheet.Cell(row, 4), balance.IncomeCents);
             WriteAmount(sheet.Cell(row, 5), balance.ExpenseCents);

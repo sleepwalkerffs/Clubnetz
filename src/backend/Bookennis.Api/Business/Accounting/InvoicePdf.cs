@@ -1,41 +1,55 @@
 using System.Globalization;
 using Bookennis.Domain.Accounting;
+using Bookennis.Shared.Utils;
 using QRCoder;
 using SkiaSharp;
 using static Bookennis.Api.Business.Accounting.PdfKit;
 
 namespace Bookennis.Api.Business.Accounting;
 
-/// <summary>What an invoice PDF shows besides the invoice: the club and where to pay.</summary>
-public record InvoicePdfData(Invoice Invoice, InvoiceSettings Settings, string ClubName, string Iban);
+/// <summary>
+/// What an invoice PDF shows besides the invoice: the club, the money account to pay to (its IBAN, or a US account and routing number) and
+/// where the club is (formats, currency, paper).
+/// </summary>
+public record InvoicePdfData(Invoice Invoice, InvoiceSettings Settings, string ClubName, MoneyAccount Account, AccountingRegion Region)
+{
+    /// <summary>The formats of the club's country in the language of the invoice.</summary>
+    public RegionalCulture Culture => Region.Culture(Invoice.German);
+
+    /// <summary>The EPC QR code is a SEPA credit transfer: euros to an IBAN.</summary>
+    public bool HasQrCode => Region.IsEuro && Account.Iban is not null;
+}
 
 /// <summary>
-/// Draws an invoice as an A4 PDF with SkiaSharp: the club (address, ZVR), the recipient, the lines, the total, the payment details with an
-/// EPC QR code ("Zahlen mit Code") and the footer. Drafts and cancelled invoices are marked across the page. The font (Lato) is embedded,
-/// so the PDF looks the same on every server.
+/// Draws an invoice as a PDF with SkiaSharp (A4, US Letter for US clubs): the club (address, ZVR or EIN), the recipient, the lines, the total,
+/// the payment details (with an EPC QR code, "Zahlen mit Code", for euros to an IBAN) and the footer. Drafts and cancelled invoices are marked
+/// across the page. The font (Lato) is embedded, so the PDF looks the same on every server.
 /// </summary>
 public static class InvoicePdf
 {
     private sealed record Texts(
         string Invoice, string Number, string Date, string Due, string ServicePeriod, string Pos, string Description, string Quantity, string UnitPrice,
-        string Amount, string Total, string PayTitle, string PayText, string Reference, string QrCaption, string Draft, string Cancelled, string Paid, string Page, string Zvr);
+        string Amount, string Total, string PayTitle, string PayText, string Reference, string QrCaption, string Draft, string Cancelled, string Paid, string Page, string Zvr,
+        string Ein, string AccountNumber, string RoutingNumber, string Beneficiary);
 
     private static readonly Texts German = new(
         "Rechnung", "Rechnungsnummer", "Rechnungsdatum", "Zahlbar bis", "Leistungszeitraum", "Pos.", "Beschreibung", "Menge", "Einzelpreis",
         "Betrag", "Gesamtbetrag", "Zahlung", "Bitte überweise den Gesamtbetrag bis {0} auf folgendes Konto:", "Verwendungszweck",
-        "Zahlen mit Code: mit der Banking-App scannen", "ENTWURF", "STORNIERT", "BEZAHLT", "Seite {0} von {1}", "ZVR-Zahl");
+        "Zahlen mit Code: mit der Banking-App scannen", "ENTWURF", "STORNIERT", "BEZAHLT", "Seite {0} von {1}", "ZVR-Zahl",
+        "EIN", "Kontonummer", "Routing Number", "Empfänger");
 
     private static readonly Texts English = new(
         "Invoice", "Invoice number", "Invoice date", "Due", "Service period", "No.", "Description", "Qty", "Unit price",
         "Amount", "Total", "Payment", "Please transfer the total by {0} to this account:", "Reference",
-        "Scan with your banking app to pay", "DRAFT", "CANCELLED", "PAID", "Page {0} of {1}", "ZVR");
+        "Scan with your banking app to pay", "DRAFT", "CANCELLED", "PAID", "Page {0} of {1}", "ZVR",
+        "EIN", "Account number", "Routing number", "Beneficiary");
 
     public static byte[] Render(InvoicePdfData data)
     {
         var invoice = data.Invoice;
         var texts = invoice.German ? German : English;
-        // Austrian formats in both languages: the amounts are euros (en-GB would print pounds)
-        var culture = CultureInfo.GetCultureInfo(invoice.German ? "de-AT" : "en-AT");
+        // The formats of the club's country in the language of the invoice: "€ 1.234,50" / "$1,234.50", "16.11.2026" / "Nov 16, 2026"
+        var culture = data.Culture;
 
         using var stream = new MemoryStream();
         var metadata = Metadata($"{texts.Invoice} {invoice.Number ?? texts.Draft}", data.ClubName);
@@ -48,24 +62,27 @@ public static class InvoicePdf
         return stream.ToArray();
     }
 
-    private static int Draw(SKDocument? document, InvoicePdfData data, Texts texts, CultureInfo culture, int pageCount)
+    private static int Draw(SKDocument? document, InvoicePdfData data, Texts texts, RegionalCulture culture, int pageCount)
     {
         var invoice = data.Invoice;
         var settings = data.Settings;
+        var paper = PdfPaper.For(data.Region.IsUnitedStates);
+        var (pageWidth, pageHeight, right) = (paper.Width, paper.Height, paper.Right);
         var page = 1;
-        var bottomLimit = PageHeight - FooterHeight(settings) - 40;
+        var bottomLimit = pageHeight - FooterHeight(settings, paper) - 40;
         using var recorder = document is null ? new SKPictureRecorder() : null;
-        var canvas = document?.BeginPage(PageWidth, PageHeight) ?? recorder!.BeginRecording(new SKRect(0, 0, PageWidth, PageHeight));
+        var canvas = document?.BeginPage(pageWidth, pageHeight) ?? recorder!.BeginRecording(new SKRect(0, 0, pageWidth, pageHeight));
 
-        string Money(long cents) => (cents / 100m).ToString("C", culture);
-        string Day(DateOnly date) => date.ToString(invoice.German ? "dd.MM.yyyy" : "d MMM yyyy", culture);
+        string Money(long cents) => culture.Money(cents);
+        // Austria keeps "16.11.2026" in German and "16 Nov 2026" in English; the US "Nov 16, 2026"
+        string Day(DateOnly date) => date.ToString(invoice.German && !culture.IsUnitedStates ? "dd.MM.yyyy" : culture.DayMonthNameYearPattern, culture);
 
         // ---------- head: the club on the left, the invoice details on the right ----------
         var y = Margin + 10;
         Text(canvas, data.ClubName, Margin, y, 16, bold: true, Accent);
         y += 18;
         // The club on the left half: the invoice details take the right one
-        const float headWidth = (Right - Margin) / 2 - 10;
+        var headWidth = (right - Margin) / 2 - 10;
         foreach (var line in settings.Address.Split('\n').Concat(settings.Contact is { } contact ? [contact] : []).SelectMany(l => Wrap(l, headWidth, 9, bold: false)))
         {
             Text(canvas, line, Margin, y, 9, color: Muted);
@@ -73,16 +90,16 @@ public static class InvoicePdf
         }
 
         var detailY = Margin + 10;
-        Text(canvas, texts.Invoice.ToUpper(culture), Right, detailY, 20, bold: true, Ink, SKTextAlign.Right);
+        Text(canvas, texts.Invoice.ToUpper(culture), right, detailY, 20, bold: true, Ink, SKTextAlign.Right);
         detailY += 22;
         void Detail(string label, string value)
         {
             // A long value (service period) wraps under itself instead of running into its label
             var lines = Wrap(value, 100, 9, bold: true);
-            Text(canvas, label, Right - 110, detailY, 9, color: Muted, align: SKTextAlign.Right);
+            Text(canvas, label, right - 110, detailY, 9, color: Muted, align: SKTextAlign.Right);
             foreach (var line in lines)
             {
-                Text(canvas, line, Right, detailY, 9, bold: true, Ink, SKTextAlign.Right);
+                Text(canvas, line, right, detailY, 9, bold: true, Ink, SKTextAlign.Right);
                 detailY += 13;
             }
         }
@@ -91,8 +108,9 @@ public static class InvoicePdf
         Detail(texts.Due, Day(invoice.DueDate));
         if (invoice.ServicePeriod is { } period)
             Detail(texts.ServicePeriod, period);
+        // The register number of the club: the ZVR number in Austria, the EIN (Employer Identification Number) in the United States
         if (settings.ZvrNumber is { } zvr)
-            Detail(texts.Zvr, zvr);
+            Detail(data.Region.IsUnitedStates ? texts.Ein : texts.Zvr, zvr);
 
         // ---------- recipient ----------
         y = Math.Max(y, detailY) + 28;
@@ -111,7 +129,7 @@ public static class InvoicePdf
         y += 22;
         if (invoice.Subject is { } subject)
         {
-            foreach (var line in Wrap(subject, Right - Margin, 13, bold: true))
+            foreach (var line in Wrap(subject, right - Margin, 13, bold: true))
             {
                 Text(canvas, line, Margin, y, 13, bold: true, Ink);
                 y += 18;
@@ -120,7 +138,7 @@ public static class InvoicePdf
         var notesNeedPage = false;
         if (invoice.Notes is { } notes)
         {
-            foreach (var line in notes.Split('\n').SelectMany(p => Wrap(p, Right - Margin, 10, bold: false)))
+            foreach (var line in notes.Split('\n').SelectMany(p => Wrap(p, right - Margin, 10, bold: false)))
             {
                 if (y > bottomLimit)
                 {
@@ -136,9 +154,9 @@ public static class InvoicePdf
         // ---------- lines ----------
         const float colPos = Margin;
         const float colText = Margin + 30;
-        const float colQty = Right - 190;
-        const float colUnit = Right - 95;
-        const float colAmount = Right;
+        var colQty = right - 190;
+        var colUnit = right - 95;
+        var colAmount = right;
         void Header()
         {
             y += 8;
@@ -148,20 +166,20 @@ public static class InvoicePdf
             Text(canvas, texts.UnitPrice, colUnit, y, 8.5f, bold: true, Muted, SKTextAlign.Right);
             Text(canvas, texts.Amount, colAmount, y, 8.5f, bold: true, Muted, SKTextAlign.Right);
             y += 6;
-            Rule(canvas, y);
+            Rule(canvas, y, Margin, right);
             y += 14;
         }
 
         void NewPage(bool header = true)
         {
-            Footer(canvas, settings, texts, page, pageCount, invoice);
-            Stamp(canvas, invoice, texts);
+            Footer(canvas, settings, texts, page, pageCount, paper);
+            Stamp(canvas, invoice, texts, paper);
             if (document is not null)
                 document.EndPage();
             else
                 recorder!.EndRecording().Dispose();
             page++;
-            canvas = document?.BeginPage(PageWidth, PageHeight) ?? recorder!.BeginRecording(new SKRect(0, 0, PageWidth, PageHeight));
+            canvas = document?.BeginPage(pageWidth, pageHeight) ?? recorder!.BeginRecording(new SKRect(0, 0, pageWidth, pageHeight));
             y = Margin + 10;
             Text(canvas, $"{texts.Invoice} {invoice.Number ?? ""}", Margin, y, 10, bold: true, Muted);
             y += 10;
@@ -194,7 +212,7 @@ public static class InvoicePdf
             y = lineY + 5;
         }
 
-        Rule(canvas, y - 4);
+        Rule(canvas, y - 4, Margin, right);
         y += 12;
         Text(canvas, texts.Total, colUnit, y, 12, bold: true, Ink, SKTextAlign.Right);
         Text(canvas, Money(invoice.TotalCents), colAmount, y, 12, bold: true, Ink, SKTextAlign.Right);
@@ -206,13 +224,13 @@ public static class InvoicePdf
             NewPage(header: false);
 
         var boxTop = y - 14;
-        Box(canvas, new SKRect(Margin, boxTop, Right, boxTop + qrSize + 24), Panel);
+        Box(canvas, new SKRect(Margin, boxTop, right, boxTop + qrSize + 24), Panel);
 
         var textX = Margin + 14;
         y += 2;
         Text(canvas, texts.PayTitle, textX, y, 11, bold: true, Ink);
         y += 16;
-        foreach (var part in Wrap(string.Format(culture, texts.PayText, Day(invoice.DueDate)), Right - Margin - qrSize - 50, 9.5f, bold: false))
+        foreach (var part in Wrap(string.Format(culture, texts.PayText, Day(invoice.DueDate)), right - Margin - qrSize - 50, 9.5f, bold: false))
         {
             Text(canvas, part, textX, y, 9.5f, color: Ink);
             y += 13;
@@ -224,21 +242,32 @@ public static class InvoicePdf
             Text(canvas, value, textX + 95, y, 9.5f, bold: true, Ink);
             y += 13;
         }
-        PayLine(invoice.German ? "Empfänger" : "Beneficiary", data.ClubName);
-        PayLine("IBAN", FormatIban(data.Iban));
-        if (settings.Bic is { } bic)
-            PayLine("BIC", bic);
+        PayLine(texts.Beneficiary, data.ClubName);
+        var account = data.Account;
+        if (account.Iban is { } iban)
+        {
+            PayLine("IBAN", IbanNumber.Format(iban));
+            if (settings.Bic is { } bic)
+                PayLine("BIC", bic);
+        }
+        else
+        {
+            // A US bank account: what an ACH transfer or a wire needs
+            PayLine(texts.AccountNumber, account.AccountNumber ?? "—");
+            PayLine(texts.RoutingNumber, account.RoutingNumber ?? "—");
+        }
         PayLine(texts.Reference, invoice.Number ?? "—");
 
-        if (invoice.Number is { } number && invoice.Status == InvoiceStatus.Issued)
+        // The EPC QR code is a SEPA credit transfer in euros: no code for other currencies or a US account
+        if (data.HasQrCode && invoice.Number is { } number && invoice.Status == InvoiceStatus.Issued)
         {
-            var payload = EpcQrPayload.For(data.ClubName, data.Iban, settings.Bic, invoice.TotalCents, number);
-            DrawQr(canvas, payload, Right - qrSize - 12, boxTop + 8, qrSize);
-            Text(canvas, texts.QrCaption, Right - 12, boxTop + qrSize + 18, 6.5f, color: Muted, align: SKTextAlign.Right);
+            var payload = EpcQrPayload.For(data.ClubName, account.Iban!, settings.Bic, invoice.TotalCents, number);
+            DrawQr(canvas, payload, right - qrSize - 12, boxTop + 8, qrSize);
+            Text(canvas, texts.QrCaption, right - 12, boxTop + qrSize + 18, 6.5f, color: Muted, align: SKTextAlign.Right);
         }
 
-        Footer(canvas, settings, texts, page, pageCount, invoice);
-        Stamp(canvas, invoice, texts);
+        Footer(canvas, settings, texts, page, pageCount, paper);
+        Stamp(canvas, invoice, texts, paper);
         if (document is not null)
         {
             document.EndPage();
@@ -250,27 +279,27 @@ public static class InvoicePdf
         return page;
     }
 
-    private static List<string> FooterLines(InvoiceSettings settings)
-        => settings.Footer is { } footer ? footer.Split('\n').SelectMany(p => Wrap(p, Right - Margin, 8, bold: false)).ToList() : [];
+    private static List<string> FooterLines(InvoiceSettings settings, PdfPaper paper)
+        => settings.Footer is { } footer ? footer.Split('\n').SelectMany(p => Wrap(p, paper.Right - Margin, 8, bold: false)).ToList() : [];
 
     /// <summary>The footer grows upwards from above the page number: a long one takes room from the content, never runs off the page.</summary>
-    private static float FooterHeight(InvoiceSettings settings) => Math.Max(1, FooterLines(settings).Count) * 10 + 60;
+    private static float FooterHeight(InvoiceSettings settings, PdfPaper paper) => Math.Max(1, FooterLines(settings, paper).Count) * 10 + 60;
 
-    private static void Footer(SKCanvas canvas, InvoiceSettings settings, Texts texts, int page, int pageCount, Invoice invoice)
+    private static void Footer(SKCanvas canvas, InvoiceSettings settings, Texts texts, int page, int pageCount, PdfPaper paper)
     {
-        var y = PageHeight - FooterHeight(settings) + 10;
-        Rule(canvas, y - 12);
-        foreach (var line in FooterLines(settings))
+        var y = paper.Height - FooterHeight(settings, paper) + 10;
+        Rule(canvas, y - 12, Margin, paper.Right);
+        foreach (var line in FooterLines(settings, paper))
         {
             Text(canvas, line, Margin, y, 8, color: Muted);
             y += 10;
         }
         if (pageCount > 1)
-            Text(canvas, string.Format(CultureInfo.InvariantCulture, texts.Page, page, pageCount), Right, PageHeight - 30, 8, color: Muted, align: SKTextAlign.Right);
+            Text(canvas, string.Format(CultureInfo.InvariantCulture, texts.Page, page, pageCount), paper.Right, paper.Height - 30, 8, color: Muted, align: SKTextAlign.Right);
     }
 
     /// <summary>Drafts, cancelled and paid invoices say so across the page: a draft is never mistaken for the real one.</summary>
-    private static void Stamp(SKCanvas canvas, Invoice invoice, Texts texts)
+    private static void Stamp(SKCanvas canvas, Invoice invoice, Texts texts, PdfPaper paper)
     {
         var (text, color) = invoice.Status switch
         {
@@ -283,8 +312,8 @@ public static class InvoicePdf
             return;
 
         canvas.Save();
-        canvas.RotateDegrees(-30, PageWidth / 2, PageHeight / 2);
-        Text(canvas, text, PageWidth / 2, PageHeight / 2 + 30, 90, bold: true, color, SKTextAlign.Center);
+        canvas.RotateDegrees(-30, paper.Width / 2, paper.Height / 2);
+        Text(canvas, text, paper.Width / 2, paper.Height / 2 + 30, 90, bold: true, color, SKTextAlign.Center);
         canvas.Restore();
     }
 
@@ -305,11 +334,5 @@ public static class InvoicePdf
                     canvas.DrawRect(new SKRect(x + column * cell, y + row * cell, x + (column + 1) * cell + 0.2f, y + (row + 1) * cell + 0.2f), black);
             }
         }
-    }
-
-    private static string FormatIban(string iban)
-    {
-        var compact = iban.Replace(" ", "", StringComparison.Ordinal);
-        return string.Join(' ', Enumerable.Range(0, (compact.Length + 3) / 4).Select(i => compact.Substring(i * 4, Math.Min(4, compact.Length - i * 4))));
     }
 }

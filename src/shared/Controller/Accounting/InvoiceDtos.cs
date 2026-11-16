@@ -16,7 +16,10 @@ public record InvoiceSettingsDto
     public required bool IsSetUp { get; init; }
 
     public string? Address { get; init; }
+
+    /// <summary>The ZVR number (Austrian register of associations); for a US club its EIN.</summary>
     public string? ZvrNumber { get; init; }
+
     public string? Contact { get; init; }
     public int? MoneyAccountId { get; init; }
     public string? Bic { get; init; }

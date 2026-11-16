@@ -1008,4 +1008,13 @@
   <data name="ClubUnknownCountry" xml:space="preserve">
     <value>This country is not supported.</value>
   </data>
+  <data name="AccountingRoutingNumberInvalid" xml:space="preserve">
+    <value>This is not a valid routing number: it has 9 digits, and a US bank account needs both its account number and its routing number.</value>
+  </data>
+  <data name="AccountingAccountNumberInvalid" xml:space="preserve">
+    <value>The account number has {0} to {1} digits, and a US bank account needs both its account number and its routing number.</value>
+  </data>
+  <data name="AccountingInvoiceAccountWithoutBankDetails" xml:space="preserve">
+    <value>The bank account for invoices needs its account number and routing number (or an IBAN).</value>
+  </data>
 </root>

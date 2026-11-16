@@ -41,7 +41,7 @@
                     <MudTextField T="string" @bind-Value="current.Text" Label="@L["Invoice_LineText"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200" Immediate="true" Class="invoice-line__text" />
                     <MudNumericField T="decimal" @bind-Value="current.Quantity" Label="@L["Invoice_Quantity"]" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0.01m" Format="0.##" HideSpinButtons="true" Class="invoice-line__qty" />
                     <MudNumericField T="decimal" @bind-Value="current.UnitPrice" Label="@L["Invoice_UnitPrice"]" Variant="Variant.Outlined" Margin="Margin.Dense" Format="N2"
-                                     Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true" Class="invoice-line__price" />
+                                     Adornment="Adornment.Start" AdornmentText="@AccountingHelpers.CurrencySymbol" HideSpinButtons="true" Class="invoice-line__price" />
                     <div class="invoice-line__category">
                         <MudSelect T="int?" @bind-Value="current.CategoryId" Label="@L["Category"]" Variant="Variant.Outlined" Margin="Margin.Dense">
                             @foreach (var category in Categories(current.CategoryId))

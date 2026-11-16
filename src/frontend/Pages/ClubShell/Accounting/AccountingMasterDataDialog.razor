@@ -14,7 +14,7 @@
         @switch (Kind)
         {
             case DataKind.MoneyAccount:
-                <MudTextField T="string" @bind-Value="name" Label="@L["Name"]" Placeholder="@L["Accounts_NamePlaceholder"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="60" Immediate="true" />
+                <MudTextField T="string" @bind-Value="name" Label="@L["Name"]" Placeholder="@L[AccountingHelpers.Regional("Accounts_NamePlaceholder")]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="60" Immediate="true" />
                 <MudSelect T="MoneyAccountKind" @bind-Value="accountKind" Label="@L["Accounts_Kind"]" Variant="Variant.Outlined" Margin="Margin.Dense">
                     @foreach (var value in Enum.GetValues<MoneyAccountKind>())
                     {
@@ -23,7 +23,20 @@
                 </MudSelect>
                 @if (accountKind == MoneyAccountKind.Bank)
                 {
-                    <MudTextField T="string" @bind-Value="iban" Label="IBAN" Placeholder="AT61 1904 3002 3457 3201" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="42" />
+                    @* A US bank account has an account number and an ABA routing number; an account in Europe an IBAN *@
+                    @if (UsBankDetails)
+                    {
+                        <div class="master-form__row">
+                            <MudTextField T="string" @bind-Value="accountNumber" Label="@L["Accounts_AccountNumber"]" HelperText="@L["Accounts_AccountNumberHint"]" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                          MaxLength="25" InputMode="InputMode.numeric" />
+                            <MudTextField T="string" @bind-Value="routingNumber" Label="@L["Accounts_RoutingNumber"]" HelperText="@L["Accounts_RoutingNumberHint"]" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                          MaxLength="11" InputMode="InputMode.numeric" />
+                        </div>
+                    }
+                    @if (!AccountingHelpers.IsUnitedStates || iban is not null)
+                    {
+                        <MudTextField T="string" @bind-Value="iban" Label="IBAN" Placeholder="@(AccountingHelpers.IsUnitedStates ? null : "AT61 1904 3002 3457 3201")" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="42" />
+                    }
                 }
                 <MudNumericField T="int" @bind-Value="sortOrder" Label="@L["SortOrder"]" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="99" />
                 break;
@@ -40,12 +53,16 @@
                     <MudTextField T="string" @bind-Value="number" Label="@L["Number"]" Placeholder="4000" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="10" />
                     <MudTextField T="string" @bind-Value="name" Label="@L["Name"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="80" Immediate="true" />
                 </div>
-                <MudSelect T="TaxSphere" @bind-Value="sphere" Label="@L["Categories_Sphere"]" HelperText="@L[$"SphereHint_{sphere}"]" Variant="Variant.Outlined" Margin="Margin.Dense">
-                    @foreach (var value in Enum.GetValues<TaxSphere>())
-                    {
-                        <MudSelectItem T="TaxSphere" Value="@value">@L[$"Sphere_{value}"]</MudSelectItem>
-                    }
-                </MudSelect>
+                @* The tax spheres of §§ 34 ff. BAO: a US club has none (its categories stay in the non-profit sphere) *@
+                @if (!AccountingHelpers.IsUnitedStates)
+                {
+                    <MudSelect T="TaxSphere" @bind-Value="sphere" Label="@L["Categories_Sphere"]" HelperText="@L[$"SphereHint_{sphere}"]" Variant="Variant.Outlined" Margin="Margin.Dense">
+                        @foreach (var value in Enum.GetValues<TaxSphere>())
+                        {
+                            <MudSelectItem T="TaxSphere" Value="@value">@L[$"Sphere_{value}"]</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
                 break;
 
             default:
@@ -92,6 +109,8 @@
     private bool archived;
     private MoneyAccountKind accountKind = MoneyAccountKind.Bank;
     private string? iban;
+    private string? accountNumber;
+    private string? routingNumber;
     private int sortOrder;
     private AccountingCategoryKind categoryKind;
     private string? number;
@@ -103,6 +122,9 @@
         DataKind.Category => Category?.Id,
         _ => CostCenter?.Id,
     };
+
+    /// <summary>The fields of a US bank account: for a US club, or an account that has them already.</summary>
+    private bool UsBankDetails => AccountingHelpers.IsUnitedStates || Account?.AccountNumber is not null;
 
     private bool IsUsed => Kind switch
     {
@@ -119,6 +141,8 @@
             archived = account.IsArchived;
             accountKind = account.Kind;
             iban = account.Iban is { } value ? AccountingHelpers.Iban(value) : null;
+            accountNumber = account.AccountNumber;
+            routingNumber = account.RoutingNumber;
             sortOrder = account.SortOrder;
         }
         else if (Kind == DataKind.MoneyAccount)
@@ -146,7 +170,10 @@
     {
         HttpResult result = Kind switch
         {
-            DataKind.MoneyAccount => await Store.SaveMoneyAccount(Account?.Id, new SaveMoneyAccountModel { Name = name, Kind = accountKind, Iban = iban, SortOrder = sortOrder, IsArchived = archived }),
+            DataKind.MoneyAccount => await Store.SaveMoneyAccount(Account?.Id, new SaveMoneyAccountModel
+            {
+                Name = name, Kind = accountKind, Iban = iban, AccountNumber = accountNumber, RoutingNumber = routingNumber, SortOrder = sortOrder, IsArchived = archived,
+            }),
             DataKind.Category => await Store.SaveCategory(Category?.Id, new SaveAccountingCategoryModel { Kind = categoryKind, Number = number, Name = name, TaxSphere = sphere, IsArchived = archived }),
             _ => await Store.SaveCostCenter(CostCenter?.Id, new SaveCostCenterModel { Name = name, IsArchived = archived }),
         };

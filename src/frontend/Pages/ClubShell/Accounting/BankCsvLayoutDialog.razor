@@ -138,7 +138,8 @@
         return Task.FromResult<DialogResult?>(DialogResult.Ok(new CsvColumnsDto
         {
             SkipRows = skipRows,
-            Delimiter = Columns?.Delimiter ?? ";",
+            // US banks export with commas, Austrian ones with semicolons
+            Delimiter = Columns?.Delimiter ?? (AccountingHelpers.IsUnitedStates ? "," : ";"),
             BookingDate = bookingDate!.Value,
             ValueDate = valueDate,
             Amount = splitAmount ? null : amount,

@@ -18,6 +18,7 @@ public record GetAnnualReport(int ClubId, int FiscalYearId, DateTimeOffset Now) 
             var statement = await mediator.Send(new GetIncomeStatement(request.ClubId, year.Id), cancellationToken);
             var summary = await mediator.Send(new GetAccountingSummary(request.ClubId, year.Id), cancellationToken);
             var names = await context.MemberNames(request.ClubId, [year.AuditedByMemberId], cancellationToken);
+            var region = await context.GetAccountingRegion(request.ClubId, cancellationToken);
 
             var data = new AnnualReportPdfData(
                 await context.Clubs.Where(c => c.Id == request.ClubId).Select(c => c.Name).SingleAsync(cancellationToken),
@@ -28,9 +29,9 @@ public record GetAnnualReport(int ClubId, int FiscalYearId, DateTimeOffset Now) 
                 summary,
                 await context.AccountingCategories.AsNoTracking().Where(c => c.ClubId == request.ClubId).ToDictionaryAsync(c => c.Id, cancellationToken),
                 await context.MoneyAccounts.AsNoTracking().Where(a => a.ClubId == request.ClubId).ToDictionaryAsync(a => a.Id, cancellationToken),
-                AccountingQueries.Today(request.Now));
+                region.Today(request.Now));
 
-            var pdf = new AnnualReportPdf(languageAccessor.GetCultureInfo());
+            var pdf = new AnnualReportPdf(languageAccessor.GetCultureInfo(), region);
             return new AnnualReportFile(pdf.Render(data), pdf.FileName(year));
         }
     }

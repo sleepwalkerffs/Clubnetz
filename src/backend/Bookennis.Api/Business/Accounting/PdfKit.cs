@@ -2,16 +2,25 @@ using SkiaSharp;
 
 namespace Bookennis.Api.Business.Accounting;
 
+/// <summary>The size of a page in points: A4 in Europe, US Letter in the United States.</summary>
+public sealed record PdfPaper(float Width, float Height)
+{
+    public static readonly PdfPaper A4 = new(595f, 842f);
+    public static readonly PdfPaper Letter = new(612f, 792f);
+
+    public static PdfPaper For(bool unitedStates) => unitedStates ? Letter : A4;
+
+    /// <summary>Where the content ends on the right.</summary>
+    public float Right => Width - PdfKit.Margin;
+}
+
 /// <summary>
-/// What the PDFs of the accounting (invoice, annual report) share: an A4 page, the embedded font (Lato, so the PDF looks the same on every server),
-/// the colors and drawing text, rules and wrapped lines. Both documents look alike this way.
+/// What the PDFs of the accounting (invoice, annual report) share: the page (<see cref="PdfPaper"/>), the embedded font (Lato, so the PDF looks
+/// the same on every server), the colors and drawing text, rules and wrapped lines. Both documents look alike this way.
 /// </summary>
 internal static class PdfKit
 {
-    public const float PageWidth = 595f;
-    public const float PageHeight = 842f;
     public const float Margin = 50f;
-    public const float Right = PageWidth - Margin;
 
     public static readonly SKColor Ink = new(0x1F, 0x29, 0x37);
     public static readonly SKColor Muted = new(0x6B, 0x72, 0x80);
@@ -48,7 +57,7 @@ internal static class PdfKit
         return font.MeasureText(text);
     }
 
-    public static void Rule(SKCanvas canvas, float y, float left = Margin, float right = Right, SKColor? color = null, float width = 0.8f)
+    public static void Rule(SKCanvas canvas, float y, float left, float right, SKColor? color = null, float width = 0.8f)
     {
         using var paint = new SKPaint { Color = color ?? Line, StrokeWidth = width, IsAntialias = true };
         canvas.DrawLine(left, y, right, y, paint);

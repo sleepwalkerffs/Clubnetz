@@ -17,7 +17,7 @@
     <div class="acc-empty">
         <div class="acc-empty__emoji" aria-hidden="true">🧾</div>
         <div class="acc-empty__title">@L["Invoices_SetUpTitle"]</div>
-        <div class="acc-empty__text">@L["Invoices_SetUpText"]</div>
+        <div class="acc-empty__text">@L[AccountingHelpers.Regional("Invoices_SetUpText")]</div>
         @if (canManage)
         {
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="OpenSettings" Class="mt-2">@L["Invoices_SetUp"]</MudButton>

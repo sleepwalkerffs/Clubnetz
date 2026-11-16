@@ -34,7 +34,8 @@ public record ImportBankStatement(int ClubId, int UserId, int MoneyAccountId, st
 
             var saved = await context.BankCsvLayouts.SingleOrDefaultAsync(l => l.ClubId == request.ClubId && l.MoneyAccountId == account.Id, cancellationToken);
             var given = request.Layout is null ? null : BankMapper.ToDomain(request.Layout);
-            var result = BankStatementReader.Read(request.Data, given ?? saved?.Columns, preferSavedLayout: given is not null, accountIban: account.Iban);
+            var region = await context.GetAccountingRegion(request.ClubId, cancellationToken);
+            var result = BankStatementReader.Read(request.Data, given ?? saved?.Columns, preferSavedLayout: given is not null, accountIban: account.Iban, monthFirst: region.IsUnitedStates);
 
             if (result.NeedsCsvLayout)
             {

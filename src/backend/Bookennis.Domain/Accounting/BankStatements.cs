@@ -62,7 +62,8 @@ public static class BankStatementReader
     /// The IBAN of the money account: from a file with statements of several accounts only its statements are read. Without it, such a
     /// file is refused (it can't be told which lines belong to the account).
     /// </param>
-    public static BankStatementReadResult Read(byte[] data, CsvColumns? savedLayout, bool preferSavedLayout = false, string? accountIban = null)
+    /// <param name="monthFirst">The club is in the United States: a CSV date "03/04/2026" is March 4 (else 3 April).</param>
+    public static BankStatementReadResult Read(byte[] data, CsvColumns? savedLayout, bool preferSavedLayout = false, string? accountIban = null, bool monthFirst = false)
     {
         if (data.Length == 0 || data.Length > MaxFileSize)
             throw new PreconditionException(AccountingErrorCode.AccountingBankFileInvalid, "Empty or too large file.");
@@ -76,13 +77,13 @@ public static class BankStatementReader
 
         var delimiter = Csv.GuessDelimiter(text);
         var rows = Csv.Parse(text, delimiter);
-        var detected = Csv.Detect(rows) is { } found ? found with { Delimiter = delimiter } : null;
+        var detected = Csv.Detect(rows, monthFirst) is { } found ? found with { Delimiter = delimiter } : null;
         BankStatement? statement;
-        if (preferSavedLayout && savedLayout is { IsValid: true } && Csv.TryRead(Csv.Parse(text, savedLayout.Delimiter), savedLayout, out statement))
+        if (preferSavedLayout && savedLayout is { IsValid: true } && Csv.TryRead(Csv.Parse(text, savedLayout.Delimiter), savedLayout, out statement, monthFirst))
             return new BankStatementReadResult(BankStatementFormat.Csv, statement, null, savedLayout);
-        if (detected is { IsValid: true } && Csv.TryRead(rows, detected, out statement))
+        if (detected is { IsValid: true } && Csv.TryRead(rows, detected, out statement, monthFirst))
             return new BankStatementReadResult(BankStatementFormat.Csv, statement, null, detected);
-        if (!preferSavedLayout && savedLayout is { IsValid: true } && Csv.TryRead(Csv.Parse(text, savedLayout.Delimiter), savedLayout, out statement))
+        if (!preferSavedLayout && savedLayout is { IsValid: true } && Csv.TryRead(Csv.Parse(text, savedLayout.Delimiter), savedLayout, out statement, monthFirst))
             return new BankStatementReadResult(BankStatementFormat.Csv, statement, null, savedLayout);
 
         var preview = rows.Take(PreviewRows).ToList();
@@ -416,12 +417,17 @@ public static class BankStatementReader
         private static readonly string[] DateFormats =
             ["dd.MM.yyyy", "d.M.yyyy", "dd.MM.yy", "yyyy-MM-dd", "dd/MM/yyyy", "dd-MM-yyyy", "yyyyMMdd", "dd.MM.yyyy HH:mm", "dd.MM.yyyy HH:mm:ss", "yyyy-MM-ddTHH:mm:ss"];
 
-        // Header names of the columns, as Austrian and German online banking exports them (compared without case, spaces and punctuation)
-        private static readonly string[] BookingDateHeaders = ["buchungsdatum", "buchungstag", "datum", "bookingdate", "date", "transactiondate", "umsatzdatum", "belegdatum"];
-        private static readonly string[] ValueDateHeaders = ["valutadatum", "valuta", "wertstellung", "valuedate", "wertstellungsdatum"];
-        private static readonly string[] AmountHeaders = ["betrag", "umsatz", "amount", "betrageur", "umsatzeur", "buchungsbetrag", "betragineur"];
-        private static readonly string[] DebitHeaders = ["soll", "debit", "ausgang", "lastschrift", "belastung"];
-        private static readonly string[] CreditHeaders = ["haben", "credit", "eingang", "gutschrift"];
+        /// <summary>US banks write the month first: "03/04/2026" and "3/4/26" are March 4.</summary>
+        private static readonly string[] MonthFirstDateFormats =
+            ["MM/dd/yyyy", "M/d/yyyy", "MM/dd/yy", "M/d/yy", "yyyy-MM-dd", "MM-dd-yyyy", "yyyyMMdd", "MM/dd/yyyy HH:mm", "MM/dd/yyyy HH:mm:ss", "M/d/yyyy h:mm tt", "yyyy-MM-ddTHH:mm:ss"];
+
+        // Header names of the columns, as Austrian, German and US online banking exports them (compared without case, spaces and punctuation)
+        private static readonly string[] BookingDateHeaders =
+            ["buchungsdatum", "buchungstag", "datum", "bookingdate", "date", "transactiondate", "umsatzdatum", "belegdatum", "postingdate", "posteddate", "postdate"];
+        private static readonly string[] ValueDateHeaders = ["valutadatum", "valuta", "wertstellung", "valuedate", "wertstellungsdatum", "effectivedate"];
+        private static readonly string[] AmountHeaders = ["betrag", "umsatz", "amount", "betrageur", "umsatzeur", "buchungsbetrag", "betragineur", "amountusd", "transactionamount"];
+        private static readonly string[] DebitHeaders = ["soll", "debit", "ausgang", "lastschrift", "belastung", "debitamount", "debits", "withdrawal", "withdrawals", "withdrawalamount"];
+        private static readonly string[] CreditHeaders = ["haben", "credit", "eingang", "gutschrift", "creditamount", "credits", "deposit", "deposits", "depositamount"];
         private static readonly string[] MarkerHeaders = ["sollhaben", "sh", "kennzeichen", "debitcredit", "dc"];
         private static readonly string[] NameHeaders =
         [
@@ -438,7 +444,7 @@ public static class BankStatementReader
         private static readonly string[] ReferenceHeaders =
         [
             "verwendungszweck", "zahlungsreferenz", "buchungstext", "umsatztext", "buchungsinfo", "text", "reference", "description", "beschreibung",
-            "mitteilung", "zweck", "details", "buchungsdetails", "umsatzart", "info",
+            "mitteilung", "zweck", "details", "buchungsdetails", "umsatzart", "info", "memo",
         ];
 
         public static char GuessDelimiter(string text)
@@ -496,8 +502,11 @@ public static class BankStatementReader
             return rows;
         }
 
-        /// <summary>Finds the header row and the columns by their names; or a file without header (Raiffeisen ELBA: date;text;value date;amount;currency).</summary>
-        public static CsvColumns? Detect(IReadOnlyList<IReadOnlyList<string>> rows)
+        /// <summary>
+        /// Finds the header row and the columns by their names; or a file without header (Raiffeisen ELBA: date;text;value date;amount;currency,
+        /// Wells Fargo: date,amount,*,check number,description).
+        /// </summary>
+        public static CsvColumns? Detect(IReadOnlyList<IReadOnlyList<string>> rows, bool monthFirst = false)
         {
             for (var r = 0; r < Math.Min(rows.Count, 30); r++)
             {
@@ -529,21 +538,25 @@ public static class BankStatementReader
             }
 
             // Without header: date; text; date; amount; currency (Raiffeisen ELBA)
-            if (rows.Count > 0 && rows.All(row => row.Count >= 4 && ParseDate(row[0]) is not null && ParseDate(row[2]) is not null && ParseAmount(row[3]) is not null))
+            if (rows.Count > 0 && rows.All(row => row.Count >= 4 && ParseDate(row[0], monthFirst) is not null && ParseDate(row[2], monthFirst) is not null && ParseAmount(row[3]) is not null))
                 return new CsvColumns { BookingDate = 0, ValueDate = 2, Amount = 3, Reference = [1] };
+
+            // Without header: date, amount, *, check number, description (Wells Fargo, so only for clubs in the United States)
+            if (monthFirst && rows.Count > 0 && rows.All(row => row.Count >= 5 && ParseDate(row[0], monthFirst) is not null && ParseAmount(row[1]) is not null))
+                return new CsvColumns { BookingDate = 0, Amount = 1, Reference = [4] };
 
             return null;
         }
 
         /// <summary>Reads every row after <see cref="CsvColumns.SkipRows"/>; <c>false</c> when the columns don't fit (no row could be read).</summary>
-        public static bool TryRead(IReadOnlyList<IReadOnlyList<string>> rows, CsvColumns columns, out BankStatement? statement)
+        public static bool TryRead(IReadOnlyList<IReadOnlyList<string>> rows, CsvColumns columns, out BankStatement? statement, bool monthFirst = false)
         {
             statement = null;
             var lines = new List<BankStatementLine>();
             var failed = 0;
             foreach (var row in rows.Skip(columns.SkipRows))
             {
-                if (Line(row, columns) is { } line)
+                if (Line(row, columns, monthFirst) is { } line)
                     lines.Add(line);
                 else
                     failed++;
@@ -557,11 +570,11 @@ public static class BankStatementReader
             return true;
         }
 
-        private static BankStatementLine? Line(IReadOnlyList<string> row, CsvColumns columns)
+        private static BankStatementLine? Line(IReadOnlyList<string> row, CsvColumns columns, bool monthFirst)
         {
             string? Cell(int? index) => index is { } i && i >= 0 && i < row.Count && row[i].Length > 0 ? row[i] : null;
 
-            var date = ParseDate(Cell(columns.BookingDate));
+            var date = ParseDate(Cell(columns.BookingDate), monthFirst);
             if (date is null)
                 return null;
 
@@ -583,25 +596,35 @@ public static class BankStatementReader
             // A text another column already holds is left out: the Volksbank "Umsatztext" repeats the "Verwendungszweck"
             var texts = columns.Reference.Select(i => Cell(i)).OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             var reference = string.Join(" ", texts.Where(t => !texts.Any(o => o.Length > t.Length && o.Contains(t, StringComparison.OrdinalIgnoreCase))));
-            return new BankStatementLine(date.Value, ParseDate(Cell(columns.ValueDate)), amount.Value, Cell(columns.CounterpartyName), Cell(columns.CounterpartyIban), reference, null);
+            return new BankStatementLine(date.Value, ParseDate(Cell(columns.ValueDate), monthFirst), amount.Value, Cell(columns.CounterpartyName), Cell(columns.CounterpartyIban), reference, null);
         }
 
-        public static DateOnly? ParseDate(string? value)
+        public static DateOnly? ParseDate(string? value, bool monthFirst = false)
         {
             if (string.IsNullOrWhiteSpace(value))
                 return null;
             var text = value.Trim();
-            return DateTime.TryParseExact(text, DateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? DateOnly.FromDateTime(date) : null;
+            return DateTime.TryParseExact(text, monthFirst ? MonthFirstDateFormats : DateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? DateOnly.FromDateTime(date) : null;
         }
 
-        /// <summary>"-1.234,56", "1,234.56", "1234,56 S", "+12,00 EUR", "12,00-": the amount in cents (S/- = negative).</summary>
+        /// <summary>
+        /// "-1.234,56", "1,234.56", "1234,56 S", "+12,00 EUR", "12,00-", "-$1,234.56", "($12.00)": the amount in cents (S/-/parentheses = negative).
+        /// </summary>
         public static long? ParseAmount(string? value)
         {
             if (string.IsNullOrWhiteSpace(value))
                 return null;
 
-            var text = value.Trim().Replace("EUR", "", StringComparison.OrdinalIgnoreCase).Replace("€", "", StringComparison.Ordinal).Replace(" ", "", StringComparison.Ordinal).Replace(" ", "", StringComparison.Ordinal);
+            var text = value.Trim().Replace("EUR", "", StringComparison.OrdinalIgnoreCase).Replace("USD", "", StringComparison.OrdinalIgnoreCase).Replace("CHF", "", StringComparison.OrdinalIgnoreCase)
+                .Replace("€", "", StringComparison.Ordinal).Replace("$", "", StringComparison.Ordinal).Replace(" ", "", StringComparison.Ordinal).Replace(" ", "", StringComparison.Ordinal);
             var negative = false;
+            // The accounting notation of US banks: (12.00) is minus 12.00
+            if (text.Length > 2 && text.StartsWith('(') && text.EndsWith(')'))
+            {
+                negative = true;
+                text = text[1..^1];
+            }
+
             if (text.EndsWith('S') || text.EndsWith('-'))
             {
                 negative = true;
