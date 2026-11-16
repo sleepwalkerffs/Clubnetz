@@ -95,6 +95,10 @@ public class ClubhouseTab : TenantDomainEntity, IAggregateRoot
         if (item.ClubId != ClubId)
             throw new InvalidOperationException("The item belongs to another club.");
 
+        // A price is an amount in its currency: never book it onto a tab in another one
+        if (!string.Equals(item.Currency, Currency, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("The item is priced in another currency than the tab.");
+
         if (!item.IsAvailable)
             throw new PreconditionException(ClubhouseErrorCode.ClubhouseItemNotAvailable, "The item is not on the menu.");
 

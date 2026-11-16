@@ -10,7 +10,8 @@ public record UpdateAdminClubRequest
     public required PrimeTimeSettingsDto PrimeTimeSettings { get; init; }
     public int? BookingGracePeriodInMinutes { get; init; }
     public required bool IsAtpClub { get; init; }
-    public string TimeZoneId { get; init; } = "Europe/Vienna";
-    public Country Country { get; init; }
-    public string Currency { get; init; } = "eur";
+    // Not sent by older clients (e.g. a cached app right after an update): null keeps what the club has
+    public string? TimeZoneId { get; init; }
+    public Country? Country { get; init; }
+    public string? Currency { get; init; }
 }

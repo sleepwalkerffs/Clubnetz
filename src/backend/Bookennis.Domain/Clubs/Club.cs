@@ -102,13 +102,18 @@ public class Club : DomainEntity, IAggregateRoot
         ClubInvalidTimeZone = 0,
         ClubUnsupportedCurrency = 1,
         ClubUnknownCountry = 2,
+
+        /// <summary>The club has prices, payments or accounting in its currency: changing it would charge old prices in the new currency.</summary>
+        ClubCurrencyInUse = 3,
     }
 
     /// <summary>Where the club is. Prices that were set before keep the currency they were set in.</summary>
     public void SetRegion(Country country, string timeZoneId, string currency)
     {
         currency = currency.Trim().ToLowerInvariant();
-        if (!ClubTimeZone.IsValid(timeZoneId))
+        timeZoneId = timeZoneId.Trim();
+        // A club keeps a zone it already has; a new one must be one of the supported zones
+        if (!ClubTimeZone.IsValid(timeZoneId) || (timeZoneId != TimeZoneId && !ClubTimeZone.Supported.Contains(timeZoneId)))
             throw new PreconditionException(RegionErrorCode.ClubInvalidTimeZone, "Unknown time zone.");
         if (!SupportedCurrencies.Contains(currency))
             throw new PreconditionException(RegionErrorCode.ClubUnsupportedCurrency, "Unsupported currency.");
@@ -116,7 +121,7 @@ public class Club : DomainEntity, IAggregateRoot
             throw new PreconditionException(RegionErrorCode.ClubUnknownCountry, "Unknown country.");
 
         Country = country;
-        TimeZoneId = timeZoneId.Trim();
+        TimeZoneId = timeZoneId;
         Currency = currency;
     }
 

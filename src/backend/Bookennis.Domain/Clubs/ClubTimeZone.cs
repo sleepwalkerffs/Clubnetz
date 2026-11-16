@@ -15,8 +15,21 @@ public static class ClubTimeZone
     public static TimeZoneInfo Get(string? timeZoneId)
         => !string.IsNullOrWhiteSpace(timeZoneId) && TimeZoneInfo.TryFindSystemTimeZoneById(timeZoneId, out var zone) ? zone : Default;
 
+    /// <summary>
+    /// The time zones a club can be in (IANA ids; the app in the browser must know them too).
+    /// Keep in line with <c>RegionalCulture.SupportedTimeZones</c>.
+    /// </summary>
+    public static readonly IReadOnlyList<string> Supported =
+    [
+        "Europe/Vienna", "Europe/Berlin", "Europe/Zurich",
+        "America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles", "America/Anchorage", "Pacific/Honolulu",
+    ];
+
+    /// <summary>An IANA id this server knows (Windows ids like "Eastern Standard Time" are refused: the app in the browser can't use them).</summary>
     public static bool IsValid(string? timeZoneId)
-        => !string.IsNullOrWhiteSpace(timeZoneId) && TimeZoneInfo.TryFindSystemTimeZoneById(timeZoneId, out _);
+        => !string.IsNullOrWhiteSpace(timeZoneId)
+           && TimeZoneInfo.TryFindSystemTimeZoneById(timeZoneId, out var zone)
+           && zone.HasIanaId;
 
     /// <summary>The wall-clock time of the club at <paramref name="value"/>.</summary>
     public static DateTime ToLocal(DateTimeOffset value, TimeZoneInfo timeZone) => TimeZoneInfo.ConvertTimeFromUtc(value.UtcDateTime, timeZone);

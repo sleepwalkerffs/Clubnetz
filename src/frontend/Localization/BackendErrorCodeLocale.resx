@@ -1017,4 +1017,7 @@
   <data name="AccountingInvoiceAccountWithoutBankDetails" xml:space="preserve">
     <value>The bank account for invoices needs its account number and routing number (or an IBAN).</value>
   </data>
+  <data name="ClubCurrencyInUse" xml:space="preserve">
+    <value>The club already has prices, payments or bookkeeping in its currency, so the currency can no longer be changed.</value>
+  </data>
 </root>

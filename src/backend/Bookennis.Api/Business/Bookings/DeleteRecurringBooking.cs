@@ -69,7 +69,7 @@ public record DeleteRecurringBooking(
                     // Update series end date to the day before the deleted booking
                     var series = await context.RecurringBookingSeries
                         .FindRequiredAsync(booking.RecurringBookingSeriesId.Value, cancellationToken);
-                    // The day in the club's time zone (series created before it was the rule may have stored the browser's zone)
+                    // The day in the club's time zone; the series keeps its own zone: its start and end times are wall-clock times of it
                     var region = await context.GetClubRegion(series.ClubId, cancellationToken);
                     var bookingDate = region.LocalDate(booking.Interval.From);
                     series.Update(
@@ -78,7 +78,7 @@ public record DeleteRecurringBooking(
                         series.DayOfWeek,
                         series.StartTime,
                         series.EndTime,
-                        region.TimeZoneId,
+                        series.TimeZoneInfoId,
                         series.RecurrenceIntervalWeeks,
                         series.StartDate,
                         bookingDate.AddDays(-1),

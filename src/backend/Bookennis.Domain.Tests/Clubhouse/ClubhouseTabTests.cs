@@ -27,6 +27,18 @@ public class ClubhouseTabTests
     }
 
     [Fact]
+    public void Add_RefusesAnItemPricedInAnotherCurrency()
+    {
+        var tab = new ClubhouseTab(ClubId, memberId: 11, guestName: null, openedByMemberId: 99, Now, "usd");
+        var euroItem = Item();
+
+        var act = () => tab.Add(euroItem, 1, null, Now);
+
+        act.Should().Throw<InvalidOperationException>();
+        tab.Lines.Should().BeEmpty();
+    }
+
+    [Fact]
     public void WalkInTab_KeepsTheTrimmedName()
     {
         var tab = new ClubhouseTab(ClubId, null, "  Table 3 ", null, Now);

@@ -43,7 +43,7 @@ public static class ClubRegion
 
             var stored = JsonSerializer.Deserialize<StoredRegion>(json);
             if (stored is not null)
-                ApplyRegion(stored.TimeZoneId, stored.Country, stored.Currency);
+                ApplyRegion(stored.TimeZoneId, stored.Country, stored.Currency, setCurrent: false);
         }
         catch (Exception)
         {
@@ -67,14 +67,19 @@ public static class ClubRegion
         }
     }
 
-    private static void ApplyRegion(string timeZoneId, Country country, string currency)
+    /// <param name="setCurrent">
+    /// Also set <see cref="CultureInfo.CurrentCulture"/> of the current flow. Not at start: an explicit culture flows into everything
+    /// started from there (loading the profile, the first renders) and would hide the club's culture set later as the default.
+    /// </param>
+    private static void ApplyRegion(string timeZoneId, Country country, string currency, bool setCurrent = true)
     {
         SetTimeZone(timeZoneId);
 
         var culture = RegionalCulture.For(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de", country, currency);
         CultureInfo.DefaultThreadCurrentCulture = culture;
         // Also for the code that runs on in the current flow (an explicitly set culture wins over the default)
-        CultureInfo.CurrentCulture = culture;
+        if (setCurrent)
+            CultureInfo.CurrentCulture = culture;
     }
 
     private static void SetTimeZone(string timeZoneId)

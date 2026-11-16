@@ -151,7 +151,7 @@ public class BookingDomainService : IBookingDomainService
         public required TimeOnlyInterval OpeningHours { get; init; }
 
         /// <summary>The club's time zone (<see cref="Club.TimeZone"/>): opening hours and prime time are wall-clock times of it.</summary>
-        public TimeZoneInfo TimeZone { get; init; } = ClubTimeZone.Default;
+        public required TimeZoneInfo TimeZone { get; init; }
 
         /// <summary>Writes a time of the club in an error ("18:00", "6:00 PM" in the United States); the current culture when not given.</summary>
         public Func<TimeOnly, string>? FormatTime { get; init; }

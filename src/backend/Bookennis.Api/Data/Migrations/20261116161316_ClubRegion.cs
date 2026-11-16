@@ -32,13 +32,6 @@ namespace Bookennis.Api.Data.Migrations
                 maxLength: 64,
                 nullable: false,
                 defaultValue: "Europe/Vienna");
-
-            // A club that already sells court time in another time zone is in that time zone
-            migrationBuilder.Sql("""
-                UPDATE "Clubs" c SET "TimeZoneId" = s."TimeZoneId"
-                FROM "CourtSaleSettings" s
-                WHERE s."ClubId" = c."Id" AND s."TimeZoneId" <> '' AND s."TimeZoneId" <> c."TimeZoneId";
-                """);
         }
 
         /// <inheritdoc />

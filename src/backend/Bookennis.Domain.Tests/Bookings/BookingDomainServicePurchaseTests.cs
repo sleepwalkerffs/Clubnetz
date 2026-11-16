@@ -178,6 +178,7 @@ public class BookingDomainServicePurchaseTests
         return new BookingDomainService.Context
         {
             ClubId = 1,
+            TimeZone = Bookennis.Domain.Clubs.ClubTimeZone.Default,
             Court = court ?? new Court(1, "Court 1", "C1"),
             OpeningHours = club.OpeningHours,
             PrimeTimeSettings = club.PrimeTimeSettings,

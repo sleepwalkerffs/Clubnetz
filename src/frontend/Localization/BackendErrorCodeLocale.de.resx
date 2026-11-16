@@ -1017,4 +1017,7 @@
   <data name="AccountingInvoiceAccountWithoutBankDetails" xml:space="preserve">
     <value>Das Bankkonto für Rechnungen braucht Kontonummer und Routing Number (oder eine IBAN).</value>
   </data>
+  <data name="ClubCurrencyInUse" xml:space="preserve">
+    <value>Der Verein hat schon Preise, Zahlungen oder eine Buchhaltung in seiner Währung, darum kann die Währung nicht mehr geändert werden.</value>
+  </data>
 </root>

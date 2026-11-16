@@ -34,6 +34,19 @@ public class CourtPricingTests
     }
 
     [Fact]
+    public void SlotOverRulesInTwoCurrencies_IsNotForSale()
+    {
+        List<CourtPriceRule> rules =
+        [
+            new(1, new CourtPriceRule.RuleData([], Weekdays, new TimeOnly(8, 0), new TimeOnly(12, 0), 2000, "Euro morning")),
+            new(1, new CourtPriceRule.RuleData([], Weekdays, new TimeOnly(12, 0), new TimeOnly(17, 0), 2400, "Dollar day"), "usd"),
+        ];
+
+        CourtPricing.Quote(rules, 1, Local(2026, 10, 14, 11, 30, 60), Vienna).Should().BeNull();
+        CourtPricing.Quote(rules, 1, Local(2026, 10, 14, 12, 0, 60), Vienna)!.Currency.Should().Be("usd");
+    }
+
+    [Fact]
     public void HalfAnHour_IsHalfThePrice()
     {
         CourtPricing.Quote(Rules, 1, Local(2026, 10, 14, 9, 0, 30), Vienna)!.PriceCents.Should().Be(1000);

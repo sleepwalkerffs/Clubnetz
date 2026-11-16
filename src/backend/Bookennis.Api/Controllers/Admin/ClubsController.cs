@@ -43,7 +43,7 @@ public class ClubsController(IMediator mediator) : ControllerBase
                     request.PrimeTimeSettings.ChildAgeThreshold),
                 request.BookingGracePeriodInMinutes,
                 request.IsAtpClub,
-                (Country)request.Country,
+                (Country?)request.Country,
                 request.TimeZoneId,
                 request.Currency),
             cancellationToken);

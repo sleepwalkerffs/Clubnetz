@@ -100,6 +100,7 @@ public class BookingDomainServicePlayModeCourtTests
         return new BookingDomainService.Context
         {
             ClubId = 1,
+            TimeZone = Bookennis.Domain.Clubs.ClubTimeZone.Default,
             Court = court,
             OpeningHours = new TimeOnlyInterval(new TimeOnly(7, 0), new TimeOnly(22, 0)),
             PrimeTimeSettings = new PrimeTimeSettings(
