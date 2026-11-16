@@ -2,6 +2,7 @@ using Bookennis.Api.Business.Bookings;
 using Bookennis.Api.Tests.Business.CourtBlockings;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Bookings;
+using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Global.Intervals;
 using Bookennis.Shared.Controller.Booking;
@@ -38,7 +39,7 @@ public class EditRecurringBookingTests : TestBase
 
         await SendAsync(Command(booking.Id, CourtBlockingSeed.At(Day, 12, 13), [TestDataSeed.Member1Id], TestDataSeed.UserId));
 
-        bookingService.Received(1).EditBooking(Arg.Any<BookingDomainService.Context>(), Arg.Is<Booking>(b => b.Id == booking.Id), CourtBlockingSeed.At(Day, 12, 13), TimeZoneInfo.Utc.Id, null);
+        bookingService.Received(1).EditBooking(Arg.Any<BookingDomainService.Context>(), Arg.Is<Booking>(b => b.Id == booking.Id), CourtBlockingSeed.At(Day, 12, 13), ClubTimeZone.DefaultId, null);
         captured!.SkipPastBookingValidation.Should().BeFalse();
         (await QueryAsync(ctx => ctx.Bookings.SingleAsync(b => b.Id == booking.Id))).IsExcludedFromSeries.Should().BeTrue();
     }
@@ -124,7 +125,7 @@ public class EditRecurringBookingTests : TestBase
 
         await SendAsync(Command(first.Id, CourtBlockingSeed.At(Day, 12, 13), [TestDataSeed.Member1Id], TestDataSeed.UserId, scope: RecurringEditScope.ThisAndFollowing));
 
-        bookingService.Received(1).EditBooking(Arg.Any<BookingDomainService.Context>(), Arg.Is<Booking>(b => b.Id == first.Id), CourtBlockingSeed.At(Day, 12, 13), TimeZoneInfo.Utc.Id, null);
+        bookingService.Received(1).EditBooking(Arg.Any<BookingDomainService.Context>(), Arg.Is<Booking>(b => b.Id == first.Id), CourtBlockingSeed.At(Day, 12, 13), ClubTimeZone.DefaultId, null);
         var bookings = await QueryAsync(ctx => ctx.Bookings.Where(b => b.RecurringBookingSeriesId == first.RecurringBookingSeriesId).OrderBy(b => b.Interval.From).ToListAsync());
         bookings[0].Id.Should().Be(first.Id, "the detail page of the edited occurrence stays valid");
         bookings.Select(b => b.Id).Should().NotIntersectWith(later.Select(b => b.Id));

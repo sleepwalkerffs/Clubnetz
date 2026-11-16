@@ -6,7 +6,6 @@ using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Bookennis.Domain.Clubs.EmailTemplates;
 using Bookennis.Domain.Notifications;
-using Bookennis.Global;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Push;

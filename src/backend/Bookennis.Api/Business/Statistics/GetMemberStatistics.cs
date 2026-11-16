@@ -2,7 +2,6 @@ using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Members;
-using Bookennis.Global;
 using Bookennis.Shared.Controller.Statistics;
 using Microsoft.EntityFrameworkCore;
 

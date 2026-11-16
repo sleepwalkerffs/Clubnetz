@@ -5,7 +5,6 @@ using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Members;
-using Bookennis.Global;
 using Bookennis.Shared.Controller.Statistics;
 using Bookennis.Shared.Controller.Wrapped;
 using Fusonic.Extensions.EntityFrameworkCore;

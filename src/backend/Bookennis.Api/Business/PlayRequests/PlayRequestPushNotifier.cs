@@ -3,7 +3,6 @@ using Bookennis.Api.Business.Push;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Notifications;
 using Bookennis.Domain.PlayRequests;
-using Bookennis.Global;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.PlayRequests;

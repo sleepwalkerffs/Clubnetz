@@ -3,7 +3,6 @@ using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure.User;
 using Bookennis.Domain.Notifications;
-using Bookennis.Global;
 using Fusonic.Extensions.Common.Security;
 using Microsoft.EntityFrameworkCore;
 

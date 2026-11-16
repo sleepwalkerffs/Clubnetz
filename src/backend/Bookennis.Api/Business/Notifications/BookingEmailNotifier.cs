@@ -8,7 +8,6 @@ using Bookennis.Api.Infrastructure.User;
 using Bookennis.Domain.Clubs.EmailTemplates;
 using Bookennis.Domain.Members;
 using Bookennis.Domain.Notifications;
-using Bookennis.Global;
 using Fusonic.Extensions.Common.Security;
 using Microsoft.EntityFrameworkCore;
 

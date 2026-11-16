@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.CourtBlockings;
 using Bookennis.Api.Business.CourtSales;
@@ -169,6 +170,7 @@ internal sealed class BookingContextBuilder
             Court = court,
             OpeningHours = Club.OpeningHours,
             TimeZone = Region.TimeZone,
+            FormatTime = Region.Culture(CultureInfo.CurrentCulture).Time,
             PrimeTimeSettings = Club.PrimeTimeSettings,
             BookingMemberRole = [MemberRole.User],
             Participants = participants.ConvertAll(i =>

@@ -78,8 +78,9 @@ public class BookingDomainService : IBookingDomainService
 
         if (TimeOnly.FromDateTime(localFrom) < context.OpeningHours.From || TimeOnly.FromDateTime(localTo) > context.OpeningHours.To)
         {
+            var formatTime = context.FormatTime ?? (time => $"{time}");
             throw new PreconditionException(ErrorCode.OutsideClubOpeningHours,
-                [$"{context.OpeningHours.From}", $"{context.OpeningHours.To}"],
+                [formatTime(context.OpeningHours.From), formatTime(context.OpeningHours.To)],
                 $"Cannot play outside the club opening hours from {context.OpeningHours.From} to {context.OpeningHours.To}");
         }
 
@@ -151,6 +152,9 @@ public class BookingDomainService : IBookingDomainService
 
         /// <summary>The club's time zone (<see cref="Club.TimeZone"/>): opening hours and prime time are wall-clock times of it.</summary>
         public TimeZoneInfo TimeZone { get; init; } = ClubTimeZone.Default;
+
+        /// <summary>Writes a time of the club in an error ("18:00", "6:00 PM" in the United States); the current culture when not given.</summary>
+        public Func<TimeOnly, string>? FormatTime { get; init; }
         public required PrimeTimeSettings PrimeTimeSettings { get; init; }
         public required MemberRole[] BookingMemberRole { get; init; }
         public required List<PlayerContext> Participants { get; init; }

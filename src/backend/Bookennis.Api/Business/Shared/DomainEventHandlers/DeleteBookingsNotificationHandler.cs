@@ -10,7 +10,6 @@ using Bookennis.Domain.Base;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.Clubs.EmailTemplates;
 using Bookennis.Domain.Notifications;
-using Bookennis.Global;
 using Fusonic.Extensions.Common.Security;
 using Fusonic.Extensions.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;

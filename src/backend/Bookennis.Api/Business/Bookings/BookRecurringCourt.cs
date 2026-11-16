@@ -1,3 +1,4 @@
+using System.Globalization;
 using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.CourtSales;
 using System.ComponentModel.DataAnnotations;
@@ -126,6 +127,7 @@ public record BookRecurringCourt(
                 Court = queryResult.Court,
                 OpeningHours = queryResult.Club.OpeningHours,
                 TimeZone = tz,
+                FormatTime = region.Culture(CultureInfo.CurrentCulture).Time,
                 PrimeTimeSettings = queryResult.Club.PrimeTimeSettings,
                 BookingMemberRole = [MemberRole.User],
                 Participants = localParticipants.ConvertAll(i => new BookingDomainService.Context.PlayerContext
