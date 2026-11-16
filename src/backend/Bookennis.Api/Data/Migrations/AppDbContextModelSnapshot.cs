@@ -1379,6 +1379,10 @@ namespace Bookennis.Api.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "MoneyAccounts_Id_Sequence");
 
+                    b.Property<string>("AccountNumber")
+                        .HasMaxLength(17)
+                        .HasColumnType("character varying(17)");
+
                     b.Property<int>("ClubId")
                         .HasColumnType("integer");
 
@@ -1396,6 +1400,10 @@ namespace Bookennis.Api.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
+
+                    b.Property<string>("RoutingNumber")
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");

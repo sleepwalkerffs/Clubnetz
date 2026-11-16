@@ -41,7 +41,7 @@
                     }
                 </MudSelect>
                 <MudNumericField T="decimal" @bind-Value="transferAmount" Label="@L["Amount"]" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Format="N2"
-                                 Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true" />
+                                 Adornment="Adornment.Start" AdornmentText="@AccountingHelpers.CurrencySymbol" HideSpinButtons="true" />
             </div>
         }
         else
@@ -79,7 +79,7 @@
                             </div>
                         }
                         <MudNumericField T="decimal" @bind-Value="current.Amount" Label="@L["Amount"]" Variant="Variant.Outlined" Margin="Margin.Dense" Format="N2"
-                                         Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true" Class="entry-line__amount" />
+                                         Adornment="Adornment.Start" AdornmentText="@AccountingHelpers.CurrencySymbol" HideSpinButtons="true" Class="entry-line__amount" />
                         @if (lines.Count > 1)
                         {
                             <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="() => lines.Remove(current)" aria-label="@L["Entry_RemoveLine"]" Class="entry-line__remove" />

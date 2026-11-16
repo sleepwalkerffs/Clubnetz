@@ -11,7 +11,7 @@
 
 @* Shown while the accounting of the club is not set up: treasurers switch it on, auditors are told to wait. *@
 
-<SectionCard Emoji="🚀" Title="@L["SetUp_Title"]" Subtitle="@L["SetUp_Subtitle"]">
+<SectionCard Emoji="🚀" Title="@L["SetUp_Title"]" Subtitle="@L[AccountingHelpers.Regional("SetUp_Subtitle")]">
     @if (Store.Basics?.CanManage != true)
     {
         <MudAlert Severity="Severity.Info">@L["SetUp_NotYet"]</MudAlert>
@@ -22,7 +22,7 @@
             <ul class="acc-setup__list">
                 <li>@L["SetUp_Point_Years"]</li>
                 <li>@L["SetUp_Point_Accounts"]</li>
-                <li>@L["SetUp_Point_Categories"]</li>
+                <li>@L[AccountingHelpers.Regional("SetUp_Point_Categories")]</li>
                 <li>@L["SetUp_Point_Change"]</li>
             </ul>
 

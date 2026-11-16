@@ -465,6 +465,8 @@ public class AccountingStore(IAccountingHttpClient httpClient) : SemaphoreStore,
 
     private void SetBasics(AccountingDto basics)
     {
+        // Amounts, dates and bank details of the pages follow the country, currency and time zone of the club
+        Pages.ClubShell.Accounting.AccountingHelpers.UseRegion(basics.Country, basics.Currency, basics.TimeZoneId);
         Basics = basics;
         if (selectedYearId is null || basics.FiscalYears.All(y => y.Id != selectedYearId))
         {

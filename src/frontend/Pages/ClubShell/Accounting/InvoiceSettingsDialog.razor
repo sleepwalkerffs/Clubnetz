@@ -5,27 +5,31 @@
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Accounting
 
-@* What every invoice of the club says about the club: address, ZVR number, the bank account with its IBAN, numbering, payment term, footer. *@
+@* What every invoice of the club says about the club: address, ZVR number (EIN in the US), the bank account with its IBAN (account and routing number in the US), numbering, payment term, footer. *@
 
 <BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
             CanSubmit="@(!string.IsNullOrWhiteSpace(address) && moneyAccountId is not null)" Loading="@Store.IsSaving" Title="@L["InvoiceSettings_Title"]">
     <div class="invoice-form">
         <div class="invoice-form__hint">@L["InvoiceSettings_Hint"]</div>
-        <MudTextField T="string" @bind-Value="address" Label="@L["InvoiceSettings_Address"]" Placeholder="@L["InvoiceSettings_AddressPlaceholder"]" Lines="3" AutoGrow="true"
+        <MudTextField T="string" @bind-Value="address" Label="@L["InvoiceSettings_Address"]" Placeholder="@L[AccountingHelpers.Regional("InvoiceSettings_AddressPlaceholder")]" Lines="3" AutoGrow="true"
                       Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="300" Immediate="true" Required="true" />
         <div class="invoice-form__row">
-            <MudTextField T="string" @bind-Value="zvr" Label="@L["InvoiceSettings_Zvr"]" HelperText="@L["InvoiceSettings_ZvrHint"]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="20" />
-            <MudTextField T="string" @bind-Value="contact" Label="@L["InvoiceSettings_Contact"]" Placeholder="kassier@tc-beispiel.at · tc-beispiel.at" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200" />
+            <MudTextField T="string" @bind-Value="zvr" Label="@L[AccountingHelpers.Regional("InvoiceSettings_Zvr")]" HelperText="@L[AccountingHelpers.Regional("InvoiceSettings_ZvrHint")]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="20" />
+            <MudTextField T="string" @bind-Value="contact" Label="@L["InvoiceSettings_Contact"]" Placeholder="@L[AccountingHelpers.Regional("InvoiceSettings_ContactPlaceholder")]" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="200" />
         </div>
         <div class="invoice-form__row">
-            <AccountSelect Label="@L["InvoiceSettings_Account"]" Hint="@L["InvoiceSettings_AccountHint"]" Accounts="@Accounts" @bind-Value="moneyAccountId" Required="true" />
-            <MudTextField T="string" @bind-Value="bic" Label="BIC" Placeholder="BKAUATWW" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="11" />
+            <AccountSelect Label="@L["InvoiceSettings_Account"]" Hint="@L[AccountingHelpers.Regional("InvoiceSettings_AccountHint")]" Accounts="@Accounts" @bind-Value="moneyAccountId" Required="true" />
+            @* The BIC goes with an IBAN: a US account has its routing number instead *@
+            @if (!AccountingHelpers.IsUnitedStates || SelectedAccount?.Iban is not null || bic is not null)
+            {
+                <MudTextField T="string" @bind-Value="bic" Label="BIC" Placeholder="BKAUATWW" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="11" />
+            }
         </div>
         <div class="invoice-form__row">
             <MudTextField T="string" @bind-Value="prefix" Label="@L["InvoiceSettings_Prefix"]" HelperText="@string.Format(L["InvoiceSettings_PrefixHint"], Example)" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="10" Immediate="true" />
             <MudNumericField T="int" @bind-Value="term" Label="@L["InvoiceSettings_Term"]" HelperText="@L["InvoiceSettings_TermHint"]" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0" Max="365" />
         </div>
-        <MudTextField T="string" @bind-Value="footer" Label="@L["InvoiceSettings_Footer"]" HelperText="@L["InvoiceSettings_FooterHint"]" Lines="2" AutoGrow="true" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="600" />
+        <MudTextField T="string" @bind-Value="footer" Label="@L["InvoiceSettings_Footer"]" HelperText="@L[AccountingHelpers.Regional("InvoiceSettings_FooterHint")]" Lines="2" AutoGrow="true" Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="600" />
     </div>
 </BaseDialog>
 
@@ -47,8 +51,10 @@
     private int term = 14;
     private string? footer;
 
-    /// <summary>Bank accounts only: the invoice prints their IBAN.</summary>
+    /// <summary>Bank accounts only: the invoice prints their IBAN (or account and routing number).</summary>
     private List<MoneyAccountDto> Accounts => (Store.Basics?.MoneyAccounts ?? []).Where(a => a.Kind == MoneyAccountKind.Bank && (!a.IsArchived || a.Id == moneyAccountId)).ToList();
+
+    private MoneyAccountDto? SelectedAccount => Accounts.FirstOrDefault(a => a.Id == moneyAccountId);
 
     private string Example => $"{prefix?.Trim()}{DateTime.Today.Year}-0001";
 
@@ -67,8 +73,9 @@
         }
         else
         {
-            moneyAccountId = Accounts.FirstOrDefault(a => a.Iban is not null)?.Id;
-            footer = L["InvoiceSettings_FooterDefault"];
+            moneyAccountId = Accounts.FirstOrDefault(AccountingHelpers.HasBankDetails)?.Id;
+            prefix = AccountingHelpers.IsUnitedStates ? "INV" : "RE";
+            footer = L[AccountingHelpers.Regional("InvoiceSettings_FooterDefault")];
         }
     }
 

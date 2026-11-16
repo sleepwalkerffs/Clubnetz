@@ -24,9 +24,16 @@ public record GetAccounting(int ClubId, int UserId, bool CanManage, bool CanAudi
             if (request.CanAudit && AccountingAudit.Refusal(await AccountingAudit.Member(context, request.UserId, request.ClubId, cancellationToken)) is not null)
                 request = request with { CanAudit = false };
 
+            var region = await context.GetAccountingRegion(request.ClubId, cancellationToken);
             var settings = await context.AccountingSettings.AsNoTracking().SingleOrDefaultAsync(s => s.ClubId == request.ClubId, cancellationToken);
             if (settings is null)
-                return new AccountingDto { IsSetUp = false, CanManage = request.CanManage, CanAudit = request.CanAudit };
+            {
+                return new AccountingDto
+                {
+                    IsSetUp = false, CanManage = request.CanManage, CanAudit = request.CanAudit,
+                    Country = (global::Bookennis.Shared.Controller.Shared.Country)region.Country, Currency = region.Currency, TimeZoneId = region.TimeZone.Id,
+                };
+            }
 
             var years = await context.FiscalYears.AsNoTracking().Include(y => y.OpeningBalances)
                 .Where(y => y.ClubId == request.ClubId)
@@ -57,6 +64,9 @@ public record GetAccounting(int ClubId, int UserId, bool CanManage, bool CanAudi
                 CostCenters = costCenters.Select(c => c.ToDto(usedCostCenters.Contains(c.Id))).ToList(),
                 CanManage = request.CanManage,
                 CanAudit = request.CanAudit,
+                Country = (global::Bookennis.Shared.Controller.Shared.Country)region.Country,
+                Currency = region.Currency,
+                TimeZoneId = region.TimeZone.Id,
             };
         }
     }
@@ -64,7 +74,7 @@ public record GetAccounting(int ClubId, int UserId, bool CanManage, bool CanAudi
 
 /// <summary>
 /// Switches the accounting on: the start month of the fiscal year, the first fiscal year, a bank account and a cash box and the
-/// categories of the Austrian template, in the language of the treasurer.
+/// categories of the template of the club's country (Austrian or US), in the language of the treasurer.
 /// </summary>
 public record SetUpAccounting(int ClubId, SetUpAccountingModel Model, DateTimeOffset Now) : ICommand
 {
@@ -76,14 +86,15 @@ public record SetUpAccounting(int ClubId, SetUpAccountingModel Model, DateTimeOf
             if (await context.AccountingSettings.AnyAsync(s => s.ClubId == request.ClubId, cancellationToken))
                 throw new PreconditionException(AccountingErrorCode.AccountingAlreadySetUp, "The accounting is already set up.");
 
+            var region = await context.GetAccountingRegion(request.ClubId, cancellationToken);
             var settings = new AccountingSettings(request.ClubId, request.Model.FiscalYearStartMonth);
-            var year = FiscalYear.First(request.ClubId, settings.FiscalYearStartMonth, request.Model.FirstYear, AccountingQueries.Today(request.Now));
+            var year = FiscalYear.First(request.ClubId, settings.FiscalYearStartMonth, request.Model.FirstYear, region.Today(request.Now));
             var german = languageAccessor.GetCultureInfo().TwoLetterISOLanguageName == "de";
 
             context.Add(settings);
             context.Add(year);
-            context.AddRange(AccountingTemplate.CreateMoneyAccounts(request.ClubId, german));
-            context.AddRange(AccountingTemplate.CreateCategories(request.ClubId, german));
+            context.AddRange(AccountingTemplate.CreateMoneyAccounts(request.ClubId, german, region.IsUnitedStates));
+            context.AddRange(AccountingTemplate.CreateCategories(request.ClubId, german, region.IsUnitedStates));
             await context.SaveChangesAsync(cancellationToken);
             return default;
         }
@@ -101,7 +112,7 @@ public record CreateFiscalYear(int ClubId, DateTimeOffset Now) : ICommand<Fiscal
             await context.GetAccountingSettings(request.ClubId, cancellationToken);
 
             var newest = await context.FiscalYears.Include(y => y.OpeningBalances).Where(y => y.ClubId == request.ClubId).OrderByDescending(y => y.StartDate).FirstAsync(cancellationToken);
-            var next = newest.CreateNext(AccountingQueries.Today(request.Now));
+            var next = newest.CreateNext((await context.GetAccountingRegion(request.ClubId, cancellationToken)).Today(request.Now));
             context.Add(next);
             await context.SaveChangesAsync(cancellationToken);
 
@@ -161,7 +172,7 @@ public record CloseFiscalYear(int ClubId, int UserId, int FiscalYearId, DateTime
 
             year.Close(previous, memberId, request.Now);
             if (await context.GetNextFiscalYear(year, cancellationToken) is null)
-                context.Add(year.CreateNext(AccountingQueries.Today(request.Now), closing: true));
+                context.Add(year.CreateNext((await context.GetAccountingRegion(request.ClubId, cancellationToken)).Today(request.Now), closing: true));
             await context.SaveChangesAsync(cancellationToken);
 
             await AccountingBalances.CarryForward(context, year, cancellationToken);

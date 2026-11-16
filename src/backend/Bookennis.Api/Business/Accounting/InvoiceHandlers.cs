@@ -42,7 +42,10 @@ public record GetInvoiceSettings(int ClubId) : IQuery<InvoiceSettingsDto>
     }
 }
 
-/// <summary>The club's details for invoices. The money account is one of the club with an IBAN: it is printed with the QR code.</summary>
+/// <summary>
+/// The club's details for invoices. The money account is one of the club with an IBAN (printed with the QR code); a club in the United
+/// States may name one with its account and routing number instead.
+/// </summary>
 public record SaveInvoiceSettings(int ClubId, SaveInvoiceSettingsModel Model) : ICommand<InvoiceSettingsDto>
 {
     public class Handler(AppDbContext context, IMediator mediator) : IRequestHandler<SaveInvoiceSettings, InvoiceSettingsDto>
@@ -53,8 +56,7 @@ public record SaveInvoiceSettings(int ClubId, SaveInvoiceSettingsModel Model) : 
             await context.GetAccountingSettings(request.ClubId, cancellationToken);
             var model = request.Model;
             var account = await context.MoneyAccounts.SingleRequiredAsync(a => a.Id == model.MoneyAccountId && a.ClubId == request.ClubId, cancellationToken);
-            if (account.Iban is null)
-                throw new PreconditionException(AccountingErrorCode.AccountingInvoiceAccountWithoutIban, "The money account has no IBAN.");
+            InvoiceMapper.EnsurePayable(account, await context.GetAccountingRegion(request.ClubId, cancellationToken));
 
             var data = new InvoiceSettings.SettingsData(model.Address, model.ZvrNumber, model.Contact, account.Id, model.Bic, model.NumberPrefix, model.PaymentTermDays, model.Footer);
             var settings = await context.InvoiceSettings.SingleOrDefaultAsync(s => s.ClubId == request.ClubId, cancellationToken);
@@ -76,7 +78,7 @@ public record GetInvoices(int ClubId, InvoiceStatus? Status, DateTimeOffset Now)
     {
         public async Task<GetInvoicesResult> Handle(GetInvoices request, CancellationToken cancellationToken)
         {
-            var today = AccountingQueries.Today(request.Now);
+            var today = (await context.GetAccountingRegion(request.ClubId, cancellationToken)).Today(request.Now);
             var invoices = await context.Invoices.AsNoTracking()
                 .Where(i => i.ClubId == request.ClubId && (request.Status == null || i.Status == request.Status))
                 .OrderByDescending(i => i.InvoiceDate).ThenByDescending(i => i.Id)
@@ -167,7 +169,7 @@ public record IssueInvoice(int ClubId, int InvoiceId, DateTimeOffset Now) : ICom
             await context.LockAccounting(request.ClubId, cancellationToken);
             var settings = await InvoiceMapper.GetSettings(context, request.ClubId, cancellationToken);
             var invoice = await context.Invoices.Include(i => i.Lines).SingleRequiredAsync(i => i.Id == request.InvoiceId && i.ClubId == request.ClubId, cancellationToken);
-            invoice.MoveDatesForIssue(AccountingQueries.Today(request.Now));
+            invoice.MoveDatesForIssue((await context.GetAccountingRegion(request.ClubId, cancellationToken)).Today(request.Now));
 
             var year = invoice.InvoiceDate.Year;
             var last = await context.Invoices.Where(i => i.ClubId == request.ClubId && i.NumberYear == year).MaxAsync(i => i.NumberSequence, cancellationToken);
@@ -255,11 +257,12 @@ public record SendInvoice(int ClubId, int InvoiceId, string? Email, bool Reminde
 
             var data = await InvoiceMapper.PdfData(context, invoice, cancellationToken);
             var language = invoice.German ? Language.German : Language.English;
-            var culture = language.ToCultureInfo();
+            var culture = data.Culture;
             var variables = new InvoiceEmailVariables(
                 new MemberVariables(invoice.RecipientName, ""),
-                new InvoiceVariables(invoice.Number!, (invoice.TotalCents / 100m).ToString("C", culture), invoice.InvoiceDate.ToString("d", culture),
-                    invoice.DueDate.ToString("d", culture), invoice.Subject, data.Iban, invoice.ReminderCount));
+                new InvoiceVariables(invoice.Number!, culture.Money(invoice.TotalCents), culture.Date(invoice.InvoiceDate), culture.Date(invoice.DueDate), invoice.Subject,
+                    data.Account.Iban, invoice.ReminderCount,
+                    data.Account.Iban is null ? data.Account.AccountNumber : null, data.Account.Iban is null ? data.Account.RoutingNumber : null, data.HasQrCode));
             await context.SaveChangesAsync(cancellationToken);
 
             await mediator.Send(new SendClubEmail(request.ClubId, request.Reminder ? ClubEmailType.InvoiceReminder : ClubEmailType.Invoice, email, invoice.RecipientName, language,
@@ -360,6 +363,20 @@ internal static class InvoiceMapper
             model.InvoiceDate, model.DueDate, lines.Select(l => new Invoice.LineData(l.Text, l.Quantity, l.UnitPriceCents, l.CategoryId, l.CostCenterId)).ToList());
     }
 
+    /// <summary>
+    /// The money account the invoices name must have bank details to pay to: an IBAN, or in the United States the account and routing
+    /// number (an IBAN is taken there too).
+    /// </summary>
+    public static void EnsurePayable(MoneyAccount account, AccountingRegion region)
+    {
+        if (region.IsUnitedStates ? !account.HasBankDetails : account.Iban is null)
+        {
+            throw region.IsUnitedStates
+                ? new PreconditionException(AccountingErrorCode.AccountingInvoiceAccountWithoutBankDetails, "The money account has no account and routing number.")
+                : new PreconditionException(AccountingErrorCode.AccountingInvoiceAccountWithoutIban, "The money account has no IBAN.");
+        }
+    }
+
     public static async Task<InvoicePdfData> PdfData(AppDbContext context, Invoice invoice, CancellationToken cancellationToken, bool ignoreFilters = false)
     {
         var settingsQuery = ignoreFilters ? context.InvoiceSettings.IgnoreQueryFilters() : context.InvoiceSettings;
@@ -367,10 +384,11 @@ internal static class InvoiceMapper
                        ?? throw new PreconditionException(AccountingErrorCode.AccountingInvoicingNotSetUp, "The details for invoices are not set.");
         var clubs = ignoreFilters ? context.Clubs.IgnoreQueryFilters() : context.Clubs;
         var clubName = await clubs.Where(c => c.Id == invoice.ClubId).Select(c => c.Name).SingleAsync(cancellationToken);
+        var region = await context.GetAccountingRegion(invoice.ClubId, cancellationToken, ignoreFilters);
         var accounts = ignoreFilters ? context.MoneyAccounts.IgnoreQueryFilters() : context.MoneyAccounts;
-        var iban = await accounts.Where(a => a.Id == settings.MoneyAccountId && a.ClubId == invoice.ClubId).Select(a => a.Iban).SingleAsync(cancellationToken)
-                   ?? throw new PreconditionException(AccountingErrorCode.AccountingInvoiceAccountWithoutIban, "The money account has no IBAN.");
-        return new InvoicePdfData(invoice, settings, clubName, iban);
+        var account = await accounts.AsNoTracking().SingleAsync(a => a.Id == settings.MoneyAccountId && a.ClubId == invoice.ClubId, cancellationToken);
+        EnsurePayable(account, region);
+        return new InvoicePdfData(invoice, settings, clubName, account, region);
     }
 
     public static string FileName(Invoice invoice)
@@ -397,7 +415,7 @@ internal static class InvoiceMapper
     public static async Task<InvoiceDetailDto> Detail(AppDbContext context, Invoice invoice, DateTimeOffset now, CancellationToken cancellationToken)
     {
         var entryNumber = invoice.EntryId is { } entryId ? await context.AccountingEntries.Where(e => e.Id == entryId).Select(e => (int?)e.Number).SingleOrDefaultAsync(cancellationToken) : null;
-        var dto = ToDto(invoice, AccountingQueries.Today(now));
+        var dto = ToDto(invoice, (await context.GetAccountingRegion(invoice.ClubId, cancellationToken)).Today(now));
         return new InvoiceDetailDto
         {
             Id = dto.Id,

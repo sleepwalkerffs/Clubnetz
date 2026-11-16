@@ -41,9 +41,9 @@ public record UpdateMoneyAccount(int ClubId, int MoneyAccountId, SaveMoneyAccoun
             account.Update(request.Model.ToData());
             account.SetArchived(request.Model.IsArchived);
 
-            // The invoices print its IBAN (and their PDFs are drawn again for every email)
-            if (account.Iban is null && await context.InvoiceSettings.AnyAsync(s => s.ClubId == request.ClubId && s.MoneyAccountId == account.Id, cancellationToken))
-                throw new PreconditionException(AccountingErrorCode.AccountingInvoiceAccountWithoutIban, "The invoices name this account.");
+            // The invoices print its bank details (and their PDFs are drawn again for every email)
+            if (await context.InvoiceSettings.AnyAsync(s => s.ClubId == request.ClubId && s.MoneyAccountId == account.Id, cancellationToken))
+                InvoiceMapper.EnsurePayable(account, await context.GetAccountingRegion(request.ClubId, cancellationToken));
             await context.EnsureUniqueName(context.MoneyAccounts, account, cancellationToken);
 
             await context.SaveChangesAsync(cancellationToken);
@@ -195,7 +195,8 @@ public record DeleteCostCenter(int ClubId, int CostCenterId) : ICommand
 
 internal static class AccountingMasterDataExtensions
 {
-    public static MoneyAccount.AccountData ToData(this SaveMoneyAccountModel model) => new(model.Name, (MoneyAccountKind)model.Kind, model.Iban, model.SortOrder);
+    public static MoneyAccount.AccountData ToData(this SaveMoneyAccountModel model)
+        => new(model.Name, (MoneyAccountKind)model.Kind, model.Iban, model.SortOrder, model.AccountNumber, model.RoutingNumber);
 
     public static AccountingCategory.CategoryData ToData(this SaveAccountingCategoryModel model)
         => new((AccountingCategoryKind)model.Kind, model.Number, model.Name, (TaxSphere)model.TaxSphere);
@@ -206,6 +207,8 @@ internal static class AccountingMasterDataExtensions
         Name = account.Name,
         Kind = (global::Bookennis.Shared.Controller.Accounting.MoneyAccountKind)account.Kind,
         Iban = account.Iban,
+        AccountNumber = account.AccountNumber,
+        RoutingNumber = account.RoutingNumber,
         IsArchived = account.IsArchived,
         SortOrder = account.SortOrder,
         IsUsed = isUsed,

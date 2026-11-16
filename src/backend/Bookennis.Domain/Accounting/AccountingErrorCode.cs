@@ -161,4 +161,13 @@ public enum AccountingErrorCode
 
     /// <summary>The file holds statements of several accounts: give the money account its IBAN, then only its statements are read.</summary>
     AccountingBankFileSeveralAccounts = 52,
+
+    /// <summary>The ABA routing number of a US bank account is not 9 digits with a valid check digit (or the account number has none).</summary>
+    AccountingRoutingNumberInvalid = 53,
+
+    /// <summary>The number of a US bank account is not 4-17 digits (or the routing number has none). Arguments: the shortest and longest length.</summary>
+    AccountingAccountNumberInvalid = 54,
+
+    /// <summary>The money account of the invoices of a US club needs its account and routing number (or an IBAN).</summary>
+    AccountingInvoiceAccountWithoutBankDetails = 55,
 }
