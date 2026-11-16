@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Components.Shared.Dialogs
 @using Bookennis.Client.Localization
@@ -23,7 +24,7 @@
         }
 
         <MudDateRangePicker Variant="Variant.Outlined" Label="@L["SeasonPeriod"]" DateRange="@range" DateRangeChanged="@(value => range = value)"
-                            PickerVariant="PickerVariant.Dialog" Required="true" DisplayMonths="2" TitleDateFormat="dd.MM.yyyy" />
+                            PickerVariant="PickerVariant.Dialog" Required="true" DisplayMonths="2" TitleDateFormat="@RegionalCulture.Current.DateTimeFormat.ShortDatePattern" />
 
         @if (Start is { } start && End is { } end && end > start)
         {

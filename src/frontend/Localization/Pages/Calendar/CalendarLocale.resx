@@ -117,12 +117,6 @@
   <data name="FromTime" xml:space="preserve">
     <value>from {0}</value>
   </data>
-  <data name="DateFormat" xml:space="preserve">
-    <value>ddd, d MMM</value>
-  </data>
-  <data name="DateFormatWithYear" xml:space="preserve">
-    <value>ddd, d MMM yyyy</value>
-  </data>
   <data name="YoureIn" xml:space="preserve">
     <value>You're in ({0})</value>
   </data>

@@ -20,6 +20,7 @@
                    Time="@(dateTime.HasValue ? dateTime.Value.TimeOfDay : null)"
                    TimeChanged="TimeChanged"
                    Culture="CultureInfo.CurrentCulture"
+                   AmPm="@timeAmPm"
                    Editable="true"
                    PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
                    AdornmentIcon="@Icons.Material.Filled.AccessTime"
@@ -78,7 +79,7 @@
     {
         get
         {
-            return CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern.EndsWith("tt");
+            return CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern.Contains("tt", StringComparison.Ordinal);
         }
     }
 

@@ -1,4 +1,5 @@
 using System.Globalization;
+using Bookennis.Client.Utils;
 
 namespace Bookennis.Client.Pages.ClubShell.SubscriptionPlanner;
 
@@ -9,7 +10,7 @@ public static class SubscriptionPlannerFormat
         => $"{ShortDate(from)} – {ShortDate(to)}";
 
     public static string ShortDate(DateOnly date)
-        => date.ToString(CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "de" ? "d. MMM" : "d MMM", CultureInfo.CurrentCulture);
+        => date.ToString(DateFormats.Localized("d. MMM"), CultureInfo.CurrentCulture);
 
     public static string Number(double value)
         => value.ToString("0.#", CultureInfo.CurrentCulture);

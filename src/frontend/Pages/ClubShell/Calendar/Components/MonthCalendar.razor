@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Localization.Pages.Calendar
 @using Bookennis.Shared.Controller.ClubEvents
@@ -76,18 +77,19 @@
 
     private bool IsCurrentMonth => Month.Year == Today.Year && Month.Month == Today.Month;
 
-    /// <summary>The weeks shown for a month (Monday first), also used to load the events of the visible range.</summary>
+    /// <summary>The weeks shown for a month (starting on the club's first day of the week), also used to load the events of the visible range.</summary>
     public static (DateOnly From, DateOnly To) GetVisibleRange(DateOnly month)
     {
+        var region = RegionalCulture.Current;
         var first = new DateOnly(month.Year, month.Month, 1);
-        var from = first.AddDays(-(((int)first.DayOfWeek + 6) % 7));
+        var from = region.StartOfWeek(first);
         var last = first.AddMonths(1).AddDays(-1);
-        var to = last.AddDays((7 - (int)last.DayOfWeek) % 7);
+        var to = region.StartOfWeek(last).AddDays(6);
         return (from, to);
     }
 
     private static IEnumerable<string> Weekdays
-        => Enumerable.Range(0, 7).Select(i => CultureInfo.CurrentCulture.DateTimeFormat.AbbreviatedDayNames[(i + 1) % 7]);
+        => RegionalCulture.Current.WeekDays.Select(d => CultureInfo.CurrentCulture.DateTimeFormat.AbbreviatedDayNames[(int)d]);
 
     private IEnumerable<DateOnly> Days
     {

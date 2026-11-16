@@ -1,3 +1,4 @@
+using Bookennis.Shared.Utils;
 using System.Globalization;
 using Bookennis.Client.Localization.Pages.Memberships;
 using Bookennis.Shared.Controller.Memberships;
@@ -32,8 +33,8 @@ public static class MembershipHelpers
     public static string MembershipUrl(int clubId, int? seasonId = null)
         => seasonId is null ? $"/clubs/{clubId}/membership" : $"/clubs/{clubId}/membership?season={seasonId}";
 
-    /// <summary>An amount in euro, e.g. "€ 215,00".</summary>
-    public static string Amount(long cents) => "€ " + (cents / 100m).ToString("N2", CultureInfo.CurrentCulture);
+    /// <summary>An amount in the club's currency, e.g. "€ 215,00" or "$215.00".</summary>
+    public static string Amount(long cents) => RegionalCulture.Current.Money(cents);
 
     public static string Price(IStringLocalizer<MembershipsLocale> locale, int priceCents) => priceCents == 0 ? locale["Free"] : Amount(priceCents);
 

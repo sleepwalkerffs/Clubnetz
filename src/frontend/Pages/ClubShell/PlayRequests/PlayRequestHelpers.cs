@@ -1,3 +1,4 @@
+using Bookennis.Shared.Utils;
 using System.Globalization;
 using Bookennis.Shared.Controller.PlayRequests;
 
@@ -19,14 +20,14 @@ public static class PlayRequestHelpers
     }
 
     /// <summary>E.g. "Sat 3 Oct".</summary>
-    public static string Day(PlayRequestDto request) => InZone(request.StartsAt, request.TimeZoneInfoId).ToString("ddd d MMM", CultureInfo.CurrentCulture);
+    public static string Day(PlayRequestDto request) => InZone(request.StartsAt, request.TimeZoneInfoId).ToString(RegionalCulture.Current.CompactWeekdayDayMonthNamePattern, CultureInfo.CurrentCulture);
 
     /// <summary>E.g. "18:00 – 19:30".</summary>
     public static string Times(PlayRequestDto request)
-        => $"{InZone(request.StartsAt, request.TimeZoneInfoId):HH:mm} – {InZone(request.EndsAt, request.TimeZoneInfoId):HH:mm}";
+        => $"{InZone(request.StartsAt, request.TimeZoneInfoId):t} – {InZone(request.EndsAt, request.TimeZoneInfoId):t}";
 
     public static string DayAndTime(DateTimeOffset value, string timeZoneInfoId)
-        => InZone(value, timeZoneInfoId).ToString("ddd d MMM, HH:mm", CultureInfo.CurrentCulture);
+        => InZone(value, timeZoneInfoId).ToString(RegionalCulture.Current.CompactWeekdayDayMonthNamePattern + ", " + RegionalCulture.Current.DateTimeFormat.ShortTimePattern, CultureInfo.CurrentCulture);
 
     public static string FullName(string firstName, string lastName) => $"{firstName} {lastName}".Trim();
 

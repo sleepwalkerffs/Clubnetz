@@ -154,6 +154,12 @@ public sealed class RegionalCulture : CultureInfo
     /// <summary>"Mo, 16.11." / "Mon, 11/16"</summary>
     public string WeekdayDayMonthPattern => IsUnitedStates ? "ddd, M/d" : "ddd, dd.MM.";
 
+    /// <summary>"Mo 16.11." / "Mon 11/16"</summary>
+    public string CompactWeekdayDayMonthPattern => IsUnitedStates ? "ddd M/d" : "ddd d.M.";
+
+    /// <summary>"Mo 16 Nov" / "Mon Nov 16"</summary>
+    public string CompactWeekdayDayMonthNamePattern => IsUnitedStates && !IsGerman ? "ddd MMM d" : "ddd d MMM";
+
     /// <summary>"16. Nov" / "16 Nov" / "Nov 16"</summary>
     public string DayMonthNamePattern => IsUnitedStates && !IsGerman ? "MMM d" : IsGerman ? "d. MMM" : "d MMM";
 
@@ -188,6 +194,10 @@ public sealed class RegionalCulture : CultureInfo
         => UsesTwelveHourClock
             ? $"{(hour % 12 == 0 ? 12 : hour % 12)} {(hour % 24 < 12 ? "AM" : "PM")}"
             : $"{hour:00}";
+
+    /// <summary>Label of a full hour where there is room for it: "08:00" / "8 AM".</summary>
+    public string FullHourLabel(int hour)
+        => UsesTwelveHourClock ? HourLabel(hour) : Time(TimeSpan.FromHours(hour));
 
     /// <summary>An amount in cents in the club's currency, e.g. "€ 12,50" or "$12.50".</summary>
     public string Money(long cents, string? currency = null) => Money(cents / 100m, currency);

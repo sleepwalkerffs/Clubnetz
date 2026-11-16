@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Localization.Pages.Planner
 @using Bookennis.Client.Services
@@ -96,7 +97,7 @@
                             <span class="planner-block__handle planner-block__handle--start" data-edge="start"></span>
                         }
                         <div class="planner-block__line">
-                            <span class="planner-block__time">@booking.Interval.From.ToString("HH:mm")–@booking.Interval.To.ToString("HH:mm")</span>
+                            <span class="planner-block__time">@booking.Interval.From.ToString("t", CultureInfo.CurrentCulture)–@booking.Interval.To.ToString("t", CultureInfo.CurrentCulture)</span>
                             <span class="planner-block__mode">@booking.PlayMode.Name</span>
                             @if (booking.RecurringBookingSeriesId is not null)
                             {
@@ -191,14 +192,14 @@
 
     private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
     private double TotalWidth => days.Count == 0 ? 0 : days[^1].Left + days[^1].Width;
-    private string DayFormat => CultureInfo.CurrentCulture.TwoLetterISOLanguageName == "de" ? "d. MMM" : "MMM d";
+    private static string DayFormat => DateFormats.Localized("d. MMM");
 
     private static string Px(double value) => value.ToString("0.##", CultureInfo.InvariantCulture) + "px";
 
     private static bool IsWeekend(DateOnly date) => date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
 
     // Narrow hours only show the hour, wider ones "08:00"
-    private string HourLabel(int hour) => SlotWidth * 2 >= 56 ? $"{hour % 24:00}:00" : $"{hour % 24:00}";
+    private string HourLabel(int hour) => SlotWidth * 2 >= 56 ? RegionalCulture.Current.FullHourLabel(hour % 24) : RegionalCulture.Current.HourLabel(hour % 24);
 
     protected override void OnInitialized()
     {
@@ -319,7 +320,7 @@
             var left = X(segment.Day, segment.From);
             var width = Math.Max(X(segment.Day, segment.To) - left, 4);
             var names = string.Join(", ", booking.Players.Select(p => p.IsAtpPlayer ? $"{p.FirstName} {p.LastName} (ATP)" : $"{p.FirstName} {p.LastName}"));
-            var tooltip = $"{booking.Interval.From:HH:mm}–{booking.Interval.To:HH:mm} · {booking.PlayMode.Name}\n{names}";
+            var tooltip = $"{booking.Interval.From:t}–{booking.Interval.To:t} · {booking.PlayMode.Name}\n{names}";
             blocks.Add(new Block(booking, row, segment.Day, left, width, CanEdit(booking), booking.PlayMode.FixedDuration is null,
                 IsMine(booking), booking.Interval.To <= now, tooltip, names));
         }

@@ -241,24 +241,6 @@ namespace Bookennis.Client.Localization.Pages.Calendar {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to ddd, d MMM.
-        /// </summary>
-        public static string DateFormat {
-            get {
-                return ResourceManager.GetString("DateFormat", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to ddd, d MMM yyyy.
-        /// </summary>
-        public static string DateFormatWithYear {
-            get {
-                return ResourceManager.GetString("DateFormatWithYear", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Date.
         /// </summary>
         public static string DateLabel {

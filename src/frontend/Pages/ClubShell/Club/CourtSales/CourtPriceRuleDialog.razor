@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Components.Shared.Dialogs
@@ -25,8 +26,8 @@
             <MultiChoiceChips TItem="DayOfWeek" Label="@L["Rule_Weekdays"]" Items="@CourtSalesHelpers.Week" Values="@weekdays" ValuesChanged="@(v => weekdays = v)"
                               TextFunc="@CourtSalesHelpers.ShortWeekday" Dense="true" />
             <div class="rule-presets">
-                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => weekdays = CourtSalesHelpers.Week.Take(5).ToList())">@L["Rule_Weekdays_MonFri"]</MudButton>
-                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => weekdays = CourtSalesHelpers.Week.Skip(5).ToList())">@L["Rule_Weekdays_Weekend"]</MudButton>
+                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => weekdays = CourtSalesHelpers.MondayToFriday.ToList())">@L["Rule_Weekdays_MonFri"]</MudButton>
+                <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => weekdays = CourtSalesHelpers.Weekend.ToList())">@L["Rule_Weekdays_Weekend"]</MudButton>
                 <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="@(() => weekdays = CourtSalesHelpers.Week.ToList())">@L["EveryDay"]</MudButton>
             </div>
         </div>
@@ -47,7 +48,7 @@
         </div>
 
         <MudNumericField T="decimal" @bind-Value="price" Label="@L["Rule_Price"]" HelperText="@L["Rule_PriceHint"]" Min="0" Max="10000" Step="1" Format="N2"
-                         Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.Start" AdornmentText="€" />
+                         Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.Start" AdornmentText="@RegionalCulture.CurrencySymbol(RegionalCulture.Current.Currency)" />
 
         <div>
             <ChoiceChips TItem="bool" Label="@L["Rule_Courts"]" Items="@CourtModes" Value="@allCourts" ValueChanged="@(v => allCourts = v)"
@@ -100,7 +101,7 @@
     {
         if (Rule is null)
         {
-            weekdays = CourtSalesHelpers.Week.Take(5).ToList();
+            weekdays = CourtSalesHelpers.MondayToFriday.ToList();
             return;
         }
 

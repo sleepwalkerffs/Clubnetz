@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bookennis.Client.Localization.Pages.News;
+using Bookennis.Client.Utils;
 using Bookennis.Shared.Controller.ClubAnnouncements;
 using Bookennis.Shared.Controller.Shared;
 using Microsoft.Extensions.Localization;
@@ -47,10 +48,10 @@ internal static class NewsHelpers
         };
     }
 
-    public static string FormatDate(IStringLocalizer<NewsLocale> locale, DateOnly date) => date.ToString(locale["DateFormat"], CultureInfo.CurrentCulture);
+    public static string FormatDate(IStringLocalizer<NewsLocale> locale, DateOnly date) => date.ToString(DateFormats.Localized("d. MMM yyyy"), CultureInfo.CurrentCulture);
 
     public static string FormatDateTime(IStringLocalizer<NewsLocale> locale, DateTimeOffset value)
-        => value.LocalDateTime.ToString(locale["DateFormat"] + ", HH:mm", CultureInfo.CurrentCulture);
+        => value.LocalDateTime.ToString(DateFormats.Localized("d. MMM yyyy") + ", " + CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern, CultureInfo.CurrentCulture);
 
     /// <summary>Formats a count with the "{key}One" text for exactly one, e.g. "1 attachment" vs. "3 attachments".</summary>
     public static string Count(IStringLocalizer<NewsLocale> locale, string key, int count)

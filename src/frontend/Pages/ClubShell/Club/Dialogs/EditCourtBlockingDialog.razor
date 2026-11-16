@@ -1,3 +1,5 @@
+@using Bookennis.Shared.Utils
+@using System.Globalization
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Components.Shared.Dialogs
 @using Bookennis.Client.Localization
@@ -42,9 +44,9 @@
             @if (!allDay)
             {
                 <div class="blocking-edit__row">
-                    <MudTimePicker @bind-Time="startTime" Variant="Variant.Outlined" Label="@L["StartTime"]" MinuteSelectionStep="30"
+                    <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" @bind-Time="startTime" Variant="Variant.Outlined" Label="@L["StartTime"]" MinuteSelectionStep="30"
                                    PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" />
-                    <MudTimePicker @bind-Time="endTime" Variant="Variant.Outlined" Label="@L["EndTime"]" MinuteSelectionStep="30"
+                    <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" @bind-Time="endTime" Variant="Variant.Outlined" Label="@L["EndTime"]" MinuteSelectionStep="30"
                                    PickerVariant="PickerVariant.Dialog" Margin="Margin.Dense" />
                 </div>
             }
@@ -85,7 +87,7 @@
                     {
                         <li>
                             <span class="blocking-edit__conflict-when">
-                                @CourtBlockingHelpers.FormatDate(L, DateOnly.FromDateTime(booking.Interval.From.DateTime)) · @booking.Interval.From.ToString("HH:mm")–@booking.Interval.To.ToString("HH:mm") · @booking.CourtName
+                                @CourtBlockingHelpers.FormatDate(L, DateOnly.FromDateTime(booking.Interval.From.DateTime)) · @booking.Interval.From.ToString("t", CultureInfo.CurrentCulture)–@booking.Interval.To.ToString("t", CultureInfo.CurrentCulture) · @booking.CourtName
                             </span>
                             <span class="blocking-edit__conflict-players">@string.Join(", ", booking.Players)</span>
                         </li>

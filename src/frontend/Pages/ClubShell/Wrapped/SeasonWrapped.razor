@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @page "/clubs/{ClubId:int}/wrapped/{SeasonId:int}"
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
@@ -263,7 +264,7 @@
                                  {
                                      <div class="w-fact w-in" style="--d: 6">
                                          <span class="w-fact__emoji">🕖</span>
-                                         <span>@((MarkupString)string.Format(L["FavouriteHour"], Strong($"{hour:00}:00")))</span>
+                                         <span>@((MarkupString)string.Format(L["FavouriteHour"], Strong(RegionalCulture.Current.Time(TimeSpan.FromHours(hour)))))</span>
                                      </div>
                                  }
                              </div>
@@ -315,7 +316,7 @@
                           <div class="w-kicker w-in">@L["RegularKicker"]</div>
                           <div class="w-emoji w-pop" style="--d: 1">🔁</div>
                           <div class="w-mega w-mega--words w-in" style="--d: 2">@string.Format(L["RegularEvery"], CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(w.RegularSlot!.DayOfWeek))</div>
-                          <div class="w-title w-in" style="--d: 3">@string.Format(L["RegularAt"], w.RegularSlot.StartTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture), CourtName(w.RegularSlot.CourtName))</div>
+                          <div class="w-title w-in" style="--d: 3">@string.Format(L["RegularAt"], RegionalCulture.Current.Time(w.RegularSlot.StartTime), CourtName(w.RegularSlot.CourtName))</div>
                           <div class="w-text w-in" style="--d: 5">@((MarkupString)string.Format(L["RegularMatches"], Strong(w.RegularSlot.Matches.ToString(CultureInfo.CurrentCulture))))</div>
                       </div>,
 

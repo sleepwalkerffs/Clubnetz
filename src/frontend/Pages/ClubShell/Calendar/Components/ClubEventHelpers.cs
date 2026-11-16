@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bookennis.Client.Localization.Pages.Calendar;
+using Bookennis.Client.Utils;
 using Bookennis.Shared.Controller.ClubEvents;
 using Bookennis.Shared.Controller.Shared;
 using Microsoft.AspNetCore.Components;
@@ -69,7 +70,7 @@ internal static class ClubEventHelpers
     /// <summary>E.g. "Sat, 10 Oct" or "Sat, 10 Oct – Mon, 12 Oct" (the format is localized).</summary>
     public static string FormatDateRange(IStringLocalizer<CalendarLocale> locale, DateOnly start, DateOnly? end, bool withYear = false)
     {
-        var format = locale[withYear ? "DateFormatWithYear" : "DateFormat"];
+        var format = DateFormats.Localized(withYear ? "ddd, d. MMM yyyy" : "ddd, d. MMM");
         var text = start.ToString(format, CultureInfo.CurrentCulture);
         return end is { } last && last != start ? $"{text} – {last.ToString(format, CultureInfo.CurrentCulture)}" : text;
     }
@@ -81,12 +82,12 @@ internal static class ClubEventHelpers
             return locale["AllDay"];
 
         return end is null
-            ? string.Format(locale["FromTime"], start.Value.ToString("HH:mm"))
-            : $"{start.Value:HH:mm} – {end.Value:HH:mm}";
+            ? string.Format(locale["FromTime"], start.Value.ToString("t", CultureInfo.CurrentCulture))
+            : $"{start.Value:t} – {end.Value:t}";
     }
 
     public static string FormatDeadline(IStringLocalizer<CalendarLocale> locale, DateTimeOffset deadline)
-        => deadline.ToLocalTime().ToString(locale["DateFormat"] + ", HH:mm", CultureInfo.CurrentCulture);
+        => deadline.ToLocalTime().ToString(DateFormats.Localized("ddd, d. MMM") + ", " + CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern, CultureInfo.CurrentCulture);
 
     /// <summary>
     /// Plain text to share: title, date, time, location and the link.

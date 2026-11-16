@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Utils
 @using Bookennis.Client.Components.Booking.Dialogs
@@ -39,7 +40,7 @@
                 <div class="day__half-line" style="grid-row: @(row + 1)"></div>
             }
             <div class="day__time @(hour == 0 ? "day__time--first" : null)" style="grid-row: @row">
-                <span>@(((openingHourStart + hour) % 24).ToString("00")):00</span>
+                <span>@RegionalCulture.Current.FullHourLabel((openingHourStart + hour) % 24)</span>
             </div>
             @if (hour < Hours && WeatherAtHour(hour) is { } weather)
             {
@@ -83,7 +84,7 @@
                     var time = TimeSpan.FromMinutes(openingHourStart * 60 + slot * 30);
                     <div class="day__slot" style="grid-column: @(i + ColumnOffset); grid-row: @row"
                          @onclick="() => OpenBookCourtDialog(time, court)">
-                        <span class="day__slot-label">+ @time.ToString(@"hh\:mm")</span>
+                        <span class="day__slot-label">+ @RegionalCulture.Current.Time(time)</span>
                     </div>
                 }
             }
@@ -130,9 +131,9 @@
                     var anonEnd = CalculateGridRowEnd(booking.Interval.To);
                     <div class="booking-block booking-block--anon @(anonEnd - anonStart <= 1 ? "booking-block--xs" : null) @(booking.Interval.To <= DateTimeOffset.Now ? "booking-block--past" : null)"
                          style="grid-column: @column; grid-row: @anonStart / @anonEnd"
-                         title="@($"{booking.Interval.From:HH:mm}–{booking.Interval.To:HH:mm} · {Locale["Booked"]}")">
+                         title="@($"{booking.Interval.From:t}–{booking.Interval.To:t} · {Locale["Booked"]}")">
                         <div class="booking-block__head">
-                            <span class="booking-block__time">@booking.Interval.From.ToString("HH:mm")–@booking.Interval.To.ToString("HH:mm")</span>
+                            <span class="booking-block__time">@booking.Interval.From.ToString("t", CultureInfo.CurrentCulture)–@booking.Interval.To.ToString("t", CultureInfo.CurrentCulture)</span>
                         </div>
                         <div class="booking-block__mode">@Locale["Booked"]</div>
                     </div>
@@ -153,7 +154,7 @@
                      @onclick="() => OpenDetail(booking.BookingEntryId)"
                      @onkeydown="e => OnBookingKeyDown(e, booking.BookingEntryId)">
                     <div class="booking-block__head">
-                        <span class="booking-block__time">@booking.Interval.From.ToString("HH:mm")–@booking.Interval.To.ToString("HH:mm")</span>
+                        <span class="booking-block__time">@booking.Interval.From.ToString("t", CultureInfo.CurrentCulture)–@booking.Interval.To.ToString("t", CultureInfo.CurrentCulture)</span>
                         @if (booking.RecurringBookingSeriesId is not null)
                         {
                             <MudIcon Icon="@Icons.Material.Filled.Repeat" Class="booking-block__icon" />
@@ -184,7 +185,7 @@
         @if (NowRow is { } nowRow)
         {
             <div class="day__now" style="grid-row: @nowRow; --now-offset: @NowOffsetPixels.ToString(CultureInfo.InvariantCulture)px" @ref="nowLine">
-                <span class="day__now-label">@DateTime.Now.ToString("HH:mm")</span>
+                <span class="day__now-label">@DateTime.Now.ToString("t", CultureInfo.CurrentCulture)</span>
             </div>
         }
     </div>
@@ -386,14 +387,14 @@
     private int BookingsPerCourt(int courtId) => BookingsOfDay.Count(b => b.CourtId == courtId);
 
     private string BookingTooltip(BookingResult booking)
-        => $"{booking.Interval.From:HH:mm}–{booking.Interval.To:HH:mm} · {booking.PlayMode.Name}\n{string.Join(", ", booking.Players.Select(p => $"{p.FirstName} {p.LastName}"))}";
+        => $"{booking.Interval.From:t}–{booking.Interval.To:t} · {booking.PlayMode.Name}\n{string.Join(", ", booking.Players.Select(p => $"{p.FirstName} {p.LastName}"))}";
 
     /// <summary>The blocked time on this day, e.g. "14:00–18:00" or "All day" when it covers the whole day.</summary>
     private string BlockingTime(CourtBlockingOccurrenceDto blocking)
     {
         var from = blocking.Interval.From < bookableRange.From ? bookableRange.From : blocking.Interval.From;
         var to = blocking.Interval.To > bookableRange.To ? bookableRange.To : blocking.Interval.To;
-        return from == bookableRange.From && to == bookableRange.To ? Locale["AllDay"] : $"{from:HH:mm}–{to:HH:mm}";
+        return from == bookableRange.From && to == bookableRange.To ? Locale["AllDay"] : $"{from:t}–{to:t}";
     }
 
     private string BlockingTooltip(CourtBlockingOccurrenceDto blocking) => $"{blocking.Title}\n{BlockingTime(blocking)}";

@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @page "/clubs/{ClubId:int}/booking/{BookingEntryId:int}"
 @using Bookennis.Client.Components.Booking
 @using Bookennis.Client.Components.Booking.Dialogs
@@ -55,7 +56,7 @@ else
             <div class="detail-hero__text">
                 <div class="detail-hero__eyebrow">@RelativeLabel</div>
                 <div class="detail-hero__time">
-                    @booking.Interval.From.ToString("HH:mm") – @booking.Interval.To.ToString("HH:mm")
+                    @booking.Interval.From.ToString("t", CultureInfo.CurrentCulture) – @booking.Interval.To.ToString("t", CultureInfo.CurrentCulture)
                     <span class="detail-hero__duration">@FormatDuration(booking.Interval.To - booking.Interval.From)</span>
                 </div>
                 <div class="detail-hero__chips">
@@ -128,11 +129,11 @@ else
                                  ValueChanged="@(court => editCourt = court)" TextFunc="@(court => court.Name)" />
 
                     <div class="detail-edit__times">
-                        <MudDatePicker @bind-Date="editDate" Variant="Variant.Outlined" Label=@Locale["Date"] DateFormat="dd.MM.yyyy" />
-                        <MudTimePicker @bind-Time="editStartTime" Variant="Variant.Outlined" Label=@Locale["StartTime"] MinuteSelectionStep="30" />
+                        <MudDatePicker @bind-Date="editDate" Variant="Variant.Outlined" Label=@Locale["Date"] />
+                        <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" @bind-Time="editStartTime" Variant="Variant.Outlined" Label=@Locale["StartTime"] MinuteSelectionStep="30" />
                         @if (editPlayMode?.FixedDuration is null)
                         {
-                            <MudTimePicker @bind-Time="editEndTime" Variant="Variant.Outlined" Label=@Locale["EndTime"] MinuteSelectionStep="30" />
+                            <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" @bind-Time="editEndTime" Variant="Variant.Outlined" Label=@Locale["EndTime"] MinuteSelectionStep="30" />
                         }
                     </div>
 

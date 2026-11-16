@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @page "/clubs/{ClubId:int}/club-statistics"
 @layout ClubWithStoreLayout
 @using System.Globalization
@@ -175,7 +176,7 @@ else
             <MudItem xs="6" md="4">
                 <StatTile Icon="@Icons.Material.Filled.LocalFireDepartment" Color="#DC2626"
                           Value="@(play.BusiestDay is { } busiest ? Hours(busiest.Hours) : "–")" Unit="@(play.BusiestDay is null ? null : "h")"
-                          Label="@L["BusiestDay"]" Hint="@play.BusiestDay?.Date.ToString("ddd, dd.MM.", CultureInfo.CurrentCulture)" />
+                          Label="@L["BusiestDay"]" Hint="@play.BusiestDay?.Date.ToString(RegionalCulture.Current.WeekdayDayMonthPattern, CultureInfo.CurrentCulture)" />
             </MudItem>
         </MudGrid>
 

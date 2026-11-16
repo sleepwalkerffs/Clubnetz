@@ -21,7 +21,7 @@
                 <span class="buy-summary__month">@Date.ToString("MMM", CultureInfo.CurrentCulture)</span>
             </div>
             <div class="buy-summary__text">
-                <div class="buy-summary__time">@From.ToString("HH:mm")–@To.ToString("HH:mm")</div>
+                <div class="buy-summary__time">@From.ToString("t", CultureInfo.CurrentCulture)–@To.ToString("t", CultureInfo.CurrentCulture)</div>
                 <div class="buy-summary__meta">📍 @Court.Name</div>
             </div>
         </div>

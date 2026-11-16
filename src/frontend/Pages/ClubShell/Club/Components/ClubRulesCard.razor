@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Components.Shared.Buttons
@@ -18,9 +19,9 @@
         <section class="rules__group">
             <h3 class="rules__title">🕗 @L["OpeningHours"]</h3>
             <div class="rules__row">
-                <MudTimePicker Label="@L["From"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["From"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
                                Time="@openingFrom" TimeChanged="@(value => { openingFrom = value; errors = []; })" Margin="Margin.Dense" />
-                <MudTimePicker Label="@L["To"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["To"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
                                Time="@openingTo" TimeChanged="@(value => { openingTo = value; errors = []; })" Margin="Margin.Dense" />
             </div>
         </section>
@@ -42,13 +43,13 @@
             @if (primeTimeEnabled)
             {
                 <div class="rules__row">
-                    <MudTimePicker Label="@L["From"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                    <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["From"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
                                    Time="@primeFrom" TimeChanged="@(value => { primeFrom = value; errors = []; })" Margin="Margin.Dense" />
-                    <MudTimePicker Label="@L["To"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                    <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["To"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
                                    Time="@primeTo" TimeChanged="@(value => { primeTo = value; errors = []; })" Margin="Margin.Dense" />
                 </div>
 
-                <MultiChoiceChips TItem="DayOfWeek" Label="@L["PrimeTimeWeekdays"]" Items="@WeekdaysMondayFirst" Values="@weekdays"
+                <MultiChoiceChips TItem="DayOfWeek" Label="@L["PrimeTimeWeekdays"]" Items="@RegionalCulture.Current.WeekDays" Values="@weekdays"
                                   ValuesChanged="@(values => weekdays = values.ToList())" TextFunc="@(day => CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day))"
                                   ColorFunc="@(_ => "#D97706")" />
 
@@ -104,9 +105,6 @@
     [Inject] private IStringLocalizer<ClubSettingsLocale> L { get; set; } = null!;
     [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
     [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
-
-    private static readonly DayOfWeek[] WeekdaysMondayFirst =
-        [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday];
 
     private TimeSpan? openingFrom;
     private TimeSpan? openingTo;

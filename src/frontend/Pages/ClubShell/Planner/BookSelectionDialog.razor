@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Components.Booking
 @using Bookennis.Client.Components.Shared
@@ -83,8 +84,8 @@
                         }
                         <span class="book-selection__slot-text">
                             <strong>@slot.CourtName</strong>
-                            <span>@slot.From.ToString("ddd d.M.", CultureInfo.CurrentCulture)</span>
-                            <span class="book-selection__time">@slot.From.ToString("HH:mm")–@slot.To.ToString("HH:mm")</span>
+                            <span>@slot.From.ToString(RegionalCulture.Current.CompactWeekdayDayMonthPattern, CultureInfo.CurrentCulture)</span>
+                            <span class="book-selection__time">@slot.From.ToString("t", CultureInfo.CurrentCulture)–@slot.To.ToString("t", CultureInfo.CurrentCulture)</span>
                         </span>
                         @if (error is not null)
                         {
@@ -110,7 +111,7 @@
                         var from = booking.Interval.From.ToLocalTime();
                         var to = booking.Interval.To.ToLocalTime();
                         <li>
-                            <strong>@booking.PlayModeName</strong> · @CourtName(booking.CourtId) · @from.ToString("ddd d.M.", CultureInfo.CurrentCulture) @from.ToString("HH:mm")–@to.ToString("HH:mm")
+                            <strong>@booking.PlayModeName</strong> · @CourtName(booking.CourtId) · @from.ToString(RegionalCulture.Current.CompactWeekdayDayMonthPattern, CultureInfo.CurrentCulture) @from.ToString("t", CultureInfo.CurrentCulture)–@to.ToString("t", CultureInfo.CurrentCulture)
                             @if (booking.PlayerNames.Count > 0)
                             {
                                 <span> · @string.Join(", ", booking.PlayerNames)</span>
