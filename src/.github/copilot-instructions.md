@@ -56,7 +56,7 @@ A member of the club who is **not enrolled in the active season** (joined with "
 ### Domain (`Bookennis.Domain/CourtSales`)
 
 - `CourtSaleSettings` (`TenantDomainEntity`, unique per club, no row = switched off): `IsEnabled`, `PlayModeId?` (play mode of bought bookings, required to switch on, FK set null when the play mode is deleted), `TimeZoneId` (default Europe/Vienna; the prices are local times of it - **never the client's time zone**), `MaxBookingMinutes` (30-240, multiple of 30, default 120), `MaxDaysInAdvance` (0-90, default 14), `MaxUpcomingBookings` (1-10, default 1). The play mode may not overbook (`CourtSalePlayModeCanOverbook`) or have a fixed duration (`CourtSalePlayModeHasFixedDuration`).
-- `CourtPriceRule` (`TenantDomainEntity`): `CourtIds` (empty = all courts), `Weekdays`, `From`/`To` (local `TimeOnly` on full/half hours, `To` 00:00 = midnight), `PricePerHourCents` (≥ 0, 0 = free), `Currency` ("eur"), `Name?`. Rules of a club never overlap (shared weekday + shared court + intersecting times → `CourtPriceRulesOverlap` with name and times of the other rule). The DTOs carry the times as `TimeSpan` (24:00 = midnight) because the client converts `TimeOnly` to UTC.
+- `CourtPriceRule` (`TenantDomainEntity`): `CourtIds` (empty = all courts), `Weekdays`, `From`/`To` (local `TimeOnly` on full/half hours, `To` 00:00 = midnight), `PricePerHourCents` (≥ 0, 0 = free), `Currency` ("eur"), `Name?`. Rules of a club never overlap (shared weekday + shared court + intersecting times → `CourtPriceRulesOverlap` with name and times of the other rule). The DTOs carry the times as `TimeSpan` (24:00 = midnight).
 - `CourtPricing.Quote(rules, courtId, interval, timeZone)` walks the slot minute by minute in local time (spans two rules, daylight saving days are priced by the time really played); a minute without a rule = not for sale (`null`). The amount is rounded to cents once at the end. `QuoteFirstMinutes(..., 60)` is what a credit covers. `CourtPricingTests` covers it.
 - `CourtPurchase` (`TenantDomainEntity`): `MemberId?` (buyer, set null when the member is removed), `BookingId?` (set null), `CourtId`, `Interval`, `PriceCents`, `CreditUsed`, `AmountDueCents`, `Currency`, `Status`, `PaymentMethod?` (`Online`, `Credit`, `Free`), Stripe session/payment intent, `HoldExpiresAt?`, `PaidAt?`, `CancelledAt?`, `CancelledByMemberId?`. Status `AwaitingPayment` → `Processing` (SEPA) → `Paid`; `Expired` (hold released), `Failed`, `Cancelled`, `Refunded`, `Disputed`, `Compensated` (the club needed the court, `CompensationCredits?`). Transitions are methods (`CourtPurchaseInvalidStatus`), `MarkPaid/MarkProcessing/MarkFailed/MarkRefunded/MarkDisputed/Expire` are no-ops when repeated. `MarkPaid`/`MarkProcessing` also accept an `Expired` purchase (the money arrived late).
 - `BookingCreditGrant` (`TenantDomainEntity`): `MemberId` (cascade), `Count` (≠ 0, negative to take back), `Reason` (`GuestCardMigration`, `GrantedByClub`), `Note?`, `GrantedByMemberId?`. **Balance** = Σ grants − purchases with `CreditUsed` in `CourtPurchase.CreditHoldingStatuses` (AwaitingPayment, Processing, Paid): a credit comes back by itself when its purchase expires, fails or is cancelled. A negative grant can't take the balance below 0 (`BookingCreditBalanceTooLow`).
@@ -278,6 +278,12 @@ Recurring bookings allow members to reserve a court on a repeating weekly schedu
 - The `ExceptionFilter` maps these to `ErrorCodeResponse` JSON responses.
 - In the FE, `HttpResult` / `HttpResult<T>` wraps responses; use `SnackbarExtensions.ShowErrorDetails` to display errors.
 
+### Club Time Zone, Country & Currency
+
+- Every club has `TimeZoneId` (IANA), `Country` and `Currency` ("eur"/"usd"/"chf"), set by application administrators in the admin panel (club admins see them read only in the club settings). The server uses the club's zone for everything and ignores the `TimeZoneInfoId` a client sends.
+- **The app runs on the club's clock and formats** (`Services/ClubRegion.cs`): when the club profile loads, it sets the `TZ` environment variable of the WebAssembly runtime + `TimeZoneInfo.ClearCachedData()` (so `TimeZoneInfo.Local`, `DateTime.Now`, `ToLocalTime()` and the JSON converter are club time) and `CultureInfo.DefaultThreadCurrentCulture` to `RegionalCulture.For(browser language, country, currency)`; the UI culture (texts) stays the browser's. The last club's region is kept in localStorage (`App.clubRegion` in `theme.js`) and applied in `App.razor` before the first render. Switching clubs reloads the page.
+- **Never hardcode a date, time or currency format** (`"HH:mm"`, `"dd.MM."`, `"€ "`, `{h:00}:00`): use the standard formats (`"t"`, `"d"`) of the current culture or `RegionalCulture.Current` (`Time`, `Date`, `Money`, `HourLabel`/`FullHourLabel`, `DayMonthPattern`, `WeekDays`, `StartOfWeek`, ...) and `DateFormats.Localized` for day/month-name patterns. Every `MudTimePicker` gets `AmPm="@RegionalCulture.Current.UsesTwelveHourClock"`; calendars start on the club's first day of the week. US clubs see the 12-hour clock, M/d/yyyy, Sunday first, $, °F and mph.
+
 ### Frontend Store Pattern
 
 - Every store interface extends `ISemaphoreStore` and is implemented by a class extending `SemaphoreStore`.
@@ -394,7 +400,7 @@ Sports directors, admins and the other elevated booking roles plan bookings (e.g
 
 - **Drag** a booking to move it (time, day, court), **drag its edges** to resize it (not for play modes with `FixedDuration`), **drag over free time** to select a region (courts × time within one day), **Ctrl/Cmd + drag** adds regions; "Book selection" opens `BookSelectionDialog`, which creates one booking per court per region.
 - The pointer handling lives in `wwwroot/planner-interop.js` (instance id per timeline, `[JSInvokable]` callbacks on `PlannerTimeline`). It pre-checks drops (past, blockings, closed courts, opening hours, overlaps for play modes that can't overbook) only to give feedback - **the server decides**.
-- Opening hours and prime time are UTC `TimeOnly`s that the client converter shifts with today's offset; `PlannerHelpers.DailyWindow` rebuilds them per day so days after a DST change are right.
+- Opening hours and prime time are local `TimeOnly`s of the club; `PlannerHelpers.DailyWindow` turns them into the times of each day, so days after a DST change are right.
 
 ### Rules (top priority: the play mode rules always hold)
 
@@ -428,7 +434,7 @@ Maintainers, sports directors and admins block one or more courts for a time win
 
 - `CourtBlockingsController` (`api/Clubs/{clubId}/CourtBlockings`): `GET ?dayFrom=&dayTo=` (occurrences for the booking grid, `AuthorizationPolicies.Member`, also for members who are not active), `GET manage?includePast=` (blockings as entered, upcoming first), `POST conflicts`, `POST`, `PUT {id}`, `DELETE {id}`.
 - Managing requires `AuthorizationPolicies.CourtBlockingManager` (`Maintainer`, `SportsDirector`, `Admin` - not `YouthSportsDirector`). The FE mirrors this in `CourtBlockingHelpers.CanManage`.
-- **The times in `SaveCourtBlockingModel`/`CourtBlockingDto` are `TimeSpan`s, not `TimeOnly`**: the client's `TimeOnlyJsonConverter` converts `TimeOnly` to UTC time of day, which is wrong for local times that the server combines with a date and a time zone.
+- The times in `SaveCourtBlockingModel`/`CourtBlockingDto` are `TimeSpan`s (local times of the club that the server combines with a date and the time zone).
 
 ### FE
 
@@ -474,7 +480,7 @@ At the end of a season every active club member gets a story-style review of the
 
 - `Pages/ClubShell/Wrapped/WrappedSeasons.razor` (`/clubs/{id}/wrapped`, nav "Personal" → Season Wrapped): one card per season, admins get release/take back and preview. `SeasonWrapped.razor` (`/clubs/{id}/wrapped/{seasonId}`): full-screen story player (fixed overlay above the app bar, phone-sized card on desktop) with progress segments, tap left/right, hold or space to pause, arrow keys, Escape, and a summary card with share (`App.shareOrCopy`). Slides without data are left out (`BuildSlides`).
 - Auto-advance is driven by the CSS animation of the active progress segment (`@onanimationend`); pausing only pauses that animation, never the entrance animations of the slide content (they would stay invisible).
-- `WrappedTeaser` on My Club advertises a season released within the last `WrappedHelpers.TeaserDays` (60) days. `SeasonsCard` links to the page and marks released seasons with 🎁. Store: `IWrappedStore`, texts in `WrappedLocale(.de).resx`. Times of day are sent as `TimeSpan` (the client converts `TimeOnly` to UTC).
+- `WrappedTeaser` on My Club advertises a season released within the last `WrappedHelpers.TeaserDays` (60) days. `SeasonsCard` links to the page and marks released seasons with 🎁. Store: `IWrappedStore`, texts in `WrappedLocale(.de).resx`. Times of day are sent as `TimeSpan`.
 - Not built yet: a notification when a season is released, Wrapped for the children of a family.
 
 ## Play Mode Quotas
