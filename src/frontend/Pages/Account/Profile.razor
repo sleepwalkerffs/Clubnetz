@@ -46,7 +46,7 @@
                 <div class="profile-fields">
                     <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Firstname"] @bind-Value="model.FirstName" For="@(() => model.FirstName)" />
                     <MudTextField Variant="Variant.Outlined" T="string" Label=@SharedLocale["Lastname"] @bind-Value="model.LastName" For="@(() => model.LastName)" />
-                    <MudDatePicker Variant="Variant.Outlined" PickerVariant="PickerVariant.Dialog" Label=@SharedLocale["Birthday"] @bind-Date="model.Birthday" For="(() => model.Birthday)" DateFormat="dd.MM.yyyy" />
+                    <MudDatePicker Variant="Variant.Outlined" PickerVariant="PickerVariant.Dialog" Label=@SharedLocale["Birthday"] @bind-Date="model.Birthday" For="(() => model.Birthday)" />
                     <MudSelect T="int" Label=@SharedLocale["Gender"] Variant="Variant.Outlined" @bind-Value="model.Gender" For="@(() => model.Gender)">
                         <MudSelectItem T="int" Value="0">@SharedLocale["Mr"]</MudSelectItem>
                         <MudSelectItem T="int" Value="1">@SharedLocale["Mrs"]</MudSelectItem>
@@ -73,6 +73,7 @@
                             <MudSelectItem T="int" Value="0">@SharedLocale["Austria"]</MudSelectItem>
                             <MudSelectItem T="int" Value="1">@SharedLocale["Germany"]</MudSelectItem>
                             <MudSelectItem T="int" Value="2">@SharedLocale["Switzerland"]</MudSelectItem>
+                            <MudSelectItem T="int" Value="3">@SharedLocale["UnitedStates"]</MudSelectItem>
                         </MudSelect>
                     </div>
                 </div>

@@ -890,4 +890,7 @@
   <data name="AuditChartLabel" xml:space="preserve">
     <value>Entries over time</value>
   </data>
+  <data name="RegionHint" xml:space="preserve">
+    <value>The country sets how dates, times and amounts are written. Choosing it suggests its time zone and currency, both can still be changed.</value>
+  </data>
 </root>

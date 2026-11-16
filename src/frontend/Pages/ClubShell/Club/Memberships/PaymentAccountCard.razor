@@ -44,6 +44,7 @@
                                 <MudSelectItem T="Country" Value="Country.Austria">@SharedLocale["Austria"]</MudSelectItem>
                                 <MudSelectItem T="Country" Value="Country.Germany">@SharedLocale["Germany"]</MudSelectItem>
                                 <MudSelectItem T="Country" Value="Country.Switzerland">@SharedLocale["Switzerland"]</MudSelectItem>
+                                <MudSelectItem T="Country" Value="Country.UnitedStates">@SharedLocale["UnitedStates"]</MudSelectItem>
                             </MudSelect>
                             <LoadButton Variant="Variant.Filled" Color="Color.Primary" Loading="@Store.IsSaving" OnClick="Connect">@L["Account_Connect"]</LoadButton>
                         </div>
@@ -132,6 +133,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // A new payment account is opened in the club's country by default
+        country = ClubProfileStore.SelectedClub?.Country ?? Country.Austria;
         Store.OnAccountChanged += OnChanged;
         await Store.LoadAccount();
 

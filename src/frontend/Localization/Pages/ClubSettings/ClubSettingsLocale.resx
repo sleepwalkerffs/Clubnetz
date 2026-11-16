@@ -493,4 +493,13 @@
   <data name="SaveDespiteCourtConflicts" xml:space="preserve">
     <value>Save anyway</value>
   </data>
+  <data name="RegionTitle" xml:space="preserve">
+    <value>Region</value>
+  </data>
+  <data name="RegionSubtitle" xml:space="preserve">
+    <value>Time zone, country and currency of the club</value>
+  </data>
+  <data name="RegionHint" xml:space="preserve">
+    <value>Times in the app follow the club's time zone, dates and amounts the club's country and currency. To change them, please contact the Clubnetz support.</value>
+  </data>
 </root>
