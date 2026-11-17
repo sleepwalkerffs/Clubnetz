@@ -5,6 +5,9 @@ namespace Bookennis.Shared.Controller.BadgeTiers;
 public record GetBadgeTiersResult
 {
     public required List<BadgeTierDto> Tiers { get; init; }
+
+    /// <summary>The sports of the club's courts. With more than one, tiers can count the matches of one sport (a track per sport).</summary>
+    public List<Sport> Sports { get; init; } = [];
 }
 
 public record BadgeTierDto

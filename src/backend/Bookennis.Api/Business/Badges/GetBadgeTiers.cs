@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Shared;
 using Bookennis.Api.Data;
 using Bookennis.Shared.Controller.BadgeTiers;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +32,11 @@ public record GetBadgeTiers(int ClubId, int SeasonId) : IQuery<GetBadgeTiersResu
                 })
                 .ToListAsync(cancellationToken);
 
-            return new GetBadgeTiersResult { Tiers = tiers };
+            return new GetBadgeTiersResult
+            {
+                Tiers = tiers,
+                Sports = (await context.OrderedClubSports(request.ClubId, cancellationToken)).ConvertAll(s => s.ToDto()),
+            };
         }
     }
 }

@@ -1,0 +1,40 @@
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Localization.Components.Sports
+@using Bookennis.Shared.Controller.Shared
+
+@* Sport chips for statistics, leaderboard and badges. Clubs with courts of one sport see nothing. *@
+@if (Sports.Count > 1)
+{
+    <div class="sport-filter @Class">
+        <ChoiceChips TItem="Option"
+                     Items="@Options"
+                     Value="@(new Option(Value))"
+                     ValueChanged="@(option => ValueChanged.InvokeAsync(option.Sport))"
+                     TextFunc="@(option => option.Sport is { } sport ? SportNames.Name(Locale, sport) : Locale["AllSports"].Value)"
+                     Disabled="@Disabled"
+                     Label="@Label" />
+    </div>
+}
+
+@code {
+    private readonly record struct Option(Sport? Sport);
+
+    [Inject]
+    private IStringLocalizer<SportLocale> Locale { get; set; } = null!;
+
+    /// <summary>The sports of the club's courts. The filter only shows with more than one.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<Sport> Sports { get; set; } = [];
+
+    /// <summary>The selected sport; <c>null</c> = all sports.</summary>
+    [Parameter] public Sport? Value { get; set; }
+
+    [Parameter] public EventCallback<Sport?> ValueChanged { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    [Parameter] public string? Label { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    private IEnumerable<Option> Options => Sports.Select(s => new Option(s)).Prepend(new Option(null));
+}

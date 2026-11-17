@@ -1,11 +1,14 @@
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Components.Shared.Dialogs
+@using Bookennis.Client.Components.Sports
+@using Bookennis.Client.Localization.Components.Sports
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Pages.BadgeSettings
 @using Bookennis.Client.Pages.ClubShell.Members.Components
 @using Bookennis.Client.Services.Store.Badges
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.BadgeTiers
+@using Bookennis.Shared.Controller.Shared
 
 <BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
             Loading="@BadgesStore.IsSaving" Title="@L["AddTier"]">
@@ -15,9 +18,21 @@
             <div>
                 <div class="badge-edit__name">@(string.IsNullOrWhiteSpace(name) ? L["TierNamePlaceholder"] : name)</div>
                 <span class="badge-edit__pill">@string.Format(L["LevelPill"], Level)</span>
-                <div class="badge-edit__rule">🎾 @string.Format(L["MatchesRule"], matchesRequired)</div>
+                <div class="badge-edit__rule">@(sport is { } ruleSport ? SportNames.Emoji(ruleSport) : "🎾") @string.Format(L["MatchesRule"], matchesRequired)</div>
             </div>
         </div>
+
+        @if (ShowSport)
+        {
+            <MudSelect T="Sport?" Variant="Variant.Outlined" Label="@SportLocale["SportLabel"]" Value="@sport" ValueChanged="@SportChanged"
+                       Disabled="@(Tier is not null)" HelperText="@L["SportHint"]" Margin="Margin.Dense">
+                <MudSelectItem T="Sport?" Value="@((Sport?)null)">@SportLocale["AllSports"]</MudSelectItem>
+                @foreach (var option in Sports)
+                {
+                    <MudSelectItem T="Sport?" Value="@((Sport?)option)">@SportNames.Emoji(option) @SportNames.Name(SportLocale, option)</MudSelectItem>
+                }
+            </MudSelect>
+        }
 
         <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Name"]" @bind-Value="name" Immediate="true" Margin="Margin.Dense" />
         <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Description"]" @bind-Value="description" Immediate="true" Lines="3"
@@ -46,9 +61,13 @@
     /// <summary>The tier to edit, null to create a new tier.</summary>
     [Parameter] public BadgeTierDto? Tier { get; set; }
 
+    /// <summary>The sports of the club's courts. With more than one, a tier can count only the matches of one sport.</summary>
+    [Parameter] public IReadOnlyList<Sport> Sports { get; set; } = [];
+
     [Inject] private IBadgesStore BadgesStore { get; set; } = null!;
     [Inject] private IStringLocalizer<BadgeSettingsLocale> L { get; set; } = null!;
     [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SportLocale> SportLocale { get; set; } = null!;
     [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
@@ -58,7 +77,12 @@
     private string description = "";
     private int matchesRequired = 1;
 
-    private List<BadgeTierDto> Tiers => BadgesStore.BadgeTiers?.Tiers ?? [];
+    /// <summary>The track of the tier: null = matches of every sport. Levels are numbered per track.</summary>
+    private Sport? sport;
+
+    private bool ShowSport => Sports.Count > 1 || Tier?.Sport is not null;
+
+    private List<BadgeTierDto> Tiers => (BadgesStore.BadgeTiers?.Tiers ?? []).Where(t => t.Sport == sport).ToList();
 
     // New tiers get the next level
     private int Level => Tier?.Level ?? (Tiers.Count == 0 ? 1 : Tiers.Max(t => t.Level) + 1);
@@ -74,17 +98,28 @@
             name = Tier.Name;
             description = Tier.Description;
             matchesRequired = Tier.MatchesRequired;
+            sport = Tier.Sport;
         }
-        else if (Tiers.Count > 0)
+        else
         {
-            matchesRequired = Tiers.Max(t => t.MatchesRequired) + 5;
+            SuggestMatchesRequired();
         }
     }
+
+    private void SportChanged(Sport? value)
+    {
+        sport = value;
+        SuggestMatchesRequired();
+    }
+
+    // A new tier starts a few matches above the highest tier of its track
+    private void SuggestMatchesRequired()
+        => matchesRequired = Tiers.Count > 0 ? Tiers.Max(t => t.MatchesRequired) + 5 : 1;
 
     private async Task<DialogResult?> Submit()
     {
         var result = Tier is null
-            ? await BadgesStore.CreateBadgeTier(SeasonId, new CreateBadgeTierModel(name.Trim(), description.Trim(), matchesRequired))
+            ? await BadgesStore.CreateBadgeTier(SeasonId, new CreateBadgeTierModel(name.Trim(), description.Trim(), matchesRequired, sport))
             : await BadgesStore.UpdateBadgeTier(Tier.Id, new UpdateBadgeTierModel(name.Trim(), description.Trim(), matchesRequired));
 
         if (!result.Success)
