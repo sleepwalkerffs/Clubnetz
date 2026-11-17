@@ -1023,4 +1023,13 @@
   <data name="ClubInvalidBookingsPerWeek" xml:space="preserve">
     <value>Bookings per week must be between {0} and {1}.</value>
   </data>
+  <data name="PlayerNotEnrolledForSport" xml:space="preserve">
+    <value>{0} is not enrolled for {1} in this season.</value>
+  </data>
+  <data name="PlayRequestCourtsOfDifferentSports" xml:space="preserve">
+    <value>The courts of a play request must all be for the same sport.</value>
+  </data>
+  <data name="PlayRequestMemberNotEnrolledForSport" xml:space="preserve">
+    <value>{0} is not enrolled for {1} in this season and can't play here.</value>
+  </data>
 </root>

@@ -480,4 +480,22 @@
   <data name="NoClubAssigned" xml:space="preserve">
     <value>Kein Verein zugeordnet</value>
   </data>
+  <data name="Sport_Tennis" xml:space="preserve">
+    <value>Tennis</value>
+  </data>
+  <data name="Sport_Padel" xml:space="preserve">
+    <value>Padel</value>
+  </data>
+  <data name="Sport_Label" xml:space="preserve">
+    <value>Sportart</value>
+  </data>
+  <data name="Sports_Label" xml:space="preserve">
+    <value>Sportarten</value>
+  </data>
+  <data name="Sports_Every" xml:space="preserve">
+    <value>Alle Sportarten</value>
+  </data>
+  <data name="Sports_NoneMeansEvery" xml:space="preserve">
+    <value>Keine ausgewählt: alle Sportarten.</value>
+  </data>
 </root>

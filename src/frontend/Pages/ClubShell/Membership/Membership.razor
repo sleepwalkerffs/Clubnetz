@@ -168,7 +168,7 @@ else
                                     <div class="my-plan__description">@plan.Description</div>
                                 }
                                 <div class="my-plan__chips">
-                                    @foreach (var (emoji, text) in MembershipHelpers.Chips(L, plan))
+                                    @foreach (var (emoji, text) in MembershipHelpers.Chips(L, plan, ClubStore.Courts.HasSeveralSports() ? SharedLocale : null))
                                     {
                                         <span class="my-chip"><span aria-hidden="true">@emoji</span> @text</span>
                                     }
@@ -289,7 +289,7 @@ else
             return;
 
         seasonId = Season;
-        await Task.WhenAll(Store.LoadOptions(seasonId), ClubStore.LoadSeasons());
+        await Task.WhenAll(Store.LoadOptions(seasonId), ClubStore.LoadSeasons(), ClubStore.Courts.Count == 0 ? ClubStore.LoadCourts() : Task.CompletedTask);
         loaded = true;
 
         if (Order is { } orderId && Checkout == "success")

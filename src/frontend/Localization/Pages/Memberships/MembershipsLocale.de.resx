@@ -951,4 +951,16 @@
   <data name="Account_Fact_Methods_Us" xml:space="preserve">
     <value>Karten sind von Anfang an aktiv. Die Zahlungsarten wählt ihr in Stripe.</value>
   </data>
+  <data name="Sentence_Sports" xml:space="preserve">
+    <value>Gilt für {0}.</value>
+  </data>
+  <data name="Sentence_EverySport" xml:space="preserve">
+    <value>Gilt für alle Sportarten des Vereins.</value>
+  </data>
+  <data name="Plan_Sports" xml:space="preserve">
+    <value>Sportarten</value>
+  </data>
+  <data name="Plan_SportsHint" xml:space="preserve">
+    <value>Keine ausgewählt: alle Sportarten. Ein Mitglied kann pro Sportart eine Mitgliedschaft haben, z. B. Tennis und Padel getrennt.</value>
+  </data>
 </root>

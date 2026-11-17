@@ -3,6 +3,7 @@ using Bookennis.Client.Services.Store.Base;
 using Bookennis.Global.Intervals;
 using Bookennis.Shared.Controller.Booking.Shared;
 using Bookennis.Shared.Controller.Club;
+using Bookennis.Shared.Controller.Shared;
 
 namespace Bookennis.Client.Services.Store.Club;
 
@@ -29,8 +30,8 @@ public interface IClubStore : ISemaphoreStore
     /// <summary>Upcoming bookings of the play mode on courts outside <paramref name="courtIds"/> (they are kept when it is limited).</summary>
     public Task<HttpResult<PlayModeCourtConflictsResult>> GetPlayModeCourtConflicts(int playModeId, List<int> courtIds);
     public Task LoadCourts();
-    public Task<HttpResult> AddCourt(string courtName, string alias, bool isIndoor);
-    public Task<HttpResult> UpdateCourt(int courtId, string courtName, string alias, DateTimeOffsetInterval? inactive, int sortOrder, bool isIndoor);
+    public Task<HttpResult> AddCourt(string courtName, string alias, bool isIndoor, Sport sport);
+    public Task<HttpResult> UpdateCourt(int courtId, string courtName, string alias, DateTimeOffsetInterval? inactive, int sortOrder, bool isIndoor, Sport sport);
     public void ClearCourts();
     public Task LoadPlayers();
     public void ClearClubPlayers();

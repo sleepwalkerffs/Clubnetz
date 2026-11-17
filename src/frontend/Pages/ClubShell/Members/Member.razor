@@ -116,7 +116,8 @@
                 <SectionCard Emoji="🗓️" Title="@L["SeasonEnrollment"]" Subtitle="@L["SeasonEnrollmentHint"]">
                     <SeasonEnrollmentEditor Seasons="@ClubStore.Seasons.OrderByDescending(s => s.StartDate).ToList()" Overview="@overview?.Seasons"
                                             SelectedIds="@selectedSeasonIds" SelectedIdsChanged="@(ids => selectedSeasonIds = ids.ToList())" Disabled="@EditingDisabled"
-                                            Enrollments="@member.SeasonEnrollments" PaidSeasonIds="@member.PaidSeasonIds" />
+                                            Enrollments="@member.SeasonEnrollments" PaidSeasonIds="@member.PaidSeasonIds"
+                                            Sports="@(ClubStore.Courts.HasSeveralSports() ? seasonSports : null)" SportsChanged="@(sports => seasonSports = sports)" />
                 </SectionCard>
             </MudItem>
             <MudItem xs="12" md="5">
@@ -195,6 +196,9 @@ else
     private List<MemberRole> selectedRoles = [];
     private List<int> selectedSeasonIds = [];
 
+    /// <summary>The sports per enrolled season (empty = every sport), edited only in a club with courts of several sports.</summary>
+    private IReadOnlyDictionary<int, IReadOnlyCollection<Sport>> seasonSports = new Dictionary<int, IReadOnlyCollection<Sport>>();
+
     private MembersDetailResult? Detail => MembersStore.MemberDetail;
     // The member does not exist (or is not of this club) once loading is done and nothing came back
     private bool loaded;
@@ -202,7 +206,12 @@ else
     private bool RolesChanged => Detail is not null && !Detail.Roles.Order().SequenceEqual(selectedRoles.Order());
 
     private bool BookingOptionsChanged => Detail is not null
-                                          && (bookingsPerWeek != Detail.BookingsPerWeek || !Detail.AllowedSeasonIds.Order().SequenceEqual(selectedSeasonIds.Order()));
+                                          && (bookingsPerWeek != Detail.BookingsPerWeek || !Detail.AllowedSeasonIds.Order().SequenceEqual(selectedSeasonIds.Order()) || SportsChanged);
+
+    private bool SportsChanged => Detail is not null && ClubStore.Courts.HasSeveralSports()
+                                  && selectedSeasonIds.Any(id => !SportsOf(id).SequenceEqual(Detail.SeasonEnrollments.FirstOrDefault(e => e.SeasonId == id)?.Sports.Normalize() ?? []));
+
+    private List<Sport> SportsOf(int seasonId) => seasonSports.GetValueOrDefault(seasonId)?.Normalize() ?? [];
 
     private bool IsDirty => RolesChanged || BookingOptionsChanged;
 
@@ -223,7 +232,8 @@ else
 
         loadedMemberId = MemberId;
         loaded = false;
-        await Task.WhenAll(MembersStore.LoadMember(MemberId), MembersStore.LoadMemberOverview(MemberId), ClubStore.LoadSeasons());
+        await Task.WhenAll(MembersStore.LoadMember(MemberId), MembersStore.LoadMemberOverview(MemberId), ClubStore.LoadSeasons(),
+            ClubStore.Courts.Count == 0 ? ClubStore.LoadCourts() : Task.CompletedTask);
         loaded = true;
         ResetEdits();
     }
@@ -239,6 +249,7 @@ else
         bookingsPerWeek = Detail.BookingsPerWeek;
         selectedRoles = Detail.Roles.ToList();
         selectedSeasonIds = Detail.AllowedSeasonIds.ToList();
+        seasonSports = Detail.SeasonEnrollments.ToDictionary(e => e.SeasonId, IReadOnlyCollection<Sport> (e) => e.Sports.ToList());
     }
 
     private async Task Save()
@@ -258,7 +269,9 @@ else
 
         if (BookingOptionsChanged)
         {
-            var result = await MembersStore.UpdateMemberBookingOptions(Detail.MemberId, selectedSeasonIds.ToArray(), bookingsPerWeek);
+            // Only a club with courts of several sports sends the sports; otherwise every season keeps its sports
+            var sports = ClubStore.Courts.HasSeveralSports() ? selectedSeasonIds.Select(id => new SeasonSports(id, SportsOf(id))).ToList() : null;
+            var result = await MembersStore.UpdateMemberBookingOptions(Detail.MemberId, selectedSeasonIds.ToArray(), bookingsPerWeek, sports);
             if (!result.Success)
             {
                 Snackbar.ShowErrorDetails(result, BackendLocale);

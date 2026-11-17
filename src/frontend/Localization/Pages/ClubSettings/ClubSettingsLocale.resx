@@ -511,4 +511,7 @@
   <data name="PerWeek" xml:space="preserve">
     <value>per week</value>
   </data>
+  <data name="CourtSportHint" xml:space="preserve">
+    <value>Members book the court for free when their membership covers its sport. Once the club has courts for several sports, memberships can be sold per sport.</value>
+  </data>
 </root>
