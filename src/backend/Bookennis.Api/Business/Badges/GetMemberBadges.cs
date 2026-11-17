@@ -20,7 +20,7 @@ public record GetMemberBadges(int MemberId, int ClubId, int? SeasonId) : IQuery<
                         join bt in context.BadgeTiers on mb.BadgeTierId equals bt.Id
                         join s in context.Seasons on mb.SeasonId equals s.Id
                         where mb.MemberId == request.MemberId && bt.ClubId == request.ClubId
-                        orderby s.Period.From descending, bt.Level
+                        orderby s.Period.From descending, bt.Sport.HasValue, bt.Sport, bt.Level
                         select new { mb, bt, s };
 
             if (request.SeasonId.HasValue)
@@ -31,6 +31,7 @@ public record GetMemberBadges(int MemberId, int ClubId, int? SeasonId) : IQuery<
                 MemberBadgeId = x.mb.Id,
                 BadgeTierId = x.bt.Id,
                 Level = x.bt.Level,
+                Sport = (Bookennis.Shared.Controller.Shared.Sport?)x.bt.Sport,
                 Name = x.bt.Name,
                 Description = x.bt.Description,
                 ImageUrl = context.BadgeTierImages.Any(i => i.BadgeTierId == x.bt.Id)

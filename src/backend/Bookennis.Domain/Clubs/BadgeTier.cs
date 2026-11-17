@@ -1,4 +1,5 @@
 using Bookennis.Domain.Base;
+using Bookennis.Domain.Courts;
 
 namespace Bookennis.Domain.Clubs;
 
@@ -8,8 +9,12 @@ public class BadgeTier : TenantDomainEntity
     private BadgeTier() { }
 #pragma warning restore CS8618
 
-    public BadgeTier(int clubId, int seasonId, int level, string name, string description, int matchesRequired, int sortOrder)
+    public BadgeTier(int clubId, int seasonId, int level, string name, string description, int matchesRequired, int sortOrder, Sport? sport = null)
     {
+        if (sport is { } s && !Enum.IsDefined(s))
+            throw new ArgumentOutOfRangeException(nameof(sport));
+
+        Sport = sport;
         ClubId = clubId;
         SeasonId = seasonId;
         Level = level;
@@ -25,6 +30,12 @@ public class BadgeTier : TenantDomainEntity
     public string Description { get; private set; }
     public int MatchesRequired { get; private set; }
     public int SortOrder { get; private set; }
+
+    /// <summary>
+    /// The track of the tier: only matches on courts of this sport count. <c>null</c>: matches of every sport (clubs with one sport and every tier
+    /// made before sports existed). Levels are numbered per track, so a season can have a level 1 for every sport.
+    /// </summary>
+    public Sport? Sport { get; private set; }
 
     public void Update(string name, string description, int matchesRequired)
     {

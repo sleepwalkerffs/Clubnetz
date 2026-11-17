@@ -1,3 +1,5 @@
+using Bookennis.Shared.Controller.Shared;
+
 namespace Bookennis.Shared.Controller.BadgeTiers;
 
 public record GetBadgeTiersResult
@@ -9,6 +11,9 @@ public record BadgeTierDto
 {
     public required int Id { get; init; }
     public required int Level { get; init; }
+
+    /// <summary>The track of the tier: only matches on courts of this sport count; <c>null</c> = every sport. Levels are numbered per track.</summary>
+    public Sport? Sport { get; init; }
     public required string Name { get; init; }
     public required string Description { get; init; }
     public required int MatchesRequired { get; init; }

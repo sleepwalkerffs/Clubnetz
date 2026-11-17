@@ -66,6 +66,22 @@ public class CopyBadgeTiersTests(TestFixture fixture) : TestBase(fixture)
         targetTierCount.Should().Be(1);
     }
 
+    [Fact]
+    public async Task CopyBadgeTiers_TiersWithSport_KeepTheirSport()
+    {
+        var (clubId, sourceSeasonId, targetSeasonId, _) = await SeedSourceSeasonWithTierAndImage();
+        await QueryAsync(async ctx =>
+        {
+            ctx.Add(new BadgeTier(clubId, sourceSeasonId, 1, "Padel Bronze", "Padel", 2, 1, Domain.Courts.Sport.Padel));
+            await ctx.SaveChangesAsync();
+        });
+
+        await SendAsync(new CopyBadgeTiers(clubId, sourceSeasonId, targetSeasonId));
+
+        var copied = await QueryAsync(ctx => ctx.BadgeTiers.Where(t => t.SeasonId == targetSeasonId).ToListAsync());
+        copied.Select(t => (t.Name, t.Level, t.Sport)).Should().BeEquivalentTo([("Bronze", 1, (Domain.Courts.Sport?)null), ("Padel Bronze", 1, Domain.Courts.Sport.Padel)]);
+    }
+
     private async Task<(int ClubId, int SourceSeasonId, int TargetSeasonId, int SourceTierId)> SeedSourceSeasonWithTierAndImage()
     {
         return await QueryAsync(async ctx =>

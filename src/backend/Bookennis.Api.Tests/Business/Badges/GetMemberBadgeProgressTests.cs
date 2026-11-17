@@ -2,6 +2,7 @@ using Bookennis.Api.Business.Badges;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.Clubs;
+using Bookennis.Domain.Courts;
 using Bookennis.Global.Intervals;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +66,87 @@ public class GetMemberBadgeProgressTests(TestFixture fixture) : TestBase(fixture
         secondResult.EarnedBadges.Should().HaveCount(2);
         persistedBadges.Should().HaveCount(2);
         persistedBadges.Select(b => b.BadgeTierId).Should().OnlyHaveUniqueItems();
+    }
+
+    [Fact]
+    public async Task GetMemberBadgeProgress_TiersOfEverySport_OneTrackWithTheSameValues()
+    {
+        var seeded = await SeedActiveSeasonProgressData(bookingCount: 3);
+
+        var result = await SendAsync(new GetMemberBadgeProgress(seeded.MemberId, seeded.ClubId));
+
+        var track = result.Tracks.Should().ContainSingle().Subject;
+        track.Sport.Should().BeNull();
+        track.MatchCount.Should().Be(3);
+        track.CurrentBadgeTierId.Should().Be(seeded.SilverTierId);
+        track.NextBadgeTierId.Should().Be(seeded.GoldTierId);
+        track.NextBadgeMatchesRequired.Should().Be(5);
+    }
+
+    [Fact]
+    public async Task GetMemberBadgeProgress_PadelTrack_CountsOnlyPadelMatches()
+    {
+        // 3 tennis matches on court 1, 1 padel match on court 2
+        var seeded = await SeedActiveSeasonProgressData(bookingCount: 3);
+        var (padelBronzeId, padelSilverId) = await QueryAsync(async ctx =>
+        {
+            var testData = ctx.TestData();
+            testData.Court2.SetSport(Sport.Padel);
+            var seasonId = await ctx.BadgeTiers.Where(t => t.Id == seeded.BronzeTierId).Select(t => t.SeasonId).SingleAsync();
+            var padelBronze = new BadgeTier(seeded.ClubId, seasonId, 1, "Padel Bronze", "", 1, 1, Sport.Padel);
+            var padelSilver = new BadgeTier(seeded.ClubId, seasonId, 2, "Padel Silver", "", 2, 2, Sport.Padel);
+            ctx.AddRange(padelBronze, padelSilver);
+            var from = DateTimeOffset.UtcNow.AddDays(-1);
+            ctx.Add(new Booking(seeded.ClubId, TestDataSeed.Court2Id, testData.Club.PlayModes[0].Id, new DateTimeOffsetInterval(from, from.AddHours(1)), TimeZoneInfo.Utc.Id, [seeded.MemberId]));
+            await ctx.SaveChangesAsync();
+            return (padelBronze.Id, padelSilver.Id);
+        });
+
+        var result = await SendAsync(new GetMemberBadgeProgress(seeded.MemberId, seeded.ClubId));
+
+        // The result itself stays the track of every sport: 4 matches
+        result.MatchCount.Should().Be(4);
+        result.CurrentBadgeTierId.Should().Be(seeded.SilverTierId);
+        result.Tracks.Select(t => t.Sport).Should().Equal(null, Bookennis.Shared.Controller.Shared.Sport.Padel);
+
+        var padel = result.Tracks[1];
+        padel.MatchCount.Should().Be(1);
+        padel.CurrentBadgeTierId.Should().Be(padelBronzeId);
+        padel.NextBadgeTierId.Should().Be(padelSilverId);
+        padel.NextBadgeMatchesRequired.Should().Be(2);
+
+        result.EarnedBadges.Should().ContainSingle(b => b.BadgeTierId == padelBronzeId)
+            .Which.Sport.Should().Be(Bookennis.Shared.Controller.Shared.Sport.Padel);
+        result.EarnedBadges.Select(b => b.BadgeTierId).Should().NotContain(padelSilverId);
+    }
+
+    [Fact]
+    public async Task GetMemberBadgeProgress_OnlyTiersWithSport_FirstTrackIsTheResult()
+    {
+        var (clubId, memberId, tennisTierId) = await QueryAsync(async ctx =>
+        {
+            var testData = ctx.TestData();
+            testData.Court2.SetSport(Sport.Padel);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var season = new Season(testData.Club.Id, new DateOnlyInterval(today.AddDays(-30), today.AddDays(30)));
+            ctx.Add(season);
+            await ctx.SaveChangesAsync();
+
+            var padel = new BadgeTier(testData.Club.Id, season.Id, 1, "Padel", "", 1, 1, Sport.Padel);
+            var tennis = new BadgeTier(testData.Club.Id, season.Id, 1, "Tennis", "", 1, 1, Sport.Tennis);
+            ctx.AddRange(padel, tennis);
+            var from = DateTimeOffset.UtcNow.AddDays(-1);
+            ctx.Add(new Booking(testData.Club.Id, TestDataSeed.Court1Id, testData.Club.PlayModes[0].Id, new DateTimeOffsetInterval(from, from.AddHours(1)), TimeZoneInfo.Utc.Id, [testData.Member1.Id]));
+            await ctx.SaveChangesAsync();
+            return (testData.Club.Id, testData.Member1.Id, tennis.Id);
+        });
+
+        var result = await SendAsync(new GetMemberBadgeProgress(memberId, clubId));
+
+        result.Tracks.Select(t => t.Sport).Should().Equal(Bookennis.Shared.Controller.Shared.Sport.Tennis, Bookennis.Shared.Controller.Shared.Sport.Padel);
+        result.MatchCount.Should().Be(1);
+        result.CurrentBadgeTierId.Should().Be(tennisTierId);
+        result.Tracks[1].MatchCount.Should().Be(0);
     }
 
     private async Task<(int ClubId, int MemberId, int BronzeTierId, int SilverTierId, int GoldTierId)> SeedActiveSeasonProgressData(int bookingCount)

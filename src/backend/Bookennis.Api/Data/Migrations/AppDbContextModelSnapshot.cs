@@ -2214,13 +2214,22 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("Sport")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SeasonId");
 
                     b.HasIndex("ClubId", "SeasonId", "Level")
                         .IsUnique()
-                        .HasDatabaseName("UX_BadgeTiers_ClubId_SeasonId_Level");
+                        .HasDatabaseName("UX_BadgeTiers_ClubId_SeasonId_Level")
+                        .HasFilter("\"Sport\" IS NULL");
+
+                    b.HasIndex("ClubId", "SeasonId", "Sport", "Level")
+                        .IsUnique()
+                        .HasDatabaseName("UX_BadgeTiers_ClubId_SeasonId_Sport_Level")
+                        .HasFilter("\"Sport\" IS NOT NULL");
 
                     b.ToTable("BadgeTiers");
                 });

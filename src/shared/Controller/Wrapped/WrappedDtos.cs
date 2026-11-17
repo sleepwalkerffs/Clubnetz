@@ -1,3 +1,4 @@
+using Bookennis.Shared.Controller.Shared;
 using Bookennis.Shared.Controller.Statistics;
 
 namespace Bookennis.Shared.Controller.Wrapped;
@@ -38,6 +39,10 @@ public class SeasonWrappedResult
     public required string? FirstName { get; init; }
 
     public required int Matches { get; init; }
+
+    /// <summary>The member's matches per sport of the courts (only sports with matches). The rank counts every sport.</summary>
+    public List<WrappedSportDto> MatchesPerSport { get; init; } = [];
+
     public required double HoursOnCourt { get; init; }
     public required DateOnly? FirstMatch { get; init; }
     public required DateOnly? LastMatch { get; init; }
@@ -108,7 +113,17 @@ public class WrappedBadgeDto
 
     /// <summary><c>null</c> for one-time badges.</summary>
     public required int? Level { get; init; }
+
+    /// <summary>The sport of a tier badge's track; <c>null</c> for every sport and for one-time badges.</summary>
+    public Sport? Sport { get; init; }
+
     public required DateTimeOffset AwardedAt { get; init; }
+}
+
+public class WrappedSportDto
+{
+    public required Sport Sport { get; init; }
+    public required int Matches { get; init; }
 }
 
 /// <summary>Anonymous numbers of the whole club in the season.</summary>

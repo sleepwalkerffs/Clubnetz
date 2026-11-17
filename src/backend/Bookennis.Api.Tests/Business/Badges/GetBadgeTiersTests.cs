@@ -42,6 +42,28 @@ public class GetBadgeTiersTests(TestFixture fixture) : TestBase(fixture)
     }
 
     [Fact]
+    public async Task GetBadgeTiers_TracksWithSport_EverySportFirstThenBySportAndLevel()
+    {
+        var (clubId, seasonId) = await SeedSeason();
+
+        await QueryAsync(async ctx =>
+        {
+            ctx.AddRange(
+                new BadgeTier(clubId, seasonId, 1, "Padel Bronze", "", 2, 1, Domain.Courts.Sport.Padel),
+                new BadgeTier(clubId, seasonId, 2, "Tennis Silver", "", 6, 2, Domain.Courts.Sport.Tennis),
+                new BadgeTier(clubId, seasonId, 1, "Tennis Bronze", "", 3, 1, Domain.Courts.Sport.Tennis),
+                new BadgeTier(clubId, seasonId, 1, "Bronze", "", 3, 1));
+            await ctx.SaveChangesAsync();
+        });
+
+        var result = await SendAsync(new GetBadgeTiers(clubId, seasonId));
+
+        result.Tiers.Select(t => t.Name).Should().Equal("Bronze", "Tennis Bronze", "Tennis Silver", "Padel Bronze");
+        result.Tiers.Select(t => t.Sport).Should().Equal(
+            null, Bookennis.Shared.Controller.Shared.Sport.Tennis, Bookennis.Shared.Controller.Shared.Sport.Tennis, Bookennis.Shared.Controller.Shared.Sport.Padel);
+    }
+
+    [Fact]
     public async Task GetBadgeTiers_ReturnsNumberOfMembersThatEarnedTheTier()
     {
         var (clubId, seasonId) = await SeedSeason();

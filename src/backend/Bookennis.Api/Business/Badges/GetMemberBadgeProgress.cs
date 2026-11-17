@@ -1,5 +1,7 @@
 using Bookennis.Api.Business.Clubs;
+using Bookennis.Api.Business.Shared;
 using Bookennis.Api.Data;
+using Bookennis.Domain.Clubs;
 using Bookennis.Api.Infrastructure;
 using Bookennis.Shared.Controller.MemberBadges;
 using Bookennis.Shared.Controller.OneTimeBadges;
@@ -47,41 +49,67 @@ public record GetMemberBadgeProgress(int MemberId, int ClubId) : IQuery<GetMembe
             // Trigger lazy badge awarding
             await badgeProgressionService.CheckAndAwardBadges(request.MemberId, request.ClubId, season.Id, cancellationToken);
 
-            var chargingPlayModeIds = await context.PlayModes
-                .Where(pm => pm.IsChargingBookingSubscription)
-                .Select(pm => pm.Id)
-                .ToListAsync(cancellationToken);
-
-            var matchCount = 0;
-            if (chargingPlayModeIds.Count > 0)
-            {
-                // The season from the start of its first to the end of its last local day of the club
-                var seasonStart = region.StartOfDay(season.Period.From).ToUniversalTime();
-                var seasonEnd = region.StartOfDay(season.Period.To.AddDays(1)).ToUniversalTime();
-                matchCount = await context.BookingPlayers
-                    .Where(bp => bp.MemberId == request.MemberId)
-                    .Where(bp => chargingPlayModeIds.Contains(bp.Booking.PlayModeId))
-                    .Where(bp => bp.Booking.Interval.From >= seasonStart)
-                    .Where(bp => bp.Booking.Interval.To <= seasonEnd)
-                    .Where(bp => bp.Booking.Interval.To < DateTimeOffset.UtcNow)
-                    .CountAsync(cancellationToken);
-            }
-
             var badgeTiers = await context.BadgeTiers
                 .Where(bt => bt.ClubId == request.ClubId && bt.SeasonId == season.Id)
                 .OrderBy(bt => bt.Level)
                 .ToListAsync(cancellationToken);
 
+            var tierIdsWithImage = await context.BadgeTierImages
+                .Where(i => badgeTiers.Select(t => t.Id).Contains(i.BadgeTierId))
+                .Select(i => i.BadgeTierId)
+                .ToListAsync(cancellationToken);
+
+            string? ImageUrl(BadgeTier? tier) => tier is not null && tierIdsWithImage.Contains(tier.Id)
+                ? $"/api/Clubs/{request.ClubId}/BadgeTiers/{tier.Id}/image"
+                : null;
+
+            // One track per sport that has tiers (null = every sport); without tiers the matches of every sport are shown
+            var trackSports = badgeTiers
+                .Select(t => t.Sport)
+                .Distinct()
+                .OrderBy(sport => sport.HasValue)
+                .ThenBy(sport => sport)
+                .ToList();
+            if (trackSports.Count == 0)
+                trackSports.Add(null);
+
+            var matchCounts = await BadgeMatches.CountPerTrack(context, request.MemberId, request.ClubId, season, trackSports, cancellationToken);
+
+            var tracks = trackSports
+                .Select(sport =>
+                {
+                    var tiers = badgeTiers.Where(t => t.Sport == sport).ToList();
+                    var matchCount = matchCounts[BadgeMatches.Track(sport)];
+                    var current = tiers.LastOrDefault(t => matchCount >= t.MatchesRequired);
+                    var next = tiers.FirstOrDefault(t => matchCount < t.MatchesRequired);
+                    return new BadgeTrackProgressDto
+                    {
+                        Sport = sport.ToDto(),
+                        MatchCount = matchCount,
+                        CurrentBadgeTierId = current?.Id,
+                        CurrentBadgeName = current?.Name,
+                        CurrentBadgeLevel = current?.Level,
+                        CurrentBadgeImageUrl = ImageUrl(current),
+                        NextBadgeTierId = next?.Id,
+                        NextBadgeName = next?.Name,
+                        NextBadgeMatchesRequired = next?.MatchesRequired,
+                        NextBadgeLevel = next?.Level,
+                        NextBadgeImageUrl = ImageUrl(next),
+                    };
+                })
+                .ToList();
+
             var earnedBadges = await (
                 from mb in context.MemberBadges
                 join bt in context.BadgeTiers on mb.BadgeTierId equals bt.Id
                 where mb.MemberId == request.MemberId && mb.SeasonId == season.Id
-                orderby bt.Level
+                orderby bt.Sport.HasValue, bt.Sport, bt.Level
                 select new EarnedBadgeDto
                 {
                     MemberBadgeId = mb.Id,
                     BadgeTierId = bt.Id,
                     Level = bt.Level,
+                    Sport = (Bookennis.Shared.Controller.Shared.Sport?)bt.Sport,
                     Name = bt.Name,
                     Description = bt.Description,
                     ImageUrl = context.BadgeTierImages.Any(i => i.BadgeTierId == bt.Id)
@@ -115,28 +143,25 @@ public record GetMemberBadgeProgress(int MemberId, int ClubId) : IQuery<GetMembe
                 }
             ).ToListAsync(cancellationToken);
 
-            var currentBadge = badgeTiers.LastOrDefault(t => matchCount >= t.MatchesRequired);
-            var nextBadge = badgeTiers.FirstOrDefault(t => matchCount < t.MatchesRequired);
+            // The fields of the result itself are the first track: every sport, or the first sport with tiers
+            var primary = tracks[0];
 
             var badgeSettings = await context.MemberBadgeSettings
                 .FirstOrDefaultAsync(s => s.MemberId == request.MemberId, cancellationToken);
 
             return new GetMemberBadgeProgressResult
             {
-                MatchCount = matchCount,
-                CurrentBadgeTierId = currentBadge?.Id,
-                CurrentBadgeName = currentBadge?.Name,
-                CurrentBadgeLevel = currentBadge?.Level,
-                CurrentBadgeImageUrl = currentBadge is not null && await context.BadgeTierImages.AnyAsync(i => i.BadgeTierId == currentBadge.Id, cancellationToken)
-                    ? $"/api/Clubs/{request.ClubId}/BadgeTiers/{currentBadge.Id}/image"
-                    : null,
-                NextBadgeTierId = nextBadge?.Id,
-                NextBadgeName = nextBadge?.Name,
-                NextBadgeMatchesRequired = nextBadge?.MatchesRequired,
-                NextBadgeLevel = nextBadge?.Level,
-                NextBadgeImageUrl = nextBadge is not null && await context.BadgeTierImages.AnyAsync(i => i.BadgeTierId == nextBadge.Id, cancellationToken)
-                    ? $"/api/Clubs/{request.ClubId}/BadgeTiers/{nextBadge.Id}/image"
-                    : null,
+                MatchCount = primary.MatchCount,
+                CurrentBadgeTierId = primary.CurrentBadgeTierId,
+                CurrentBadgeName = primary.CurrentBadgeName,
+                CurrentBadgeLevel = primary.CurrentBadgeLevel,
+                CurrentBadgeImageUrl = primary.CurrentBadgeImageUrl,
+                NextBadgeTierId = primary.NextBadgeTierId,
+                NextBadgeName = primary.NextBadgeName,
+                NextBadgeMatchesRequired = primary.NextBadgeMatchesRequired,
+                NextBadgeLevel = primary.NextBadgeLevel,
+                NextBadgeImageUrl = primary.NextBadgeImageUrl,
+                Tracks = tracks,
                 EarnedBadges = earnedBadges,
                 OneTimeBadges = oneTimeBadges,
                 DisplayBadgeId = badgeSettings?.DisplayBadgeId,

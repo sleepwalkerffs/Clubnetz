@@ -1,12 +1,13 @@
 using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
+using Bookennis.Domain.Courts;
 using Bookennis.Global.Intervals;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Wrapped;
 
-/// <summary>A booking of the club as the Wrapped sees it: in the local time of the club, with its players.</summary>
-internal sealed record WrappedBooking(int Id, DateTime From, double DurationHours, int CourtId, int? RecurringBookingSeriesId, IReadOnlyList<int> PlayerIds)
+/// <summary>A booking of the club as the Wrapped sees it: in the local time of the club, with its players and the sport of its court.</summary>
+internal sealed record WrappedBooking(int Id, DateTime From, double DurationHours, int CourtId, int? RecurringBookingSeriesId, IReadOnlyList<int> PlayerIds, Sport Sport = Sport.Tennis)
 {
     public DateOnly Date => DateOnly.FromDateTime(From);
 }
@@ -30,7 +31,15 @@ internal static class WrappedBookings
 
         var rows = await context.Bookings
             .Where(b => b.ClubId == clubId && chargingPlayModeIds.Contains(b.PlayModeId) && b.Interval.From >= from && b.Interval.From < to)
-            .Select(b => new { b.Id, b.Interval.From, b.Interval.To, b.CourtId, b.RecurringBookingSeriesId })
+            .Select(b => new
+            {
+                b.Id,
+                b.Interval.From,
+                b.Interval.To,
+                b.CourtId,
+                b.RecurringBookingSeriesId,
+                Sport = context.Courts.Where(c => c.Id == b.CourtId).Select(c => c.Sport).FirstOrDefault(),
+            })
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
@@ -49,7 +58,8 @@ internal static class WrappedBookings
                 (r.To - r.From).TotalHours,
                 r.CourtId,
                 r.RecurringBookingSeriesId,
-                players[r.Id].Distinct().ToList()))
+                players[r.Id].Distinct().ToList(),
+                r.Sport))
             .Where(b => period.From <= b.Date && b.Date <= period.To)
             .ToList();
     }

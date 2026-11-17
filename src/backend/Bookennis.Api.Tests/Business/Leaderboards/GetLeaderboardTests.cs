@@ -2,6 +2,7 @@ using Bookennis.Api.Business.Leaderboards;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.Clubs;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Members;
 using Bookennis.Global.Intervals;
 using FluentAssertions;
@@ -16,7 +17,7 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
     {
         var userId = Query(ctx => ctx.TestData().User.Id);
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         result.AllTime.Entries.Should().BeEmpty();
         result.AllTime.CurrentMemberRank.Should().BeNull();
@@ -45,7 +46,7 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
         });
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         result.AllTime.Entries.Should().HaveCount(2);
         result.AllTime.Entries[0].TotalHours.Should().Be(3.0);
@@ -71,7 +72,7 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
         });
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         result.AllTime.CurrentMemberRank.Should().Be(1);
         result.AllTime.CurrentMemberDuration.Should().Be(1.5);
@@ -96,7 +97,7 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
         });
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         result.AllTime.Entries.Should().HaveCount(1);
         result.AllTime.Entries[0].TotalHours.Should().Be(1.0);
@@ -132,7 +133,7 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
         });
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         var seasonLeaderboard = result.SeasonLeaderboards.FirstOrDefault(s => s.StartDate == new DateOnly(2025, 1, 1));
         seasonLeaderboard.Should().NotBeNull();
@@ -165,7 +166,7 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
         });
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         result.AllTime.Entries.Should().NotContain(e => e.IsCurrentMember);
     }
@@ -190,7 +191,7 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
         });
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         var seasonLeaderboard = result.SeasonLeaderboards.FirstOrDefault(s => s.StartDate == new DateOnly(2025, 1, 1));
         seasonLeaderboard.Should().NotBeNull();
@@ -224,7 +225,7 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
             }
         });
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         result.AllTime.Entries.Should().HaveCount(25);
         result.AllTime.Entries[0].Rank.Should().Be(1);
@@ -253,7 +254,7 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
         });
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         result.AllTime.Entries.Should().ContainSingle();
         result.AllTime.Entries[0].TotalHours.Should().Be(1.0);
@@ -283,7 +284,7 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
         });
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         var data = result.AllTime;
         data.TotalPlayers.Should().Be(2);
@@ -323,7 +324,7 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
         });
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         var entries = result.AllTime.Entries;
         entries[0].MemberId.Should().Be(TestDataSeed.Member1Id);
@@ -348,8 +349,89 @@ public class GetLeaderboardTests(TestFixture fixture) : TestBase(fixture)
             await ctx.SaveChangesAsync();
         });
 
-        var result = await SendAsync(new GetLeaderboard(userId));
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
 
         result.AllTime.Entries[0].RankChange.Should().BeNull();
     }
+
+    [Fact]
+    public async Task GetLeaderboard_Sport_CountsOnlyBookingsOnCourtsOfTheSport()
+    {
+        var userId = Query(ctx => ctx.TestData().User.Id);
+        await SeedTennisAndPadelBookings();
+
+        var all = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
+        var padel = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId, Sport.Padel));
+        var tennis = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId, Sport.Tennis));
+
+        all.Sport.Should().BeNull();
+        all.Sports.Should().Equal(Bookennis.Shared.Controller.Shared.Sport.Tennis, Bookennis.Shared.Controller.Shared.Sport.Padel);
+        all.AllTime.Entries.Select(e => (e.MemberId, e.TotalHours)).Should().Equal((TestDataSeed.Member2Id, 3.0), (TestDataSeed.Member1Id, 2.0));
+        all.AllTime.TotalMatches.Should().Be(3);
+
+        padel.Sport.Should().Be(Bookennis.Shared.Controller.Shared.Sport.Padel);
+        padel.AllTime.Entries.Select(e => (e.MemberId, e.TotalHours)).Should().Equal((TestDataSeed.Member2Id, 2.0));
+        padel.AllTime.TotalMatches.Should().Be(1);
+
+        tennis.AllTime.Entries.Select(e => (e.MemberId, e.TotalHours)).Should().Equal((TestDataSeed.Member1Id, 2.0), (TestDataSeed.Member2Id, 1.0));
+    }
+
+    [Fact]
+    public async Task GetLeaderboard_OneSport_NoDefaultSport()
+    {
+        var userId = Query(ctx => ctx.TestData().User.Id);
+
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
+
+        result.Sports.Should().Equal(Bookennis.Shared.Controller.Shared.Sport.Tennis);
+        result.DefaultSport.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetLeaderboard_SeveralSports_DefaultSportIsTheFirstEnrolledSport()
+    {
+        var userId = Query(ctx => ctx.TestData().User.Id);
+        await SeedActiveSeasonEnrollment([Sport.Padel]);
+
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
+
+        result.DefaultSport.Should().Be(Bookennis.Shared.Controller.Shared.Sport.Padel);
+    }
+
+    [Fact]
+    public async Task GetLeaderboard_SeveralSportsEnrolledForEverySport_NoDefaultSport()
+    {
+        var userId = Query(ctx => ctx.TestData().User.Id);
+        await SeedActiveSeasonEnrollment([]);
+
+        var result = await SendAsync(new GetLeaderboard(userId, TestDataSeed.ClubId));
+
+        result.DefaultSport.Should().BeNull();
+    }
+
+    /// <summary>Court 2 is a padel court; the user (member 1) is enrolled in the running season.</summary>
+    private Task SeedActiveSeasonEnrollment(Sport[] sports) => QueryAsync(async ctx =>
+    {
+        ctx.TestData().Court2.SetSport(Sport.Padel);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var season = new Season(TestDataSeed.ClubId, new DateOnlyInterval(today.AddDays(-30), today.AddDays(30)));
+        ctx.Add(season);
+        await ctx.SaveChangesAsync();
+        ctx.Add(new MemberSeason(TestDataSeed.Member1Id, season.Id, sports: sports));
+        await ctx.SaveChangesAsync();
+    });
+
+    /// <summary>Court 2 is a padel court. Member 1: 2 h tennis. Member 2: 1 h tennis, 2 h padel.</summary>
+    private Task SeedTennisAndPadelBookings() => QueryAsync(async ctx =>
+    {
+        var club = ctx.TestData().Club;
+        ctx.TestData().Court2.SetSport(Sport.Padel);
+        var playMode = club.PlayModes[0];
+
+        var from = new DateTimeOffset(2025, 6, 1, 10, 0, 0, TimeSpan.Zero);
+        ctx.Add(new Booking(club.Id, TestDataSeed.Court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(2)), TimeZoneInfo.Utc.Id, [TestDataSeed.Member1Id]));
+        ctx.Add(new Booking(club.Id, TestDataSeed.Court1Id, playMode.Id, new DateTimeOffsetInterval(from.AddDays(1), from.AddDays(1).AddHours(1)), TimeZoneInfo.Utc.Id, [TestDataSeed.Member2Id]));
+        ctx.Add(new Booking(club.Id, TestDataSeed.Court2Id, playMode.Id, new DateTimeOffsetInterval(from.AddDays(2), from.AddDays(2).AddHours(2)), TimeZoneInfo.Utc.Id, [TestDataSeed.Member2Id]));
+        await ctx.SaveChangesAsync();
+    });
 }

@@ -3,6 +3,7 @@ using Bookennis.Api.Data;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.Clubs;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Members;
 using Bookennis.Domain.User;
 using Bookennis.Global;
@@ -390,6 +391,49 @@ public class GetMemberStatisticsTests(TestFixture fixture) : TestBase(fixture)
         data.TotalBookings.Should().Be(1);
         data.ActivityDays.Single().Date.Should().Be(new DateOnly(2025, 6, 1));
         data.WeekdayCounts[6].Should().Be(1); // Sunday
+    }
+
+    [Fact]
+    public async Task GetMemberStatistics_Sport_CountsOnlyBookingsOnCourtsOfTheSport()
+    {
+        var userId = Query(ctx => ctx.TestData().User.Id);
+
+        int seasonId = 0;
+        await QueryAsync(async ctx =>
+        {
+            var club = ctx.TestData().Club;
+            ctx.TestData().Court2.SetSport(Sport.Padel);
+            var playMode = club.PlayModes[0];
+
+            var season = new Season(club.Id, new DateOnlyInterval(new DateOnly(2025, 6, 1), new DateOnly(2025, 6, 30)));
+            ctx.Add(season);
+            await ctx.SaveChangesAsync();
+            seasonId = season.Id;
+            ctx.Add(new MemberSeason(TestDataSeed.Member1Id, season.Id));
+
+            // Member 2 is enrolled for tennis only: not part of the padel comparison
+            ctx.Add(new MemberSeason(TestDataSeed.Member2Id, season.Id, sports: [Sport.Tennis]));
+
+            AddBooking(ctx, club.Id, TestDataSeed.Court1Id, playMode.Id, new DateTimeOffset(2025, 6, 2, 10, 0, 0, TimeSpan.Zero), TimeZoneInfo.Utc.Id, TestDataSeed.Member1Id);
+            AddBooking(ctx, club.Id, TestDataSeed.Court1Id, playMode.Id, new DateTimeOffset(2025, 6, 3, 10, 0, 0, TimeSpan.Zero), TimeZoneInfo.Utc.Id, TestDataSeed.Member2Id);
+            AddBooking(ctx, club.Id, TestDataSeed.Court2Id, playMode.Id, new DateTimeOffset(2025, 6, 4, 10, 0, 0, TimeSpan.Zero), TimeZoneInfo.Utc.Id, TestDataSeed.Member1Id);
+            AddBooking(ctx, club.Id, TestDataSeed.Court2Id, playMode.Id, new DateTimeOffset(2025, 6, 5, 10, 0, 0, TimeSpan.Zero), TimeZoneInfo.Utc.Id, TestDataSeed.Member1Id);
+            await ctx.SaveChangesAsync();
+        });
+
+        var all = await SendAsync(new GetMemberStatistics(userId, ClubId));
+        var padel = await SendAsync(new GetMemberStatistics(userId, ClubId, Sport.Padel));
+
+        all.Sport.Should().BeNull();
+        all.Sports.Should().Equal(Bookennis.Shared.Controller.Shared.Sport.Tennis, Bookennis.Shared.Controller.Shared.Sport.Padel);
+        all.AllTime.TotalBookings.Should().Be(3);
+        all.SeasonStatistics.Single(s => s.SeasonId == seasonId).ClubComparison!.EnrolledMembers.Should().Be(2);
+
+        padel.Sport.Should().Be(Bookennis.Shared.Controller.Shared.Sport.Padel);
+        padel.AllTime.TotalBookings.Should().Be(2);
+        padel.AllTime.CourtUsage.Select(c => c.Label).Should().Equal("Court 2");
+        padel.SeasonStatistics.Single(s => s.SeasonId == seasonId).Data!.TotalBookings.Should().Be(2);
+        padel.SeasonStatistics.Single(s => s.SeasonId == seasonId).ClubComparison.Should().BeNull();
     }
 
     private const string ViennaTimeZoneId = "Europe/Vienna";
