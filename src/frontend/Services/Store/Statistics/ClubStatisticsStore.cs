@@ -1,5 +1,6 @@
 using Bookennis.Client.Services.HttpClients.Statistics;
 using Bookennis.Client.Services.Store.Base;
+using Bookennis.Shared.Controller.Shared;
 using Bookennis.Shared.Controller.Statistics;
 
 namespace Bookennis.Client.Services.Store.Statistics;
@@ -9,9 +10,9 @@ public class ClubStatisticsStore(IStatisticsHttpClient statisticsHttpClient) : S
     public event Action? OnClubStatisticsChanged;
     public GetClubStatisticsResult? ClubStatistics { get; private set; }
 
-    public Task LoadClubStatistics() => RunInLoadingContextAsync(async cancellationToken =>
+    public Task LoadClubStatistics(Sport? sport = null) => RunInLoadingContextAsync(async cancellationToken =>
     {
-        var response = await statisticsHttpClient.GetClubStatistics(cancellationToken);
+        var response = await statisticsHttpClient.GetClubStatistics(sport, cancellationToken);
         if (response is { Success: true, Dto: not null })
         {
             ClubStatistics = response.Dto;

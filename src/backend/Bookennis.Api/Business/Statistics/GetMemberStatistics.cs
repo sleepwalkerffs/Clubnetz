@@ -1,13 +1,16 @@
 using Bookennis.Api.Business.Clubs;
+using Bookennis.Api.Business.Shared;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Members;
 using Bookennis.Shared.Controller.Statistics;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Statistics;
 
-public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStatisticsResult>
+/// <summary>The statistics of the signed-in member. <c>Sport</c>: only bookings on courts of this sport (also for the club comparison); <c>null</c> = every sport. The play mode quotas always count every sport.</summary>
+public record GetMemberStatistics(int UserId, int ClubId, Sport? Sport = null) : IQuery<GetMemberStatisticsResult>
 {
     // From/To are in the local time of the club; DurationHours comes from the UTC interval (correct across DST changes)
     private sealed record BookingData(int Id, DateTime From, DateTime To, double DurationHours, int CourtId, int PlayModeId)
@@ -60,7 +63,7 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
                 .ToListAsync(cancellationToken);
 
             var bookingRows = await (
-                from booking in context.Bookings
+                from booking in context.Bookings.OfSport(context, request.Sport)
                 where chargingPlayModeIds.Contains(booking.PlayModeId)
                 where context.BookingPlayers.Any(bp => bp.BookingEntryId == booking.Id && memberIds.Contains(bp.MemberId))
                 select new { booking.Id, booking.Interval.From, booking.Interval.To, booking.CourtId, booking.PlayModeId }
@@ -138,6 +141,7 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
 
             // --- Club comparison (anonymous): bookings of all members of the club ---
             var clubBookingRows = await context.BookingPlayers
+                .OfSport(context, request.Sport)
                 .Where(bp => bp.Booking.ClubId == request.ClubId && chargingPlayModeIds.Contains(bp.Booking.PlayModeId))
                 .Select(bp => new { bp.MemberId, bp.Booking.Interval.From })
                 .ToListAsync(cancellationToken);
@@ -147,10 +151,13 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
                 .ToList();
 
             var seasonIds = seasons.Select(s => s.Id).ToList();
-            var enrollments = await context.MemberSeasons
-                .Where(ms => seasonIds.Contains(ms.SeasonId))
-                .Select(ms => new { ms.SeasonId, ms.MemberId })
-                .ToListAsync(cancellationToken);
+            // With a sport: compared with the members whose enrollment covers it
+            var enrollments = (await context.MemberSeasons
+                    .Where(ms => seasonIds.Contains(ms.SeasonId))
+                    .Select(ms => new { ms.SeasonId, ms.MemberId, ms.Sports })
+                    .ToListAsync(cancellationToken))
+                .Where(ms => request.Sport is not { } sport || Sports.Covers(ms.Sports, sport))
+                .ToList();
             // -------------------------
 
             var today = region.Today();
@@ -205,6 +212,8 @@ public record GetMemberStatistics(int UserId, int ClubId) : IQuery<GetMemberStat
             {
                 SeasonStatistics = seasonStats,
                 AllTime = allTimeData,
+                Sport = request.Sport.ToDto(),
+                Sports = (await context.OrderedClubSports(request.ClubId, cancellationToken)).ConvertAll(s => s.ToDto()),
             };
         }
 

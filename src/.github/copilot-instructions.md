@@ -334,14 +334,14 @@ A club can have courts of more than one sport (`Court.Sport`: `Tennis` = 0, `Pad
 
 ### Overview
 
-There are two kinds of badges, both **scoped to a season** and per-club (not per-play-mode):
+There are two kinds of badges, both **scoped to a season** and per-club (not per-play-mode). Tier badges can also be per sport (see "Tracks per sport" below):
 
 - **Tier badges** — earned automatically by completing bookings within a season. Each season has its own set of tiers (e.g., Bronze, Silver, Gold) with configurable thresholds.
 - **One-time badges** — manually awarded by club staff for special achievements (e.g., club champion). They have no level/threshold.
 
 ### Domain Model
 
-- `BadgeTier` (`TenantDomainEntity`) — a badge variant for a club **and season**. Has `SeasonId`, `Name`, `Level` (int, higher = better), `MatchesRequired` (int threshold), `Description`, `SortOrder`. Unique index on `(ClubId, SeasonId, Level)`; FK to `Season` with cascade delete. Image is stored separately in `BadgeTierImage`.
+- `BadgeTier` (`TenantDomainEntity`) — a badge variant for a club **and season**. Has `SeasonId`, `Name`, `Level` (int, higher = better), `MatchesRequired` (int threshold), `Description`, `SortOrder` and `Sport?` (the track: `null` = matches of every sport). Levels are unique per track: two partial unique indexes `(ClubId, SeasonId, Level) WHERE Sport IS NULL` and `(ClubId, SeasonId, Sport, Level) WHERE Sport IS NOT NULL` (instead of `NULLS NOT DISTINCT`, works on every Postgres version); FK to `Season` with cascade delete. Image is stored separately in `BadgeTierImage`.
 - `MemberBadge` — awarded to a member when they reach a badge tier threshold within a season. Linked to `MemberId`, `BadgeTierId`, `SeasonId`, `EarnedAt`. Raises `MemberBadgeAwardedDomainEvent`.
 - `OneTimeBadge` (`TenantDomainEntity`) — `SeasonId`, `Name`, `Description`. Unique index on `(ClubId, SeasonId, Name)`; cascade-deleted with its club/season. Image is stored separately in `OneTimeBadgeImage` (keyed by `OneTimeBadgeId`).
 - `MemberOneTimeBadge` — award of a one-time badge to a member: `MemberId`, `OneTimeBadgeId`, `AwardedAt`. Unique on `(MemberId, OneTimeBadgeId)`. Raises `MemberOneTimeBadgeAwardedDomainEvent`.
@@ -351,9 +351,15 @@ There are two kinds of badges, both **scoped to a season** and per-club (not per
 ### Seasonal Badge Tiers
 
 - All tier queries (`GetBadgeTiers`, `BadgeProgressionService`, `GetMemberBadgeProgress`) filter by `ClubId` **and** `SeasonId`. `GET BadgeTiers` requires a `seasonId` query parameter.
-- `CreateBadgeTier` assigns the next `Level` (max level in that season + 1) automatically; `SortOrder` = `Level`.
+- `CreateBadgeTier` assigns the next `Level` (max level of that season **and track** + 1) automatically; `SortOrder` = `Level`. The sport is chosen when the tier is created and can't be changed afterwards (`UpdateBadgeTier` keeps it).
 - `DeleteBadgeTier` is rejected once any member has earned the tier (`ErrorCode.BadgeTierAlreadyEarned`).
-- `CopyBadgeTiers(SourceSeasonId, TargetSeasonId)` copies tiers + images into another season. Fails if the source has no tiers or the target already has tiers.
+- `CopyBadgeTiers(SourceSeasonId, TargetSeasonId)` copies tiers + images (and their sport) into another season. Fails if the source has no tiers or the target already has tiers.
+
+### Tracks per sport
+
+- A club with courts of more than one sport (see `Court.Sport`) can give tiers a sport: such a tier only counts matches on courts of that sport; a tier without a sport counts every sport (the behaviour of clubs with one sport and of every tier made before sports existed; migration `AddBadgeTierSports` left them `null`). The tiers with the same sport form a **track** with its own levels 1, 2, 3, ...
+- `BadgeMatches` (in `BadgeProgressionService.cs`) counts the matches of a track (`SportFilter.OfSport`: the sport of a booking is the sport of its court); `CheckAndAwardBadges` compares each tier with the count of its track.
+- `GetBadgeTiers` returns the tiers ordered by track (every sport first, then by sport and level) plus `Sports` (the club's sports). `EarnedBadgeDto.Sport` / `WrappedBadgeDto.Sport` carry the sport of a tier badge; the app shows it next to the name (`SportNames.BadgeName`, "Gold · Padel") in the trophy case, profile, badge settings dialog and Wrapped.
 - Migration `MakeBadgeTiersSeasonal` split the former club-global tiers into one copy per existing season, re-pointed existing `MemberBadges` to the copy of the season they were earned in, and deleted the old season-less tiers. Its `Down()` only reverts the schema, not the data.
 
 ### One-Time Badges
@@ -367,7 +373,7 @@ There are two kinds of badges, both **scoped to a season** and per-club (not per
 
 ### Badge Awarding
 
-- `BadgeProgressionService.CheckAndAwardBadges` handles the tier awarding logic: counts completed bookings for the member in the current season (only in play modes with `IsChargingBookingSubscription = true`), compares against each of **that season's** `BadgeTier.MatchesRequired`, and creates missing `MemberBadge` records.
+- `BadgeProgressionService.CheckAndAwardBadges` handles the tier awarding logic: counts completed bookings for the member in the current season (only in play modes with `IsChargingBookingSubscription = true`, per track: a tier with a sport only counts bookings on courts of that sport), compares against each of **that season's** `BadgeTier.MatchesRequired`, and creates missing `MemberBadge` records.
 - Awarding is triggered **inline** when `GetMemberBadgeProgress` is called (i.e., when the member loads their badge progress in My Club). There is no background job — the check runs on demand.
 - An EF Core migration (`AddMissingMemberBadgesForPreviousSeasons`) backfills badges for past seasons based on historical booking counts.
 
@@ -387,8 +393,8 @@ There are two kinds of badges, both **scoped to a season** and per-club (not per
 
 ### Badge Progress (My Club)
 
-- `GetMemberBadgeProgress` returns the member's progress toward the next badge tier in the current season: `CurrentBadgeLevel`, `CurrentBadgeImageUrl`, `NextBadgeLevel`, `NextBadgeImageUrl`, `RequiredMatches`, `CurrentMatches`, `EarnedBadges` (list with season info), `OneTimeBadges` (current season), `DisplayOneTimeBadgeId`.
-- `BadgeProgressCard.razor` — three-column layout: current badge icon + name (left) → progress bar + match count (center) → next badge icon at 55% opacity + name (right). Settings gear at top-right. Trophy case link at bottom.
+- `GetMemberBadgeProgress` returns the member's progress toward the next badge tier in the current season: `CurrentBadgeLevel`, `CurrentBadgeImageUrl`, `NextBadgeLevel`, `NextBadgeImageUrl`, `RequiredMatches`, `CurrentMatches`, `EarnedBadges` (list with season info), `OneTimeBadges` (current season), `DisplayOneTimeBadgeId`. The match/badge fields are those of the first track; `Tracks` (`BadgeTrackProgressDto`) lists every track of the season (every sport first, then the sports with tiers; one entry for every sport when the season has no tiers).
+- `BadgeProgressCard.razor` — three-column layout per track: current badge icon + name (left) → progress bar + match count (center) → next badge icon at 55% opacity + name (right). With several tracks every row gets the sport and its "x matches to ..." above it. Settings gear at top-right. Trophy case link at bottom.
 
 ### Badge Display Settings
 
@@ -397,7 +403,7 @@ There are two kinds of badges, both **scoped to a season** and per-club (not per
 
 ### Badge Settings Page (Club Administration)
 
-- `Pages/ClubShell/Club/BadgeSettings.razor` (`/clubs/{id}/badge-settings`) — season selector (defaults to the active season) plus two tabs: **Tiers** (add/edit/delete/copy tiers, upload images; admin only) and **One-Time Badges** (add/edit/delete/copy, upload images, award/revoke).
+- `Pages/ClubShell/Club/BadgeSettings.razor` (`/clubs/{id}/badge-settings`) — season selector (defaults to the active season) plus two tabs: **Tiers** (add/edit/delete/copy tiers, upload images; admin only) and **One-Time Badges** (add/edit/delete/copy, upload images, award/revoke). With several sports (or tiers that have a sport) the tiers are shown as one ladder per track, and `CreateBadgeTierDialog` has a sport select ("All sports" or a sport; disabled when editing).
 - Dialogs live in `Pages/ClubShell/Club/Dialogs/`: `CreateBadgeTierDialog`, `CopyBadgeTiersDialog`, `CreateOneTimeBadgeDialog`, `CopyOneTimeBadgesDialog`, `AwardOneTimeBadgeDialog`.
 - `NavMenu.razor` shows the Badge Settings link to admins and additionally to `SportsDirector` / `YouthSportsDirector`.
 
@@ -495,7 +501,8 @@ The club admin enters where the courts are (`Club.Latitude`/`Longitude`, `GeoLoc
 At the end of a season every active club member gets a story-style review of their season ("Wrapped"): matches, hours, place among the enrolled members, favourite partners, play style, home court, records, regular slot, badges, events and the numbers of the whole club. A season is the club's existing `Season` (`Period`), nothing new to define.
 
 - **The club admins release it** (`Season.WrappedPublishedAt`, `PublishWrapped`/`UnpublishWrapped`): any season that has started, also past ones and the running one (`ErrorCode.WrappedSeasonNotStarted` for upcoming seasons). Repeating keeps the first date. Before that only `ClubAdministrator`s can open it, as a preview.
-- **Nothing is stored**: `GetSeasonWrapped` calculates it from the bookings whenever it is opened, so every past season can be generated and the numbers always match the statistics. Same counting rule as statistics and badges (`WrappedBookings.Load`: play modes with `IsChargingBookingSubscription`, local date of the booking within the season). Reuses `GetMemberStatistics.Handler.GetPlayerType`/`GetLongestWeekStreak`.
+- **Nothing is stored**: `GetSeasonWrapped` calculates it from the bookings whenever it is opened, so every past season can be generated and the numbers always match the statistics. Same counting rule as statistics and badges (`WrappedBookings.Load`: play modes with `IsChargingBookingSubscription`, local date of the booking within the season, with the sport of the court). Reuses `GetMemberStatistics.Handler.GetPlayerType`/`GetLongestWeekStreak`.
+- `MatchesPerSport` (only sports with matches): a member who played more than one sport gets a line "By sport: 12 Tennis · 5 Padel" on the matches slide. Everything else (rank included) counts every sport.
 - Rank: place by matches among the members enrolled in the season (ties share a place), only for a member who played. Other members only appear as top partners with name and picture (see Member Data & Privacy); club numbers are anonymous totals.
 
 ### API
@@ -510,6 +517,14 @@ At the end of a season every active club member gets a story-style review of the
 - Auto-advance is driven by the CSS animation of the active progress segment (`@onanimationend`); pausing only pauses that animation, never the entrance animations of the slide content (they would stay invisible).
 - `WrappedTeaser` on My Club advertises a season released within the last `WrappedHelpers.TeaserDays` (60) days. `SeasonsCard` links to the page and marks released seasons with 🎁. Store: `IWrappedStore`, texts in `WrappedLocale(.de).resx`. Times of day are sent as `TimeSpan`.
 - Not built yet: a notification when a season is released, Wrapped for the children of a family.
+
+## Sports in Statistics & Leaderboards
+
+- A booking's sport is the sport of its court (`Court.Sport`). `Business/Shared/SportFilter.cs`: `OfSport(context, sport)` on `Booking`/`BookingPlayer` queries (no-op for `null`), `OrderedClubSports` (the club's sports, Tennis first) and the casts between the domain and shared `Sport` enums.
+- `GET Leaderboards?sport=`, `GET Statistics?sport=` and `GET Statistics/club?sport=` take an optional sport (`Tennis`/`Padel` or the number). **Without it nothing changes**: every sport, so existing clients and API keys get the same numbers. The results carry `Sport` (what they are for) and `Sports` (the club's sports); the leaderboard also `DefaultSport` (the first sport the member is enrolled for in the active season, only for clubs with several sports).
+- Member statistics with a sport: only bookings on its courts, and the club comparison only with the members whose enrollment covers it. The play mode quotas always count every sport.
+- Club statistics with a sport: only the courts of the sport (occupancy, heatmaps), the bookings on them and the members whose enrollment covers it (demographics, activity).
+- FE: `Components/Sports/SportFilter.razor` (chips "All sports" + one per sport, renders nothing for a club with one sport), `SportNames` (name, emoji, badge name), texts in `Localization/Components/Sports/SportLocale(.de).resx`. The leaderboard starts with `DefaultSport`, the statistics pages with all sports; switching reloads the store (`LoadLeaderboard(sport)`, `LoadStatistics(sport)`, `LoadClubStatistics(sport)`) and keeps the selected season/tab.
 
 ## Play Mode Quotas
 

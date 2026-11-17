@@ -1,6 +1,7 @@
 using Bookennis.Client.Services.HttpClients.Leaderboards;
 using Bookennis.Client.Services.Store.Base;
 using Bookennis.Shared.Controller.Leaderboards;
+using Bookennis.Shared.Controller.Shared;
 
 namespace Bookennis.Client.Services.Store.Leaderboards;
 
@@ -9,9 +10,12 @@ public class LeaderboardStore(ILeaderboardHttpClient leaderboardHttpClient) : Se
     public event Action? OnLeaderboardChanged;
     public GetLeaderboardResult? Leaderboard { get; private set; }
 
-    public Task LoadLeaderboard() => RunInLoadingContextAsync(async cancellationToken =>
+    public Sport? Sport { get; private set; }
+
+    public Task LoadLeaderboard(Sport? sport = null) => RunInLoadingContextAsync(async cancellationToken =>
     {
-        var response = await leaderboardHttpClient.GetLeaderboard(cancellationToken);
+        Sport = sport;
+        var response = await leaderboardHttpClient.GetLeaderboard(sport, cancellationToken);
         if (response is { Success: true, Dto: not null })
         {
             Leaderboard = response.Dto;
@@ -28,7 +32,7 @@ public class LeaderboardStore(ILeaderboardHttpClient leaderboardHttpClient) : Se
             if (response.Success)
             {
                 success = true;
-                await LoadLeaderboard();
+                await LoadLeaderboard(Sport);
             }
             return response;
         }, nameof(ToggleOptOut));

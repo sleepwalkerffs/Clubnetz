@@ -3,9 +3,11 @@
 @layout ClubWithStoreLayout
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Sports
 @using Bookennis.Client.Localization.Pages.ClubStatistics
 @using Bookennis.Client.Pages.ClubShell.ClubStatistics.Components
 @using Bookennis.Client.Services.Store.Statistics
+@using Bookennis.Shared.Controller.Shared
 @using Bookennis.Shared.Controller.Statistics
 @using Bookennis.Client.Utils
 
@@ -24,9 +26,16 @@ else
 {
     var season = stats.SeasonStatistics.FirstOrDefault(s => s.SeasonId == selectedSeasonId);
 
+    @if (ClubStatisticsStore.IsLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
     <div class="cstats">
+        <SportFilter Sports="@stats.Sports" Value="@selectedSport" ValueChanged="@SelectSport" Disabled="@ClubStatisticsStore.IsLoading" />
+
         <ChoiceChips TItem="Scope" Items="@Scopes(stats)" Value="@Scopes(stats).FirstOrDefault(s => s.SeasonId == selectedSeasonId)"
-                     ValueChanged="@(scope => selectedSeasonId = scope.SeasonId)" TextFunc="@(scope => scope.Label)" ColorFunc="@(scope => scope.IsLive ? "#059669" : null)" />
+                     ValueChanged="@SelectScope" TextFunc="@(scope => scope.Label)" ColorFunc="@(scope => scope.IsLive ? "#059669" : null)" />
 
         @if (season is null)
         {
@@ -55,6 +64,24 @@ else
     /// <summary>Selected season, null for all time.</summary>
     private int? selectedSeasonId;
 
+    /// <summary>The user picked a season or all time: reloading for another sport keeps it.</summary>
+    private bool isScopeChosen;
+
+    /// <summary>The sport chips (clubs with several sports): null = all sports.</summary>
+    private Sport? selectedSport;
+
+    private void SelectScope(Scope scope)
+    {
+        selectedSeasonId = scope.SeasonId;
+        isScopeChosen = true;
+    }
+
+    private async Task SelectSport(Sport? sport)
+    {
+        selectedSport = sport;
+        await ClubStatisticsStore.LoadClubStatistics(sport);
+    }
+
     protected override async Task OnInitializedAsync()
     {
         ClubStatisticsStore.OnClubStatisticsChanged += OnStatisticsChanged;
@@ -73,7 +100,7 @@ else
     private void SelectDefaultScope()
     {
         var stats = ClubStatisticsStore.ClubStatistics!;
-        if (selectedSeasonId is not null && stats.SeasonStatistics.Any(s => s.SeasonId == selectedSeasonId))
+        if ((selectedSeasonId is not null || isScopeChosen) && (selectedSeasonId is null || stats.SeasonStatistics.Any(s => s.SeasonId == selectedSeasonId)))
             return;
 
         selectedSeasonId = (stats.SeasonStatistics.FirstOrDefault(s => s.State == SeasonState.Current)

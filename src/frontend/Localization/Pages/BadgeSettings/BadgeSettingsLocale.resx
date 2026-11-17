@@ -205,4 +205,10 @@
   <data name="NoAccess" xml:space="preserve">
     <value>Only those who manage the badges of the club see this page.</value>
   </data>
+  <data name="CountsSport" xml:space="preserve">
+    <value>Counts only {0} matches</value>
+  </data>
+  <data name="SportHint" xml:space="preserve">
+    <value>Only matches on courts of this sport count. Levels are numbered per sport. Can't be changed later.</value>
+  </data>
 </root>

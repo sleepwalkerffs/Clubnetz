@@ -4,6 +4,7 @@ using Bookennis.Api.Data;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.Clubs;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Members;
 using Bookennis.Domain.User;
 using Bookennis.Global.Intervals;
@@ -87,6 +88,59 @@ public class GetClubStatisticsTests(TestFixture fixture) : TestBase(fixture)
 
         var hour9 = court1Heatmap.Hours.Single(h => h.Hour == 9);
         hour9.OccupancyPercentage.Should().Be(50.0); // 5 out of 10 days
+    }
+
+    [Fact]
+    public async Task GetClubStatistics_Sport_OnlyCourtsBookingsAndMembersOfTheSport()
+    {
+        var clubId = Query(ctx => ctx.TestData().Club.Id);
+
+        int seasonId = 0;
+        await QueryAsync(async ctx =>
+        {
+            ctx.TestData().Court2.SetSport(Sport.Padel);
+            var season = new Season(clubId, new DateOnlyInterval(new DateOnly(2025, 6, 1), new DateOnly(2025, 6, 10)));
+            ctx.Add(season);
+            await ctx.SaveChangesAsync();
+            seasonId = season.Id;
+
+            ctx.Add(new MemberSeason(TestDataSeed.Member1Id, season.Id, sports: [Sport.Tennis]));
+            ctx.Add(new MemberSeason(TestDataSeed.Member2Id, season.Id));
+
+            var playMode = ctx.TestData().Club.PlayModes[0];
+
+            // Court 1 (tennis) at 9-10 on 5 days, court 2 (padel) at 9-10 on 2 days
+            for (var day = 1; day <= 5; day++)
+            {
+                var from = new DateTimeOffset(2025, 6, day, 9, 0, 0, Summer).ToUniversalTime();
+                ctx.Add(new Booking(clubId, TestDataSeed.Court1Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), ViennaTimeZoneId, [TestDataSeed.Member1Id]));
+            }
+
+            for (var day = 1; day <= 2; day++)
+            {
+                var from = new DateTimeOffset(2025, 6, day, 9, 0, 0, Summer).ToUniversalTime();
+                ctx.Add(new Booking(clubId, TestDataSeed.Court2Id, playMode.Id, new DateTimeOffsetInterval(from, from.AddHours(1)), ViennaTimeZoneId, [TestDataSeed.Member2Id]));
+            }
+
+            await ctx.SaveChangesAsync();
+        });
+
+        var all = await SendAsync(new GetClubStatistics(clubId));
+        var padel = await SendAsync(new GetClubStatistics(clubId, Sport: Sport.Padel));
+
+        all.Sport.Should().BeNull();
+        all.Sports.Should().Equal(Bookennis.Shared.Controller.Shared.Sport.Tennis, Bookennis.Shared.Controller.Shared.Sport.Padel);
+        all.AllTime.Totals.Bookings.Should().Be(7);
+        all.SeasonStatistics.Single(s => s.SeasonId == seasonId).Occupancy.CourtHeatmaps.Select(h => h.CourtName).Should().Equal("Court 1", "Court 2");
+
+        padel.Sport.Should().Be(Bookennis.Shared.Controller.Shared.Sport.Padel);
+        padel.Sports.Should().HaveCount(2);
+        padel.AllTime.Totals.Bookings.Should().Be(2);
+        var season = padel.SeasonStatistics.Single(s => s.SeasonId == seasonId);
+        var heatmap = season.Occupancy.CourtHeatmaps.Should().ContainSingle().Subject;
+        heatmap.CourtName.Should().Be("Court 2");
+        heatmap.Hours.Single(h => h.Hour == 9).OccupancyPercentage.Should().Be(20.0); // 2 out of 10 days
+        season.MemberActivity.EnrolledMembers.Should().Be(1); // member 1 is enrolled for tennis only
     }
 
     [Fact]

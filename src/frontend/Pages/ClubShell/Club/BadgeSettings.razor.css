@@ -228,3 +228,20 @@
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
 }
+
+/* Tiers per sport: a title above every track's ladder */
+.ladder-track {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.ladder + .ladder-track {
+    margin-top: 22px;
+}

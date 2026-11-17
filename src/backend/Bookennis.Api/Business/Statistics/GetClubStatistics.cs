@@ -1,8 +1,10 @@
 using System.Drawing;
 using System.Globalization;
 using Bookennis.Api.Business.Clubs;
+using Bookennis.Api.Business.Shared;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Members;
 using Bookennis.Domain.User;
 using Bookennis.Shared.Controller.Statistics;
@@ -12,7 +14,11 @@ namespace Bookennis.Api.Business.Statistics;
 
 /// <param name="ClubId">The club.</param>
 /// <param name="Today">Overrides the current local date of the club (only used by tests).</param>
-public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<GetClubStatisticsResult>
+/// <param name="Sport">
+/// Only the courts of this sport and the bookings on them (occupancy and heatmap included), and only the members whose enrollment covers it;
+/// <c>null</c> = every sport.
+/// </param>
+public record GetClubStatistics(int ClubId, DateOnly? Today = null, Sport? Sport = null) : IQuery<GetClubStatisticsResult>
 {
     private const int TopPlayerCount = 10;
 
@@ -35,7 +41,12 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
                 .OrderBy(c => c.SortOrder)
                 .ToListAsync(cancellationToken);
 
+            var clubSports = courts.Select(c => c.Sport).Distinct().Order().ToList();
+            if (request.Sport is { } sport)
+                courts = courts.Where(c => c.Sport == sport).ToList();
+
             var bookingRows = await context.Bookings
+                .OfSport(context, request.Sport)
                 .Where(b => b.ClubId == request.ClubId)
                 .Select(b => new
                 {
@@ -68,10 +79,13 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
             // "Today" is the local date of the club
             var today = request.Today ?? region.Today();
 
-            var memberSeasons = await context.MemberSeasons
-                .Where(ms => context.Set<Member>().IgnoreQueryFilters().Any(m => m.Id == ms.MemberId && m.ClubId == request.ClubId && m.MemberType == MemberType.ClubMember))
+            var memberSeasons = (await context.MemberSeasons
+                    .Where(ms => context.Set<Member>().IgnoreQueryFilters().Any(m => m.Id == ms.MemberId && m.ClubId == request.ClubId && m.MemberType == MemberType.ClubMember))
+                    .Select(ms => new { ms.MemberId, ms.SeasonId, ms.Sports })
+                    .ToListAsync(cancellationToken))
+                .Where(ms => request.Sport is not { } enrolledSport || Sports.Covers(ms.Sports, enrolledSport))
                 .Select(ms => new MemberSeasonData(ms.MemberId, ms.SeasonId))
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             var memberUsers = await (
                 from member in context.Set<Member>().IgnoreQueryFilters()
@@ -180,6 +194,8 @@ public record GetClubStatistics(int ClubId, DateOnly? Today = null) : IQuery<Get
                 SeasonStatistics = seasonResults,
                 AllTime = BuildAllTime(seasons, allBookings, memberSeasons, players, playModes, matchPlayModeIds, calculator, seasonSummaries, today),
                 Today = today,
+                Sport = request.Sport.ToDto(),
+                Sports = clubSports.ConvertAll(s => s.ToDto()),
                 OpeningHourFrom = calculator.OpeningHourFrom,
                 OpeningHourTo = calculator.OpeningHourTo,
                 PrimeTime = primeTime.IsEnabled

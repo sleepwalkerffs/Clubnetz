@@ -1,6 +1,8 @@
 @page "/clubs/{ClubId:int}/badge-settings"
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Sports
+@using Bookennis.Client.Localization.Components.Sports
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Pages.BadgeSettings
 @using Bookennis.Client.Pages.ClubShell.Club.Dialogs
@@ -96,32 +98,22 @@ else
                 else
                 {
                     var maxEarned = Math.Max(1, tiers.Max(t => t.EarnedCount));
-                    <div class="ladder">
-                        @for (var i = 0; i < tiers.Count; i++)
+                    @if (!IsGroupedBySport(tiers))
+                    {
+                        @RenderLadder(tiers, maxEarned)
+                    }
+                    else
+                    {
+                        // One ladder per track: every sport first, then the sports in their order
+                        @foreach (var track in tiers.GroupBy(t => t.Sport).OrderBy(g => g.Key.HasValue).ThenBy(g => g.Key))
                         {
-                            var tier = tiers[i];
-                            @if (i > 0)
-                            {
-                                <div class="ladder__step" aria-hidden="true">
-                                    <span class="ladder__step-line"></span>
-                                    <span class="ladder__step-text">+@(tier.MatchesRequired - tiers[i - 1].MatchesRequired)</span>
-                                </div>
-                            }
-                            <div class="ladder__item">
-                                <TrophyTile Name="@tier.Name" ImageUrl="@tier.ImageUrl" Level="@tier.Level" OnClick="() => OpenTierDetail(tier)">
-                                    <span>🎾 @string.Format(L["MatchesRule"], tier.MatchesRequired)</span>
-                                    <span class="earned-bar" title="@string.Format(L["EarnedBy"], tier.EarnedCount)">
-                                        <span style="width: @((tier.EarnedCount * 100.0 / maxEarned).ToString("0.#", CultureInfo.InvariantCulture))%"></span>
-                                    </span>
-                                    <span><strong>@tier.EarnedCount</strong> @L["Earned"]</span>
-                                </TrophyTile>
-                                @if (isAdmin)
-                                {
-                                    @RenderActions($"tier-{tier.Id}", () => OpenTierDialog(tier), e => OnTierImageSelected(e, tier.Id), () => DeleteTier(tier))
-                                }
+                            <div class="ladder-track">
+                                <span aria-hidden="true">@(track.Key is { } sport ? SportNames.Emoji(sport) : "🏅")</span>
+                                <span>@(track.Key is { } trackSport ? SportNames.Name(SportLocale, trackSport) : SportLocale["AllSports"].Value)</span>
                             </div>
+                            @RenderLadder(track.OrderBy(t => t.Level).ToList(), maxEarned)
                         }
-                    </div>
+                    }
                 }
             </ChildContent>
         </SectionCard>
@@ -204,6 +196,7 @@ else
     [Inject] private IClubStore ClubStore { get; set; } = null!;
     [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
     [Inject] private IStringLocalizer<BadgeSettingsLocale> L { get; set; } = null!;
+    [Inject] private IStringLocalizer<SportLocale> SportLocale { get; set; } = null!;
     [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
     [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
@@ -255,6 +248,39 @@ else
         </div>
     };
 
+    /// <summary>Several sports (or tiers that already have a sport): the tiers are shown per track.</summary>
+    private bool IsGroupedBySport(List<BadgeTierDto> tiers) => (BadgesStore.BadgeTiers?.Sports.Count ?? 0) > 1 || tiers.Any(t => t.Sport is not null);
+
+    private RenderFragment RenderLadder(List<BadgeTierDto> tiers, int maxEarned) => __builder =>
+    {
+        <div class="ladder">
+            @for (var i = 0; i < tiers.Count; i++)
+            {
+                var tier = tiers[i];
+                @if (i > 0)
+                {
+                    <div class="ladder__step" aria-hidden="true">
+                        <span class="ladder__step-line"></span>
+                        <span class="ladder__step-text">+@(tier.MatchesRequired - tiers[i - 1].MatchesRequired)</span>
+                    </div>
+                }
+                <div class="ladder__item">
+                    <TrophyTile Name="@tier.Name" ImageUrl="@tier.ImageUrl" Level="@tier.Level" OnClick="() => OpenTierDetail(tier)">
+                        <span>🎾 @string.Format(L["MatchesRule"], tier.MatchesRequired)</span>
+                        <span class="earned-bar" title="@string.Format(L["EarnedBy"], tier.EarnedCount)">
+                            <span style="width: @((tier.EarnedCount * 100.0 / maxEarned).ToString("0.#", CultureInfo.InvariantCulture))%"></span>
+                        </span>
+                        <span><strong>@tier.EarnedCount</strong> @L["Earned"]</span>
+                    </TrophyTile>
+                    @if (isAdmin)
+                    {
+                        @RenderActions($"tier-{tier.Id}", () => OpenTierDialog(tier), e => OnTierImageSelected(e, tier.Id), () => DeleteTier(tier))
+                    }
+                </div>
+            }
+        </div>
+    };
+
     private Task OpenTierDetail(BadgeTierDto tier)
         => OpenDetail(new TrophyDetailDialog.BadgeDetailViewModel(tier.Name, tier.Description, tier.ImageUrl, tier.Level, null), TierFacts(tier));
 
@@ -263,6 +289,10 @@ else
 
     private RenderFragment TierFacts(BadgeTierDto tier) => __builder =>
     {
+        if (tier.Sport is { } sport)
+        {
+            <div class="trophy-detail__fact"><span aria-hidden="true">@SportNames.Emoji(sport)</span><span>@string.Format(L["CountsSport"], SportNames.Name(SportLocale, sport))</span></div>
+        }
         <div class="trophy-detail__fact"><span aria-hidden="true">🎾</span><span>@string.Format(L["MatchesRule"], tier.MatchesRequired)</span></div>
         <div class="trophy-detail__fact"><span aria-hidden="true">👥</span><span>@string.Format(L["EarnedBy"], tier.EarnedCount)</span></div>
     };
@@ -301,7 +331,12 @@ else
         if (selectedSeasonId is not { } seasonId)
             return;
 
-        var parameters = new DialogParameters<CreateBadgeTierDialog> { { d => d.SeasonId, seasonId }, { d => d.Tier, tier } };
+        var parameters = new DialogParameters<CreateBadgeTierDialog>
+        {
+            { d => d.SeasonId, seasonId },
+            { d => d.Tier, tier },
+            { d => d.Sports, BadgesStore.BadgeTiers?.Sports ?? [] },
+        };
         await DialogService.ShowAsync<CreateBadgeTierDialog>(tier is null ? L["AddTier"] : string.Format(L["EditTitle"], tier.Name), parameters,
             new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true });
     }

@@ -18,7 +18,7 @@ public class BadgeTiersController(IMediator mediator) : ClubControllerBase
     [HttpPost]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]
     public Task<int> CreateBadgeTier(int clubId, int seasonId, [FromBody] CreateBadgeTierModel model, CancellationToken cancellationToken)
-        => mediator.Send(new CreateBadgeTier(clubId, seasonId, model.Name, model.Description, model.MatchesRequired), cancellationToken);
+        => mediator.Send(new CreateBadgeTier(clubId, seasonId, model.Name, model.Description, model.MatchesRequired, (Domain.Courts.Sport?)model.Sport), cancellationToken);
 
     [HttpPut("{tierId:int}")]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]

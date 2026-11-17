@@ -36,7 +36,7 @@ public record CopyBadgeTiers(int ClubId, int SourceSeasonId, int TargetSeasonId)
                 .Select(tier => new
                 {
                     SourceTierId = tier.Id,
-                    NewTier = new BadgeTier(request.ClubId, request.TargetSeasonId, tier.Level, tier.Name, tier.Description, tier.MatchesRequired, tier.SortOrder)
+                    NewTier = new BadgeTier(request.ClubId, request.TargetSeasonId, tier.Level, tier.Name, tier.Description, tier.MatchesRequired, tier.SortOrder, tier.Sport)
                 })
                 .ToList();
 

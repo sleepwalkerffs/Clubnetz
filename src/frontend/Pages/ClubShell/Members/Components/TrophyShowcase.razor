@@ -1,5 +1,7 @@
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Sports
+@using Bookennis.Client.Localization.Components.Sports
 @using Bookennis.Client.Localization.Pages.Trophies
 @using Bookennis.Client.Pages.ClubShell.Members.Dialogs
 @using Bookennis.Shared.Controller.MemberBadges
@@ -31,8 +33,9 @@
                 <div class="shelf__items">
                     @foreach (var badge in season.Badges.OrderByDescending(b => b.Level))
                     {
-                        <TrophyTile Name="@badge.Name" ImageUrl="@badge.ImageUrl" Level="@badge.Level" Date="@badge.EarnedAt"
-                                    OnClick="() => OpenDetail(new TrophyDetailDialog.BadgeDetailViewModel(badge.Name, badge.Description, badge.ImageUrl, badge.Level, badge.EarnedAt), season, club)" />
+                        var badgeName = SportNames.BadgeName(SportLocale, badge.Name, badge.Sport);
+                        <TrophyTile Name="@badgeName" ImageUrl="@badge.ImageUrl" Level="@badge.Level" Date="@badge.EarnedAt"
+                                    OnClick="() => OpenDetail(new TrophyDetailDialog.BadgeDetailViewModel(badgeName, badge.Description, badge.ImageUrl, badge.Level, badge.EarnedAt), season, club)" />
                     }
                     @foreach (var badge in season.OneTimeBadges.OrderByDescending(b => b.AwardedAt))
                     {
@@ -50,6 +53,7 @@
     [Parameter, EditorRequired] public GetTrophyCaseResult TrophyCase { get; set; } = null!;
 
     [Inject] private IStringLocalizer<TrophyLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SportLocale> SportLocale { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
 
     private bool ShowClubNames => TrophyCase.Clubs.Count(HasBadges) > 1;

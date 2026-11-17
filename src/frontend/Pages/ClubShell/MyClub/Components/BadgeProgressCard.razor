@@ -1,24 +1,22 @@
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Sports
+@using Bookennis.Client.Localization.Components.Sports
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Pages.MyClub
 @using Bookennis.Client.Pages.ClubShell.MyClub.Dialogs
 @using Bookennis.Client.Services.Store.Badges
+@using Bookennis.Shared.Controller.MemberBadges
 
 @implements IDisposable
 
 @if (BadgesStore.BadgeProgress is not null)
 {
     var progress = BadgesStore.BadgeProgress;
-    var hasNext = progress.NextBadgeMatchesRequired.HasValue;
-    var allEarned = !hasNext && progress.CurrentBadgeName is not null;
-    var progressValue = hasNext && progress.NextBadgeMatchesRequired!.Value > 0
-        ? Math.Min((double)progress.MatchCount / progress.NextBadgeMatchesRequired.Value * 100, 100)
-        : (allEarned ? 100.0 : 0.0);
-    var matchesToGo = hasNext ? Math.Max(progress.NextBadgeMatchesRequired!.Value - progress.MatchCount, 0) : 0;
-    var subtitle = hasNext
-        ? string.Format(MyClubLocale["MatchesToNextBadge"], matchesToGo, progress.NextBadgeName)
-        : allEarned ? Locale["AllBadgesEarned"].Value : null;
+    var tracks = Tracks(progress);
+
+    // One track (the usual case): the subtitle tells the matches to the next badge. Several tracks (badges per sport): every row tells its own.
+    var subtitle = tracks.Count == 1 ? TrackSubtitle(tracks[0]) : null;
 
     <SectionCard Emoji="🏅" Title="@Locale["BadgeProgress"]" Subtitle="@subtitle">
         <Actions>
@@ -27,54 +25,31 @@
             </MudTooltip>
         </Actions>
         <ChildContent>
-            <div class="badge-track">
-                <div class="badge-track__badge">
-                    <div class="badge-track__glow @(progress.CurrentBadgeName is null ? "badge-track__glow--none" : null)">
-                        <BadgeIcon ImageUrl="@progress.CurrentBadgeImageUrl" Level="@(progress.CurrentBadgeLevel ?? 0)" Size="Size.Large" ExtraStyle="width: 64px; height: 64px;" />
-                    </div>
-                    <div class="badge-track__name">@(progress.CurrentBadgeName ?? Locale["NoBadgeYet"])</div>
-                </div>
-
-                <div class="badge-track__progress">
-                    <div class="badge-track__count">
-                        <span class="badge-track__count-value">@progress.MatchCount</span>
-                        @if (hasNext)
-                        {
-                            <span class="badge-track__count-target">/ @progress.NextBadgeMatchesRequired</span>
-                        }
-                        <span class="badge-track__count-unit">@MyClubLocale["Matches"]</span>
-                    </div>
-                    <div class="badge-track__bar">
-                        <div class="badge-track__fill @(allEarned ? "badge-track__fill--done" : null)"
-                             style="width: @progressValue.ToString("0.#", CultureInfo.InvariantCulture)%"></div>
-                    </div>
-                    @if (allEarned)
-                    {
-                        <div class="badge-track__caption badge-track__caption--done">🏆 @Locale["AllBadgesEarned"]</div>
-                    }
-                    else if (hasNext)
-                    {
-                        <div class="badge-track__caption">@string.Format(MyClubLocale["PercentReached"], (int)progressValue)</div>
-                    }
-                </div>
-
-                @if (hasNext)
+            @foreach (var track in tracks)
+            {
+                @if (tracks.Count > 1)
                 {
-                    <div class="badge-track__badge badge-track__badge--next">
-                        <BadgeIcon ImageUrl="@progress.NextBadgeImageUrl" Level="@(progress.NextBadgeLevel ?? 0)" Size="Size.Large" ExtraStyle="width: 64px; height: 64px;" />
-                        <div class="badge-track__name">@progress.NextBadgeName</div>
+                    <div class="badge-track__sport">
+                        <span aria-hidden="true">@(track.Sport is { } sport ? SportNames.Emoji(sport) : "🏅")</span>
+                        <span>@(track.Sport is { } trackSport ? SportNames.Name(SportLocale, trackSport) : SportLocale["AllSports"].Value)</span>
+                        @if (TrackSubtitle(track) is { } caption)
+                        {
+                            <span class="badge-track__sport-caption">· @caption</span>
+                        }
                     </div>
                 }
-            </div>
+
+                @RenderTrack(track)
+            }
 
             @if (progress.EarnedBadges.Count > 0 || progress.OneTimeBadges.Count > 0)
             {
                 <div class="badge-collection">
                     <div class="badge-collection__label">@MyClubLocale["CollectedThisSeason"]</div>
                     <div class="badge-collection__items">
-                        @foreach (var badge in progress.EarnedBadges.OrderBy(b => b.Level))
+                        @foreach (var badge in progress.EarnedBadges.OrderBy(b => b.Sport.HasValue).ThenBy(b => b.Sport).ThenBy(b => b.Level))
                         {
-                            <MudTooltip Text="@badge.Name">
+                            <MudTooltip Text="@(badge.Sport is { } badgeSport ? $"{badge.Name} · {SportNames.Name(SportLocale, badgeSport)}" : badge.Name)">
                                 <BadgeIcon ImageUrl="@badge.ImageUrl" Level="@badge.Level" Alt="@badge.Name" Size="Size.Medium" />
                             </MudTooltip>
                         }
@@ -116,6 +91,9 @@
     private IStringLocalizer<MyClubLocale> MyClubLocale { get; set; } = null!;
 
     [Inject]
+    private IStringLocalizer<SportLocale> SportLocale { get; set; } = null!;
+
+    [Inject]
     private IDialogService DialogService { get; set; } = null!;
 
     [Inject]
@@ -127,6 +105,84 @@
         if (MemberId > 0)
             await BadgesStore.LoadBadgeProgress(MemberId);
     }
+
+    private static List<BadgeTrackProgressDto> Tracks(GetMemberBadgeProgressResult progress)
+        => progress.Tracks.Count > 0
+            ? progress.Tracks
+            :
+            [
+                new BadgeTrackProgressDto
+                {
+                    Sport = null,
+                    MatchCount = progress.MatchCount,
+                    CurrentBadgeTierId = progress.CurrentBadgeTierId,
+                    CurrentBadgeName = progress.CurrentBadgeName,
+                    CurrentBadgeLevel = progress.CurrentBadgeLevel,
+                    CurrentBadgeImageUrl = progress.CurrentBadgeImageUrl,
+                    NextBadgeTierId = progress.NextBadgeTierId,
+                    NextBadgeName = progress.NextBadgeName,
+                    NextBadgeMatchesRequired = progress.NextBadgeMatchesRequired,
+                    NextBadgeLevel = progress.NextBadgeLevel,
+                    NextBadgeImageUrl = progress.NextBadgeImageUrl,
+                },
+            ];
+
+    private string? TrackSubtitle(BadgeTrackProgressDto track)
+    {
+        if (track.NextBadgeMatchesRequired is { } required)
+            return string.Format(MyClubLocale["MatchesToNextBadge"], Math.Max(required - track.MatchCount, 0), track.NextBadgeName);
+
+        return track.CurrentBadgeName is not null ? Locale["AllBadgesEarned"].Value : null;
+    }
+
+    private RenderFragment RenderTrack(BadgeTrackProgressDto track) => __builder =>
+    {
+        var hasNext = track.NextBadgeMatchesRequired.HasValue;
+        var allEarned = !hasNext && track.CurrentBadgeName is not null;
+        var progressValue = hasNext && track.NextBadgeMatchesRequired!.Value > 0
+            ? Math.Min((double)track.MatchCount / track.NextBadgeMatchesRequired.Value * 100, 100)
+            : (allEarned ? 100.0 : 0.0);
+
+        <div class="badge-track">
+            <div class="badge-track__badge">
+                <div class="badge-track__glow @(track.CurrentBadgeName is null ? "badge-track__glow--none" : null)">
+                    <BadgeIcon ImageUrl="@track.CurrentBadgeImageUrl" Level="@(track.CurrentBadgeLevel ?? 0)" Size="Size.Large" ExtraStyle="width: 64px; height: 64px;" />
+                </div>
+                <div class="badge-track__name">@(track.CurrentBadgeName ?? Locale["NoBadgeYet"])</div>
+            </div>
+
+            <div class="badge-track__progress">
+                <div class="badge-track__count">
+                    <span class="badge-track__count-value">@track.MatchCount</span>
+                    @if (hasNext)
+                    {
+                        <span class="badge-track__count-target">/ @track.NextBadgeMatchesRequired</span>
+                    }
+                    <span class="badge-track__count-unit">@MyClubLocale["Matches"]</span>
+                </div>
+                <div class="badge-track__bar">
+                    <div class="badge-track__fill @(allEarned ? "badge-track__fill--done" : null)"
+                         style="width: @progressValue.ToString("0.#", CultureInfo.InvariantCulture)%"></div>
+                </div>
+                @if (allEarned)
+                {
+                    <div class="badge-track__caption badge-track__caption--done">🏆 @Locale["AllBadgesEarned"]</div>
+                }
+                else if (hasNext)
+                {
+                    <div class="badge-track__caption">@string.Format(MyClubLocale["PercentReached"], (int)progressValue)</div>
+                }
+            </div>
+
+            @if (hasNext)
+            {
+                <div class="badge-track__badge badge-track__badge--next">
+                    <BadgeIcon ImageUrl="@track.NextBadgeImageUrl" Level="@(track.NextBadgeLevel ?? 0)" Size="Size.Large" ExtraStyle="width: 64px; height: 64px;" />
+                    <div class="badge-track__name">@track.NextBadgeName</div>
+                </div>
+            }
+        </div>
+    };
 
     public void Dispose()
     {

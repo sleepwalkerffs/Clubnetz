@@ -8,7 +8,14 @@ public class BadgeTierEntityConfiguration : IEntityTypeConfiguration<BadgeTier>
 {
     public void Configure(EntityTypeBuilder<BadgeTier> builder)
     {
-        builder.HasIndex(x => new { x.ClubId, x.SeasonId, x.Level }).IsUnique();
+        // Levels are numbered per track (sport, or every sport when null): two partial indexes instead of NULLS NOT DISTINCT
+        builder.HasIndex(x => new { x.ClubId, x.SeasonId, x.Level })
+            .IsUnique()
+            .HasFilter("\"Sport\" IS NULL");
+
+        builder.HasIndex(x => new { x.ClubId, x.SeasonId, x.Sport, x.Level })
+            .IsUnique()
+            .HasFilter("\"Sport\" IS NOT NULL");
 
         builder.HasOne<Club>()
             .WithMany()

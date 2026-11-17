@@ -5,6 +5,7 @@ using Bookennis.Api.Tests.Business.ClubEvents;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.ClubEvents;
 using Bookennis.Domain.Clubs;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Members;
 using Bookennis.Domain.User;
@@ -73,6 +74,35 @@ public class GetSeasonWrappedTests(TestFixture fixture) : TestBase(fixture)
         result.Club.BusiestCourt.Should().Be("Court 1");
         result.Club.Events.Should().Be(1);
         result.Club.OwnSharePercentage.Should().Be(80);
+    }
+
+    [Fact]
+    public async Task GetSeasonWrapped_OneSport_MatchesPerSportHasOneEntry()
+    {
+        var (seasonId, _) = await SeedSeasonWithBookings(publish: true);
+
+        var result = await SendAsync(new GetSeasonWrapped(TestDataSeed.UserId, TestDataSeed.ClubId, seasonId, CanManage: false));
+
+        result.MatchesPerSport.Select(m => (m.Sport, m.Matches)).Should().Equal((Bookennis.Shared.Controller.Shared.Sport.Tennis, 4));
+    }
+
+    [Fact]
+    public async Task GetSeasonWrapped_TennisAndPadel_CountsTheMatchesPerSportAndRanksAcrossAllSports()
+    {
+        var (seasonId, _) = await SeedSeasonWithBookings(publish: true);
+        await QueryAsync(async ctx =>
+        {
+            ctx.TestData().Court2.SetSport(Sport.Padel);
+            await ctx.SaveChangesAsync();
+        });
+
+        var result = await SendAsync(new GetSeasonWrapped(TestDataSeed.UserId, TestDataSeed.ClubId, seasonId, CanManage: false));
+
+        result.Matches.Should().Be(4);
+        result.MatchesPerSport.Select(m => (m.Sport, m.Matches)).Should().Equal(
+            (Bookennis.Shared.Controller.Shared.Sport.Tennis, 3),
+            (Bookennis.Shared.Controller.Shared.Sport.Padel, 1));
+        result.Rank.Should().Be(1);
     }
 
     [Fact]

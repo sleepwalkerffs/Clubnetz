@@ -25,6 +25,17 @@ public class GetTrophyCaseTests(TestFixture fixture) : TestBase(fixture)
         result.Clubs[0].Seasons[0].Badges.Should().ContainSingle();
         result.Clubs[0].Seasons[0].Badges[0].BadgeTierId.Should().Be(seeded.BadgeTierId);
         result.Clubs[0].Seasons[0].Badges[0].Name.Should().Be("Bronze");
+        result.Clubs[0].Seasons[0].Badges[0].Sport.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetTrophyCase_TierWithSport_ReturnsTheSport()
+    {
+        var seeded = await SeedTrophyCaseData(isPublic: true, sport: Domain.Courts.Sport.Padel);
+
+        var result = await SendAsync(new GetTrophyCase(seeded.RequestingUserId, seeded.TargetMemberId));
+
+        result.Clubs[0].Seasons[0].Badges[0].Sport.Should().Be(Bookennis.Shared.Controller.Shared.Sport.Padel);
     }
 
     [Fact]
@@ -52,7 +63,7 @@ public class GetTrophyCaseTests(TestFixture fixture) : TestBase(fixture)
         result.Clubs[0].Seasons[0].Badges.Should().ContainSingle();
     }
 
-    private async Task<(int ClubId, int RequestingUserId, int TargetMemberId, int BadgeTierId)> SeedTrophyCaseData(bool isPublic, bool viewAsOwner = false)
+    private async Task<(int ClubId, int RequestingUserId, int TargetMemberId, int BadgeTierId)> SeedTrophyCaseData(bool isPublic, bool viewAsOwner = false, Domain.Courts.Sport? sport = null)
     {
         return await QueryAsync(async ctx =>
         {
@@ -64,7 +75,7 @@ public class GetTrophyCaseTests(TestFixture fixture) : TestBase(fixture)
             ctx.Add(season);
             await ctx.SaveChangesAsync();
 
-            var badgeTier = new BadgeTier(club.Id, season.Id, 1, "Bronze", "Bronze badge", 1, 1);
+            var badgeTier = new BadgeTier(club.Id, season.Id, 1, "Bronze", "Bronze badge", 1, 1, sport);
             ctx.Add(badgeTier);
             await ctx.SaveChangesAsync();
 
