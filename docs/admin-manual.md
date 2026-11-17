@@ -50,6 +50,7 @@ Menu: *Club setup → Club settings*. Only admins see this page.
 
 - *Opening hours* (*From* / *To*): the first and last bookable time of the day. Bookings outside are refused.
 - *Grace period*: how many minutes after the start a booking can still be made or cancelled.
+- *Bookings per week* (1–50): despite its name, how many **upcoming** bookings a member may hold at the same time, e.g. 3: after playing one, they can book the next. It applies to every member and counts bookings in play modes with *Counts as match*. On the member page you can set a lower value for a single member.
 - *Prime time*: the most popular hours, optionally only on some *Weekdays*. Two switches use it:
   - *No children in prime time*: members younger than the *Age limit* can't book prime time.
   - *No bought slots in prime time*: non-members who buy court time can't buy prime time.
@@ -103,7 +104,7 @@ These rules only apply to play modes with *Counts as match*:
 
 - a member can't hold two bookings at the same time,
 - a member can book **at most one booking in advance per day**. A booking that starts within the next 30 minutes is exempt, so a free court can still be used spontaneously.
-- *Bookings per week* of the member ([section 3.4](#34-roles-and-the-per-member-booking-limit)) applies.
+- *Bookings per week* ([section 2.1](#21-opening-hours--rules)) applies.
 
 So for normal play, switch *Counts as match* on.
 
@@ -152,7 +153,7 @@ A member who is not enrolled still sees the booking grid, but without names, and
 On the member page:
 
 - *Roles*: what the member may do in the club ([section 1.2](#12-who-sees-what)). Making someone *Admin* gives them the club settings too.
-- *Bookings per week*: despite its name, how many **upcoming** bookings the member may hold at the same time (e.g. 3: after playing one, they can book the next). It counts bookings in play modes with *Counts as match*.
+- *Bookings per week*: a lower limit for this member than the club's ([section 2.1](#21-opening-hours--rules)). A higher value has no effect: the club's value is the upper bound.
 
 ### 3.5 Households (families)
 
