@@ -49,6 +49,32 @@ public class RegisterUserTests
         created.ZipCode.Should().Be("1010");
     }
 
+    [Theory]
+    [InlineData(Language.German, "de")]
+    [InlineData(Language.English, "en")]
+    public async Task StoresChosenLanguage_AndSendsVerificationEmailInIt(Language language, string expectedLanguageCode)
+    {
+        User? created = null;
+        userManager.CreateAsync(Arg.Do<User>(u => created = u), "Secret-123").Returns(IdentityResult.Success);
+        userManager.GenerateEmailConfirmationTokenAsync(Arg.Any<User>()).Returns("token");
+
+        await CreateHandler().Handle(NewCommand(null, null, null) with { Language = language }, CancellationToken.None);
+
+        created!.Language.Should().Be(language);
+        await mediator.Received(1).Send(Arg.Is<SendEmail>(e => e.Culture.TwoLetterISOLanguageName == expectedLanguageCode), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UnknownLanguage_FallsBackToGerman()
+    {
+        User? created = null;
+        userManager.CreateAsync(Arg.Do<User>(u => created = u), "Secret-123").Returns(IdentityResult.Success);
+
+        await CreateHandler().Handle(NewCommand(null, null, null) with { Language = (Language)42 }, CancellationToken.None);
+
+        created!.Language.Should().Be(Language.German);
+    }
+
     [Fact]
     public async Task CreateFails_DoesNotAssignRole_AndThrows()
     {

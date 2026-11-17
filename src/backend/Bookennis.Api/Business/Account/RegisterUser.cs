@@ -25,7 +25,8 @@ public record RegisterUser(
     string? City,
     string? ZipCode,
     [Required] Country Country,
-    bool AcceptPrivacyPolicy
+    bool AcceptPrivacyPolicy,
+    Language Language = Language.German
 ) : ICommand
 {
     public enum ErrorCode
@@ -40,7 +41,7 @@ public record RegisterUser(
             if (!request.AcceptPrivacyPolicy)
                 throw new PreconditionException(ErrorCode.PrivacyPolicyNotAccepted, "The privacy policy has to be accepted.");
 
-            var user = new User(request.UserName, request.Email, request.FirstName, request.LastName, request.Birthday, request.Gender, request.Street ?? string.Empty, request.City ?? string.Empty, request.ZipCode ?? string.Empty, request.Country);
+            var user = new User(request.UserName, request.Email, request.FirstName, request.LastName, request.Birthday, request.Gender, request.Street ?? string.Empty, request.City ?? string.Empty, request.ZipCode ?? string.Empty, request.Country, Enum.IsDefined(request.Language) ? request.Language : Language.German);
             user.AcceptPrivacyPolicy();
             var result = await userManager.CreateAsync(user, request.Password);
 

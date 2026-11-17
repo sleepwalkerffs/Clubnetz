@@ -14,7 +14,7 @@ public class AccountController(IMediator mediator) : ControllerBase
     [HttpPost("Register")]
     public Task RegisterUser(RegisterUserModel model, CancellationToken cancellationToken) =>
         mediator.Send(
-            new RegisterUser(model.FirstName, model.LastName, model.Birthday, model.Email, model.UserName, model.Password, (Gender)model.Gender, model.Street, model.City, model.ZipCode, (Domain.User.Country)model.Country, model.AcceptPrivacyPolicy),
+            new RegisterUser(model.FirstName, model.LastName, model.Birthday, model.Email, model.UserName, model.Password, (Gender)model.Gender, model.Street, model.City, model.ZipCode, (Domain.User.Country)model.Country, model.AcceptPrivacyPolicy, (Language)model.Language),
             cancellationToken
         );
 

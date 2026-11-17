@@ -466,6 +466,15 @@ namespace Bookennis.Client.Localization.Pages.Account {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to We'll send your emails in this language. You can change it later in your profile..
+        /// </summary>
+        public static string Register_LanguageHelper {
+            get {
+                return ResourceManager.GetString("Register_LanguageHelper", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Your club may need your address for its member list. You can also add it later in your profile..
         /// </summary>
         public static string Register_AddressHint {
