@@ -284,6 +284,7 @@ else
     {
         Store.OnOptionsChanged += OnChanged;
         ClubProfileStore.OnClubProfileChanged += OnChanged;
+        ClubStore.OnCourtsDataChanged += OnChanged;
 
         if (ClubProfileStore.IsSupportMode || ClubProfileStore.Roles.Contains(MemberRole.Guest))
             return;
@@ -526,5 +527,6 @@ else
         disposed.Dispose();
         Store.OnOptionsChanged -= OnChanged;
         ClubProfileStore.OnClubProfileChanged -= OnChanged;
+        ClubStore.OnCourtsDataChanged -= OnChanged;
     }
 }

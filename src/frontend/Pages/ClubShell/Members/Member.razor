@@ -223,6 +223,8 @@ else
         MembersStore.OnMemberChanged += StateHasChanged;
         MembersStore.OnMemberOverviewChanged += StateHasChanged;
         ClubStore.OnSeasonsChanged += StateHasChanged;
+        // The sport chips appear once the courts are known (another component may be loading them)
+        ClubStore.OnCourtsDataChanged += StateHasChanged;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -311,6 +313,7 @@ else
         MembersStore.OnMemberChanged -= StateHasChanged;
         MembersStore.OnMemberOverviewChanged -= StateHasChanged;
         ClubStore.OnSeasonsChanged -= StateHasChanged;
+        ClubStore.OnCourtsDataChanged -= StateHasChanged;
         MembersStore.ResetMember();
     }
 }

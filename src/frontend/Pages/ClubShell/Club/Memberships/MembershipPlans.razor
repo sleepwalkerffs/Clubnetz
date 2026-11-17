@@ -164,6 +164,7 @@ else
         Store.OnPlansChanged += OnChanged;
         AccountStore.OnAccountChanged += OnChanged;
         ClubProfileStore.OnClubProfileChanged += OnChanged;
+        ClubStore.OnCourtsDataChanged += OnChanged;
 
         if (!CanManage)
             return;
@@ -261,5 +262,6 @@ else
         Store.OnPlansChanged -= OnChanged;
         AccountStore.OnAccountChanged -= OnChanged;
         ClubProfileStore.OnClubProfileChanged -= OnChanged;
+        ClubStore.OnCourtsDataChanged -= OnChanged;
     }
 }
