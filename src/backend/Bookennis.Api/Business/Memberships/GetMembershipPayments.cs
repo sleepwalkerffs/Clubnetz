@@ -50,10 +50,6 @@ public record MembershipPaymentsOverview(Season Season, List<MembershipPaymentMe
             .ToListAsync(cancellationToken);
 
         var methodByOrder = orders.ToDictionary(o => o.Id, o => o.PaymentMethod);
-        var planIds = orders.Select(o => o.MembershipPlanId).Distinct().ToList();
-        var sportsByPlan = await context.MembershipPlans
-            .Where(p => planIds.Contains(p.Id))
-            .ToDictionaryAsync(p => p.Id, p => p.Sports, cancellationToken);
 
         var members = people.All
             .Select(p => new MembershipPaymentMemberDto
@@ -75,7 +71,7 @@ public record MembershipPaymentsOverview(Season Season, List<MembershipPaymentMe
             Id = o.Id,
             MembershipPlanId = o.MembershipPlanId,
             PlanName = o.PlanName,
-            Sports = sportsByPlan.GetValueOrDefault(o.MembershipPlanId, []).Select(s => (Bookennis.Shared.Controller.Shared.Sport)s).ToList(),
+            Sports = o.Sports.Select(s => (Bookennis.Shared.Controller.Shared.Sport)s).ToList(),
             AmountCents = o.AmountCents,
             Currency = o.Currency,
             Status = (SharedOrderStatus)o.Status,

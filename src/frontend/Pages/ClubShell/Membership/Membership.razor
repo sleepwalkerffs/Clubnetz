@@ -42,7 +42,8 @@ else
     var orders = options.Orders.Where(o => o.Status is not (MembershipOrderStatus.Cancelled or MembershipOrderStatus.Refunded)).ToList();
     var myOrder = me is null ? null : orders.FirstOrDefault(o => o.Members.Any(m => m.MemberId == me.MemberId));
     var state = State(me, myOrder);
-    var canOrder = options.People.Any(p => !p.HasMembership);
+    // One membership per sport: a member with tennis can still order padel, so the plans decide (the server checks again)
+    var canOrder = options.People.Any(p => !p.HasMembership) || options.Plans.Any(p => p.IsEligible);
     var eligible = options.Plans.Where(p => p.IsEligible).ToList();
     var notEligible = options.Plans.Where(p => !p.IsEligible).ToList();
 

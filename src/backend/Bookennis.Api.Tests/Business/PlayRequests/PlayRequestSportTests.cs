@@ -49,6 +49,16 @@ public class PlayRequestSportTests : TestBase
     }
 
     [Fact]
+    public async Task CreatePlayRequest_RequesterEnrolledForAnotherSport_Throws()
+    {
+        var (_, aliceMember, bob, _) = await SeedPlayers();
+
+        var act = () => SendAsync(Create(bob, [aliceMember], [TestDataSeed.Court2Id]));
+
+        (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(PlayRequest.ErrorCode.PlayRequestMemberNotEnrolledForSport));
+    }
+
+    [Fact]
     public async Task CreatePlayRequest_OnTheTennisCourt_PassesTheSportsOfTheEnrollmentToTheRules()
     {
         var (alice, _, _, bob) = await SeedPlayers();

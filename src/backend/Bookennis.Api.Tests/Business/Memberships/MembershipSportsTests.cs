@@ -101,6 +101,59 @@ public class MembershipSportsTests(TestFixture fixture) : TestBase(fixture)
     }
 
     [Fact]
+    public async Task CancellingBothOrdersTennisFirst_RemovesTheEnrollment()
+    {
+        var (tennisId, padelId) = await SeedPlans();
+        var tennis = await Record(tennisId);
+        var padel = await Record(padelId);
+
+        await SendAsync(new CancelMembershipOrder(TestDataSeed.ClubId, tennis.Id, ByTreasurer: true, RemoveEnrollments: true));
+        var afterTennis = await QueryAsync(ctx => ctx.MemberSeasons.SingleAsync(ms => ms.MemberId == TestDataSeed.Member1Id));
+        afterTennis.MembershipOrderId.Should().Be(padel.Id, "the padel order still pays for the enrollment");
+
+        await SendAsync(new CancelMembershipOrder(TestDataSeed.ClubId, padel.Id, ByTreasurer: true, RemoveEnrollments: true));
+
+        (await QueryAsync(ctx => ctx.MemberSeasons.AnyAsync())).Should().BeFalse("no order pays for padel any more");
+    }
+
+    [Fact]
+    public async Task WithdrawingAnUnpaidOrder_KeepsAnEnrollmentMadeByHand()
+    {
+        var (_, padelId) = await SeedPlans();
+        await QueryAsync(async ctx =>
+        {
+            ctx.MemberSeasons.Add(new Domain.Members.MemberSeason(TestDataSeed.Member1Id, await SeasonId(ctx), sports: [Sport.Tennis, Sport.Padel]));
+            await ctx.SaveChangesAsync();
+            return 0;
+        });
+        var order = await SendAsync(new CreateMembershipOrder(TestDataSeed.ClubId, TestDataSeed.UserId, padelId, [TestDataSeed.Member1Id]));
+
+        await SendAsync(new CancelMembershipOrder(TestDataSeed.ClubId, order.Id, ByTreasurer: false));
+
+        (await QueryAsync(ctx => ctx.MemberSeasons.SingleAsync())).Sports.Should().Equal(Sport.Tennis, Sport.Padel);
+    }
+
+    [Fact]
+    public async Task ChangingTheSportsOfAPlan_DoesNotChangeExistingOrders()
+    {
+        var (tennisId, padelId) = await SeedPlans();
+        var padel = await Record(padelId);
+
+        // The padel plan becomes a tennis plan: the order bought padel and keeps it
+        await QueryAsync(async ctx =>
+        {
+            var plan = await ctx.MembershipPlans.SingleAsync(p => p.Id == padelId);
+            plan.Update(MembershipSeed.Data("Padel", 9000) with { Sports = [Sport.Tennis] });
+            await ctx.SaveChangesAsync();
+            return 0;
+        });
+
+        (await QueryAsync(ctx => ctx.MembershipOrders.SingleAsync(o => o.Id == padel.Id))).Sports.Should().Equal(Sport.Padel);
+        await Record(tennisId);
+        (await QueryAsync(ctx => ctx.MemberSeasons.SingleAsync())).Sports.Should().Equal(Sport.Tennis, Sport.Padel);
+    }
+
+    [Fact]
     public async Task CancellingTheOnlyOrder_RemovesTheEnrollment()
     {
         var (_, padelId) = await SeedPlans();

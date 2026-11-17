@@ -60,9 +60,9 @@ public static class ActiveMembership
                 .FirstOrDefaultAsync(cancellationToken);
     }
 
-    /// <summary>The sports of the club's courts (one entry per sport).</summary>
+    /// <summary>The sports of the club's courts (one entry per sport, ordered).</summary>
     public static Task<List<Sport>> ClubSports(this AppDbContext context, int clubId, CancellationToken cancellationToken)
-        => context.Courts.Where(c => c.ClubId == clubId).Select(c => c.Sport).Distinct().ToListAsync(cancellationToken);
+        => Bookennis.Api.Business.Shared.SportFilter.OrderedClubSports(context, clubId, cancellationToken);
 
     /// <summary>See <see cref="ActiveMembership"/>. <c>false</c> for a member of another club or a member that does not exist.</summary>
     public static async Task<bool> IsActive(AppDbContext context, int clubId, int memberId, CancellationToken cancellationToken)

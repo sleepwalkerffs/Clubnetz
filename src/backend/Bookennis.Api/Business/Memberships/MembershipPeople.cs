@@ -91,10 +91,6 @@ public class MembershipPeople(IReadOnlyList<MembershipPerson> people)
             .ToList();
     }
 
-    /// <summary>The sports of the plan of an order (empty = every sport).</summary>
-    public static Task<Sport[]> PlanSports(AppDbContext context, MembershipOrder order, CancellationToken cancellationToken)
-        => context.MembershipPlans.Where(p => p.Id == order.MembershipPlanId).Select(p => p.Sports).SingleAsync(cancellationToken);
-
     /// <summary>
     /// Loads the club members of the club. With <paramref name="aroundMemberIds"/> only these members and the members of their families
     /// (the families are needed for the rules), otherwise all members of the club.
@@ -136,13 +132,12 @@ public class MembershipPeople(IReadOnlyList<MembershipPerson> people)
         var activeOrders = await (
             from orderMember in context.MembershipOrderMembers
             join order in context.MembershipOrders on orderMember.MembershipOrderId equals order.Id
-            join plan in context.MembershipPlans on order.MembershipPlanId equals plan.Id
             where order.ClubId == clubId
                && order.SeasonId == season.Id
                && MembershipOrder.ActiveStatuses.Contains(order.Status)
                && memberIds.Contains(orderMember.MemberId)
             orderby order.Id
-            select new { orderMember.MemberId, OrderId = order.Id, order.Status, plan.Sports }
+            select new { orderMember.MemberId, OrderId = order.Id, order.Status, order.Sports }
         ).ToListAsync(cancellationToken);
         var activeOrdersByMember = activeOrders.ToLookup(o => o.MemberId, o => new MembershipActiveOrder(o.OrderId, o.Status, o.Sports));
 

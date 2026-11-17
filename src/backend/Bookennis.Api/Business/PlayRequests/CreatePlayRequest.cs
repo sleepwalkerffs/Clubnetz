@@ -52,7 +52,7 @@ public record CreatePlayRequest(
 
             // Tennis and padel are separate memberships: nobody is asked who could not play on these courts
             var sport = await PlayRequestBooking.SportOfCourts(context, request.ClubId, request.CourtIds, cancellationToken);
-            var otherSports = await PlayRequestBooking.EnrolledForOtherSports(context, request.ClubId, askedIds.Where(id => id != requesterId).ToList(), sport, cancellationToken);
+            var otherSports = await PlayRequestBooking.EnrolledForOtherSports(context, request.ClubId, [requesterId, .. askedIds], sport, cancellationToken);
             if (otherSports.Count > 0)
             {
                 var names = await (

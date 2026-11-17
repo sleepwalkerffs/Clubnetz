@@ -3102,6 +3102,10 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("SeasonId")
                         .HasColumnType("integer");
 
+                    b.PrimitiveCollection<int[]>("Sports")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 

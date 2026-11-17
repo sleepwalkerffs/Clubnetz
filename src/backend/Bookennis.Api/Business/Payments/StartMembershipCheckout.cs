@@ -50,8 +50,7 @@ public record StartMembershipCheckout(int ClubId, int UserId, int MembershipOrde
             // A failed order is open again: make sure nobody of it got another membership in the meantime
             await context.LockMembershipOrders(request.ClubId, season.Id, cancellationToken);
             var people = await MembershipPeople.Load(context, request.ClubId, season, order.Members.Select(m => m.MemberId).ToList(), cancellationToken);
-            var sports = await MembershipPeople.PlanSports(context, order, cancellationToken);
-            if (order.Members.Any(m => people.Find(m.MemberId) is { } person && person.HasMembershipFor(sports, order.Id)))
+            if (order.Members.Any(m => people.Find(m.MemberId) is { } person && person.HasMembershipFor(order.Sports, order.Id)))
                 throw new PreconditionException(MembershipEligibility.ErrorCode.AlreadyHasMembership, "A member already has a membership in this season.");
 
             var previousSessionId = order.StripeCheckoutSessionId;

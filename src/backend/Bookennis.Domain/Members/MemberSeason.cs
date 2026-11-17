@@ -33,4 +33,7 @@ public class MemberSeason : DomainEntity
     public bool Covers(Sport sport) => Courts.Sports.Covers(Sports, sport);
 
     public void SetSports(IEnumerable<Sport>? sports) => Sports = Courts.Sports.Normalize(sports);
+
+    /// <summary>Another order holds the enrollment now (the order that made it was revoked, a later one still pays for it).</summary>
+    public void SetMembershipOrder(int? membershipOrderId) => MembershipOrderId = membershipOrderId;
 }
