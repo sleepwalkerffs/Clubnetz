@@ -1,7 +1,10 @@
 name: Build image and deploy
 
-# Pushing to stage or production builds the Docker image, publishes it to the GitHub Container
-# Registry and asks Coolify to roll it out. Each environment (Staging, Production) needs the secrets
+# Pushing to stage builds the Docker image, publishes it to the GitHub Container Registry and asks
+# Coolify to roll it out. Pushing to production re-tags the image stage built of the same commit (or
+# builds it when there is none) and rolls it out after the approval.
+#
+# Each environment (Staging, Production) needs the secrets
 #   COOLIFY_WEBHOOK_URL  the deploy webhook of the application in Coolify
 #   COOLIFY_TOKEN        a Coolify API token that is allowed to deploy
 
@@ -40,8 +43,27 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # The branch tag (stage, production) is what Coolify pulls, the commit tag is for rolling back
+      # Production runs the image that stage built and tested for the same commit: re-tagging it takes
+      # seconds instead of a ten-minute build. A commit that never went through stage is built here.
+      - name: Look for the image stage built of this commit
+        id: existing
+        if: github.ref_name == 'production'
+        run: |
+          if docker buildx imagetools inspect "$IMAGE:$GITHUB_SHA" > /dev/null 2>&1; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Re-tag the image of stage for production
+        if: steps.existing.outputs.found == 'true'
+        run: docker buildx imagetools create --tag "$IMAGE:production" "$IMAGE:$GITHUB_SHA"
+
+      # The branch tag (stage, production) is what Coolify pulls, the commit tag is for rolling back.
+      # No build cache: the source is copied before the slow steps, so every change rebuilds them
+      # anyway, and exporting the cache took minutes and filled the 10 GB cache of the repository.
       - name: Build and push the image
+        if: steps.existing.outputs.found != 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -51,8 +73,6 @@ jobs:
             ${{ env.IMAGE }}:${{ github.sha }}
           build-args: |
             SOURCE_REVISION_ID=${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   deploy:
     runs-on: ubuntu-latest
