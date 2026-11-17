@@ -205,13 +205,33 @@ public static class MembershipHelpers
         return text.ResourceNotFound ? locale["Reason_Other"] : text;
     }
 
-    /// <summary>An order holds the membership of its members: it is not cancelled, failed or refunded.</summary>
-    /// <summary>The members a payment can be recorded for: those no running order of the season covers.</summary>
-    public static List<MembershipPaymentMemberDto> MembersWithoutMembership(GetMembershipPaymentsResult payments)
+    /// <summary>
+    /// The members a payment can be recorded for: those no running order of the season covers - for the sports of <paramref name="sports"/>
+    /// (one membership per sport and season; empty = every sport). Without sports: those who could still get a membership for some sport,
+    /// i.e. no running order of theirs is for every sport and theirs together don't cover <paramref name="clubSports"/>.
+    /// </summary>
+    public static List<MembershipPaymentMemberDto> MembersWithoutMembership(
+        GetMembershipPaymentsResult payments, IReadOnlyCollection<Sport>? sports = null, IReadOnlyCollection<Sport>? clubSports = null)
     {
-        var withMembership = payments.Orders.Where(o => o.Status.IsActive()).SelectMany(o => o.MemberIds).ToHashSet();
-        return payments.Members.Where(m => !withMembership.Contains(m.MemberId)).ToList();
+        var running = payments.Orders.Where(o => o.Status.IsActive()).ToList();
+        return payments.Members.Where(m =>
+        {
+            var own = running.Where(o => o.MemberIds.Contains(m.MemberId)).ToList();
+            if (own.Count == 0)
+                return true;
+
+            if (sports is not null)
+                return !own.Any(o => Overlap(o.Sports, sports));
+
+            if (own.Any(o => o.Sports.Count == 0) || clubSports is not { Count: > 1 })
+                return false;
+
+            return clubSports.Any(sport => !own.Any(o => o.Sports.Contains(sport)));
+        }).ToList();
     }
+
+    /// <summary>Two lists of sports share one (an empty list is every sport).</summary>
+    public static bool Overlap(IReadOnlyCollection<Sport> a, IReadOnlyCollection<Sport> b) => a.Count == 0 || b.Count == 0 || a.Intersect(b).Any();
 
     /// <summary>
     /// Who the treasurer can put on an existing order: the payer, the members it already covers and the rest of the payer's family,
@@ -219,7 +239,7 @@ public static class MembershipHelpers
     /// </summary>
     public static List<MembershipPaymentMemberDto> CoverableBy(GetMembershipPaymentsResult payments, MembershipPaymentOrderDto order, MembershipPaymentMemberDto payer)
     {
-        var free = MembersWithoutMembership(payments).Select(m => m.MemberId).ToHashSet();
+        var free = MembersWithoutMembership(payments, order.Sports).Select(m => m.MemberId).ToHashSet();
         return payments.Members
             .Where(m => order.MemberIds.Contains(m.MemberId)
                      || (free.Contains(m.MemberId) && (m.MemberId == payer.MemberId || (payer.FamilyId is not null && m.FamilyId == payer.FamilyId))))

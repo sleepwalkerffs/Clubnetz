@@ -46,6 +46,10 @@ public record MembershipPaymentOrderDto
     public required int Id { get; init; }
     public required int MembershipPlanId { get; init; }
     public required string PlanName { get; init; }
+
+    /// <summary>The sports of the order's plan; empty = every sport. A member has one membership per sport and season.</summary>
+    public List<Bookennis.Shared.Controller.Shared.Sport> Sports { get; init; } = [];
+
     public required int AmountCents { get; init; }
     public required string Currency { get; init; }
     public required MembershipOrderStatus Status { get; init; }

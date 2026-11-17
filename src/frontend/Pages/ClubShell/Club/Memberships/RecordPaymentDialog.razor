@@ -61,6 +61,9 @@
     /// <summary>The members who have no membership in the season yet. Read again from the store when a family was changed in the dialog.</summary>
     [Parameter, EditorRequired] public List<MembershipPaymentMemberDto> Members { get; set; } = [];
 
+    /// <summary>The sports of the club's courts (one membership per sport and season).</summary>
+    [Parameter] public List<Bookennis.Shared.Controller.Shared.Sport> ClubSports { get; set; } = [];
+
     /// <summary>The member the dialog was opened for.</summary>
     [Parameter] public MembershipPaymentMemberDto? Member { get; set; }
 
@@ -139,7 +142,7 @@
         if (Store.Payments is null)
             return;
 
-        Members = MembershipHelpers.MembersWithoutMembership(Store.Payments);
+        Members = MembershipHelpers.MembersWithoutMembership(Store.Payments, clubSports: ClubSports);
         member = Members.FirstOrDefault(m => m.MemberId == member.MemberId) ?? member;
         ResetCovered();
     }

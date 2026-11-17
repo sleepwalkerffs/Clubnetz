@@ -218,6 +218,9 @@ else
     [Inject] private IMembershipPaymentsStore Store { get; set; } = null!;
     [Inject] private IMembershipPlansStore PlansStore { get; set; } = null!;
     [Inject] private IClubStore ClubStore { get; set; } = null!;
+
+    /// <summary>The sports of the club's courts: a member with a tennis membership can still get one for padel.</summary>
+    private List<Bookennis.Shared.Controller.Shared.Sport> ClubSports => ClubStore.Courts.Select(c => c.Sport).Distinct().ToList();
     [Inject] private IClubProfileStore ClubProfileStore { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
@@ -463,7 +466,7 @@ else
         if (selectedSeasonId is not { } seasonId || Store.Payments is not { } payments)
             return;
 
-        await PlansStore.LoadPlans(seasonId);
+        await Task.WhenAll(PlansStore.LoadPlans(seasonId), ClubStore.Courts.Count == 0 ? ClubStore.LoadCourts() : Task.CompletedTask);
         if (PlansStore.Plans is not { Count: > 0 } plans)
         {
             Snackbar.Add(L["Payments_NoPlans"], Severity.Info);
@@ -473,7 +476,8 @@ else
         var parameters = new DialogParameters<RecordPaymentDialog>
         {
             { d => d.Plans, plans },
-            { d => d.Members, MembershipHelpers.MembersWithoutMembership(payments) },
+            { d => d.Members, MembershipHelpers.MembersWithoutMembership(payments, clubSports: ClubSports) },
+            { d => d.ClubSports, ClubSports },
             { d => d.Member, member },
         };
         var dialog = await DialogService.ShowAsync<RecordPaymentDialog>(L["Payments_Record"], parameters,

@@ -65,6 +65,18 @@ public class MembershipSportsTests(TestFixture fixture) : TestBase(fixture)
     }
 
     [Fact]
+    public async Task GetMembershipPayments_ListsTheSportsOfEachOrder()
+    {
+        var (tennisId, _) = await SeedPlans();
+        var tennis = await Record(tennisId);
+        var seasonId = await QueryAsync(SeasonId);
+
+        var payments = await SendAsync(new GetMembershipPayments(TestDataSeed.ClubId, seasonId, null));
+
+        payments.Orders.Single(o => o.Id == tennis.Id).Sports.Should().Equal(Bookennis.Shared.Controller.Shared.Sport.Tennis);
+    }
+
+    [Fact]
     public async Task CancellingThePadelOrder_KeepsTennis()
     {
         var (tennisId, padelId) = await SeedPlans();
