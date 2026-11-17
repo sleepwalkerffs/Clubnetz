@@ -1,4 +1,5 @@
 using Bookennis.Client.Localization.Components.Sports;
+using Bookennis.Client.Utils;
 using Bookennis.Shared.Controller.Shared;
 using Microsoft.Extensions.Localization;
 
@@ -13,10 +14,6 @@ public static class SportNames
     public static string BadgeName(IStringLocalizer<SportLocale> locale, string name, Sport? sport)
         => sport is { } s ? $"{name} · {Name(locale, s)}" : name;
 
-    /// <summary>Emoji of the sport, for chips and labels.</summary>
-    public static string Emoji(Sport sport) => sport switch
-    {
-        Sport.Padel => "🏓",
-        _ => "🎾",
-    };
+    /// <summary>Emoji of the sport, for chips and labels (one place: <see cref="SportExtensions.Emoji"/>).</summary>
+    public static string Emoji(Sport sport) => sport.Emoji();
 }
