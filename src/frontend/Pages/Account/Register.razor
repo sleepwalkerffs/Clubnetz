@@ -7,6 +7,7 @@
 @using Bookennis.Client.Services.HttpClients.Account
 @using Bookennis.Client.Shared
 @using System.ComponentModel.DataAnnotations
+@using System.Globalization
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Shared
 @using Bookennis.Client.Components.Shared.Buttons
@@ -51,6 +52,13 @@ else
                             <MudSelectItem T="int" Value="2">@SharedLocale["None"]</MudSelectItem>
                         </MudSelect>
                         <MudDatePicker PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" Label=@SharedLocale["Birthday"] @bind-Date="model.Birthday" For="(() => model.Birthday)" />
+                        <div class="register-grid__full">
+                            <MudSelect T="int" Label=@SharedLocale["Language"] Variant="Variant.Outlined" @bind-Value="model.Language" For="@(() => model.Language)"
+                                       HelperText="@Locale["Register_LanguageHelper"]">
+                                <MudSelectItem T="int" Value="0">@SharedLocale["German"]</MudSelectItem>
+                                <MudSelectItem T="int" Value="1">@SharedLocale["English"]</MudSelectItem>
+                            </MudSelect>
+                        </div>
                     </div>
                 </div>
 
@@ -174,7 +182,7 @@ else
         {
             model.Birthday = DateTime.SpecifyKind(model.Birthday!.Value, DateTimeKind.Utc);
             var email = model.Email!.Trim();
-            var response = await AccountHttpClient.RegisterUser(new(model.FirstName!, model.LastName!, DateOnly.FromDateTime(model.Birthday.Value), email, email, model.Password!, (Gender)model.Gender, model.Street, model.City, model.ZipCode, (Country)model.Country, model.AcceptPrivacyPolicy));
+            var response = await AccountHttpClient.RegisterUser(new(model.FirstName!, model.LastName!, DateOnly.FromDateTime(model.Birthday.Value), email, email, model.Password!, (Gender)model.Gender, model.Street, model.City, model.ZipCode, (Country)model.Country, model.AcceptPrivacyPolicy, (Language)model.Language));
             if (!response.Success)
             {
                 snackbar.ShowErrorDetails(response, BackendLocale);
@@ -237,6 +245,9 @@ else
         public string? ZipCode { get; set; }
 
         public int Country { get; set; }
+
+        // Emails start in this language, beginning with the confirmation email. Preselected from the language the app is shown in.
+        public int Language { get; set; } = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de" ? (int)Bookennis.Shared.Controller.Shared.Language.German : (int)Bookennis.Shared.Controller.Shared.Language.English;
 
         public bool AcceptPrivacyPolicy { get; set; }
     }

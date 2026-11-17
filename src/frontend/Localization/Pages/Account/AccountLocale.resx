@@ -267,6 +267,9 @@
   <data name="Register_EmailHelper" xml:space="preserve">
     <value>We'll send you a link to confirm this address.</value>
   </data>
+  <data name="Register_LanguageHelper" xml:space="preserve">
+    <value>We'll send your emails in this language. You can change it later in your profile.</value>
+  </data>
   <data name="Register_AddressHint" xml:space="preserve">
     <value>Your club may need your address for its member list. You can also add it later in your profile.</value>
   </data>

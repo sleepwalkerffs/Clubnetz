@@ -15,7 +15,8 @@ public record RegisterUserModel(
     string? City,
     string? ZipCode,
     [Required] Country Country,
-    bool AcceptPrivacyPolicy
+    bool AcceptPrivacyPolicy,
+    Language Language = Language.German
 )
 {
     public string FirstName { get; init; } = FirstName.Trim();
