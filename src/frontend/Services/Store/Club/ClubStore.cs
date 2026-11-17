@@ -5,6 +5,7 @@ using Bookennis.Client.Services.Store.ClubProfile;
 using Bookennis.Global.Intervals;
 using Bookennis.Shared.Controller.Booking.Shared;
 using Bookennis.Shared.Controller.Club;
+using Bookennis.Shared.Controller.Shared;
 
 namespace Bookennis.Client.Services.Store.Club;
 
@@ -107,9 +108,9 @@ public class ClubStore(IClubsHttpClient clubsHttpClient, IClubProfileStore clubP
         }
     }, nameof(LoadCourts));
 
-    public Task<HttpResult> AddCourt(string courtName, string alias, bool isIndoor) => RunInSavingContextAsync(async cancellationToken =>
+    public Task<HttpResult> AddCourt(string courtName, string alias, bool isIndoor, Sport sport) => RunInSavingContextAsync(async cancellationToken =>
     {
-        var result = await clubsHttpClient.AddCourt(new AddCourtRequest(courtName, alias, isIndoor), cancellationToken);
+        var result = await clubsHttpClient.AddCourt(new AddCourtRequest(courtName, alias, isIndoor, sport), cancellationToken);
         if (result.Success)
         {
             // The server picks the sort order, so reload the list instead of guessing it
@@ -122,9 +123,9 @@ public class ClubStore(IClubsHttpClient clubsHttpClient, IClubProfileStore clubP
         return (HttpResult)result;
     }, nameof(AddCourt));
 
-    public Task<HttpResult> UpdateCourt(int courtId, string courtName, string alias, DateTimeOffsetInterval? inactive, int sortOrder, bool isIndoor) => RunInSavingContextAsync(async cancellationToken =>
+    public Task<HttpResult> UpdateCourt(int courtId, string courtName, string alias, DateTimeOffsetInterval? inactive, int sortOrder, bool isIndoor, Sport sport) => RunInSavingContextAsync(async cancellationToken =>
     {
-        var result = await clubsHttpClient.UpdateCourt(courtId, new UpdateCourtRequest(courtName, alias, inactive, sortOrder, isIndoor), cancellationToken);
+        var result = await clubsHttpClient.UpdateCourt(courtId, new UpdateCourtRequest(courtName, alias, inactive, sortOrder, isIndoor, sport), cancellationToken);
         if (result.Success)
         {
             Courts[Courts.IndexOf(Courts.Single(x => x.CourtId == courtId))] = new CourtResult()
@@ -136,6 +137,7 @@ public class ClubStore(IClubsHttpClient clubsHttpClient, IClubProfileStore clubP
                 Alias = alias,
                 SortOrder = sortOrder,
                 IsIndoor = isIndoor,
+                Sport = sport,
             };
             Courts = Courts.OrderBy(c => c.SortOrder).ThenBy(c => c.Name).ToList();
             OnCourtsDataChanged?.Invoke();

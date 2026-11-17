@@ -5,10 +5,12 @@
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Pages.Memberships
 @using Bookennis.Client.Pages.ClubShell.Members.Components
+@using Bookennis.Client.Services.Store.Club
 @using Bookennis.Client.Services.Store.Memberships
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Club
 @using Bookennis.Shared.Controller.Memberships
+@using Bookennis.Shared.Controller.Shared
 
 <BaseDialog SubmitFunc="Submit" SubmitCaption="@SharedLocale["Save"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
             Loading="@Store.IsSaving" Title="@L[Plan is null ? "Plan_NewTitle" : "Plan_EditTitle"]">
@@ -33,6 +35,15 @@
                 <p class="plan-edit__hint">@L["Plan_CoverageGroupHint"]</p>
             }
         </section>
+
+        @if (SeveralSports)
+        {
+            <section>
+                <MultiChoiceChips TItem="Sport" Label="@L["Plan_Sports"]" Items="@SportExtensions.All" @bind-Values="sports"
+                                  TextFunc="@(s => s.Label(SharedLocale))" />
+                <p class="plan-edit__hint">@L["Plan_SportsHint"]</p>
+            </section>
+        }
 
         <section class="plan-edit__box @(ageLimit ? "plan-edit__box--on" : null)">
             <MudSwitch T="bool" @bind-Value="ageLimit" Color="Color.Primary" Label="@L[IsGroup ? "Plan_AgeLimitAdults" : "Plan_AgeLimit"]" />
@@ -86,7 +97,7 @@
                 <span class="plan-edit__summary-price">@MembershipHelpers.Price(L, PriceCents)</span>
             </div>
             <ul>
-                @foreach (var sentence in MembershipHelpers.Sentences(L, Preview, Season.StartDate.Year))
+                @foreach (var sentence in MembershipHelpers.Sentences(L, Preview, Season.StartDate.Year, SeveralSports ? SharedLocale : null))
                 {
                     <li>@sentence</li>
                 }
@@ -107,6 +118,7 @@
     [Parameter, EditorRequired] public SeasonResult Season { get; set; } = null!;
 
     [Inject] private IMembershipPlansStore Store { get; set; } = null!;
+    [Inject] private IClubStore ClubStore { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
     [Inject] private IStringLocalizer<MembershipsLocale> L { get; set; } = null!;
     [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
@@ -131,6 +143,9 @@
     private DateTime? availableFrom;
     private DateTime? availableUntil;
     private bool showErrors;
+    private IReadOnlyCollection<Sport> sports = [];
+
+    private bool SeveralSports => ClubStore.Courts.HasSeveralSports();
 
     private bool IsGroup => coverage != MembershipCoverage.OneMember;
     private int PriceCents => (int)Math.Round(price * 100m, MidpointRounding.AwayFromZero);
@@ -176,6 +191,8 @@
                 AvailableFrom = availableFrom is { } from ? DateOnly.FromDateTime(from) : null,
                 AvailableUntil = availableUntil is { } until ? DateOnly.FromDateTime(until) : null,
                 IsSelfService = isSelfService,
+                // A club with one sport keeps what the plan had (nothing, unless a sport was removed later)
+                Sports = SeveralSports ? sports.Normalize() : Plan?.Sports ?? [],
             };
         }
     }
@@ -205,16 +222,26 @@
                 AvailableFrom = model.AvailableFrom,
                 AvailableUntil = model.AvailableUntil,
                 IsSelfService = model.IsSelfService,
+                Sports = model.Sports ?? [],
                 SortOrder = Plan?.SortOrder ?? 0,
                 OrderCount = 0,
             };
         }
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        // The sports are only offered when the club has courts of several sports
+        if (ClubStore.Courts.Count == 0)
+            await ClubStore.LoadCourts();
+    }
+
     protected override void OnInitialized()
     {
         if (Plan is not { } plan)
             return;
+
+        sports = plan.Sports.ToList();
 
         name = plan.Name;
         description = plan.Description;

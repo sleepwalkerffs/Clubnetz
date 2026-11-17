@@ -14,6 +14,7 @@
 @using Bookennis.Shared.Controller.Club
 @using Bookennis.Shared.Controller.Families
 @using Bookennis.Shared.Controller.PlayRequests
+@using Bookennis.Shared.Controller.Shared
 
 @* Ask other members to play: one slot, one or more courts (the first free one is booked), and the members who may accept. *@
 <BaseDialog SubmitFunc="Submit" Title="@L["Create_Title"]" SubmitCaption="@L["Create_Submit"]" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
@@ -58,9 +59,9 @@
                              TextFunc="@FormatDuration" />
             }
 
-            <MultiChoiceChips TItem="CourtResult" Label="@L["Field_Courts"]" Items="@CourtsOfPlayMode" Values="@selectedCourts" ValuesChanged="c => selectedCourts = c"
-                              TextFunc="@(court => court.Name)" />
-            <div class="create-request__hint">@L["Field_Courts_Hint"]</div>
+            <MultiChoiceChips TItem="CourtResult" Label="@L["Field_Courts"]" Items="@CourtsOfPlayMode" Values="@selectedCourts" ValuesChanged="OnCourtsChanged"
+                              TextFunc="@(court => SeveralSports ? $"{court.Sport.Emoji()} {court.Name}" : court.Name)" />
+            <div class="create-request__hint">@L[SeveralSports ? "Field_Courts_HintSports" : "Field_Courts_Hint"]</div>
 
             @if (!selectedPlayMode.FixedPlayerCount.HasValue)
             {
@@ -172,32 +173,72 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await Task.WhenAll(ClubStore.LoadCourts(), ClubStore.LoadPlayModes(), Store.LoadCandidates(), Store.LoadGroups());
+        await Task.WhenAll(ClubStore.LoadCourts(), ClubStore.LoadPlayModes(), Store.LoadGroups());
 
         // The same play modes the member sees when booking
         PlayModes = ClubStore.PlayModes.Where(mode => mode.AllowedRoles.Any(ClubProfileStore.Roles.Contains)).ToList();
         Courts = ClubStore.Courts.OrderBy(c => c.SortOrder).ToList();
         selectedCourts = Courts;
-        candidateItems = Store.Candidates.ConvertAll(c => new FamilyMemberDto { MemberId = c.MemberId, FirstName = c.FirstName, LastName = c.LastName });
 
         if (PlayModes.Count > 0)
         {
             selectedPlayMode = PlayModes[0];
-            selectedCourts = CourtsOfPlayMode;
+            selectedCourts = OfOneSport(CourtsOfPlayMode, PreferredSport(CourtsOfPlayMode));
         }
 
+        await LoadCandidates();
         loaded = true;
+    }
+
+    /// <summary>The courts are for tennis and padel: a request is for courts of one sport, and only members enrolled for it are asked.</summary>
+    private bool SeveralSports => Courts.HasSeveralSports();
+
+    private Sport? SelectedSport => selectedCourts.Select(c => c.Sport).Distinct().ToList() is [var sport] ? sport : null;
+
+    /// <summary>The sport the member plays for free (<c>EnrolledSports</c>), else the sport of the first court.</summary>
+    private Sport? PreferredSport(List<CourtResult> courts)
+    {
+        var enrolled = ClubProfileStore.BookingOptions?.EnrolledSports ?? [];
+        return (courts.FirstOrDefault(c => enrolled.Covers(c.Sport)) ?? courts.FirstOrDefault())?.Sport;
+    }
+
+    private List<CourtResult> OfOneSport(IEnumerable<CourtResult> courts, Sport? sport)
+        => SeveralSports && sport is { } only ? courts.Where(c => c.Sport == only).ToList() : courts.ToList();
+
+    private async Task LoadCandidates()
+    {
+        await Store.LoadCandidates(SeveralSports ? SelectedSport : null);
+        candidateItems = Store.Candidates.ConvertAll(c => new FamilyMemberDto { MemberId = c.MemberId, FirstName = c.FirstName, LastName = c.LastName });
+        // Members of another sport can't be asked any more
+        invitees = invitees.Where(id => candidateItems.Any(c => c.MemberId == id)).ToList();
+    }
+
+    private async Task OnCourtsChanged(IReadOnlyCollection<CourtResult> courts)
+    {
+        var sportBefore = SelectedSport;
+        // A court of another sport switches the selection to the courts of that sport that were ticked
+        var added = courts.FirstOrDefault(c => !selectedCourts.Contains(c));
+        selectedCourts = added is not null && SeveralSports && added.Sport != sportBefore ? OfOneSport(courts, added.Sport) : courts.ToList();
+
+        if (SeveralSports && SelectedSport is { } sport && sport != sportBefore)
+            await LoadCandidates();
     }
 
     /// <summary>The courts the selected play mode can be booked on (<see cref="PlayModeDto.CourtIds"/>).</summary>
     private List<CourtResult> CourtsOfPlayMode => selectedPlayMode is null ? Courts : Courts.Where(c => selectedPlayMode.IsAllowedOnCourt(c.CourtId)).ToList();
 
-    private void OnPlayModeChanged(PlayModeDto playMode)
+    private async Task OnPlayModeChanged(PlayModeDto playMode)
     {
+        var sportBefore = SelectedSport;
         selectedPlayMode = playMode;
-        // Keep the chosen courts the new play mode allows; none left: all of its courts
+        // Keep the chosen courts the new play mode allows; none left: all of its courts (of the same sport, if it has some)
         var kept = selectedCourts.Where(c => playMode.IsAllowedOnCourt(c.CourtId)).ToList();
-        selectedCourts = kept.Count > 0 ? kept : CourtsOfPlayMode;
+        selectedCourts = kept.Count > 0
+            ? kept
+            : OfOneSport(CourtsOfPlayMode, CourtsOfPlayMode.Any(c => c.Sport == sportBefore) ? sportBefore : PreferredSport(CourtsOfPlayMode));
+
+        if (SeveralSports && SelectedSport != sportBefore)
+            await LoadCandidates();
     }
 
     private void OnGroupChanged(PlayerGroupDto group)

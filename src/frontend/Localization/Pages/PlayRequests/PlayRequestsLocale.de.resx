@@ -91,4 +91,7 @@
   <data name="Card_Mine" xml:space="preserve"><value>Deine offenen Anfragen: {0}</value></data>
   <data name="Card_Next" xml:space="preserve"><value>Als Nächstes: {0} · {1}</value></data>
   <data name="Card_Open" xml:space="preserve"><value>Ansehen</value></data>
+  <data name="Field_Courts_HintSports" xml:space="preserve">
+    <value>Gebucht wird der erste freie Platz davon. Alle Plätze sind für dieselbe Sportart: Gefragt werden können nur Mitglieder, die dafür angemeldet sind.</value>
+  </data>
 </root>
