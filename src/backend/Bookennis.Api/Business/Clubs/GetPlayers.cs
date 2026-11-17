@@ -50,8 +50,19 @@ public record GetPlayers(IReadOnlySet<int>? OnlyMemberIds = null) : ICommand<Get
                 clubPlayers = clubPlayers.DistinctBy(p => p.MemberId).ToList();
             }
 
+            // The sports of the enrollments, so a booking dialog only offers players who can play on the court
+            var localIds = clubPlayers.Where(p => !p.IsAtpPlayer).Select(p => p.MemberId).ToList();
+            var sportsByMember = (await context.MemberSeasons
+                    .Where(ms => localIds.Contains(ms.MemberId) && context.Seasons.Any(s => s.Id == ms.SeasonId && s.ClubId == currentClub.Id && s.Period.From <= today && today <= s.Period.To))
+                    .Select(ms => new { ms.MemberId, ms.Sports })
+                    .ToListAsync(cancellationToken))
+                .GroupBy(e => e.MemberId)
+                .ToDictionary(g => g.Key, g => g.First().Sports);
+
             // Guests were removed: former guest members are no players any more
-            return new GetPlayersResult(clubPlayers);
+            return new GetPlayersResult(clubPlayers.ConvertAll(p => sportsByMember.TryGetValue(p.MemberId, out var sports) && sports.Length > 0
+                ? p with { Sports = sports.Select(s => (Bookennis.Shared.Controller.Shared.Sport)s).ToList() }
+                : p));
         }
     }
 }

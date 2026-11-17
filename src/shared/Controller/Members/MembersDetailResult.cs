@@ -1,4 +1,5 @@
 ﻿using Bookennis.Shared.Controller.Memberships;
+using Bookennis.Shared.Controller.Shared;
 
 namespace Bookennis.Shared.Controller.Members;
 
@@ -8,4 +9,8 @@ public record MembersDetailResult : MemberResult
     public List<MemberSeasonEnrollment> SeasonEnrollments { get; set; } = [];
 }
 
-public record MemberSeasonEnrollment(int SeasonId, MembershipEnrollmentSource Source);
+/// <summary><c>Sports</c>: what the enrollment books for free; empty = every sport.</summary>
+public record MemberSeasonEnrollment(int SeasonId, MembershipEnrollmentSource Source)
+{
+    public List<Sport> Sports { get; init; } = [];
+}

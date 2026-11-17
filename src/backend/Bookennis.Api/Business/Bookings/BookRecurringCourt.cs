@@ -4,6 +4,7 @@ using Bookennis.Api.Business.CourtSales;
 using System.ComponentModel.DataAnnotations;
 using Bookennis.Api.Business.CourtBlockings;
 using Bookennis.Api.Data;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Bookings;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Exceptions;
@@ -78,10 +79,9 @@ public record BookRecurringCourt(
             if (seriesEndDate > activeSeason.Period.To)
                 seriesEndDate = activeSeason.Period.To;
 
-            var memberSeasonMemberIds = await context.MemberSeasons
+            var enrollments = await context.MemberSeasons
                 .Where(ms => ms.SeasonId == activeSeason.Id && request.Players.Contains(ms.MemberId))
-                .Select(ms => ms.MemberId)
-                .ToListAsync(cancellationToken);
+                .ToDictionaryAsync(ms => ms.MemberId, ms => ms.Sports, cancellationToken);
 
             // Calculate all occurrence dates
             var firstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(request.Interval.From.UtcDateTime, tz));
@@ -138,7 +138,8 @@ public record BookRecurringCourt(
                     UpcomingBookingsCount = i.UpcomingBookingsCount,
                     ActiveBookingsAtTimeOfReservation = i.ActiveBookingsCount,
                     BookingsOnThatDay = i.BookingsOnThatDay,
-                    IsAllowedInCurrentSeason = memberSeasonMemberIds.Contains(i.Member.Id),
+                    IsAllowedInCurrentSeason = enrollments.ContainsKey(i.Member.Id),
+                    EnrolledSports = enrollments.GetValueOrDefault(i.Member.Id, []),
                     IsAtpParticipant = false,
                     PlayModeBookingsInSeasonCount = i.PlayModeBookingsInSeasonCount,
                 }),

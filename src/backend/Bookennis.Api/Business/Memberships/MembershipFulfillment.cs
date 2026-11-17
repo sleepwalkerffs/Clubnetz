@@ -1,4 +1,5 @@
 using Bookennis.Api.Data;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Members;
 using Bookennis.Domain.Memberships;
 using Microsoft.EntityFrameworkCore;
@@ -30,34 +31,58 @@ public class MembershipFulfillment(AppDbContext context) : IMembershipFulfillmen
 {
     public async Task Complete(MembershipOrder order, CancellationToken cancellationToken)
     {
-        var grantsEnrollment = await context.MembershipPlans
+        var plan = await context.MembershipPlans
             .Where(p => p.Id == order.MembershipPlanId && p.ClubId == order.ClubId)
-            .Select(p => p.GrantsSeasonEnrollment)
+            .Select(p => new { p.GrantsSeasonEnrollment, p.Sports })
             .SingleAsync(cancellationToken);
 
-        if (!grantsEnrollment)
+        if (!plan.GrantsSeasonEnrollment)
             return;
 
         var memberIds = order.Members.Select(m => m.MemberId).ToList();
-        var alreadyEnrolled = await context.MemberSeasons
+
+        // Saved enrollments and the ones added in this unit of work that are not saved yet
+        var enrollments = await context.MemberSeasons
             .Where(ms => ms.SeasonId == order.SeasonId && memberIds.Contains(ms.MemberId))
-            .Select(ms => ms.MemberId)
             .ToListAsync(cancellationToken);
+        enrollments.AddRange(context.MemberSeasons.Local.Where(ms => ms.SeasonId == order.SeasonId && memberIds.Contains(ms.MemberId) && !enrollments.Contains(ms)));
 
-        // Enrollments added in this unit of work that are not saved yet
-        var pending = context.MemberSeasons.Local.Where(ms => ms.SeasonId == order.SeasonId).Select(ms => ms.MemberId).ToList();
-
-        foreach (var memberId in memberIds.Except(alreadyEnrolled).Except(pending))
-            context.MemberSeasons.Add(new MemberSeason(memberId, order.SeasonId, order.Id));
+        foreach (var memberId in memberIds)
+        {
+            // One membership per sport: a member enrolled for tennis who pays for padel gets padel added
+            var enrollment = enrollments.FirstOrDefault(ms => ms.MemberId == memberId);
+            if (enrollment is null)
+                context.MemberSeasons.Add(new MemberSeason(memberId, order.SeasonId, order.Id, plan.Sports));
+            else
+                enrollment.SetSports(Sports.Union(enrollment.Sports, plan.Sports));
+        }
     }
 
     public async Task Revoke(MembershipOrder order, CancellationToken cancellationToken)
     {
-        // Bookings the members already made stay; they just can't book anything new in the season
+        var planSports = await context.MembershipPlans
+            .Where(p => p.Id == order.MembershipPlanId)
+            .Select(p => p.Sports)
+            .SingleAsync(cancellationToken);
+
+        var memberIds = order.Members.Select(m => m.MemberId).ToList();
+
+        // Bookings the members already made stay; they just can't book anything new in the season (for the sports of the order)
         var enrollments = await context.MemberSeasons
-            .Where(ms => ms.MembershipOrderId == order.Id && ms.SeasonId == order.SeasonId)
+            .Where(ms => ms.SeasonId == order.SeasonId && (ms.MembershipOrderId == order.Id || memberIds.Contains(ms.MemberId)))
             .ToListAsync(cancellationToken);
 
-        context.MemberSeasons.RemoveRange(enrollments);
+        foreach (var enrollment in enrollments)
+        {
+            // Take back the sports of this order. What is left came from another order or from the treasurer (tennis paid, padel failed).
+            var left = planSports.Length > 0 && enrollment.Sports.Length > 0 ? enrollment.Sports.Except(planSports).ToArray() : [];
+
+            if (left.Length > 0)
+                enrollment.SetSports(left);
+            else if (enrollment.MembershipOrderId == order.Id)
+                context.MemberSeasons.Remove(enrollment);
+
+            // Otherwise the enrollment was made by hand or by another order for every sport: it stays as it is
+        }
     }
 }

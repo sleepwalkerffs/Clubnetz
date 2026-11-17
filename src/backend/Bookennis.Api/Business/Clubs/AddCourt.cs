@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Bookennis.Api.Business.Clubs;
 
 /// <summary>Adds a court to the current club. It is placed after the existing courts.</summary>
-public record AddCourt(string Name, string Alias, bool IsIndoor = false) : ICommand<int>
+public record AddCourt(string Name, string Alias, bool IsIndoor = false, Sport Sport = Sport.Tennis) : ICommand<int>
 {
     public class Handler(AppDbContext context) : IRequestHandler<AddCourt, int>
     {
@@ -17,6 +17,7 @@ public record AddCourt(string Name, string Alias, bool IsIndoor = false) : IComm
 
             var court = new Court(club.Id, request.Name.Trim(), request.Alias.Trim(), sortOrder);
             court.SetIndoor(request.IsIndoor);
+            court.SetSport(request.Sport);
             context.Courts.Add(court);
 
             await context.SaveChangesAsync(cancellationToken);

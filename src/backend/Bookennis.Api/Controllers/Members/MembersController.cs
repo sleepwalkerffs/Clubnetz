@@ -57,7 +57,8 @@ public class MembersController(IMediator mediator, IAuthorizationService authori
     [HttpPatch("{memberId:int}/BookingOptions")]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]
     public async Task EditMember(int memberId, UpdateMemberBookingOptionsRequest editMember, CancellationToken cancellationToken)
-        => await mediator.Send(new UpdateMemberBookingOptions(memberId, editMember.AllowedSeasonIds, editMember.BookingsPerWeek), cancellationToken);
+        => await mediator.Send(new UpdateMemberBookingOptions(memberId, editMember.AllowedSeasonIds, editMember.BookingsPerWeek,
+            editMember.SeasonSports?.ToDictionary(s => s.SeasonId, s => s.Sports.Select(x => (Domain.Courts.Sport)x).ToArray())), cancellationToken);
 
     [HttpPatch("{memberId:int}/Roles")]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]

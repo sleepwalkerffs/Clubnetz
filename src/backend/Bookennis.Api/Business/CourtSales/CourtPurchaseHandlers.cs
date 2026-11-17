@@ -88,6 +88,11 @@ public record GetCourtSaleOptions(int ClubId, int UserId) : IQuery<CourtSaleOpti
 {
     public class Handler(AppDbContext context, IPaymentAvailability payments) : IRequestHandler<GetCourtSaleOptions, CourtSaleOptionsResult>
     {
+        /// <summary>Enrolled for the sport of every court of the club: nothing to buy.</summary>
+        private static async Task<bool> IsEnrolledForEverySport(AppDbContext context, int clubId, int memberId, CancellationToken cancellationToken)
+            => await ActiveMembership.EnrolledSportsInActiveSeason(context, clubId, memberId, cancellationToken) is { } sports
+               && (await context.ClubSports(clubId, cancellationToken)).All(sport => Sports.Covers(sports, sport));
+
         public async Task<CourtSaleOptionsResult> Handle(GetCourtSaleOptions request, CancellationToken cancellationToken)
         {
             var settings = await context.GetCourtSaleSettings(request.ClubId, cancellationToken);
@@ -102,7 +107,7 @@ public record GetCourtSaleOptions(int ClubId, int UserId) : IQuery<CourtSaleOpti
                 reason = CourtSaleUnavailableReason.NotEnabled;
             else if (memberId is null)
                 reason = CourtSaleUnavailableReason.NoMember;
-            else if (await ActiveMembership.IsEnrolledInActiveSeason(context, request.ClubId, memberId.Value, cancellationToken))
+            else if (await IsEnrolledForEverySport(context, request.ClubId, memberId.Value, cancellationToken))
                 reason = CourtSaleUnavailableReason.AlreadyEnrolled;
             else if (upcoming >= settings.MaxUpcomingBookings)
                 reason = CourtSaleUnavailableReason.LimitReached;
@@ -214,7 +219,9 @@ public record StartCourtPurchase(int ClubId, int UserId, int CourtId, DateTimeOf
             var memberId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken)
                 ?? throw new PreconditionException(CourtPurchaseErrorCode.CourtPurchaseRequiresMember, "Only a member of the club can buy court time.");
 
-            if (await ActiveMembership.IsEnrolledInActiveSeason(context, request.ClubId, memberId, cancellationToken))
+            // A member enrolled for tennis buys padel time: only the sport of the court counts
+            if (await ActiveMembership.EnrolledSportsInActiveSeason(context, request.ClubId, memberId, cancellationToken) is { } enrolledSports
+                && Sports.Covers(enrolledSports, court.Sport))
                 throw new PreconditionException(CourtPurchaseErrorCode.AlreadyEnrolled, "Members of the season book for free.");
 
             // One purchase of the club after the other: the overlap check and the limits below see every hold

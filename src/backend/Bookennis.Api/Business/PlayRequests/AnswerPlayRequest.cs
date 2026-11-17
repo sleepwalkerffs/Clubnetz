@@ -44,6 +44,18 @@ public record AcceptPlayRequest(int ClubId, int UserId, int PlayRequestId) : ICo
             if (!await ActiveMembership.IsActive(context, request.ClubId, memberId, cancellationToken))
                 throw new PreconditionException(PlayRequest.ErrorCode.PlayRequestMemberNotActive, "Only active members of the club can play together");
 
+            var sport = await PlayRequestBooking.SportOfCourts(context, request.ClubId, playRequest.CourtIds, cancellationToken);
+            if ((await PlayRequestBooking.EnrolledForOtherSports(context, request.ClubId, [memberId], sport, cancellationToken)).Count > 0)
+            {
+                var name = await (
+                    from member in context.ClubMembers
+                    join user in context.Users on member.UserId equals user.Id
+                    where member.Id == memberId
+                    select user.FirstName + " " + user.LastName
+                ).SingleAsync(cancellationToken);
+                throw new PreconditionException(PlayRequest.ErrorCode.PlayRequestMemberNotEnrolledForSport, [name, sport.ToString()], "You are not enrolled for the sport of the courts");
+            }
+
             var isFull = playRequest.Accept(memberId, now);
             var interval = new DateTimeOffsetInterval(playRequest.StartsAt, playRequest.EndsAt);
             if (!isFull)

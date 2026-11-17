@@ -133,7 +133,8 @@ public record GetPlayRequests(int ClubId, int UserId) : IQuery<List<PlayRequestD
 }
 
 /// <summary>The members the caller can ask: active members of the club (name only), without the caller.</summary>
-public record GetPlayRequestCandidates(int ClubId, int UserId) : IQuery<List<PlayRequestCandidateDto>>
+/// <summary><c>Sport</c>: leaves out the members enrolled for other sports only (the sport of the courts the requester picked).</summary>
+public record GetPlayRequestCandidates(int ClubId, int UserId, Domain.Courts.Sport? Sport = null) : IQuery<List<PlayRequestCandidateDto>>
 {
     public class Handler(AppDbContext context) : IRequestHandler<GetPlayRequestCandidates, List<PlayRequestCandidateDto>>
     {
@@ -143,6 +144,8 @@ public record GetPlayRequestCandidates(int ClubId, int UserId) : IQuery<List<Pla
             var activeIds = await ActiveMembership.ActiveMemberIds(context, request.ClubId, null, cancellationToken);
             activeIds.IntersectWith(await PlayRequestBooking.WithOwnLogin(context, [.. activeIds], cancellationToken));
             activeIds.Remove(memberId);
+            if (request.Sport is { } sport)
+                activeIds.ExceptWith(await PlayRequestBooking.EnrolledForOtherSports(context, request.ClubId, null, sport, cancellationToken));
 
             var members = await (
                 from member in context.ClubMembers

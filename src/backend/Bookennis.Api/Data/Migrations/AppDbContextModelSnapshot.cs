@@ -2694,6 +2694,9 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Sport")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ClubId");
@@ -2983,6 +2986,10 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("SeasonId")
                         .HasColumnType("integer");
 
+                    b.PrimitiveCollection<int[]>("Sports")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
                     b.HasKey("Id");
 
                     b.HasIndex("MembershipOrderId");
@@ -3205,6 +3212,10 @@ namespace Bookennis.Api.Data.Migrations
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
+
+                    b.PrimitiveCollection<int[]>("Sports")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
 
                     b.HasKey("Id");
 

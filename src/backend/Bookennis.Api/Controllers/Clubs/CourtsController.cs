@@ -15,10 +15,10 @@ public class CourtsController(IMediator mediator) : ClubControllerBase
     [HttpPost]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]
     public Task<int> AddCourt(AddCourtRequest request, CancellationToken cancellationToken)
-        => mediator.Send(new AddCourt(request.Name, request.Alias, request.IsIndoor), cancellationToken);
+        => mediator.Send(new AddCourt(request.Name, request.Alias, request.IsIndoor, (Domain.Courts.Sport)request.Sport), cancellationToken);
 
     [HttpPatch("{courtId:int}/Update")]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]
     public Task EditCourt(int courtId, UpdateCourtRequest updateCourt, CancellationToken cancellationToken)
-        => mediator.Send(new UpdateCourt(courtId, updateCourt.Name, updateCourt.Alias, updateCourt.Interval, updateCourt.SortOrder, updateCourt.IsIndoor), cancellationToken);
+        => mediator.Send(new UpdateCourt(courtId, updateCourt.Name, updateCourt.Alias, updateCourt.Interval, updateCourt.SortOrder, updateCourt.IsIndoor, (Domain.Courts.Sport?)updateCourt.Sport), cancellationToken);
 }

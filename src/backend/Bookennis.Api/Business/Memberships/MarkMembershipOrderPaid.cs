@@ -75,7 +75,8 @@ public static class MembershipPayments
         if (distinctMemberIds.Any(id => people.Find(id) is null))
             throw new PreconditionException(RecordMembershipPayment.ErrorCode.MembershipMemberNotInClub, "A member is not a member of this club.");
 
-        if (distinctMemberIds.Any(id => people.Find(id) is { HasMembership: true } person && person.ActiveOrderId != order.Id))
+        var sports = await MembershipPeople.PlanSports(context, order, cancellationToken);
+        if (distinctMemberIds.Any(id => people.Find(id)!.HasMembershipFor(sports, order.Id)))
             throw new PreconditionException(MembershipEligibility.ErrorCode.AlreadyHasMembership, "A member already has a membership in this season.");
 
         order.SetMembers(distinctMemberIds);

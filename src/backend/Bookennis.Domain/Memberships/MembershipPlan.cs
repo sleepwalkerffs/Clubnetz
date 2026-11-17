@@ -1,5 +1,7 @@
 using System.Runtime.InteropServices;
 using Bookennis.Domain.Base;
+using Bookennis.Domain.Courts;
+using Bookennis.Domain.Members;
 using Bookennis.Domain.Exceptions;
 
 namespace Bookennis.Domain.Memberships;
@@ -54,7 +56,8 @@ public class MembershipPlan : TenantDomainEntity, IAggregateRoot
         bool GrantsSeasonEnrollment,
         DateOnly? AvailableFrom,
         DateOnly? AvailableUntil,
-        bool IsSelfService);
+        bool IsSelfService,
+        IReadOnlyCollection<Sport>? Sports = null);
 
 #pragma warning disable CS8618
     private MembershipPlan() { }
@@ -112,6 +115,9 @@ public class MembershipPlan : TenantDomainEntity, IAggregateRoot
 
     public int SortOrder { get; private set; }
 
+    /// <summary>The sports an order of this plan enrolls for (<see cref="MemberSeason.Sports"/>). Empty: every sport.</summary>
+    public Sport[] Sports { get; private set; } = [];
+
     /// <summary>One order covers several members of a family.</summary>
     public bool IsGroupPlan => MaxAdults > 1 || IncludesChildren;
 
@@ -164,6 +170,7 @@ public class MembershipPlan : TenantDomainEntity, IAggregateRoot
         AvailableFrom = data.AvailableFrom;
         AvailableUntil = data.AvailableUntil;
         IsSelfService = data.IsSelfService;
+        Sports = Courts.Sports.Normalize(data.Sports);
     }
 
     public void SetSortOrder(int sortOrder) => SortOrder = sortOrder;
@@ -185,5 +192,6 @@ public class MembershipPlan : TenantDomainEntity, IAggregateRoot
         GrantsSeasonEnrollment,
         AvailableFrom?.AddYears(yearOffset),
         AvailableUntil?.AddYears(yearOffset),
-        IsSelfService);
+        IsSelfService,
+        Sports);
 }

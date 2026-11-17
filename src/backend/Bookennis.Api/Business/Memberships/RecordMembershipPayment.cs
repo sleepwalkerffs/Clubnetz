@@ -48,7 +48,7 @@ public record RecordMembershipPayment(
             if (involved.Any(id => people.Find(id) is null))
                 throw new PreconditionException(ErrorCode.MembershipMemberNotInClub, "A member is not a member of this club.");
 
-            if (memberIds.Any(id => people.Find(id)!.HasMembership))
+            if (memberIds.Any(id => people.Find(id)!.HasMembershipFor(plan.Sports)))
                 throw new PreconditionException(MembershipEligibility.ErrorCode.AlreadyHasMembership, "A member already has a membership in this season.");
 
             var order = new MembershipOrder(plan, payerMemberId, memberIds, request.Note);
