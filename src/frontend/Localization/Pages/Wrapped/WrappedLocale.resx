@@ -99,6 +99,9 @@
   <data name="MatchPlural" xml:space="preserve">
     <value>matches</value>
   </data>
+  <data name="HoursOnCourtAnySport" xml:space="preserve">
+    <value>{0} hours on court – that's {1} minutes of play</value>
+  </data>
   <data name="HoursOnCourt" xml:space="preserve">
     <value>{0} hours on court – that's {1} minutes of tennis</value>
   </data>

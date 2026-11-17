@@ -672,6 +672,9 @@
   <data name="Record_Member" xml:space="preserve">
     <value>Member</value>
   </data>
+  <data name="Record_MemberHintSports" xml:space="preserve">
+    <value>Only members who don't have a membership for every sport of this season yet.</value>
+  </data>
   <data name="Record_MemberHint" xml:space="preserve">
     <value>Only members without a membership in this season.</value>
   </data>

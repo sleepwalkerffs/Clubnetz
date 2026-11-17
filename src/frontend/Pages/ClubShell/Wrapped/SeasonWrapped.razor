@@ -227,7 +227,7 @@
                               }
                               <div class="w-fact w-in" style="--d: 4">
                                   <span class="w-fact__emoji">⏱️</span>
-                                  <span>@((MarkupString)string.Format(L["HoursOnCourt"], Strong(Number(w.HoursOnCourt)), Strong(Number(Math.Round(w.HoursOnCourt * 60)))))</span>
+                                  <span>@((MarkupString)string.Format(L[w.MatchesPerSport.Any(m => m.Sport != Bookennis.Shared.Controller.Shared.Sport.Tennis) ? "HoursOnCourtAnySport" : "HoursOnCourt"], Strong(Number(w.HoursOnCourt)), Strong(Number(Math.Round(w.HoursOnCourt * 60)))))</span>
                               </div>
                               <div class="w-fact w-in" style="--d: 5">
                                   <span class="w-fact__emoji">📅</span>

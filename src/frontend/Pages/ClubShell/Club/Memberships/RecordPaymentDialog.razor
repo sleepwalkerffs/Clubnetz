@@ -13,15 +13,15 @@
 
         <MudAutocomplete T="MembershipPaymentMemberDto" Value="@member" ValueChanged="OnMemberChanged" SearchFunc="SearchMembers" ToStringFunc="@(m => m is null ? "" : Name(m))"
                          Variant="Variant.Outlined" Label="@L["Record_Member"]" Required="true" ResetValueOnEmptyText="true" CoerceText="true" MaxItems="30"
-                         Margin="Margin.Dense" HelperText="@L["Record_MemberHint"]" />
+                         Margin="Margin.Dense" HelperText="@L[SeveralSports ? "Record_MemberHintSports" : "Record_MemberHint"]" />
 
         <MudSelect T="MembershipPlanDto" Value="@plan" ValueChanged="OnPlanChanged" Variant="Variant.Outlined" Label="@L["Record_Plan"]" Required="true" Margin="Margin.Dense"
-                   ToStringFunc="@(p => p is null ? "" : $"{p.Name} · {MembershipHelpers.Price(L, p.PriceCents)}")">
+                   ToStringFunc="@(p => p is null ? "" : $"{p.Name}{SportsSuffix(p)} · {MembershipHelpers.Price(L, p.PriceCents)}")">
             @foreach (var option in Plans)
             {
                 <MudSelectItem T="MembershipPlanDto" Value="@option">
                     <div class="record__plan">
-                        <span>@option.Name</span>
+                        <span>@option.Name@SportsSuffix(option)</span>
                         <span class="record__price">@MembershipHelpers.Price(L, option.PriceCents)</span>
                     </div>
                 </MudSelectItem>
@@ -63,6 +63,11 @@
 
     /// <summary>The sports of the club's courts (one membership per sport and season).</summary>
     [Parameter] public List<Bookennis.Shared.Controller.Shared.Sport> ClubSports { get; set; } = [];
+
+    private bool SeveralSports => ClubSports.Count > 1;
+
+    /// <summary>" · Padel" in a club with several sports: a member can have one membership per sport.</summary>
+    private string SportsSuffix(MembershipPlanDto plan) => SeveralSports ? $" · {plan.Sports.Names(SharedLocale)}" : "";
 
     /// <summary>The member the dialog was opened for.</summary>
     [Parameter] public MembershipPaymentMemberDto? Member { get; set; }
