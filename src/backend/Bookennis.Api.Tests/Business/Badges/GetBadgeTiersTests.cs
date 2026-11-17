@@ -48,6 +48,7 @@ public class GetBadgeTiersTests(TestFixture fixture) : TestBase(fixture)
 
         await QueryAsync(async ctx =>
         {
+            ctx.TestData().Court2.SetSport(Domain.Courts.Sport.Padel);
             ctx.AddRange(
                 new BadgeTier(clubId, seasonId, 1, "Padel Bronze", "", 2, 1, Domain.Courts.Sport.Padel),
                 new BadgeTier(clubId, seasonId, 2, "Tennis Silver", "", 6, 2, Domain.Courts.Sport.Tennis),
@@ -58,6 +59,7 @@ public class GetBadgeTiersTests(TestFixture fixture) : TestBase(fixture)
 
         var result = await SendAsync(new GetBadgeTiers(clubId, seasonId));
 
+        result.Sports.Should().Equal(Bookennis.Shared.Controller.Shared.Sport.Tennis, Bookennis.Shared.Controller.Shared.Sport.Padel);
         result.Tiers.Select(t => t.Name).Should().Equal("Bronze", "Tennis Bronze", "Tennis Silver", "Padel Bronze");
         result.Tiers.Select(t => t.Sport).Should().Equal(
             null, Bookennis.Shared.Controller.Shared.Sport.Tennis, Bookennis.Shared.Controller.Shared.Sport.Tennis, Bookennis.Shared.Controller.Shared.Sport.Padel);
