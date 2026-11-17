@@ -19,7 +19,8 @@ public interface IPlayRequestsStore : ISemaphoreStore
     List<PlayerGroupDto> Groups { get; }
 
     Task LoadRequests();
-    Task LoadCandidates();
+    /// <summary><paramref name="sport"/>: the sport of the chosen courts; members enrolled only for other sports are left out.</summary>
+    Task LoadCandidates(Bookennis.Shared.Controller.Shared.Sport? sport = null);
     Task LoadGroups();
     Task<HttpResult<int>> Create(CreatePlayRequestModel model);
     Task<HttpResult<PlayRequestAcceptResult>> Accept(int playRequestId);

@@ -91,4 +91,7 @@
   <data name="Card_Mine" xml:space="preserve"><value>Your open requests: {0}</value></data>
   <data name="Card_Next" xml:space="preserve"><value>Next: {0} · {1}</value></data>
   <data name="Card_Open" xml:space="preserve"><value>Show</value></data>
+  <data name="Field_Courts_HintSports" xml:space="preserve">
+    <value>The first free court of these is booked. All courts are for the same sport: only members enrolled for it can be asked.</value>
+  </data>
 </root>

@@ -39,7 +39,7 @@
                 {
                     var enrolled = member.AllowedSeasonIds.Contains(currentSeason.Id);
                     <span class="hero-chip @(enrolled ? "hero-chip--ok" : "hero-chip--warn")">
-                        @(enrolled ? "✅" : "⛔") @string.Format(L[enrolled ? "EnrolledChip" : "NotEnrolledChip"], MemberAdminHelpers.SeasonLabel(currentSeason))
+                        @(enrolled ? "✅" : "⛔") @string.Format(L[enrolled ? "EnrolledChip" : "NotEnrolledChip"], MemberAdminHelpers.SeasonLabel(currentSeason))@(enrolled && ClubStore.Courts.HasSeveralSports() ? $" · {member.SeasonEnrollments.FirstOrDefault(e => e.SeasonId == currentSeason.Id)?.Sports.Names(SharedLocale) ?? SharedLocale["Sports_Every"]}" : null)
                     </span>
                 }
                 <span class="hero-chip">🎂 @string.Format(L["AgeYears"], MemberAdminHelpers.Age(member.Birthday)) · @L[$"AgeGroup_{MemberAdminHelpers.AgeGroupOf(member.Birthday)}"]</span>
