@@ -945,4 +945,10 @@
   <data name="Plans_OrdersOne" xml:space="preserve">
     <value>Einmal gewählt</value>
   </data>
+  <data name="Account_Subtitle_Us" xml:space="preserve">
+    <value>Mitglieder bezahlen mit Karte, direkt an euren Verein</value>
+  </data>
+  <data name="Account_Fact_Methods_Us" xml:space="preserve">
+    <value>Karten sind von Anfang an aktiv. Die Zahlungsarten wählt ihr in Stripe.</value>
+  </data>
 </root>

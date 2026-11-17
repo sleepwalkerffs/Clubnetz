@@ -9,7 +9,7 @@
 
 @implements IDisposable
 
-<SectionCard Emoji="💳" Title="@L["Account_Title"]" Subtitle="@L["Account_Subtitle"]">
+<SectionCard Emoji="💳" Title="@L["Account_Title"]" Subtitle="@L[Regional("Account_Subtitle")]">
     <ChildContent>
         @if (Store.Account is not { } account)
         {
@@ -34,7 +34,7 @@
                     <div class="pay-state__text">@L["Account_NotConnectedText"]</div>
                     <ul class="pay-state__list">
                         <li>@L["Account_Fact_Direct"]</li>
-                        <li>@L["Account_Fact_Methods"]</li>
+                        <li>@L[Regional("Account_Fact_Methods")]</li>
                         <li>@L["Account_Fact_Fees"]</li>
                     </ul>
                     @if (CanConnect)
@@ -127,6 +127,9 @@
     [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
 
     private Country country = Country.Austria;
+
+    // A US club gets no SEPA direct debit: the texts about payment methods say so
+    private string Regional(string key) => ClubProfileStore.SelectedClub?.Country == Country.UnitedStates ? key + "_Us" : key;
     private bool linkExpired;
 
     private bool CanConnect => MembershipHelpers.CanConnectPayments(ClubProfileStore.Roles);
