@@ -348,4 +348,7 @@
   <data name="RecurringHintWeekly" xml:space="preserve">
     <value>Wiederholt sich jede Woche am {0} bis Saisonende oder zum Enddatum.</value>
   </data>
+  <data name="NotEnrolledForSport" xml:space="preserve">
+    <value>Deine Mitgliedschaft in dieser Saison umfasst kein {0}. Eine Mitgliedschaft für {0} bekommst du auf der Mitgliedschaftsseite.</value>
+  </data>
 </root>

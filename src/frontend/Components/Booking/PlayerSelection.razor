@@ -1,6 +1,8 @@
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Localization.Components.Booking
 @using Bookennis.Shared.Controller.Booking.Shared
+@using Bookennis.Shared.Controller.Shared
+@using Bookennis.Client.Utils
 
 <div class="player-selection">
     <div class="player-selection__header">
@@ -108,6 +110,9 @@
     public required PlayerResult? FixedPlayer { get; set; }
     [Parameter]
     public List<PlayerResult> InitialPlayers { get; set; } = [];
+    /// <summary>The sport of the court: only players whose enrollment covers it can be added (<see cref="PlayerResult.Sports"/>). <c>null</c>: everyone.</summary>
+    [Parameter]
+    public Sport? Sport { get; set; }
     /// <summary>Raised after the user added, removed or switched a player (e.g. to check the booking again).</summary>
     [Parameter]
     public EventCallback OnSelectionChanged { get; set; }
@@ -124,6 +129,9 @@
     private PlayerResult? lastFixedPlayerParameter;
 
     public List<PlayerResult> SelectedPlayers => currentFixedPlayer is null ? [.. selectedPlayers] : [.. selectedPlayers, currentFixedPlayer];
+
+    /// <summary>The players that can be added: tennis and padel are separate memberships.</summary>
+    private IEnumerable<PlayerResult> Addable => Sport is { } sport ? AvailablePlayers.Where(p => p.Sports.Covers(sport)) : AvailablePlayers;
 
     private bool IsFull => MaxPlayers is { } max && SelectedPlayers.Count >= max;
 
@@ -188,7 +196,7 @@
 
     private async Task OnValueChanged(PlayerResult? value)
     {
-        if (value is null || IsFull || !AvailablePlayers.Contains(value) || SelectedPlayers.Any(p => p.MemberId == value.MemberId))
+        if (value is null || IsFull || !Addable.Contains(value) || SelectedPlayers.Any(p => p.MemberId == value.MemberId))
             return;
 
         selectedPlayers.Add(value);
@@ -202,7 +210,7 @@
     private Task<IEnumerable<PlayerResult>> Search(string searchValue, CancellationToken cancellationToken)
     {
         var selectedIds = SelectedPlayers.Select(p => p.MemberId).ToHashSet();
-        var available = AvailablePlayers.Where(p => !selectedIds.Contains(p.MemberId));
+        var available = Addable.Where(p => !selectedIds.Contains(p.MemberId));
         if (string.IsNullOrWhiteSpace(searchValue))
             return Task.FromResult(available.OrderBy(p => p.FirstName).ThenBy(p => p.LastName).AsEnumerable());
 
