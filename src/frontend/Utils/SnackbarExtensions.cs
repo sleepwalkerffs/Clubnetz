@@ -37,6 +37,18 @@ public static class SnackbarExtensions
     /// </summary>
     public static string LocalizeErrorCode(this IStringLocalizer locale, string errorCode, string[]? errorDetails)
         => errorDetails is not null
-            ? locale[errorCode, errorDetails]
+            ? locale[errorCode, FormatMoneyDetails(errorCode, errorDetails)]
             : locale[errorCode];
+
+    /// <summary>Error codes whose first detail is an amount (invariant, e.g. "12.50"): it is shown in the club's currency and format.</summary>
+    private static readonly HashSet<string> MoneyErrorCodes = ["AccountingAmountInvalid", "AccountingBankTransactionAmountMismatch"];
+
+    private static object[] FormatMoneyDetails(string errorCode, string[] errorDetails)
+    {
+        var details = errorDetails.Cast<object>().ToArray();
+        if (MoneyErrorCodes.Contains(errorCode) && details.Length > 0
+            && decimal.TryParse(errorDetails[0], System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var amount))
+            details[0] = Bookennis.Shared.Utils.RegionalCulture.Current.Money(amount);
+        return details;
+    }
 }

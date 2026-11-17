@@ -23,7 +23,7 @@ public class NotifyClubAnnouncementCreatedHandler(AppDbContext context, IPushNot
             select new { a.Id, a.ClubId, a.Title, a.ExpiresOn, ClubName = club.Name }
         ).SingleOrDefaultAsync(cancellationToken);
 
-        if (announcement is null || announcement.ExpiresOn < ClubAnnouncementMapper.Today)
+        if (announcement is null || announcement.ExpiresOn < await ClubAnnouncementMapper.GetToday(context, announcement.ClubId, cancellationToken))
             return;
 
         var authorUserId = userAccessor.TryGetUserId(out var userId) ? userId : (int?)null;

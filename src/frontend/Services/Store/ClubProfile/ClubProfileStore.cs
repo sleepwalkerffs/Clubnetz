@@ -3,10 +3,11 @@ using Bookennis.Client.Services.Store.Base;
 using Bookennis.Client.Services.Store.Profile.Models;
 using Bookennis.Shared.Controller.ClubProfile;
 using Bookennis.Shared.Controller.Shared;
+using Microsoft.JSInterop;
 
 namespace Bookennis.Client.Services.Store.ClubProfile;
 
-public class ClubProfileStore(IClubProfileHttpClient clubProfileHttpClient) : SemaphoreStore, IClubProfileStore
+public class ClubProfileStore(IClubProfileHttpClient clubProfileHttpClient, IJSRuntime jsRuntime) : SemaphoreStore, IClubProfileStore
 {
     public event Action? OnClubProfileChanged;
     public event Action? OnBookingOptionsChanged;
@@ -44,7 +45,13 @@ public class ClubProfileStore(IClubProfileHttpClient clubProfileHttpClient) : Se
                     IsActiveMember = memberResponse.Dto.IsActiveMember,
                     Permissions = memberResponse.Dto.Permissions,
                     PermissionScopes = memberResponse.Dto.PermissionScopes,
+                    TimeZoneId = memberResponse.Dto.TimeZoneId,
+                    Country = memberResponse.Dto.Country,
+                    Currency = memberResponse.Dto.Currency,
                 };
+
+                // The whole app runs on the club's clock and formats (see ClubRegion), before anything of the club renders
+                ClubRegion.Apply(jsRuntime, SelectedClub.TimeZoneId, SelectedClub.Country, SelectedClub.Currency);
 
                 OnClubProfileChanged?.Invoke();
                 IsClubProfileLoaded = true;

@@ -16,9 +16,8 @@ public record GetPlayers(IReadOnlySet<int>? OnlyMemberIds = null) : ICommand<Get
     {
         public async Task<GetPlayersResult> Handle(GetPlayers request, CancellationToken cancellationToken)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
             var currentClub = await context.Clubs.SingleRequiredAsync(cancellationToken);
+            var today = ClubRegion.Of(currentClub).Today();
 
             var clubPlayers = await (from user in context.Users
                                      join member in context.ClubMembers on user.Id equals member.UserId

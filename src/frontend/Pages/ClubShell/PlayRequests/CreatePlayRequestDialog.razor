@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Components.Family
 @using Bookennis.Client.Components.Shared
@@ -29,7 +30,7 @@
     {
         <div class="create-request">
             <div class="create-request__summary">
-                <span class="create-request__summary-day">@(Start is { } start ? start.ToString("ddd d MMM", CultureInfo.CurrentCulture) : "–")</span>
+                <span class="create-request__summary-day">@(Start is { } start ? start.ToString(RegionalCulture.Current.CompactWeekdayDayMonthNamePattern, CultureInfo.CurrentCulture) : "–")</span>
                 <span>@string.Format(L["Summary_Line"], SummaryTime, selectedPlayMode.Name, SummaryCourts)</span>
             </div>
 
@@ -43,7 +44,7 @@
             <div class="create-request__row">
                 <MudDatePicker Date="Date" DateChanged="d => Date = d" Variant="Variant.Outlined" Label="@L["Field_Date"]" MinDate="DateTime.Today"
                                PickerVariant="PickerVariant.Dialog" Editable="false" />
-                <MudTimePicker Time="Time" TimeChanged="t => Time = t" Variant="Variant.Outlined" Label="@L["Field_Time"]" MinuteSelectionStep="30"
+                <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Time="Time" TimeChanged="t => Time = t" Variant="Variant.Outlined" Label="@L["Field_Time"]" MinuteSelectionStep="30"
                                AdornmentIcon="@Icons.Material.Filled.Schedule" />
             </div>
             @if (StartInPast)
@@ -90,7 +91,7 @@
                     <div class="create-request__row">
                         <MudDatePicker @bind-Date="expiryDate" Variant="Variant.Outlined" Label="@L["Expire_Date"]" MinDate="DateTime.Today"
                                        PickerVariant="PickerVariant.Dialog" Editable="false" />
-                        <MudTimePicker @bind-Time="expiryTime" Variant="Variant.Outlined" Label="@L["Expire_Time"]" MinuteSelectionStep="30"
+                        <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" @bind-Time="expiryTime" Variant="Variant.Outlined" Label="@L["Expire_Time"]" MinuteSelectionStep="30"
                                        AdornmentIcon="@Icons.Material.Filled.Schedule" />
                     </div>
                     @if (!ExpiryValid)

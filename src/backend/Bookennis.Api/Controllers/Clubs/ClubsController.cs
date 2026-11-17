@@ -28,6 +28,7 @@ public class ClubsController(IMediator mediator) : ControllerBase
                     model.PrimeTimeSettings.RestrictChildren,
                     model.PrimeTimeSettings.RestrictGuests,
                     model.PrimeTimeSettings.ChildAgeThreshold),
-                model.BookingGracePeriodInMinutes),
+                model.BookingGracePeriodInMinutes,
+                model.BookingsPerWeek),
             cancellationToken);
 }

@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.Events;
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Data;
@@ -21,10 +22,11 @@ public class NotifyClubEventCreatedHandler(AppDbContext context, IClubEventNotif
         var clubEvent = await context.ClubEvents
             .IgnoreQueryFilters()
             .Where(e => e.Id == notification.EntityId)
-            .Select(e => new { e.StartDate, e.NotifyMembers })
+            .Select(e => new { e.ClubId, e.StartDate, e.NotifyMembers })
             .SingleOrDefaultAsync(cancellationToken);
 
-        if (clubEvent is null || !clubEvent.NotifyMembers || clubEvent.StartDate < DateOnly.FromDateTime(DateTime.UtcNow))
+        // Not for events that started before today, the local day of the club
+        if (clubEvent is null || !clubEvent.NotifyMembers || clubEvent.StartDate < await context.GetClubToday(clubEvent.ClubId, cancellationToken))
             return;
 
         var creatorUserId = userAccessor.TryGetUserId(out var userId) ? userId : (int?)null;

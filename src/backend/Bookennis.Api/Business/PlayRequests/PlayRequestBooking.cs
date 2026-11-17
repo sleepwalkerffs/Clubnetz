@@ -33,7 +33,6 @@ internal static class PlayRequestBooking
         IBookingDomainService bookingService,
         IReadOnlyList<int> courtIds,
         DateTimeOffsetInterval interval,
-        string timeZoneInfoId,
         int playersNeeded,
         bool validateAsIfFull,
         CancellationToken cancellationToken)
@@ -47,7 +46,7 @@ internal static class PlayRequestBooking
 
             try
             {
-                return bookingService.BookCourt(context, interval, timeZoneInfoId, comment: null);
+                return bookingService.BookCourt(context, interval, builder.Region.TimeZoneId, comment: null);
             }
             catch (PreconditionException e) when (e.ErrorCode is not null && CourtErrors.Contains(e.ErrorCode))
             {

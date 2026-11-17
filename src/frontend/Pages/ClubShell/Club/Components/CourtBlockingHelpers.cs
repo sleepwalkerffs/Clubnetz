@@ -1,5 +1,7 @@
 using System.Globalization;
 using Bookennis.Client.Localization.Pages.CourtBlockings;
+using Bookennis.Client.Utils;
+using Bookennis.Shared.Utils;
 using Bookennis.Shared.Controller.Club;
 using Bookennis.Shared.Controller.CourtBlockings;
 using Bookennis.Shared.Controller.Shared;
@@ -66,7 +68,7 @@ internal static class CourtBlockingHelpers
             : null;
 
     public static string FormatDate(IStringLocalizer<CourtBlockingsLocale> locale, DateOnly date)
-        => date.ToString(locale["DateFormat"], CultureInfo.CurrentCulture);
+        => date.ToString(DateFormats.Localized("ddd, d. MMM yyyy"), CultureInfo.CurrentCulture);
 
     /// <summary>"Active now", "Today", "Tomorrow", "In 3 days" or "Over".</summary>
     public static string StatusText(IStringLocalizer<CourtBlockingsLocale> locale, CourtBlockingDto blocking, DateTimeOffset now)

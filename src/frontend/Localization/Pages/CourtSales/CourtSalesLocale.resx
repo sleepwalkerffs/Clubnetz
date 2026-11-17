@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -112,7 +112,7 @@
     <value>Time zone of the prices</value>
   </data>
   <data name="Settings_TimeZoneHint" xml:space="preserve">
-    <value>The times of the prices are local times of this zone</value>
+    <value>The times of the prices are local times of the club's time zone. Support can change it.</value>
   </data>
   <data name="Settings_MaxMinutes" xml:space="preserve">
     <value>Longest bookable slot</value>
@@ -145,7 +145,7 @@
     <value>No prices yet</value>
   </data>
   <data name="Rules_EmptyHint" xml:space="preserve">
-    <value>Add e.g. Mon–Fri 08:00–12:00 for € 20 per hour.</value>
+    <value>Add e.g. a price per hour for weekday mornings.</value>
   </data>
   <data name="Rules_Note" xml:space="preserve">
     <value>Prices may not overlap. A slot across two prices is charged per minute; prime time can be closed to bought slots in the club settings.</value>
@@ -193,7 +193,7 @@
     <value>Some courts</value>
   </data>
   <data name="Rule_Hint" xml:space="preserve">
-    <value>Times are local times of the club, on full or half hours. 24:00 is midnight.</value>
+    <value>Times are local times of the club, on full or half hours. Midnight as the end is the end of the day.</value>
   </data>
   <data name="Rule_Saved" xml:space="preserve">
     <value>Price saved</value>

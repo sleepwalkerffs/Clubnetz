@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -72,9 +72,6 @@
   <data name="Weather_unknown" xml:space="preserve">
     <value>Wetter</value>
   </data>
-  <data name="Temperature" xml:space="preserve">
-    <value>{0} °C</value>
-  </data>
   <data name="Rain" xml:space="preserve">
     <value>Regen: {0} mm</value>
   </data>
@@ -82,7 +79,7 @@
     <value>Regenwahrscheinlichkeit: {0} %</value>
   </data>
   <data name="Wind" xml:space="preserve">
-    <value>Wind: {0} km/h</value>
+    <value>Wind: {0}</value>
   </data>
   <data name="Period" xml:space="preserve">
     <value>{0}–{1}</value>

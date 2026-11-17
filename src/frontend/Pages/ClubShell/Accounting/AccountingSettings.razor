@@ -85,7 +85,7 @@
                         <span aria-hidden="true">@AccountingHelpers.AccountIcon(account.Kind)</span>
                         <span class="acc-item__main">
                             <span class="acc-item__name">@account.Name</span>
-                            <span class="acc-note">@L[$"AccountKind_{account.Kind}"] @(account.Iban is { } iban ? $"· {AccountingHelpers.Iban(iban)}" : null)</span>
+                            <span class="acc-note">@L[$"AccountKind_{account.Kind}"] @(AccountingHelpers.BankDetails(account) is { } details ? $"· {details}" : null)</span>
                         </span>
                         @if (account.IsArchived)
                         {
@@ -97,7 +97,7 @@
         </ChildContent>
     </SectionCard>
 
-    <SectionCard Emoji="🗂️" Title="@L["Categories_Title"]" Subtitle="@L["Categories_Subtitle"]">
+    <SectionCard Emoji="🗂️" Title="@L["Categories_Title"]" Subtitle="@L[AccountingHelpers.Regional("Categories_Subtitle")]">
         <Actions>
             @if (canManage)
             {
@@ -116,7 +116,10 @@
                             <span class="acc-item__number">@category.Number</span>
                             <span class="acc-item__main">
                                 <span class="acc-item__name">@category.Name</span>
-                                <span class="acc-note">@L[$"Sphere_{category.TaxSphere}"]</span>
+                                @if (!AccountingHelpers.IsUnitedStates)
+                                {
+                                    <span class="acc-note">@L[$"Sphere_{category.TaxSphere}"]</span>
+                                }
                             </span>
                             @if (category.IsArchived)
                             {

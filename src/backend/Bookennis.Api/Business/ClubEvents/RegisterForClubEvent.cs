@@ -1,4 +1,5 @@
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.ClubEvents;
 using Bookennis.Shared.Controller.ClubEvents;
@@ -15,13 +16,14 @@ public record RegisterForClubEvent(int ClubId, int UserId, int ClubEventId, int 
             var memberId = await context.GetRequiredClubMemberId(request.UserId, request.ClubId, cancellationToken);
             var clubEvent = await context.ClubEvents.GetEventWithDetails(request.ClubId, request.ClubEventId, cancellationToken);
             var now = DateTimeOffset.UtcNow;
+            var timeZone = (await context.GetClubRegion(request.ClubId, cancellationToken)).TimeZone;
 
-            clubEvent.Register(memberId, request.HeadCount, request.Answers, request.Comment, now);
+            clubEvent.Register(memberId, request.HeadCount, request.Answers, request.Comment, now, timeZone);
 
             await context.SaveChangesAsync(cancellationToken);
 
             var members = await ClubEventMapper.LoadMemberInfos(context, clubEvent, cancellationToken);
-            return ClubEventMapper.ToDto(renderer, clubEvent, members, memberId, now);
+            return ClubEventMapper.ToDto(renderer, clubEvent, members, memberId, now, timeZone);
         }
     }
 }

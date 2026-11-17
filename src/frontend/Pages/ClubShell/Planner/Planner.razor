@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @page "/clubs/{ClubId:int}/planner"
 @using System.Globalization
 @using System.Net
@@ -63,7 +64,7 @@
                         </MudTooltip>
                         <MudDatePicker Date="@Start.ToDateTime(TimeOnly.MinValue)" DateChanged="OnDatePicked" Disabled="@saving"
                                        PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" Margin="Margin.Dense"
-                                       Label="@Locale["GoToDate"]" DateFormat="dd.MM.yy" Class="planner-toolbar__picker" />
+                                       Label="@Locale["GoToDate"]" DateFormat="@RegionalCulture.Current.ShortDateTwoDigitYearPattern" Class="planner-toolbar__picker" />
                     </div>
 
                     <ChoiceChips TItem="int" Items="@PlannerHelpers.DayOptions" Value="@Days" ValueChanged="OnDaysChanged"
@@ -500,7 +501,7 @@
     private async Task<bool> ConfirmOverbooking(BookingResult booking, int courtId, List<BookingResult> conflicts)
     {
         var items = string.Join(string.Empty, conflicts.Select(c =>
-            $"<li><strong>{WebUtility.HtmlEncode(c.PlayMode.Name)}</strong> · {c.Interval.From:HH:mm}–{c.Interval.To:HH:mm} · "
+            $"<li><strong>{WebUtility.HtmlEncode(c.PlayMode.Name)}</strong> · {c.Interval.From:t}–{c.Interval.To:t} · "
             + $"{WebUtility.HtmlEncode(string.Join(", ", c.Players.Select(p => $"{p.FirstName} {p.LastName}")))}</li>"));
         var text = WebUtility.HtmlEncode(string.Format(Locale["OverbookText"], booking.PlayMode.Name, CourtName(courtId)));
         var message = new MarkupString($"<p>{text}</p><ul class=\"planner-confirm-list\">{items}</ul><p>{WebUtility.HtmlEncode(Locale["OverbookNotify"])}</p>");

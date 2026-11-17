@@ -1,3 +1,4 @@
+using Bookennis.Shared.Utils;
 using System.Globalization;
 using Bookennis.Client.Localization.Pages.CourtSales;
 using Bookennis.Shared.Controller.Club;
@@ -11,25 +12,29 @@ namespace Bookennis.Client.Pages.ClubShell.Club.CourtSales;
 /// <summary>Texts, colors and small calculations shared by the court sales page, its dialogs and the booking page.</summary>
 public static class CourtSalesHelpers
 {
-    /// <summary>Monday first, as people read a week.</summary>
-    public static readonly DayOfWeek[] Week =
-        [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday];
+    /// <summary>The days of a week in the order of the club's calendar (Monday first in Europe, Sunday first in the United States).</summary>
+    public static IReadOnlyList<DayOfWeek> Week => RegionalCulture.Current.WeekDays;
+
+    public static readonly DayOfWeek[] MondayToFriday =
+        [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday];
+
+    public static readonly DayOfWeek[] Weekend = [DayOfWeek.Saturday, DayOfWeek.Sunday];
 
     /// <summary>Treasurers and admins manage the court sales (same as the backend policy <c>CourtSalesManager</c>).</summary>
     public static bool CanManage(IEnumerable<MemberRole> roles) => roles.Any(r => r is MemberRole.Admin or MemberRole.Treasurer);
 
     public static string Url(int clubId) => $"/clubs/{clubId}/court-sales";
 
-    /// <summary>Amount in euros, e.g. "€ 28,00" (only eur is sold).</summary>
-    public static string Amount(long cents) => "€ " + (cents / 100m).ToString("N2", CultureInfo.CurrentCulture);
+    /// <summary>Amount in the club's currency, e.g. "€ 28,00" or "$28.00".</summary>
+    public static string Amount(long cents) => RegionalCulture.Current.Money(cents);
 
     public static string PerHour(IStringLocalizer<CourtSalesLocale> locale, int cents)
         => cents == 0 ? locale["Free"] : string.Format(locale["PricePerHour"], Amount(cents));
 
     /// <summary>A local time of a price rule; 24:00 is midnight at the end of the day.</summary>
-    public static string Time(TimeSpan time) => time >= TimeSpan.FromDays(1) ? "24:00" : time.ToString(@"hh\:mm", CultureInfo.InvariantCulture);
+    public static string Time(TimeSpan time) => RegionalCulture.Current.Time(time);
 
-    public static string Time(DateTimeOffset time) => time.ToLocalTime().ToString("HH:mm", CultureInfo.CurrentCulture);
+    public static string Time(DateTimeOffset time) => time.ToLocalTime().ToString("t", CultureInfo.CurrentCulture);
 
     public static string Day(DateTimeOffset time) => time.ToLocalTime().ToString(DateFormats.Localized("ddd, d. MMM"), CultureInfo.CurrentCulture);
 
@@ -41,7 +46,8 @@ public static class CourtSalesHelpers
         if (days.Count == 7)
             return locale["EveryDay"];
 
-        var indexes = Week.Select((d, i) => (d, i)).Where(x => days.Contains(x.d)).Select(x => x.i).ToList();
+        var week = Week;
+        var indexes = week.Select((d, i) => (d, i)).Where(x => days.Contains(x.d)).Select(x => x.i).ToList();
         var parts = new List<string>();
         var start = 0;
         while (start < indexes.Count)
@@ -51,9 +57,9 @@ public static class CourtSalesHelpers
                 end++;
 
             if (end - start >= 2)
-                parts.Add($"{ShortWeekday(Week[indexes[start]])}–{ShortWeekday(Week[indexes[end]])}");
+                parts.Add($"{ShortWeekday(week[indexes[start]])}–{ShortWeekday(week[indexes[end]])}");
             else
-                parts.AddRange(indexes.Skip(start).Take(end - start + 1).Select(i => ShortWeekday(Week[i])));
+                parts.AddRange(indexes.Skip(start).Take(end - start + 1).Select(i => ShortWeekday(week[i])));
 
             start = end + 1;
         }
@@ -107,5 +113,5 @@ public static class CourtSalesHelpers
 
     /// <summary>The price rules sorted like a week: by their first weekday, then by time.</summary>
     public static List<CourtPriceRuleDto> Sorted(IEnumerable<CourtPriceRuleDto> rules)
-        => rules.OrderBy(r => r.Weekdays.Count == 0 ? 7 : r.Weekdays.Min(d => Array.IndexOf(Week, d))).ThenBy(r => r.From).ThenBy(r => r.CourtIds.Count).ToList();
+        => rules.OrderBy(r => r.Weekdays.Count == 0 ? 7 : r.Weekdays.Min(d => Week.ToList().IndexOf(d))).ThenBy(r => r.From).ThenBy(r => r.CourtIds.Count).ToList();
 }

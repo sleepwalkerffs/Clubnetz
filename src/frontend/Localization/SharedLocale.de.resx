@@ -429,4 +429,55 @@
   <data name="Role_Auditor" xml:space="preserve">
     <value>Rechnungsprüfer</value>
   </data>
+  <data name="UnitedStates" xml:space="preserve">
+    <value>USA</value>
+  </data>
+  <data name="TimeZone" xml:space="preserve">
+    <value>Zeitzone</value>
+  </data>
+  <data name="Currency" xml:space="preserve">
+    <value>Währung</value>
+  </data>
+  <data name="TimeZone_Europe_Vienna" xml:space="preserve">
+    <value>Mitteleuropäische Zeit (Wien)</value>
+  </data>
+  <data name="TimeZone_Europe_Berlin" xml:space="preserve">
+    <value>Mitteleuropäische Zeit (Berlin)</value>
+  </data>
+  <data name="TimeZone_Europe_Zurich" xml:space="preserve">
+    <value>Mitteleuropäische Zeit (Zürich)</value>
+  </data>
+  <data name="TimeZone_America_New_York" xml:space="preserve">
+    <value>Ostküstenzeit (New York)</value>
+  </data>
+  <data name="TimeZone_America_Chicago" xml:space="preserve">
+    <value>Zentralzeit (Chicago)</value>
+  </data>
+  <data name="TimeZone_America_Denver" xml:space="preserve">
+    <value>Gebirgszeit (Denver)</value>
+  </data>
+  <data name="TimeZone_America_Phoenix" xml:space="preserve">
+    <value>Gebirgszeit ohne Sommerzeit (Phoenix)</value>
+  </data>
+  <data name="TimeZone_America_Los_Angeles" xml:space="preserve">
+    <value>Pazifikzeit (Los Angeles)</value>
+  </data>
+  <data name="TimeZone_America_Anchorage" xml:space="preserve">
+    <value>Alaska-Zeit (Anchorage)</value>
+  </data>
+  <data name="TimeZone_Pacific_Honolulu" xml:space="preserve">
+    <value>Hawaii-Zeit (Honolulu)</value>
+  </data>
+  <data name="Currency_eur" xml:space="preserve">
+    <value>Euro (€)</value>
+  </data>
+  <data name="Currency_usd" xml:space="preserve">
+    <value>US-Dollar ($)</value>
+  </data>
+  <data name="Currency_chf" xml:space="preserve">
+    <value>Schweizer Franken (CHF)</value>
+  </data>
+  <data name="NoClubAssigned" xml:space="preserve">
+    <value>Kein Verein zugeordnet</value>
+  </data>
 </root>

@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Memberships;
@@ -33,7 +34,8 @@ public record GetMembershipPayments(int ClubId, int SeasonId, MembershipOrderSta
 }
 
 /// <summary>Everything the payments list, its summary and its export show about a season.</summary>
-public record MembershipPaymentsOverview(Season Season, List<MembershipPaymentMemberDto> Members, List<MembershipPaymentOrderDto> Orders)
+/// <remarks><c>Region</c>: the club's time zone, country and currency (the currency of the summary, the days in the export).</remarks>
+public record MembershipPaymentsOverview(Season Season, List<MembershipPaymentMemberDto> Members, List<MembershipPaymentOrderDto> Orders, ClubRegion Region)
 {
     public static async Task<MembershipPaymentsOverview> Load(AppDbContext context, int clubId, int seasonId, CancellationToken cancellationToken)
     {
@@ -80,7 +82,7 @@ public record MembershipPaymentsOverview(Season Season, List<MembershipPaymentMe
             Note = o.Note,
         });
 
-        return new MembershipPaymentsOverview(season, members, orderDtos);
+        return new MembershipPaymentsOverview(season, members, orderDtos, await context.GetClubRegion(clubId, cancellationToken));
     }
 
     public GetMembershipPaymentsSummaryResult ToSummary()
@@ -97,7 +99,8 @@ public record MembershipPaymentsOverview(Season Season, List<MembershipPaymentMe
             OpenCents = Orders
                 .Where(o => o.Status is SharedOrderStatus.AwaitingApproval or SharedOrderStatus.AwaitingPayment or SharedOrderStatus.Failed)
                 .Sum(o => (long)o.AmountCents),
-            Currency = MembershipPlan.DefaultCurrency,
+            // The orders of a season are in the currency of their plans, the one of the club
+            Currency = Orders.Select(o => o.Currency).FirstOrDefault() ?? Region.Currency,
             MembersPaid = Members.Count(m => paidMemberIds.Contains(m.MemberId)),
             MembersEnrolled = Members.Count(m => m.Enrollment != MembershipEnrollmentSource.NotEnrolled),
             MembersTotal = Members.Count,

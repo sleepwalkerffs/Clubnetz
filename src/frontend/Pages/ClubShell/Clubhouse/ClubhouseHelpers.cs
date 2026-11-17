@@ -1,3 +1,4 @@
+using Bookennis.Shared.Utils;
 using System.Globalization;
 using Bookennis.Client.Localization.Pages.Clubhouse;
 using Bookennis.Shared.Controller.Clubhouse;
@@ -25,8 +26,8 @@ public static class ClubhouseHelpers
 
     public static string SumUpUrl(int clubId) => $"/clubs/{clubId}/clubhouse?view=sumup";
 
-    /// <summary>Amount in euros, e.g. "€ 4,50" (only eur is sold).</summary>
-    public static string Amount(long cents) => "€ " + (cents / 100m).ToString("N2", CultureInfo.CurrentCulture);
+    /// <summary>Amount in the club's currency, e.g. "€ 4,50" or "$4.50".</summary>
+    public static string Amount(long cents) => RegionalCulture.Current.Money(cents);
 
     public static string Price(IStringLocalizer<ClubhouseLocale> locale, int cents) => cents == 0 ? locale["Free"] : Amount(cents);
 
@@ -54,7 +55,7 @@ public static class ClubhouseHelpers
 
     public static string Day(DateTimeOffset time) => time.ToLocalTime().ToString(DateFormats.Localized("ddd, d. MMM"), CultureInfo.CurrentCulture);
 
-    public static string Time(DateTimeOffset time) => time.ToLocalTime().ToString("HH:mm", CultureInfo.CurrentCulture);
+    public static string Time(DateTimeOffset time) => time.ToLocalTime().ToString("t", CultureInfo.CurrentCulture);
 
     /// <summary>
     /// The search of the host: every word must match the start of the first or the last name (like the player search), so

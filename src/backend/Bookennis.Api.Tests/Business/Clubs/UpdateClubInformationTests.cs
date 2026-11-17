@@ -45,4 +45,41 @@ public class UpdateClubInformationTests(TestFixture fixture) : TestBase(fixture)
 
         await act.Should().ThrowAsync<PreconditionException>();
     }
+
+    [Fact]
+    public async Task UpdateClubInformation_BookingsPerWeek_IsSaved()
+    {
+        await QueryAsync(async ctx => await ctx.RemoveMigrationSeedData());
+        var club = Query(ctx => ctx.TestData().Club);
+
+        await SendAsync(new UpdateClubInformation(club.Id, club.OpeningHours, club.PrimeTimeSettings, null, 4));
+
+        Query(ctx => ctx.TestData().Club).ConcurrentAllowedBookings.Should().Be(4);
+        (await SendAsync(new GetClubInformation(club.Id))).BookingsPerWeek.Should().Be(4);
+    }
+
+    [Fact]
+    public async Task UpdateClubInformation_WithoutBookingsPerWeek_KeepsTheClubValue()
+    {
+        await QueryAsync(async ctx => await ctx.RemoveMigrationSeedData());
+        var club = Query(ctx => ctx.TestData().Club);
+        await SendAsync(new UpdateClubInformation(club.Id, club.OpeningHours, club.PrimeTimeSettings, null, 6));
+
+        await SendAsync(new UpdateClubInformation(club.Id, club.OpeningHours, club.PrimeTimeSettings, 10));
+
+        Query(ctx => ctx.TestData().Club).ConcurrentAllowedBookings.Should().Be(6);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(51)]
+    public async Task UpdateClubInformation_BookingsPerWeekOutOfRange_ThrowsPreconditionException(int bookingsPerWeek)
+    {
+        await QueryAsync(async ctx => await ctx.RemoveMigrationSeedData());
+        var club = Query(ctx => ctx.TestData().Club);
+
+        var act = () => SendAsync(new UpdateClubInformation(club.Id, club.OpeningHours, club.PrimeTimeSettings, null, bookingsPerWeek));
+
+        (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(Club.BookingsPerWeekErrorCode.ClubInvalidBookingsPerWeek));
+    }
 }

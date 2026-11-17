@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Localization
@@ -56,7 +57,7 @@
 
             <div class="next__countdown">@MyClubHelpers.Countdown(Locale, booking.Interval.From)</div>
             <div class="next__when">
-                @booking.Interval.From.ToString("ddd, dd.MM.", CultureInfo.CurrentCulture) · @booking.Interval.From.ToString("HH:mm") – @booking.Interval.To.ToString("HH:mm")
+                @booking.Interval.From.ToString(RegionalCulture.Current.WeekdayDayMonthPattern, CultureInfo.CurrentCulture) · @booking.Interval.From.ToString("t", CultureInfo.CurrentCulture) – @booking.Interval.To.ToString("t", CultureInfo.CurrentCulture)
             </div>
             <div class="next__where">📍 @CourtName · @booking.PlayMode.Name</div>
 

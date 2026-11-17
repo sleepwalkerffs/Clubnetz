@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Localization.Pages.ClubStatistics
 @using Bookennis.Shared.Controller.Statistics
@@ -48,18 +49,18 @@ else
         </svg>
 
         <div class="trend__axis">
-            <span>@Weeks[0].WeekStart.ToString("dd.MM.", CultureInfo.CurrentCulture)</span>
+            <span>@Weeks[0].WeekStart.ToString(RegionalCulture.Current.DayMonthPattern, CultureInfo.CurrentCulture)</span>
             @if (Weeks.Count > 2)
             {
-                <span>@Weeks[Weeks.Count / 2].WeekStart.ToString("dd.MM.", CultureInfo.CurrentCulture)</span>
+                <span>@Weeks[Weeks.Count / 2].WeekStart.ToString(RegionalCulture.Current.DayMonthPattern, CultureInfo.CurrentCulture)</span>
             }
-            <span>@Weeks[^1].WeekStart.ToString("dd.MM.", CultureInfo.CurrentCulture)</span>
+            <span>@Weeks[^1].WeekStart.ToString(RegionalCulture.Current.DayMonthPattern, CultureInfo.CurrentCulture)</span>
         </div>
 
         <div class="trend__facts">
             <div class="trend__fact">
                 <span class="trend__fact-value">🏆 @best.Hours.ToString("0.#", CultureInfo.CurrentCulture) h</span>
-                <span class="trend__fact-label">@string.Format(L["BestWeek"], best.WeekStart.ToString("dd.MM.", CultureInfo.CurrentCulture))</span>
+                <span class="trend__fact-label">@string.Format(L["BestWeek"], best.WeekStart.ToString(RegionalCulture.Current.DayMonthPattern, CultureInfo.CurrentCulture))</span>
             </div>
             <div class="trend__fact">
                 <span class="trend__fact-value">👥 @Weeks.Max(w => w.ActivePlayers)</span>

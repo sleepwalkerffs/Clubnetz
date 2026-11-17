@@ -14,7 +14,7 @@ public record GetClubAnnouncementAttachment(int ClubId, int ClubAnnouncementId, 
     {
         public async Task<GetClubAnnouncementAttachmentResult> Handle(GetClubAnnouncementAttachment request, CancellationToken cancellationToken)
         {
-            var today = ClubAnnouncementMapper.Today;
+            var today = await ClubAnnouncementMapper.GetToday(context, request.ClubId, cancellationToken);
 
             var attachment = await context.ClubAnnouncementAttachments
                 .Where(a => a.Id == request.AttachmentId

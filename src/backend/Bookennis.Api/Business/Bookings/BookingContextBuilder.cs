@@ -1,3 +1,5 @@
+using System.Globalization;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.CourtBlockings;
 using Bookennis.Api.Business.CourtSales;
 using Bookennis.Api.Data;
@@ -41,6 +43,7 @@ internal sealed class BookingContextBuilder
         this.context = context;
         this.excludedBookingId = excludedBookingId;
         Club = club;
+        Region = ClubRegion.Of(club);
         PlayMode = playMode;
         Courts = courts;
         this.participants = participants;
@@ -50,6 +53,9 @@ internal sealed class BookingContextBuilder
     }
 
     public Club Club { get; }
+
+    /// <summary>Time zone, country and currency of the club: opening hours, prime time, "today" and the days of bookings are local to it.</summary>
+    public ClubRegion Region { get; }
     public PlayMode PlayMode { get; }
     public IReadOnlyDictionary<int, Court> Courts { get; }
     public Season? ActiveSeason { get; }
@@ -98,20 +104,22 @@ internal sealed class BookingContextBuilder
         if (courts.Count != distinctCourtIds.Count)
             throw new EntityNotFoundException(typeof(Court));
 
+        // "Today" is the local day of the club, not the UTC day (a club in New York is still on Monday at 21:00 local time)
+        var region = ClubRegion.Of(club);
+        var today = region.Today();
+        var activeSeason = await context.Seasons
+            .Where(s => s.ClubId == club.Id && s.Period.From <= today && today <= s.Period.To)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+
         var mayBookForAnyMember = await BookingRights.MayBookForAnyMember(context, club.Id, userId, playModeId, cancellationToken);
-        var participants = await LoadParticipants(context, club, playModeId, players, userId, mayBookForAnyMember, excludedBookingId, cancellationToken);
+        var participants = await LoadParticipants(context, club, today, SeasonWindow.Of(activeSeason, region), playModeId, players, userId, mayBookForAnyMember, excludedBookingId, cancellationToken);
 
         if (participants.Count != players.Count)
             throw new EntityNotFoundException("Player does not exist");
 
         if (!participants.Any(i => i.IsAllowedUser))
             throw new PreconditionException(BookCourt.ErrorCode.UserNotAllowedToBook, "User is not allowed to make booking for the provided memberIds");
-
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var activeSeason = await context.Seasons
-            .Where(s => s.ClubId == club.Id && s.Period.From <= today && today <= s.Period.To)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(cancellationToken);
 
         var enrolledMemberIds = activeSeason is not null
             ? await context.MemberSeasons
@@ -152,7 +160,8 @@ internal sealed class BookingContextBuilder
         var pendingCharging = PlayMode.IsChargingBookingSubscription ? pendingBookings : [];
         var pendingUpcoming = pendingCharging.Count(b => b.To > now);
         var pendingActive = pendingCharging.Count(b => b.Intersects(interval));
-        var pendingOnThatDay = pendingCharging.Count(b => DateOfEnd(b.To) == interval.From.Date);
+        var day = Region.LocalDate(interval.From);
+        var pendingOnThatDay = pendingCharging.Count(b => Region.LocalDate(b.To) == day);
         var pendingInSeason = PlayMode.MaxBookingsPerSeason is not null ? pendingBookings.Count(IsInActiveSeason) : 0;
 
         return new BookingDomainService.Context
@@ -160,6 +169,8 @@ internal sealed class BookingContextBuilder
             ClubId = Club.Id,
             Court = court,
             OpeningHours = Club.OpeningHours,
+            TimeZone = Region.TimeZone,
+            FormatTime = Region.Culture(CultureInfo.CurrentCulture).Time,
             PrimeTimeSettings = Club.PrimeTimeSettings,
             BookingMemberRole = [MemberRole.User],
             Participants = participants.ConvertAll(i =>
@@ -172,7 +183,7 @@ internal sealed class BookingContextBuilder
                     IsChild = i.IsChild,
                     UpcomingBookingsCount = i.UpcomingBookingsCount + pendingUpcoming,
                     ActiveBookingsAtTimeOfReservation = chargingBookings.Count(b => b.Interval.Intersects(interval)) + pendingActive,
-                    BookingsOnThatDay = chargingBookings.Count(b => b.EndDate == interval.From.Date) + pendingOnThatDay,
+                    BookingsOnThatDay = chargingBookings.Count(b => Region.LocalDate(b.To) == day) + pendingOnThatDay,
                     IsAllowedInCurrentSeason = enrolledMemberIds.Contains(i.Member.Id),
                     IsAtpParticipant = Club.IsAtpClub && i.IsFromAtpClub && i.Member.MemberType == MemberType.ClubMember,
                     PlayModeBookingsInSeasonCount = i.PlayModeBookingsInSeasonCount + pendingInSeason,
@@ -181,33 +192,43 @@ internal sealed class BookingContextBuilder
             IntersectingBookings = intersectingBookings,
             PlayMode = PlayMode,
             BookingGracePeriodInMinutes = Club.BookingGracePeriodInMinutes,
+            ClubBookingsPerWeek = Club.ConcurrentAllowedBookings,
             ActiveSeasonId = ActiveSeason?.Id,
             CourtBlockingTitles = courtBlockingTitles,
         };
     }
 
-    /// <summary>
-    /// The date of the end of a booking as the database query of <see cref="LoadChargingBookings"/> calculates it
-    /// (Npgsql takes the date of a <c>timestamptz</c> in UTC).
-    /// </summary>
-    private static DateTime DateOfEnd(DateTimeOffset to) => to.UtcDateTime.Date;
-
     /// <summary>Same rule as the season count of the participant query.</summary>
     private bool IsInActiveSeason(DateTimeOffsetInterval interval)
-        => ActiveSeason is not null
-            && DateOnly.FromDateTime(interval.From.UtcDateTime) >= ActiveSeason.Period.From
-            && DateOnly.FromDateTime(interval.To.UtcDateTime) <= ActiveSeason.Period.To;
+        => SeasonWindow.Of(ActiveSeason, Region) is { } season && interval.From >= season.Start && interval.To <= season.End;
 
-    private static async Task<List<ParticipantInfo>> LoadParticipants(AppDbContext context, Club currentClub, int playModeId, List<int> players, int userId, bool mayBookForAnyMember, int excludedBookingId, CancellationToken cancellationToken)
+    /// <summary>
+    /// The active season as moments: from the start of its first local day to the end of its last local day in the club.
+    /// A booking counts for the season when it lies in between.
+    /// </summary>
+    private sealed record SeasonWindow(DateTimeOffset Start, DateTimeOffset End)
+    {
+        public static SeasonWindow? Of(Season? season, ClubRegion region)
+            => season is null
+                ? null
+                : new SeasonWindow(region.StartOfDay(season.Period.From).ToUniversalTime(), region.StartOfDay(season.Period.To.AddDays(1)).ToUniversalTime());
+    }
+
+    private static async Task<List<ParticipantInfo>> LoadParticipants(AppDbContext context, Club currentClub, DateOnly today, SeasonWindow? activeSeason, int playModeId, List<int> players, int userId, bool mayBookForAnyMember, int excludedBookingId, CancellationToken cancellationToken)
     {
         var childAgeThreshold = currentClub.PrimeTimeSettings.ChildAgeThreshold;
         var clubId = currentClub.Id;
+
+        // Without an active season no booking counts for the season limit
+        var hasSeason = activeSeason is not null;
+        var seasonStart = activeSeason?.Start ?? DateTimeOffset.UnixEpoch;
+        var seasonEnd = activeSeason?.End ?? DateTimeOffset.UnixEpoch;
 
         var localParticipants = await (
             from member in context.Set<Member>()
             join user in context.Users on member.UserId equals user.Id
 
-            let isChild = user.Birthday.AddYears(childAgeThreshold) > DateOnly.FromDateTime(DateTime.UtcNow)
+            let isChild = user.Birthday.AddYears(childAgeThreshold) > today
 
             let upcomingBookingsCount = (
                 from bookingPlayer in context.BookingPlayers
@@ -221,11 +242,7 @@ internal sealed class BookingContextBuilder
                 from bookingPlayer in context.BookingPlayers
                 where bookingPlayer.MemberId == member.Id && bookingPlayer.Booking.PlayModeId == playModeId
                     && bookingPlayer.Booking.Id != excludedBookingId
-                join season in context.Seasons on clubId equals season.ClubId
-                let today = DateOnly.FromDateTime(DateTime.UtcNow)
-                where season.Period.From <= today && today <= season.Period.To
-                where DateOnly.FromDateTime(bookingPlayer.Booking.Interval.From.DateTime) >= season.Period.From
-                    && DateOnly.FromDateTime(bookingPlayer.Booking.Interval.To.DateTime) <= season.Period.To
+                where hasSeason && bookingPlayer.Booking.Interval.From >= seasonStart && bookingPlayer.Booking.Interval.To <= seasonEnd
                 select bookingPlayer.Id
             ).Count()
 
@@ -264,7 +281,7 @@ internal sealed class BookingContextBuilder
                 join user in context.Users on member.UserId equals user.Id
                 join club in context.Clubs.IgnoreQueryFilters() on member.ClubId equals club.Id
 
-                let isChild = user.Birthday.AddYears(childAgeThreshold) > DateOnly.FromDateTime(DateTime.UtcNow)
+                let isChild = user.Birthday.AddYears(childAgeThreshold) > today
 
                 let upcomingBookingsCount = (
                     from bookingPlayer in context.BookingPlayers
@@ -278,11 +295,7 @@ internal sealed class BookingContextBuilder
                     from bookingPlayer in context.BookingPlayers
                     where bookingPlayer.MemberId == member.Id && bookingPlayer.Booking.PlayModeId == playModeId
                     && bookingPlayer.Booking.Id != excludedBookingId
-                    join season in context.Seasons on clubId equals season.ClubId
-                    let today = DateOnly.FromDateTime(DateTime.UtcNow)
-                    where season.Period.From <= today && today <= season.Period.To
-                    where DateOnly.FromDateTime(bookingPlayer.Booking.Interval.From.DateTime) >= season.Period.From
-                        && DateOnly.FromDateTime(bookingPlayer.Booking.Interval.To.DateTime) <= season.Period.To
+                    where hasSeason && bookingPlayer.Booking.Interval.From >= seasonStart && bookingPlayer.Booking.Interval.To <= seasonEnd
                     select bookingPlayer.Id
                 ).Count()
 
@@ -353,8 +366,7 @@ internal sealed class BookingContextBuilder
                select new PlayerBooking(
                    bookingPlayer.MemberId,
                    bookingPlayer.Booking.Interval.From,
-                   bookingPlayer.Booking.Interval.To,
-                   bookingPlayer.Booking.Interval.To.Date);
+                   bookingPlayer.Booking.Interval.To);
     }
 
     private sealed record ParticipantInfo
@@ -368,8 +380,8 @@ internal sealed class BookingContextBuilder
         public required bool IsFromAtpClub { get; init; }
     }
 
-    /// <summary>A booking of a player; <c>EndDate</c> is the date of its end as the database calculates it.</summary>
-    private sealed record PlayerBooking(int MemberId, DateTimeOffset From, DateTimeOffset To, DateTime EndDate)
+    /// <summary>A booking of a player; its day is the local day of the club on which it ends.</summary>
+    private sealed record PlayerBooking(int MemberId, DateTimeOffset From, DateTimeOffset To)
     {
         public DateTimeOffsetInterval Interval => new(From, To.ToOffset(From.Offset));
     }

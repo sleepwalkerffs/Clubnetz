@@ -1,6 +1,8 @@
-using Bookennis.Api.Business.Admin;
+﻿using Bookennis.Api.Business.Admin;
 using Bookennis.Api.Tests.TestUtils;
+using Bookennis.Domain.Clubhouse;
 using Bookennis.Domain.Clubs;
+using Bookennis.Domain.Exceptions;
 using Bookennis.Global.Intervals;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +34,64 @@ public class UpdateAdminClubTests(TestFixture fixture) : TestBase(fixture)
         club.PrimeTimeSettings.ApplicableWeekdays.Should().BeEquivalentTo([DayOfWeek.Monday, DayOfWeek.Wednesday]);
         club.PrimeTimeSettings.RestrictChildren.Should().BeTrue();
         club.PrimeTimeSettings.RestrictGuests.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task UpdateAdminClub_SetsTheRegion_AndKeepsItWhenTheRequestHasNone()
+    {
+        var clubId = Query(ctx => ctx.TestData().Club.Id);
+        SetTenantId(0);
+        var club = await QueryAsync(ctx => ctx.Clubs.AsNoTracking().SingleAsync(c => c.Id == clubId));
+        var prime = club.PrimeTimeSettings.PrimeTimeHours;
+
+        await SendAsync(new UpdateAdminClub(clubId, club.Name, club.OpeningHours, prime, club.PrimeTimeSettings, null, false,
+            Domain.User.Country.UnitedStates, "America/New_York", club.Currency));
+        // An older client sends no region: the club keeps it
+        await SendAsync(new UpdateAdminClub(clubId, club.Name, club.OpeningHours, prime, club.PrimeTimeSettings, null, false));
+
+        var updated = await QueryAsync(ctx => ctx.Clubs.AsNoTracking().SingleAsync(c => c.Id == clubId));
+        updated.Country.Should().Be(Domain.User.Country.UnitedStates);
+        updated.TimeZoneId.Should().Be("America/New_York");
+    }
+
+    [Theory]
+    [InlineData("Eastern Standard Time")] // a Windows id: the app in the browser can't use it
+    [InlineData("Asia/Tokyo")] // not a supported zone
+    [InlineData("Mars/Olympus")]
+    public async Task UpdateAdminClub_RefusesTimeZonesOutsideTheSupportedOnes(string timeZoneId)
+    {
+        var clubId = Query(ctx => ctx.TestData().Club.Id);
+        SetTenantId(0);
+        var club = await QueryAsync(ctx => ctx.Clubs.AsNoTracking().SingleAsync(c => c.Id == clubId));
+
+        var act = () => SendAsync(new UpdateAdminClub(clubId, club.Name, club.OpeningHours, club.PrimeTimeSettings.PrimeTimeHours, club.PrimeTimeSettings, null, false,
+            TimeZoneId: timeZoneId));
+
+        (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(Club.RegionErrorCode.ClubInvalidTimeZone));
+    }
+
+    [Fact]
+    public async Task UpdateAdminClub_CurrencyCanChangeOnlyWhileTheClubHasNoPrices()
+    {
+        var clubId = Query(ctx => ctx.TestData().Club.Id);
+        SetTenantId(0);
+        var club = await QueryAsync(ctx => ctx.Clubs.AsNoTracking().SingleAsync(c => c.Id == clubId));
+        Task Change(string currency) => SendAsync(new UpdateAdminClub(clubId, club.Name, club.OpeningHours, club.PrimeTimeSettings.PrimeTimeHours, club.PrimeTimeSettings, null, false,
+            Currency: currency));
+
+        await Change("usd");
+        (await QueryAsync(ctx => ctx.Clubs.AsNoTracking().SingleAsync(c => c.Id == clubId))).Currency.Should().Be("usd");
+
+        await QueryAsync(async ctx =>
+        {
+            ctx.ClubhouseItems.Add(new ClubhouseItem(clubId, new ClubhouseItem.ItemData("Lemonade", ClubhouseItemCategory.Drink, 300, true, 0), "usd"));
+            return await ctx.SaveChangesAsync();
+        });
+
+        var act = () => Change("eur");
+
+        (await act.Should().ThrowAsync<PreconditionException>()).Which.ErrorCode.Should().Be(nameof(Club.RegionErrorCode.ClubCurrencyInUse));
+        (await QueryAsync(ctx => ctx.Clubs.AsNoTracking().SingleAsync(c => c.Id == clubId))).Currency.Should().Be("usd");
     }
 
     [Fact]

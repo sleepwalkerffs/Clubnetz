@@ -18,7 +18,7 @@ public record GetClubAnnouncements(int ClubId, bool CanManage, bool IncludeExpir
     {
         public async Task<GetClubAnnouncementsResult> Handle(GetClubAnnouncements request, CancellationToken cancellationToken)
         {
-            var today = ClubAnnouncementMapper.Today;
+            var today = await ClubAnnouncementMapper.GetToday(context, request.ClubId, cancellationToken);
             var take = Math.Clamp(request.Take ?? MaxCount, 1, MaxCount);
 
             var query = context.ClubAnnouncements.Where(a => a.ClubId == request.ClubId);

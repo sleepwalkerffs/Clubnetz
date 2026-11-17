@@ -174,9 +174,20 @@ function pad(value) {
     return String(value).padStart(2, '0');
 }
 
+// In the club's time zone and clock (sent by .NET), whatever the browser's are: "08:30" / "8:30 AM"
 function formatTime(ms) {
-    const date = new Date(ms);
-    return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    const data = state.data;
+    try {
+        return new Intl.DateTimeFormat(data.hour12 ? 'en-US' : 'de-AT', {
+            hour: data.hour12 ? 'numeric' : '2-digit',
+            minute: '2-digit',
+            hour12: data.hour12,
+            timeZone: data.timeZone,
+        }).format(new Date(ms));
+    } catch {
+        const date = new Date(ms);
+        return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
 }
 
 function formatRange(from, to) {

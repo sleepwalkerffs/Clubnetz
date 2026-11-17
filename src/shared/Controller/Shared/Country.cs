@@ -4,5 +4,6 @@ public enum Country
 {
     Austria,
     Germany,
-    Switzerland
+    Switzerland,
+    UnitedStates
 }

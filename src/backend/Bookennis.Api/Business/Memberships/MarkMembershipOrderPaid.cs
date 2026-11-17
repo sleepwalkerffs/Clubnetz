@@ -1,5 +1,6 @@
 using Bookennis.Api.Business.ClubEvents;
 using Bookennis.Api.Business.Payments;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Memberships;
@@ -31,9 +32,9 @@ public record MarkMembershipOrderPaid(int ClubId, int UserId, int MembershipOrde
                 await MembershipPayments.SetMembers(context, order, request.MemberIds, cancellationToken);
 
             if (order.IsFree)
-                order.ConfirmFree(MembershipPayments.PaidAt(request.PaidOn));
+                order.ConfirmFree(MembershipPayments.PaidAt(request.PaidOn, await context.GetClubToday(request.ClubId, cancellationToken)));
             else
-                order.MarkPaid(MembershipPayments.ManualMethod(request.Method), MembershipPayments.PaidAt(request.PaidOn), treasurerMemberId);
+                order.MarkPaid(MembershipPayments.ManualMethod(request.Method), MembershipPayments.PaidAt(request.PaidOn, await context.GetClubToday(request.ClubId, cancellationToken)), treasurerMemberId);
 
             if (request.Note is not null)
                 order.SetNote(request.Note);
@@ -84,10 +85,12 @@ public static class MembershipPayments
     public static MembershipPaymentMethod ManualMethod(MembershipPaymentMethod method)
         => method == MembershipPaymentMethod.Online ? MembershipPaymentMethod.Other : method;
 
-    /// <summary>The day the money arrived, at noon so it stays that day in the time zone of the club. No day or a day in the future is now.</summary>
-    public static DateTimeOffset PaidAt(DateOnly paidOn)
+    /// <summary>
+    /// The day the money arrived, at noon UTC so it stays that day in the time zone of the club (Europe and the United States).
+    /// No day or a day from <paramref name="today"/> (the local day of the club) on is now.
+    /// </summary>
+    public static DateTimeOffset PaidAt(DateOnly paidOn, DateOnly today)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
         if (paidOn == default || paidOn >= today)
             return DateTimeOffset.UtcNow;
 

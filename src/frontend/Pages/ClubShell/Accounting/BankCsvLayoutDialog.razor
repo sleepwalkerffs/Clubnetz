@@ -46,7 +46,7 @@
                 <ColumnSelect Label="@L["Csv_Marker"]" Hint="@L["Csv_MarkerHint"]" Names="@Names" @bind-Value="marker" />
             }
             <ColumnSelect Label="@L["Csv_Name"]" Names="@Names" @bind-Value="name" />
-            <ColumnSelect Label="@L["Csv_Iban"]" Names="@Names" @bind-Value="iban" />
+            <ColumnSelect Label="@L[AccountingHelpers.Regional("Csv_Iban")]" Names="@Names" @bind-Value="iban" />
         </div>
 
         <MudSelect T="int" Label="@L["Csv_Reference"]" HelperText="@L["Csv_ReferenceHint"]" MultiSelection="true" @bind-SelectedValues="references" Variant="Variant.Outlined" Margin="Margin.Dense"
@@ -138,7 +138,8 @@
         return Task.FromResult<DialogResult?>(DialogResult.Ok(new CsvColumnsDto
         {
             SkipRows = skipRows,
-            Delimiter = Columns?.Delimiter ?? ";",
+            // US banks export with commas, Austrian ones with semicolons
+            Delimiter = Columns?.Delimiter ?? (AccountingHelpers.IsUnitedStates ? "," : ";"),
             BookingDate = bookingDate!.Value,
             ValueDate = valueDate,
             Amount = splitAmount ? null : amount,

@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Localization.Pages.Statistics
 @using Bookennis.Global
@@ -14,9 +15,9 @@
         @for (var dayIndex = 0; dayIndex < 7; dayIndex++)
         {
             <div class="calendar-weekday">@(dayIndex % 2 == 0 ? GetWeekdayLabel(dayIndex) : "")</div>
-            @foreach (var monday in weeks)
+            @foreach (var weekStart in weeks)
             {
-                var date = monday.AddDays(dayIndex);
+                var date = weekStart.AddDays(dayIndex);
                 if (date < From || date > To)
                 {
                     <div class="calendar-cell calendar-cell--outside"></div>
@@ -58,7 +59,10 @@
 
     protected override void OnParametersSet()
     {
-        weeks = CalendarWeeks.Between(From, To).Select(w => w.Monday).ToList();
+        // The weeks start on the club's first day of the week (Sunday in the United States)
+        weeks = [];
+        for (var weekStart = RegionalCulture.Current.StartOfWeek(From); weekStart <= To; weekStart = weekStart.AddDays(7))
+            weeks.Add(weekStart);
         countsByDate = Days
             .Where(d => d.Date >= From && d.Date <= To)
             .ToDictionary(d => d.Date, d => d.Count);
@@ -68,23 +72,23 @@
 
     private string GetMonthLabel(int weekIndex)
     {
-        var monday = weeks[weekIndex];
-        var firstVisibleDay = monday < From ? From : monday;
-        var sunday = monday.AddDays(6);
+        var weekStart = weeks[weekIndex];
+        var firstVisibleDay = weekStart < From ? From : weekStart;
+        var weekEnd = weekStart.AddDays(6);
 
         // Label the column in which a month starts (or the first column)
         var showLabel = weekIndex == 0
             ? firstVisibleDay.Day <= 21
-            : sunday.Day <= 7;
+            : weekEnd.Day <= 7;
 
         if (!showLabel)
             return "";
 
-        var monthDate = weekIndex == 0 ? firstVisibleDay : new DateOnly(sunday.Year, sunday.Month, 1);
+        var monthDate = weekIndex == 0 ? firstVisibleDay : new DateOnly(weekEnd.Year, weekEnd.Month, 1);
         return CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(monthDate.Month);
     }
 
-    // dayIndex 0 = Monday
+    // dayIndex 0 = the club's first day of the week
     private static string GetWeekdayLabel(int dayIndex)
-        => CultureInfo.CurrentCulture.DateTimeFormat.GetShortestDayName((DayOfWeek)((dayIndex + 1) % 7));
+        => CultureInfo.CurrentCulture.DateTimeFormat.GetShortestDayName(RegionalCulture.Current.WeekDays[dayIndex]);
 }

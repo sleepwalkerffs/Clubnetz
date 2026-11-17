@@ -174,7 +174,7 @@ public class GetSeasonWrappedTests(TestFixture fixture) : TestBase(fixture)
         ctx.AddRange(new MemberSeason(TestDataSeed.Member1Id, season.Id), new MemberSeason(TestDataSeed.Member2Id, season.Id), new MemberSeason(partner.Id, season.Id));
 
         var firstTuesday = NextOrSame(SeasonStart, DayOfWeek.Tuesday);
-        var series = new RecurringBookingSeries(club.Id, TestDataSeed.Court1Id, playModeId, DayOfWeek.Tuesday, new TimeOnly(19, 0), new TimeOnly(20, 0), TimeZoneInfo.Utc.Id, 1, firstTuesday, SeasonEnd, null, [TestDataSeed.Member1Id, partner.Id]);
+        var series = new RecurringBookingSeries(club.Id, TestDataSeed.Court1Id, playModeId, DayOfWeek.Tuesday, new TimeOnly(19, 0), new TimeOnly(20, 0), ClubTimeZone.DefaultId, 1, firstTuesday, SeasonEnd, null, [TestDataSeed.Member1Id, partner.Id]);
         ctx.Add(series);
         await ctx.SaveChangesAsync();
 
@@ -206,8 +206,8 @@ public class GetSeasonWrappedTests(TestFixture fixture) : TestBase(fixture)
 
     private static void AddBooking(AppDbContext ctx, int clubId, int courtId, int playModeId, DateOnly date, int hour, int? seriesId, params int[] memberIds)
     {
-        var from = new DateTimeOffset(date.ToDateTime(new TimeOnly(hour, 0)), TimeSpan.Zero);
-        ctx.Add(new Booking(clubId, courtId, playModeId, new DateTimeOffsetInterval(from, from.AddHours(1)), TimeZoneInfo.Utc.Id, [.. memberIds], recurringBookingSeriesId: seriesId));
+        var from = ClubTimeZone.At(date, new TimeOnly(hour, 0), ClubTimeZone.Default).ToUniversalTime(); // local hours of the club
+        ctx.Add(new Booking(clubId, courtId, playModeId, new DateTimeOffsetInterval(from, from.AddHours(1)), ClubTimeZone.DefaultId, [.. memberIds], recurringBookingSeriesId: seriesId));
     }
 
     private static async Task<ClubMember> AddClubMember(AppDbContext ctx, int clubId, string firstName, string lastName)

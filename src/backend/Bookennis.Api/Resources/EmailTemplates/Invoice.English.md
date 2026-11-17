@@ -7,10 +7,12 @@ please find attached our invoice **{{ invoice.number }}**{% if invoice.subject %
 - **Amount:** {{ invoice.amount }}
 - **Invoice date:** {{ invoice.date }}
 - **Due:** {{ invoice.due_date }}
-- **IBAN:** {{ invoice.iban }}
-- **Reference:** {{ invoice.number }}
+{% if invoice.iban %}- **IBAN:** {{ invoice.iban }}
+{% else %}- **Account number:** {{ invoice.account_number }}
+- **Routing number:** {{ invoice.routing_number }}
+{% endif %}- **Reference:** {{ invoice.number }}
 
-The QR code on the invoice lets you pay with your banking app.
+{% if invoice.qr_code %}The QR code on the invoice lets you pay with your banking app.{% else %}Please pay to the account on the invoice and give the invoice number as reference.{% endif %}
 
 Thank you!
 

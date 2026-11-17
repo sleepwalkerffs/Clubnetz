@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,9 @@ public record ExportSubscriptionPlan(int ClubId, int SubscriptionPlanId) : IQuer
             var plan = await context.SubscriptionPlans.AsNoTracking().GetPlanWithDetails(request.ClubId, request.SubscriptionPlanId, cancellationToken);
             var dto = SubscriptionPlanMapper.ToDto(plan);
 
-            var data = new SubscriptionPlanExcelExporter(languageAccessor.GetCultureInfo()).Export(dto);
+            // Dates as the club writes them
+            var culture = (await context.GetClubRegion(request.ClubId, cancellationToken)).Culture(languageAccessor.GetCultureInfo());
+            var data = new SubscriptionPlanExcelExporter(culture).Export(dto);
 
             return new ExportSubscriptionPlanResult(data, $"{ToFileName(dto.Name)}.xlsx");
         }

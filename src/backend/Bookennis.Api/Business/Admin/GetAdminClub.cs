@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Shared.Controller.Admin;
 using Bookennis.Shared.Controller.Booking.Shared;
@@ -13,14 +14,14 @@ public record GetAdminClub(int ClubId) : IQuery<AdminClubDetailResult>
     {
         public async Task<AdminClubDetailResult> Handle(GetAdminClub request, CancellationToken cancellationToken)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
             var club = await context.Clubs
                 .Include(c => c.PlayModes)
                 .Include(c => c.Seasons)
                 .AsNoTracking()
                 .SingleOrDefaultAsync(c => c.Id == request.ClubId, cancellationToken) ?? throw new EntityNotFoundException(typeof(Domain.Clubs.Club), request.ClubId);
 
+            // The active season is the one of the local day of the club
+            var today = ClubRegion.Of(club).Today();
             var now = DateTimeOffset.UtcNow;
             var since = now.AddDays(-AdminClubQueryExtensions.ActivityDays);
             var admins = await context.GetClubAdmins(club.Id, cancellationToken);
@@ -48,6 +49,9 @@ public record GetAdminClub(int ClubId) : IQuery<AdminClubDetailResult>
                 BookingGracePeriodInMinutes = club.BookingGracePeriodInMinutes,
                 ConcurrentAllowedBookings = club.ConcurrentAllowedBookings,
                 IsAtpClub = club.IsAtpClub,
+                TimeZoneId = club.TimeZoneId,
+                Country = (Country)club.Country,
+                Currency = club.Currency,
                 PlayModes = club.PlayModes.OrderBy(p => p.Id).Select(p => new PlayModeDto
                 {
                     Id = p.Id,

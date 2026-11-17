@@ -1379,6 +1379,10 @@ namespace Bookennis.Api.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "MoneyAccounts_Id_Sequence");
 
+                    b.Property<string>("AccountNumber")
+                        .HasMaxLength(17)
+                        .HasColumnType("character varying(17)");
+
                     b.Property<int>("ClubId")
                         .HasColumnType("integer");
 
@@ -1396,6 +1400,10 @@ namespace Bookennis.Api.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
+
+                    b.Property<string>("RoutingNumber")
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
@@ -2249,6 +2257,14 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("ConcurrentAllowedBookings")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Country")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
                     b.Property<bool>("HasCustomPermissions")
                         .HasColumnType("boolean");
 
@@ -2270,6 +2286,11 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<string>("ReplyToEmail")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("WebsiteUrl")
                         .HasMaxLength(500)

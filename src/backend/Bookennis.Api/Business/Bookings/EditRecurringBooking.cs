@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using Bookennis.Api.Business.CourtBlockings;
 using Bookennis.Api.Business.CourtSales;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Bookings;
+using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Members;
 using Bookennis.Global.Intervals;
@@ -13,11 +15,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Bookings;
 
+/// <remarks><c>TimeZoneInfoId</c>: Ignored: the series is planned in the club's time zone (<c>Club.TimeZoneId</c>).</remarks>
 public record EditRecurringBooking(
     [Required] int BookingEntryId,
     [Required] int CourtId,
     [Required] DateTimeOffsetInterval Interval,
-    [Required] string TimeZoneInfoId,
+    string? TimeZoneInfoId,
     [Required] int PlayModeId,
     [Required] List<int> Players,
     [Required] RecurringEditScope Scope,
@@ -71,7 +74,7 @@ public record EditRecurringBooking(
             var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, [], cancellationToken)
                 with { SkipPastBookingValidation = hasElevatedRole };
 
-            bookingService.EditBooking(bookingContext, booking, request.Interval, request.TimeZoneInfoId, request.Comment);
+            bookingService.EditBooking(bookingContext, booking, request.Interval, builder.Region.TimeZoneId, request.Comment);
             booking.ExcludeFromSeries();
 
             await context.SaveChangesAsync(cancellationToken);
@@ -88,7 +91,9 @@ public record EditRecurringBooking(
                 .Include(s => s.SeriesPlayers)
                 .SingleAsync(s => s.Id == booking.RecurringBookingSeriesId, cancellationToken);
 
-            var tz = TimeZoneInfo.FindSystemTimeZoneById(request.TimeZoneInfoId);
+            // The series is planned in the club's time zone, never the browser's
+            var region = await context.GetClubRegion(series.ClubId, cancellationToken);
+            var tz = region.TimeZone;
             // The date the member picked: moving the occurrence to another day moves the series to that weekday
             var editFromDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(request.Interval.From.UtcDateTime, tz));
 
@@ -122,7 +127,7 @@ public record EditRecurringBooking(
             var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, [], cancellationToken)
                 with { SkipPastBookingValidation = hasElevatedRole };
 
-            bookingService.EditBooking(bookingContext, booking, request.Interval, request.TimeZoneInfoId, request.Comment);
+            bookingService.EditBooking(bookingContext, booking, request.Interval, builder.Region.TimeZoneId, request.Comment);
 
             // Update series template
             var newStartTime = TimeOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(request.Interval.From.UtcDateTime, tz));
@@ -135,7 +140,7 @@ public record EditRecurringBooking(
                 editFromDate.DayOfWeek,
                 newStartTime,
                 newEndTime,
-                request.TimeZoneInfoId,
+                region.TimeZoneId,
                 newIntervalWeeks,
                 editFromDate,
                 request.EndDate ?? series.EndDate,
@@ -145,7 +150,7 @@ public record EditRecurringBooking(
             await context.SaveChangesAsync(cancellationToken);
 
             // Determine end date for regeneration
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = region.Today();
             var activeSeason = await context.Seasons
                 .Where(s => s.ClubId == series.ClubId && s.Period.From <= today && today <= s.Period.To)
                 .AsNoTracking()
@@ -160,13 +165,13 @@ public record EditRecurringBooking(
 
             while (current <= seriesEndDate)
             {
-                var occurrenceStart = new DateTimeOffset(current.ToDateTime(newStartTime), tz.GetUtcOffset(current.ToDateTime(newStartTime)));
+                var occurrenceStart = ClubTimeZone.At(current, newStartTime, tz);
                 var occurrenceEnd = occurrenceStart.Add(duration);
                 var occurrenceInterval = new DateTimeOffsetInterval(occurrenceStart.ToUniversalTime(), occurrenceEnd.ToUniversalTime());
 
                 // Skip dates where an individually edited (excluded) booking from this series exists
-                var dayStart = new DateTimeOffset(current.ToDateTime(TimeOnly.MinValue), tz.GetUtcOffset(current.ToDateTime(TimeOnly.MinValue))).ToUniversalTime();
-                var dayEnd = dayStart.AddDays(1);
+                var dayStart = region.StartOfDay(current).ToUniversalTime();
+                var dayEnd = region.StartOfDay(current.AddDays(1)).ToUniversalTime();
                 var hasExcludedBooking = await context.Bookings
                     .AnyAsync(b => b.IsExcludedFromSeries
                         && b.RecurringBookingSeriesId == series.Id
@@ -202,7 +207,7 @@ public record EditRecurringBooking(
                     request.CourtId,
                     request.PlayModeId,
                     occurrenceInterval,
-                    request.TimeZoneInfoId,
+                    region.TimeZoneId,
                     request.Players,
                     request.Comment,
                     series.Id);

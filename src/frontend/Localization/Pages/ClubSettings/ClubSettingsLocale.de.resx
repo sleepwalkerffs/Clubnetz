@@ -493,4 +493,22 @@
   <data name="SaveDespiteCourtConflicts" xml:space="preserve">
     <value>Trotzdem speichern</value>
   </data>
+  <data name="RegionTitle" xml:space="preserve">
+    <value>Region</value>
+  </data>
+  <data name="RegionSubtitle" xml:space="preserve">
+    <value>Zeitzone, Land und Währung des Vereins</value>
+  </data>
+  <data name="RegionHint" xml:space="preserve">
+    <value>Uhrzeiten in der App richten sich nach der Zeitzone des Vereins, Datum und Beträge nach Land und Währung. Für eine Änderung wende dich bitte an den Clubnetz-Support.</value>
+  </data>
+  <data name="BookingsPerWeek" xml:space="preserve">
+    <value>Buchungen pro Woche</value>
+  </data>
+  <data name="BookingsPerWeekHint" xml:space="preserve">
+    <value>Wie viele offene Buchungen ein Mitglied gleichzeitig haben darf. Gilt für alle Mitglieder, eigene Werte auf der Mitgliederseite können nur niedriger sein.</value>
+  </data>
+  <data name="PerWeek" xml:space="preserve">
+    <value>pro Woche</value>
+  </data>
 </root>

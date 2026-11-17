@@ -1,4 +1,3 @@
-using System.Globalization;
 using Bookennis.Api.Business.ClubEvents;
 using Bookennis.Api.Business.Payments.Stripe;
 using Bookennis.Api.Data;
@@ -10,6 +9,7 @@ using Bookennis.Domain.CourtSales;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Memberships;
 using Bookennis.Shared.Controller.Accounting;
+using Bookennis.Shared.Utils;
 using Fusonic.Extensions.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using AccountingAutomationMode = Bookennis.Domain.Accounting.AccountingAutomationMode;
@@ -62,7 +62,7 @@ public record UpdateAccountingAutomation(int ClubId, SaveAccountingAutomationMod
                 throw new Fusonic.Extensions.Common.Entities.EntityNotFoundException(typeof(AccountingCategory));
 
             var existing = await context.AccountingSourceSettings.Where(s => s.ClubId == request.ClubId).ToListAsync(cancellationToken);
-            var today = AccountingQueries.Today(request.Now);
+            var today = (await context.GetAccountingRegion(request.ClubId, cancellationToken)).Today(request.Now);
             foreach (var input in model.Sources.DistinctBy(s => s.Source))
             {
                 var source = (AccountingSource)input.Source;
@@ -127,7 +127,8 @@ public record SyncAccountingProposals(int ClubId, DateTimeOffset Now) : ICommand
             var settings = await context.GetAccountingSettings(request.ClubId, cancellationToken);
             var sources = await context.AccountingSourceSettings.Where(s => s.ClubId == request.ClubId && s.Mode != AccountingAutomationMode.Off).ToListAsync(cancellationToken);
 
-            var collector = new AccountingProposalCollector(context, stripeGateway, settings, request.Now);
+            var region = await context.GetAccountingRegion(request.ClubId, cancellationToken);
+            var collector = new AccountingProposalCollector(context, stripeGateway, settings, region, request.Now);
             var candidates = new List<(AccountingSource Source, string Key, AccountingProposal.ProposalData Data)>();
             var stripeFailed = false;
             foreach (var source in sources)
@@ -326,13 +327,16 @@ internal static class AccountingAutomationMapper
 }
 
 /// <summary>Turns what was paid in Clubnetz into suggested entries, per source. Pure reading: the caller adds what is new.</summary>
-internal sealed class AccountingProposalCollector(AppDbContext context, IStripeGateway stripeGateway, AccountingSettings settings, DateTimeOffset now)
+internal sealed class AccountingProposalCollector(AppDbContext context, IStripeGateway stripeGateway, AccountingSettings settings, AccountingRegion region, DateTimeOffset now)
 {
     /// <summary>Stripe is asked at most this far back (its fees and payouts of older days were collected before).</summary>
     private const int StripeOverlapDays = 3;
 
-    private readonly DateOnly today = AccountingQueries.Today(now);
+    private readonly DateOnly today = region.Today(now);
     private bool German => settings.GermanTexts;
+
+    /// <summary>The texts of the entries write dates and times the way the club does (24-hour clock in Austria, 12-hour clock in the US).</summary>
+    private RegionalCulture Culture => region.Culture(German);
 
     public sealed record Candidate(string Key, AccountingProposal.ProposalData Data);
 
@@ -345,12 +349,11 @@ internal sealed class AccountingProposalCollector(AppDbContext context, IStripeG
         _ => Task.FromResult(new List<Candidate>()),
     };
 
-    private static DateTimeOffset StartOfDay(DateOnly date)
-        => new(TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(TimeOnly.MinValue), ClubTimeZone.Instance), TimeSpan.Zero);
+    private DateTimeOffset StartOfDay(DateOnly date) => region.StartOfDay(date);
 
-    private static DateOnly LocalDate(DateTimeOffset value) => DateOnly.FromDateTime(ClubTimeZone.ToLocal(value));
+    private DateOnly LocalDate(DateTimeOffset value) => region.LocalDate(value);
 
-    private static string Date(DateOnly date) => date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
+    private string Date(DateOnly date) => Culture.Date(date);
 
     // ---------- membership fees ----------
 
@@ -414,8 +417,8 @@ internal sealed class AccountingProposalCollector(AppDbContext context, IStripeG
         foreach (var purchase in purchases)
         {
             var member = purchase.MemberId is { } memberId ? names.GetValueOrDefault(memberId) : null;
-            var start = ClubTimeZone.ToLocal(purchase.Interval.From);
-            var text = $"{(German ? "Platzbuchung" : "Court booking")} {purchase.CourtName} {start.ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)}";
+            var start = region.LocalTime(purchase.Interval.From);
+            var text = $"{(German ? "Platzbuchung" : "Court booking")} {purchase.CourtName} {Culture.DateAndTime(start)}";
             candidates.Add(new Candidate(AccountingProposal.Key("court-purchase", purchase.Id),
                 new AccountingProposal.ProposalData(LocalDate(purchase.PaidAt!.Value), text, AccountingEntryKind.Booking, account, null, source.CategoryId, purchase.AmountDueCents, purchase.MemberId, member)));
 

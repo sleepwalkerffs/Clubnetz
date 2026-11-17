@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Resources;
 using Bookennis.Domain.Accounting;
 using Bookennis.Shared.Controller.Accounting;
+using Bookennis.Shared.Utils;
 using SkiaSharp;
 using static Bookennis.Api.Business.Accounting.PdfKit;
 using AccountingCategoryKind = Bookennis.Shared.Controller.Accounting.AccountingCategoryKind;
@@ -23,20 +24,26 @@ public record AnnualReportPdfData(
     DateOnly Created);
 
 /// <summary>
-/// Draws the annual report of a fiscal year for the general meeting as an A4 PDF, in the style of the invoice: the income/expense statement
-/// (Einnahmen-Ausgaben-Rechnung) by tax sphere next to the year before, the money accounts (Vermögensübersicht) and the audit.
-/// The texts come from the resources of the Excel export, in the language of the request.
+/// Draws the annual report of a fiscal year for the general meeting as a PDF (A4, US Letter for US clubs), in the style of the invoice: the
+/// income/expense statement (Einnahmen-Ausgaben-Rechnung) by tax sphere (a US club has none: one list) next to the year before, the money
+/// accounts (Vermögensübersicht) and the audit. The texts come from the resources of the Excel export, in the language of the request; dates
+/// and amounts in the formats and currency of the club (<paramref name="region"/>).
 /// </summary>
-public class AnnualReportPdf(CultureInfo culture)
+public class AnnualReportPdf(CultureInfo culture, AccountingRegion region)
 {
     private static readonly ResourceManager Resources = new("Bookennis.Api.Resources.Localization.Export.Accounting", typeof(AnnualReportPdf).Assembly);
 
-    private const float ContentBottom = PageHeight - 70;
     private const float RowHeight = 16;
 
-    // Austrian formats in both languages: the amounts are euros (en-GB would print pounds)
-    private readonly CultureInfo format = CultureInfo.GetCultureInfo(culture.TwoLetterISOLanguageName == "de" ? "de-AT" : "en-AT");
+    private readonly PdfPaper paper = PdfPaper.For(region.IsUnitedStates);
+    private float ContentBottom => paper.Height - 70;
+    private float PageWidth => paper.Width;
+    private float PageHeight => paper.Height;
+    private float Right => paper.Right;
+
+    private AccountingRegion Region => region;
     private bool German => culture.TwoLetterISOLanguageName == "de";
+    private readonly RegionalCulture format = region.Culture(culture.TwoLetterISOLanguageName == "de");
 
     public string FileName(FiscalYear year) => $"{T("AnnualReport")} {year.Label.Replace('/', '-')}.pdf";
 
@@ -52,7 +59,7 @@ public class AnnualReportPdf(CultureInfo culture)
 
     private string T(string key) => Resources.GetString(key, culture) ?? key;
 
-    private string Money(long cents) => cents < 0 ? "−" + (-cents / 100m).ToString("C", format) : (cents / 100m).ToString("C", format);
+    private string Money(long cents) => cents < 0 ? "−" + format.Money(-cents) : format.Money(cents);
 
     private string Signed(long cents) => cents switch
     {
@@ -61,7 +68,8 @@ public class AnnualReportPdf(CultureInfo culture)
         _ => Money(0),
     };
 
-    private string Day(DateOnly date) => date.ToString(German ? "dd.MM.yyyy" : "d MMM yyyy", format);
+    // Austria keeps "16.11.2026" in German and "16 Nov 2026" in English; the US "Nov 16, 2026"
+    private string Day(DateOnly date) => date.ToString(German && !region.IsUnitedStates ? "dd.MM.yyyy" : format.DayMonthNameYearPattern, format);
 
     /// <summary>One pass over the pages: without a document it only counts them.</summary>
     private sealed class Drawing(AnnualReportPdf pdf, AnnualReportPdfData data, SKDocument? document, int pageCount)
@@ -88,6 +96,14 @@ public class AnnualReportPdf(CultureInfo culture)
         }
 
         private string T(string key) => pdf.T(key);
+
+        private float PageWidth => pdf.PageWidth;
+        private float PageHeight => pdf.PageHeight;
+        private float Right => pdf.Right;
+        private float ContentBottom => pdf.ContentBottom;
+
+        private void Rule(SKCanvas target, float atY, float left = Margin, float? right = null, SKColor? color = null)
+            => PdfKit.Rule(target, atY, left, right ?? Right, color);
 
         // ---------- pages ----------
 
@@ -186,9 +202,9 @@ public class AnnualReportPdf(CultureInfo culture)
             const float colNumber = Margin;
             const float colName = Margin + 38;
             var colCurrent = hasPrevious ? Right - 100 : Right;
-            const float colPrevious = Right;
+            var colPrevious = Right;
 
-            SectionTitle(T("SheetIncomeStatement"), T("IncomeStatementHint"));
+            SectionTitle(T("SheetIncomeStatement"), T(pdf.Region.IsUnitedStates ? "IncomeStatementHintNoSpheres" : "IncomeStatementHint"));
             if (statement.Spheres.Count == 0)
             {
                 Text(canvas, T("NoEntries"), Margin, y + 4, 10, color: Muted);
@@ -217,17 +233,29 @@ public class AnnualReportPdf(CultureInfo culture)
 
             tableHeader = Header;
             Header();
-            foreach (var sphere in statement.Spheres)
+            // A US club has no tax spheres: one list of income and expenses, without the result of each sphere
+            var showSpheres = !pdf.Region.IsUnitedStates;
+            IEnumerable<(IncomeStatementSphereDto? Sphere, IReadOnlyList<IncomeStatementCategoryDto> Lines)> groups = showSpheres
+                ? statement.Spheres.Select(s => ((IncomeStatementSphereDto?)s, (IReadOnlyList<IncomeStatementCategoryDto>)s.Categories))
+                : [(null, statement.Spheres.SelectMany(s => s.Categories).ToList())];
+            foreach (var (sphere, sphereLines) in groups)
             {
-                // The name of the area stays with its first line
-                Need(RowHeight * 2 + 6);
-                y += 4;
-                Text(canvas, T($"Sphere_{sphere.TaxSphere}"), colNumber, y, 10, bold: true, Ink);
-                y += RowHeight;
+                if (sphere is not null)
+                {
+                    // The name of the area stays with its first line
+                    Need(RowHeight * 2 + 6);
+                    y += 4;
+                    Text(canvas, T($"Sphere_{sphere.TaxSphere}"), colNumber, y, 10, bold: true, Ink);
+                    y += RowHeight;
+                }
 
                 foreach (var kind in new[] { AccountingCategoryKind.Income, AccountingCategoryKind.Expense })
                 {
-                    foreach (var line in sphere.Categories.Where(c => c.Kind == kind))
+                    // Without spheres the categories of all spheres are sorted again: by number, then name
+                    var kindLines = sphereLines.Where(c => c.Kind == kind);
+                    if (sphere is null)
+                        kindLines = kindLines.OrderBy(c => data.Categories[c.CategoryId].Number is null).ThenBy(c => data.Categories[c.CategoryId].Number, StringComparer.Ordinal).ThenBy(c => data.Categories[c.CategoryId].Name, StringComparer.CurrentCulture);
+                    foreach (var line in kindLines)
                     {
                         var category = data.Categories[line.CategoryId];
                         var name = Wrap(category.Name, colCurrent - colName - 110, 10, bold: false);
@@ -242,6 +270,12 @@ public class AnnualReportPdf(CultureInfo culture)
                         }
                         y += 2;
                     }
+                }
+
+                if (sphere is null)
+                {
+                    y += 4;
+                    continue;
                 }
 
                 Need(RowHeight + 4);
@@ -304,7 +338,9 @@ public class AnnualReportPdf(CultureInfo culture)
             {
                 var account = data.Accounts[balance.MoneyAccountId];
                 var name = Wrap(account.Name, nameWidth, 10, bold: false);
-                var iban = account.Iban is { } value ? IbanNumber.Format(value) : null;
+                // The IBAN, or the last digits of a US account (the report is shown at the general meeting)
+                var iban = account.Iban is { } value ? IbanNumber.Format(value)
+                    : account.AccountNumber is { } number ? $"{pdf.T("AccountNumber")} {UsBankAccount.Masked(number)}" : null;
                 // The last account keeps the total with it
                 Need(name.Count * 13 + (iban is null ? 0 : 11) + 4 + (balance == last ? 30 : 0));
 
@@ -348,7 +384,7 @@ public class AnnualReportPdf(CultureInfo culture)
                 return;
 
             var lines = new List<(string Text, bool Muted)>();
-            var date = pdf.Day(AccountingQueries.Today(auditedAt));
+            var date = pdf.Day(pdf.Region.Today(auditedAt));
             foreach (var part in Wrap(string.Format(pdf.format, T("AuditedBy"), data.AuditedByName ?? "—", date), Right - Margin - 28, 10, bold: false))
                 lines.Add((part, false));
             if (year.AuditComment is { } comment)

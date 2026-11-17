@@ -157,7 +157,7 @@ delete from "AccountingReceiptContents";
 delete from "AccountingReceipts";
 update "FiscalYears" set "AuditComment" = null where "AuditComment" is not null;
 -- Clubs name accounts and cost centers after people ("Sparbuch Max Muster", "Training Huber").
-update "MoneyAccounts" set "Iban" = null, "Name" = 'Konto ' || "Id";
+update "MoneyAccounts" set "Iban" = null, "AccountNumber" = null, "RoutingNumber" = null, "Name" = 'Konto ' || "Id";
 update "CostCenters" set "Name" = 'Kostenstelle ' || "Id";
 -- Suggested entries and bank statements carry who paid, their IBANs and what they wrote; rules look for names.
 update "AccountingProposals" set

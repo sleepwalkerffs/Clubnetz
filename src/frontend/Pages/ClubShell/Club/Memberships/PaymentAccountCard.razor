@@ -9,7 +9,7 @@
 
 @implements IDisposable
 
-<SectionCard Emoji="💳" Title="@L["Account_Title"]" Subtitle="@L["Account_Subtitle"]">
+<SectionCard Emoji="💳" Title="@L["Account_Title"]" Subtitle="@L[Regional("Account_Subtitle")]">
     <ChildContent>
         @if (Store.Account is not { } account)
         {
@@ -34,7 +34,7 @@
                     <div class="pay-state__text">@L["Account_NotConnectedText"]</div>
                     <ul class="pay-state__list">
                         <li>@L["Account_Fact_Direct"]</li>
-                        <li>@L["Account_Fact_Methods"]</li>
+                        <li>@L[Regional("Account_Fact_Methods")]</li>
                         <li>@L["Account_Fact_Fees"]</li>
                     </ul>
                     @if (CanConnect)
@@ -44,6 +44,7 @@
                                 <MudSelectItem T="Country" Value="Country.Austria">@SharedLocale["Austria"]</MudSelectItem>
                                 <MudSelectItem T="Country" Value="Country.Germany">@SharedLocale["Germany"]</MudSelectItem>
                                 <MudSelectItem T="Country" Value="Country.Switzerland">@SharedLocale["Switzerland"]</MudSelectItem>
+                                <MudSelectItem T="Country" Value="Country.UnitedStates">@SharedLocale["UnitedStates"]</MudSelectItem>
                             </MudSelect>
                             <LoadButton Variant="Variant.Filled" Color="Color.Primary" Loading="@Store.IsSaving" OnClick="Connect">@L["Account_Connect"]</LoadButton>
                         </div>
@@ -126,12 +127,17 @@
     [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
 
     private Country country = Country.Austria;
+
+    // A US club gets no SEPA direct debit: the texts about payment methods say so
+    private string Regional(string key) => ClubProfileStore.SelectedClub?.Country == Country.UnitedStates ? key + "_Us" : key;
     private bool linkExpired;
 
     private bool CanConnect => MembershipHelpers.CanConnectPayments(ClubProfileStore.Roles);
 
     protected override async Task OnInitializedAsync()
     {
+        // A new payment account is opened in the club's country by default
+        country = ClubProfileStore.SelectedClub?.Country ?? Country.Austria;
         Store.OnAccountChanged += OnChanged;
         await Store.LoadAccount();
 

@@ -14,6 +14,16 @@ public record GetClubProfileResult
     /// </summary>
     public bool IsSupportMode { get; set; }
 
+    /// <summary>IANA id of the club's time zone: the app shows every time in it, whatever the device's time zone.</summary>
+    public string TimeZoneId { get; set; } = "Europe/Vienna";
+
+    /// <summary>The country of the club: how dates, times and amounts are written.</summary>
+    public Country Country { get; set; }
+
+    /// <summary>ISO 4217 code in lower case, e.g. "eur" or "usd".</summary>
+    public string Currency { get; set; } = "eur";
+
+
     /// <summary>
     /// The member may see the other members: enrolled in the active season, a parent of an enrolled child, a staff role (anything but
     /// User), or support mode. Members who are not active see the booking calendar anonymized and have no leaderboard,

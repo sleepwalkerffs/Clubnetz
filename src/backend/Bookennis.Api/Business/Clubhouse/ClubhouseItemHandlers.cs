@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubhouse;
 using Bookennis.Shared.Controller.Clubhouse;
@@ -30,7 +31,8 @@ public record CreateClubhouseItem(int ClubId, SaveClubhouseItemModel Model) : IC
     {
         public async Task<ClubhouseItemDto> Handle(CreateClubhouseItem request, CancellationToken cancellationToken)
         {
-            var item = new ClubhouseItem(request.ClubId, request.Model.ToData());
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
+            var item = new ClubhouseItem(request.ClubId, request.Model.ToData(), region.Currency);
             context.ClubhouseItems.Add(item);
             await context.SaveChangesAsync(cancellationToken);
             return item.ToDto();

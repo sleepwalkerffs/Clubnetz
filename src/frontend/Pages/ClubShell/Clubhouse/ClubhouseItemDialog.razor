@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Components.Shared.Dialogs
 @using Bookennis.Client.Localization
@@ -14,7 +15,7 @@
         <MudTextField T="string" @bind-Value="name" Immediate="true" Label="@L["Item_Name"]" Placeholder="@L["Item_NamePlaceholder"]" MaxLength="60" AutoFocus="@(Item is null)"
                       Variant="Variant.Outlined" />
 
-        <MudNumericField T="decimal?" @bind-Value="price" Immediate="true" Label="@L["Item_Price"]" Min="@(0m)" Max="@(1000m)" Step="@(0.1m)" Format="N2" Adornment="Adornment.Start" AdornmentText="€"
+        <MudNumericField T="decimal?" @bind-Value="price" Immediate="true" Label="@L["Item_Price"]" Min="@(0m)" Max="@(1000m)" Step="@(0.1m)" Format="N2" Adornment="Adornment.Start" AdornmentText="@RegionalCulture.CurrencySymbol(RegionalCulture.Current.Currency)"
                          Variant="Variant.Outlined" HideSpinButtons="true" InputMode="@(InputMode.@decimal)" />
 
         <ChoiceChips TItem="ClubhouseItemCategory" Items="@ClubhouseHelpers.Categories" @bind-Value="category" Label="@L["Item_Category"]"

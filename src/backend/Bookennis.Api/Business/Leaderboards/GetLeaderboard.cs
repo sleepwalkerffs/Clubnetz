@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Members;
 using Bookennis.Shared.Controller.Leaderboards;
@@ -92,14 +93,15 @@ public record GetLeaderboard(int UserId) : IQuery<GetLeaderboardResult>
                     return new MemberInfo(m.FirstName, m.LastName, m.UserId, m.HasProfilePicture, badgeImageUrl, badge?.Level);
                 });
 
+            // A season lasts from the start of its first to the end of its last local day of the club
+            var region = await context.GetTenantRegion(cancellationToken);
             var seasonRanges = seasons.ToDictionary(
                 s => s.Id,
-                s => (From: new DateTimeOffset(s.Period.From.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero),
-                      To: new DateTimeOffset(s.Period.To.ToDateTime(TimeOnly.MaxValue), TimeSpan.Zero)));
+                s => (From: region.StartOfDay(s.Period.From), To: region.StartOfDay(s.Period.To.AddDays(1))));
 
             bookings = bookings.ConvertAll(b => b with
             {
-                SeasonId = seasons.FirstOrDefault(season => b.From >= seasonRanges[season.Id].From && b.From <= seasonRanges[season.Id].To)?.Id,
+                SeasonId = seasons.FirstOrDefault(season => b.From >= seasonRanges[season.Id].From && b.From < seasonRanges[season.Id].To)?.Id,
             });
 
             var seasonLeaderboards = new List<SeasonLeaderboardResult>();

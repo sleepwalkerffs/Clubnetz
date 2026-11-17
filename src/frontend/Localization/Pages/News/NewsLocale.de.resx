@@ -90,9 +90,6 @@
   <data name="Yesterday" xml:space="preserve">
     <value>Gestern</value>
   </data>
-  <data name="DateFormat" xml:space="preserve">
-    <value>d. MMM yyyy</value>
-  </data>
   <data name="MyClubNewsSubtitle" xml:space="preserve">
     <value>Das Neueste aus deinem Verein</value>
   </data>

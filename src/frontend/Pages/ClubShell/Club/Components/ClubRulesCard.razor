@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Components.Shared.Buttons
@@ -18,9 +19,9 @@
         <section class="rules__group">
             <h3 class="rules__title">🕗 @L["OpeningHours"]</h3>
             <div class="rules__row">
-                <MudTimePicker Label="@L["From"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["From"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
                                Time="@openingFrom" TimeChanged="@(value => { openingFrom = value; errors = []; })" Margin="Margin.Dense" />
-                <MudTimePicker Label="@L["To"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["To"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
                                Time="@openingTo" TimeChanged="@(value => { openingTo = value; errors = []; })" Margin="Margin.Dense" />
             </div>
         </section>
@@ -29,6 +30,12 @@
             <h3 class="rules__title">⏳ @L["GracePeriod"]</h3>
             <p class="rules__hint">@L["GracePeriodHint"]</p>
             <NumberStepper Value="@(gracePeriod ?? 0)" ValueChanged="@(value => gracePeriod = value)" Min="0" Max="30" Unit="@L["Minutes"]" Label="@L["GracePeriod"]" />
+        </section>
+
+        <section class="rules__group">
+            <h3 class="rules__title">🎾 @L["BookingsPerWeek"]</h3>
+            <p class="rules__hint">@L["BookingsPerWeekHint"]</p>
+            <NumberStepper @bind-Value="bookingsPerWeek" Min="@MinBookingsPerWeek" Max="@MaxBookingsPerWeek" Unit="@L["PerWeek"]" Label="@L["BookingsPerWeek"]" />
         </section>
 
         <section class="rules__group rules__group--wide">
@@ -42,13 +49,13 @@
             @if (primeTimeEnabled)
             {
                 <div class="rules__row">
-                    <MudTimePicker Label="@L["From"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                    <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["From"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
                                    Time="@primeFrom" TimeChanged="@(value => { primeFrom = value; errors = []; })" Margin="Margin.Dense" />
-                    <MudTimePicker Label="@L["To"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
+                    <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Label="@L["To"]" TimeEditMode="TimeEditMode.OnlyHours" Required="true" PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined"
                                    Time="@primeTo" TimeChanged="@(value => { primeTo = value; errors = []; })" Margin="Margin.Dense" />
                 </div>
 
-                <MultiChoiceChips TItem="DayOfWeek" Label="@L["PrimeTimeWeekdays"]" Items="@WeekdaysMondayFirst" Values="@weekdays"
+                <MultiChoiceChips TItem="DayOfWeek" Label="@L["PrimeTimeWeekdays"]" Items="@RegionalCulture.Current.WeekDays" Values="@weekdays"
                                   ValuesChanged="@(values => weekdays = values.ToList())" TextFunc="@(day => CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedDayName(day))"
                                   ColorFunc="@(_ => "#D97706")" />
 
@@ -105,14 +112,12 @@
     [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
     [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
 
-    private static readonly DayOfWeek[] WeekdaysMondayFirst =
-        [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday];
-
     private TimeSpan? openingFrom;
     private TimeSpan? openingTo;
     private TimeSpan? primeFrom;
     private TimeSpan? primeTo;
     private int? gracePeriod;
+    private int bookingsPerWeek;
     private bool primeTimeEnabled;
     private List<DayOfWeek> weekdays = [];
     private bool restrictChildren;
@@ -129,6 +134,7 @@
            || primeFrom != Details.PrimeTimeSettings.PrimeTimeHours.From.ToTimeSpan()
            || primeTo != Details.PrimeTimeSettings.PrimeTimeHours.To.ToTimeSpan()
            || gracePeriod != Details.BookingGracePeriodInMinutes && !(gracePeriod == 0 && Details.BookingGracePeriodInMinutes is null)
+           || bookingsPerWeek != Details.BookingsPerWeek
            || primeTimeEnabled != Details.PrimeTimeSettings.IsEnabled
            || !weekdays.Order().SequenceEqual(Details.PrimeTimeSettings.ApplicableWeekdays.Order())
            || restrictChildren != Details.PrimeTimeSettings.RestrictChildren
@@ -144,6 +150,7 @@
         primeFrom = Details.PrimeTimeSettings.PrimeTimeHours.From.ToTimeSpan();
         primeTo = Details.PrimeTimeSettings.PrimeTimeHours.To.ToTimeSpan();
         gracePeriod = Details.BookingGracePeriodInMinutes;
+        bookingsPerWeek = Details.BookingsPerWeek;
         primeTimeEnabled = Details.PrimeTimeSettings.IsEnabled;
         weekdays = Details.PrimeTimeSettings.ApplicableWeekdays.ToList();
         restrictChildren = Details.PrimeTimeSettings.RestrictChildren;
@@ -151,6 +158,10 @@
         childAgeThreshold = Details.PrimeTimeSettings.ChildAgeThreshold;
         errors = [];
     }
+
+    // Same bounds as Club.SetBookingsPerWeek on the server
+    private const int MinBookingsPerWeek = 1;
+    private const int MaxBookingsPerWeek = 50;
 
     private static double Hours(TimeSpan? value) => value?.TotalHours ?? 0;
 
@@ -197,6 +208,7 @@
                     ChildAgeThreshold = childAgeThreshold,
                 },
                 BookingGracePeriodInMinutes = gracePeriod,
+                BookingsPerWeek = bookingsPerWeek,
             });
 
             if (!result.Success)

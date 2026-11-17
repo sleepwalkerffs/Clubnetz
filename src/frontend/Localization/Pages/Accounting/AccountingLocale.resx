@@ -1213,4 +1213,71 @@
   <data name="Automation_NoProvider" xml:space="preserve">
     <value>Add a money account of the kind “payment provider” under Setup first.</value>
   </data>
+  <data name="SetUp_Subtitle_Us" xml:space="preserve">
+    <value>Income and expenses and an overview of the money accounts, for the board and the annual meeting</value>
+  </data>
+  <data name="SetUp_Point_Categories_Us" xml:space="preserve">
+    <value>The usual categories of a US tennis club are ready: dues, court and guest fees, lessons, USTA fees and more.</value>
+  </data>
+  <data name="Report_IncomeStatementHint_Us" xml:space="preserve">
+    <value>Income and expenses by category, next to the year before</value>
+  </data>
+  <data name="Categories_Subtitle_Us" xml:space="preserve">
+    <value>What money comes in and goes out for</value>
+  </data>
+  <data name="Invoices_SetUpText_Us" xml:space="preserve">
+    <value>To sponsors, for lessons or tournaments: as PDF, sent by email, paid with one click or by the bank import. First enter the club's details once.</value>
+  </data>
+  <data name="Accounts_NamePlaceholder_Us" xml:space="preserve">
+    <value>e.g. Checking account</value>
+  </data>
+  <data name="Accounts_AccountNumber" xml:space="preserve">
+    <value>Account number</value>
+  </data>
+  <data name="Accounts_AccountNumberHint" xml:space="preserve">
+    <value>4 to 17 digits</value>
+  </data>
+  <data name="Accounts_RoutingNumber" xml:space="preserve">
+    <value>Routing number</value>
+  </data>
+  <data name="Accounts_RoutingNumberHint" xml:space="preserve">
+    <value>9 digits (ABA), on your checks</value>
+  </data>
+  <data name="InvoiceSettings_AddressPlaceholder_Us" xml:space="preserve">
+    <value>123 Main Street
+Ashburn, VA 20147</value>
+  </data>
+  <data name="InvoiceSettings_Zvr_Us" xml:space="preserve">
+    <value>EIN</value>
+  </data>
+  <data name="InvoiceSettings_ZvrHint_Us" xml:space="preserve">
+    <value>Employer Identification Number, e.g. 12-3456789</value>
+  </data>
+  <data name="InvoiceSettings_ContactPlaceholder" xml:space="preserve">
+    <value>kassier@tc-beispiel.at · tc-beispiel.at</value>
+  </data>
+  <data name="InvoiceSettings_ContactPlaceholder_Us" xml:space="preserve">
+    <value>treasurer@tennisclub.org · tennisclub.org</value>
+  </data>
+  <data name="InvoiceSettings_AccountHint_Us" xml:space="preserve">
+    <value>Its account and routing number are printed on the invoice</value>
+  </data>
+  <data name="InvoiceSettings_FooterHint_Us" xml:space="preserve">
+    <value>E.g. a thank-you or a note about the club's tax status.</value>
+  </data>
+  <data name="InvoiceSettings_FooterDefault_Us" xml:space="preserve">
+    <value>Thank you for supporting our club!</value>
+  </data>
+  <data name="Bank_Subtitle_Us" xml:space="preserve">
+    <value>Import the CSV export of your online banking and match each line with its entry</value>
+  </data>
+  <data name="Csv_Iban_Us" xml:space="preserve">
+    <value>Account number of the other party</value>
+  </data>
+  <data name="Rules_MatchIban_Us" xml:space="preserve">
+    <value>Account number of the other party</value>
+  </data>
+  <data name="Rules_Hint_Us" xml:space="preserve">
+    <value>A line a rule fits gets its category with one click, e.g. “USTA” → USTA and league fees.</value>
+  </data>
 </root>

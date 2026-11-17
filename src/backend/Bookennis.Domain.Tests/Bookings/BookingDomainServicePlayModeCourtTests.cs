@@ -72,7 +72,7 @@ public class BookingDomainServicePlayModeCourtTests
             date = date.AddDays(1);
 
         var local = date.ToDateTime(new TimeOnly(10, 0));
-        var from = new DateTimeOffset(local, ClubTimeZone.Instance.GetUtcOffset(local));
+        var from = new DateTimeOffset(local, ClubTimeZone.Default.GetUtcOffset(local));
         return new DateTimeOffsetInterval(from, from.AddHours(1));
     }
 
@@ -100,6 +100,7 @@ public class BookingDomainServicePlayModeCourtTests
         return new BookingDomainService.Context
         {
             ClubId = 1,
+            TimeZone = Bookennis.Domain.Clubs.ClubTimeZone.Default,
             Court = court,
             OpeningHours = new TimeOnlyInterval(new TimeOnly(7, 0), new TimeOnly(22, 0)),
             PrimeTimeSettings = new PrimeTimeSettings(

@@ -1,11 +1,11 @@
-using Bookennis.Api.Business.Statistics;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Global.Intervals;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Wrapped;
 
-/// <summary>A booking of the club as the Wrapped sees it: in the local time of the booking, with its players.</summary>
+/// <summary>A booking of the club as the Wrapped sees it: in the local time of the club, with its players.</summary>
 internal sealed record WrappedBooking(int Id, DateTime From, double DurationHours, int CourtId, int? RecurringBookingSeriesId, IReadOnlyList<int> PlayerIds)
 {
     public DateOnly Date => DateOnly.FromDateTime(From);
@@ -30,7 +30,7 @@ internal static class WrappedBookings
 
         var rows = await context.Bookings
             .Where(b => b.ClubId == clubId && chargingPlayModeIds.Contains(b.PlayModeId) && b.Interval.From >= from && b.Interval.From < to)
-            .Select(b => new { b.Id, b.Interval.From, b.Interval.To, b.TimeZoneInfoId, b.CourtId, b.RecurringBookingSeriesId })
+            .Select(b => new { b.Id, b.Interval.From, b.Interval.To, b.CourtId, b.RecurringBookingSeriesId })
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
@@ -41,11 +41,11 @@ internal static class WrappedBookings
                 .ToListAsync(cancellationToken))
             .ToLookup(bp => bp.BookingEntryId, bp => bp.MemberId);
 
-        var localTime = new LocalTimeConverter();
+        var region = await context.GetClubRegion(clubId, cancellationToken);
         return rows
             .Select(r => new WrappedBooking(
                 r.Id,
-                localTime.ToLocal(r.From, r.TimeZoneInfoId),
+                region.ToLocal(r.From),
                 (r.To - r.From).TotalHours,
                 r.CourtId,
                 r.RecurringBookingSeriesId,

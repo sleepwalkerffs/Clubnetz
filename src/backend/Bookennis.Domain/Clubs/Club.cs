@@ -1,7 +1,9 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 using Bookennis.Domain.Base;
+using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Members;
+using Bookennis.Domain.User;
 using Bookennis.Domain.Weather;
 using Bookennis.Global;
 using Bookennis.Global.Intervals;
@@ -44,7 +46,28 @@ public class Club : DomainEntity, IAggregateRoot
     }
 
     public string Name { get; private set; }
+
+    /// <summary>
+    /// Bookings per week: how many upcoming bookings in charging play modes a member may have at the same time.
+    /// Applies to every member without an own value (<see cref="Member.BookingsPerWeek"/>) and is the upper bound of the own values.
+    /// </summary>
     public int ConcurrentAllowedBookings { get; private set; } = ConcurrentAllowedBookingsForNewClubs;
+
+    public const int MinBookingsPerWeek = 1;
+    public const int MaxBookingsPerWeek = 50;
+
+    public enum BookingsPerWeekErrorCode
+    {
+        ClubInvalidBookingsPerWeek = 0,
+    }
+
+    public void SetBookingsPerWeek(int bookingsPerWeek)
+    {
+        if (bookingsPerWeek is < MinBookingsPerWeek or > MaxBookingsPerWeek)
+            throw new PreconditionException(BookingsPerWeekErrorCode.ClubInvalidBookingsPerWeek, [MinBookingsPerWeek.ToString(), MaxBookingsPerWeek.ToString()],
+                $"Bookings per week must be between {MinBookingsPerWeek} and {MaxBookingsPerWeek}.");
+        ConcurrentAllowedBookings = bookingsPerWeek;
+    }
     public TimeOnlyInterval OpeningHours { get; private set; }
     public IReadOnlyList<PlayMode> PlayModes => playModes.AsReadOnly();
     public IReadOnlyList<Season> Seasons => seasons.AsReadOnly();
@@ -80,6 +103,48 @@ public class Club : DomainEntity, IAggregateRoot
     }
 
     public void SetIsAtpClub(bool isAtpClub) => IsAtpClub = isAtpClub;
+
+    /// <summary>IANA id of the club's time zone: opening hours, prime time, club events and "today" are local times of it.</summary>
+    public string TimeZoneId { get; private set; } = ClubTimeZone.DefaultId;
+
+    /// <summary>The country of the club: how dates, times and amounts are written (12-hour clock in the United States) and where its Stripe account is.</summary>
+    public Country Country { get; private set; } = Country.Austria;
+
+    /// <summary>ISO 4217 code in lower case ("eur", "usd", "chf"): what membership plans, court time and the clubhouse charge, and the currency of the accounting.</summary>
+    public string Currency { get; private set; } = DefaultCurrency;
+
+    public const string DefaultCurrency = "eur";
+    public static readonly IReadOnlyList<string> SupportedCurrencies = ["eur", "usd", "chf"];
+
+    public TimeZoneInfo TimeZone => ClubTimeZone.Get(TimeZoneId);
+
+    public enum RegionErrorCode
+    {
+        ClubInvalidTimeZone = 0,
+        ClubUnsupportedCurrency = 1,
+        ClubUnknownCountry = 2,
+
+        /// <summary>The club has prices, payments or accounting in its currency: changing it would charge old prices in the new currency.</summary>
+        ClubCurrencyInUse = 3,
+    }
+
+    /// <summary>Where the club is. Prices that were set before keep the currency they were set in.</summary>
+    public void SetRegion(Country country, string timeZoneId, string currency)
+    {
+        currency = currency.Trim().ToLowerInvariant();
+        timeZoneId = timeZoneId.Trim();
+        // A club keeps a zone it already has; a new one must be one of the supported zones
+        if (!ClubTimeZone.IsValid(timeZoneId) || (timeZoneId != TimeZoneId && !ClubTimeZone.Supported.Contains(timeZoneId)))
+            throw new PreconditionException(RegionErrorCode.ClubInvalidTimeZone, "Unknown time zone.");
+        if (!SupportedCurrencies.Contains(currency))
+            throw new PreconditionException(RegionErrorCode.ClubUnsupportedCurrency, "Unsupported currency.");
+        if (!Enum.IsDefined(country))
+            throw new PreconditionException(RegionErrorCode.ClubUnknownCountry, "Unknown country.");
+
+        Country = country;
+        TimeZoneId = timeZoneId;
+        Currency = currency;
+    }
 
     public void UpdateWorkingHours(TimeOnlyInterval openingHours, TimeOnlyInterval primeTimeHours)
     {

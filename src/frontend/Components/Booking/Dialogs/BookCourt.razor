@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Components.Weather
@@ -55,11 +56,11 @@
         <div>
             <div class="book-court__label">@Locale["When"]</div>
             <div class="book-court__times">
-                <MudTimePicker Time="Time" TimeChanged="OnStartTimeChanged" Variant="Variant.Outlined" Label=@Locale["StartTime"]
+                <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" Time="Time" TimeChanged="OnStartTimeChanged" Variant="Variant.Outlined" Label=@Locale["StartTime"]
                                MinuteSelectionStep="30" AdornmentIcon="@Icons.Material.Filled.Schedule" />
                 @if (!selectedPlayMode.FixedDuration.HasValue)
                 {
-                    <MudTimePicker @bind-Time="EndTime" Variant="Variant.Outlined" Label=@Locale["EndTime"] MinuteSelectionStep="30"
+                    <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" @bind-Time="EndTime" Variant="Variant.Outlined" Label=@Locale["EndTime"] MinuteSelectionStep="30"
                                    Disabled="@EntireDay" AdornmentIcon="@Icons.Material.Filled.Schedule" />
                 }
             </div>
@@ -216,7 +217,7 @@
 
     private string SummaryTime => Time is null
         ? "–"
-        : $"{Time.Value:hh\\:mm} – {(EffectiveEnd is { } end ? end.ToString(@"hh\:mm") : "…")}";
+        : $"{RegionalCulture.Current.Time(Time.Value)} – {(EffectiveEnd is { } end ? RegionalCulture.Current.Time(end) : "…")}";
 
     private TimeSpan? SelectedPreset => SummaryDuration is { } duration && DurationPresets.Contains(duration) ? duration : null;
 

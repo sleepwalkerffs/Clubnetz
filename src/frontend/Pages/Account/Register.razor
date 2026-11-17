@@ -50,7 +50,7 @@ else
                             <MudSelectItem T="int" Value="1">@SharedLocale["Mrs"].</MudSelectItem>
                             <MudSelectItem T="int" Value="2">@SharedLocale["None"]</MudSelectItem>
                         </MudSelect>
-                        <MudDatePicker PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" Label=@SharedLocale["Birthday"] @bind-Date="model.Birthday" For="(() => model.Birthday)" DateFormat="dd.MM.yyyy" />
+                        <MudDatePicker PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" Label=@SharedLocale["Birthday"] @bind-Date="model.Birthday" For="(() => model.Birthday)" />
                     </div>
                 </div>
 
@@ -103,6 +103,7 @@ else
                                         <MudSelectItem T="int" Value="0">@SharedLocale["Austria"]</MudSelectItem>
                                         <MudSelectItem T="int" Value="1">@SharedLocale["Germany"]</MudSelectItem>
                                         <MudSelectItem T="int" Value="2">@SharedLocale["Switzerland"]</MudSelectItem>
+                                        <MudSelectItem T="int" Value="3">@SharedLocale["UnitedStates"]</MudSelectItem>
                                     </MudSelect>
                                 </div>
                             </div>

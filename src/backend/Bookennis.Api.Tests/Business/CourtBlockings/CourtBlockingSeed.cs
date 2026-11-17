@@ -1,6 +1,7 @@
 using Bookennis.Api.Data;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Bookings;
+using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Courts;
 using Bookennis.Global.Intervals;
 
@@ -12,7 +13,7 @@ internal static class CourtBlockingSeed
 
     public static readonly DateOnly Day = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(10);
 
-    /// <summary>Blocks court 1 on <see cref="Day"/> from 10:00 to 14:00 (UTC).</summary>
+    /// <summary>Blocks court 1 on <see cref="Day"/> from 10:00 to 14:00 (local times of the club, Vienna).</summary>
     public static CourtBlocking.BlockingData Data(DateOnly? day = null, IReadOnlyCollection<int>? courtIds = null) => new(
         Title,
         courtIds ?? [TestDataSeed.Court1Id],
@@ -20,7 +21,7 @@ internal static class CourtBlockingSeed
         day ?? Day,
         new TimeOnly(10, 0),
         new TimeOnly(14, 0),
-        TimeZoneInfo.Utc.Id,
+        ClubTimeZone.DefaultId,
         null,
         null);
 
@@ -32,19 +33,21 @@ internal static class CourtBlockingSeed
         return blocking;
     }
 
-    /// <summary>A one hour booking of member 1 (UTC).</summary>
+    /// <summary>A one hour booking of member 1 (local hours of the club).</summary>
     public static async Task<Booking> SeedBooking(AppDbContext context, DateOnly day, int hour, int courtId = TestDataSeed.Court1Id)
     {
         var playModeId = context.TestData().Club.PlayModes[0].Id;
-        var booking = new Booking(TestDataSeed.ClubId, courtId, playModeId, At(day, hour, hour + 1), TimeZoneInfo.Utc.Id, [TestDataSeed.Member1Id]);
+        var booking = new Booking(TestDataSeed.ClubId, courtId, playModeId, At(day, hour, hour + 1), ClubTimeZone.DefaultId, [TestDataSeed.Member1Id]);
         context.Bookings.Add(booking);
         await context.SaveChangesAsync();
         return booking;
     }
 
+    /// <summary>The local day of the club (Vienna), in UTC.</summary>
     public static DateTimeOffsetInterval AllDay(DateOnly day)
-        => new(new DateTimeOffset(day.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero), new DateTimeOffset(day.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero));
+        => new(ClubTimeZone.StartOfDay(day, ClubTimeZone.Default).ToUniversalTime(), ClubTimeZone.StartOfDay(day.AddDays(1), ClubTimeZone.Default).ToUniversalTime());
 
+    /// <summary>Local hours of the club (Vienna), in UTC.</summary>
     public static DateTimeOffsetInterval At(DateOnly day, int fromHour, int toHour)
-        => new(new DateTimeOffset(day.ToDateTime(new TimeOnly(fromHour, 0)), TimeSpan.Zero), new DateTimeOffset(day.ToDateTime(new TimeOnly(toHour, 0)), TimeSpan.Zero));
+        => new(ClubTimeZone.At(day, new TimeOnly(fromHour, 0), ClubTimeZone.Default).ToUniversalTime(), ClubTimeZone.At(day, new TimeOnly(toHour, 0), ClubTimeZone.Default).ToUniversalTime());
 }

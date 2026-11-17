@@ -31,3 +31,25 @@ App.theme = {
   const isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   App.theme.apply(isDark);
 })();
+
+// The time zone and formats of the last club opened on this device (Services/ClubRegion/ClubRegion.cs).
+// Read synchronously when the app starts, so pages don't show the device's time zone until the club profile has loaded.
+App.clubRegion = {
+  storageKey: 'clubnetz-club-region',
+
+  get: function () {
+    try {
+      return localStorage.getItem(App.clubRegion.storageKey);
+    } catch {
+      return null;
+    }
+  },
+
+  set: function (value) {
+    try {
+      localStorage.setItem(App.clubRegion.storageKey, value);
+    } catch {
+      // Storage blocked (e.g. private mode) - the club profile sets the region again on the next start
+    }
+  }
+};

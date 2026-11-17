@@ -88,7 +88,7 @@ else
                     <div class="admin-fields">
                         <MudTextField @bind-Value="firstName" Label="@SharedLocale["Firstname"]" Required="true" Variant="Variant.Outlined" />
                         <MudTextField @bind-Value="lastName" Label="@SharedLocale["Lastname"]" Required="true" Variant="Variant.Outlined" />
-                        <MudDatePicker @bind-Date="birthday" Label="@SharedLocale["Birthday"]" Variant="Variant.Outlined" PickerVariant="PickerVariant.Dialog" DateFormat="dd.MM.yyyy" />
+                        <MudDatePicker @bind-Date="birthday" Label="@SharedLocale["Birthday"]" Variant="Variant.Outlined" PickerVariant="PickerVariant.Dialog" />
                         <MudSelect T="Gender" @bind-Value="gender" Label="@SharedLocale["Gender"]" Variant="Variant.Outlined">
                             <MudSelectItem T="Gender" Value="Gender.Male">@SharedLocale["Mr"]</MudSelectItem>
                             <MudSelectItem T="Gender" Value="Gender.Female">@SharedLocale["Mrs"]</MudSelectItem>
@@ -104,6 +104,7 @@ else
                                 <MudSelectItem T="Country" Value="Country.Austria">@SharedLocale["Austria"]</MudSelectItem>
                                 <MudSelectItem T="Country" Value="Country.Germany">@SharedLocale["Germany"]</MudSelectItem>
                                 <MudSelectItem T="Country" Value="Country.Switzerland">@SharedLocale["Switzerland"]</MudSelectItem>
+                                <MudSelectItem T="Country" Value="Country.UnitedStates">@SharedLocale["UnitedStates"]</MudSelectItem>
                             </MudSelect>
                         </div>
                     </div>

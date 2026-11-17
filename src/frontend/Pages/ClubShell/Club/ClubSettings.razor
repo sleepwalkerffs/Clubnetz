@@ -7,6 +7,8 @@
 @using Bookennis.Client.Pages.ClubShell.Members.Components
 @using Bookennis.Client.Services.Store.Club
 @using Bookennis.Client.Services.Store.ClubProfile
+@using Bookennis.Client.Utils
+@using Bookennis.Shared.Utils
 
 @implements IDisposable
 
@@ -30,10 +32,10 @@ else
     <div class="club-settings">
         <AdminHero Emoji="🏟️" Eyebrow="@L["Eyebrow"]" Title="@(ClubProfileStore.SelectedClub?.ClubName ?? SharedLocale["Settings"])" Subtitle="@L["Subtitle"]">
             <Chips>
-                <span class="hero-chip">🕗 @details.OpeningHours.From.ToString("HH:mm", CultureInfo.CurrentCulture) – @details.OpeningHours.To.ToString("HH:mm", CultureInfo.CurrentCulture)</span>
+                <span class="hero-chip">🕗 @RegionalCulture.Current.Time(details.OpeningHours.From) – @RegionalCulture.Current.Time(details.OpeningHours.To)</span>
                 @if (prime.IsEnabled)
                 {
-                    <span class="hero-chip">⚡ @string.Format(L["PrimeTimeChip"], prime.PrimeTimeHours.From.ToString("HH:mm", CultureInfo.CurrentCulture), prime.PrimeTimeHours.To.ToString("HH:mm", CultureInfo.CurrentCulture))</span>
+                    <span class="hero-chip">⚡ @string.Format(L["PrimeTimeChip"], RegionalCulture.Current.Time(prime.PrimeTimeHours.From), RegionalCulture.Current.Time(prime.PrimeTimeHours.To))</span>
                 }
                 <span class="hero-chip">🎾 @string.Format(L["CourtsChip"], ClubStore.Courts.Count)</span>
                 @if (closedCourts > 0)
@@ -67,6 +69,7 @@ else
             <a href="@($"/clubs/{ClubId}/profile#courts")">🎾 @L["CourtsTitle"]</a>
             <a href="@($"/clubs/{ClubId}/profile#location")">🌦️ @L["LocationTitle"]</a>
             <a href="@($"/clubs/{ClubId}/profile#playmodes")">🏷️ @L["PlayModesTitle"]</a>
+            <a href="@($"/clubs/{ClubId}/profile#region")">🌍 @L["RegionTitle"]</a>
         </nav>
 
         <MudGrid Spacing="3">
@@ -93,6 +96,29 @@ else
         <div id="playmodes" class="club-settings__anchor">
             <PlayModesCard />
         </div>
+
+        @if (ClubProfileStore.SelectedClub is { } club)
+        {
+            <div id="region" class="club-settings__anchor">
+                <SectionCard Emoji="🌍" Title="@L["RegionTitle"]" Subtitle="@L["RegionSubtitle"]">
+                    <dl class="region">
+                        <div class="region__item">
+                            <dt>@SharedLocale["TimeZone"]</dt>
+                            <dd>@RegionNames.TimeZone(SharedLocale, club.TimeZoneId)</dd>
+                        </div>
+                        <div class="region__item">
+                            <dt>@SharedLocale["Country"]</dt>
+                            <dd>@RegionNames.Country(SharedLocale, club.Country)</dd>
+                        </div>
+                        <div class="region__item">
+                            <dt>@SharedLocale["Currency"]</dt>
+                            <dd>@RegionNames.Currency(SharedLocale, club.Currency)</dd>
+                        </div>
+                    </dl>
+                    <p class="region__hint">ℹ️ @L["RegionHint"]</p>
+                </SectionCard>
+            </div>
+        }
     </div>
 }
 

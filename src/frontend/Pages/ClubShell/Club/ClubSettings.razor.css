@@ -72,3 +72,36 @@
     border-radius: 3px;
     background: #A7F3D0;
 }
+
+.region {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 4px 0 0;
+}
+
+.region__item {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--mud-palette-background-gray);
+}
+
+.region__item dt {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mud-palette-text-secondary);
+}
+
+.region__item dd {
+    margin: 2px 0 0;
+    font-weight: 600;
+    color: var(--mud-palette-text-primary);
+}
+
+.region__hint {
+    margin: 12px 0 0;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}

@@ -96,9 +96,6 @@
   <data name="AllCourts" xml:space="preserve">
     <value>Alle Plätze</value>
   </data>
-  <data name="DateFormat" xml:space="preserve">
-    <value>ddd, d. MMM yyyy</value>
-  </data>
   <data name="RecurringWeekly" xml:space="preserve">
     <value>Jeden {0}</value>
   </data>

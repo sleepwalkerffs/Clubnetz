@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 
 <div class="day-timeline" role="img" aria-label="@Description">
@@ -37,5 +38,5 @@
 
     private static string Pct(double hours) => (Math.Clamp(hours, 0, 24) / 24 * 100).ToString("0.##", CultureInfo.InvariantCulture) + "%";
 
-    private static string Format(double hours) => TimeSpan.FromHours(hours).ToString(@"hh\:mm", CultureInfo.InvariantCulture);
+    private static string Format(double hours) => RegionalCulture.Current.Time(TimeSpan.FromHours(hours));
 }

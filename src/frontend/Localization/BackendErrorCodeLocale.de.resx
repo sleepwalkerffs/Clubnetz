@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -868,7 +868,7 @@
     <value>Gib einen Text mit höchstens {0} Zeichen ein.</value>
   </data>
   <data name="AccountingAmountInvalid" xml:space="preserve">
-    <value>Gib einen Betrag ungleich 0 und höchstens € {0} ein.</value>
+    <value>Gib einen Betrag ungleich 0 und höchstens {0} ein.</value>
   </data>
   <data name="AccountingLinesInvalid" xml:space="preserve">
     <value>Eine Einnahme oder Ausgabe braucht 1 bis {0} Zeilen.</value>
@@ -943,7 +943,7 @@
     <value>Die Bankzeile wurde schon zugeordnet oder ignoriert.</value>
   </data>
   <data name="AccountingBankTransactionAmountMismatch" xml:space="preserve">
-    <value>Die Buchung muss genau € {0} auf diesem Konto buchen.</value>
+    <value>Die Buchung muss genau {0} auf diesem Konto buchen.</value>
   </data>
   <data name="AccountingBankRuleInvalid" xml:space="preserve">
     <value>Eine Regel braucht einen Text oder eine IBAN, nach der sie sucht.</value>
@@ -998,5 +998,29 @@
   </data>
   <data name="PlayModeNotAllowedOnCourt" xml:space="preserve">
     <value>{0} kann auf {1} nicht gebucht werden. Wähle einen anderen Platz oder eine andere Spielart.</value>
+  </data>
+  <data name="ClubInvalidTimeZone" xml:space="preserve">
+    <value>Die Zeitzone ist unbekannt.</value>
+  </data>
+  <data name="ClubUnsupportedCurrency" xml:space="preserve">
+    <value>Diese Währung wird nicht unterstützt.</value>
+  </data>
+  <data name="ClubUnknownCountry" xml:space="preserve">
+    <value>Dieses Land wird nicht unterstützt.</value>
+  </data>
+  <data name="AccountingRoutingNumberInvalid" xml:space="preserve">
+    <value>Das ist keine gültige Routing Number: Sie hat 9 Ziffern, und ein US-Bankkonto braucht Kontonummer und Routing Number.</value>
+  </data>
+  <data name="AccountingAccountNumberInvalid" xml:space="preserve">
+    <value>Die Kontonummer hat {0} bis {1} Ziffern, und ein US-Bankkonto braucht Kontonummer und Routing Number.</value>
+  </data>
+  <data name="AccountingInvoiceAccountWithoutBankDetails" xml:space="preserve">
+    <value>Das Bankkonto für Rechnungen braucht Kontonummer und Routing Number (oder eine IBAN).</value>
+  </data>
+  <data name="ClubCurrencyInUse" xml:space="preserve">
+    <value>Der Verein hat schon Preise, Zahlungen oder eine Buchhaltung in seiner Währung, darum kann die Währung nicht mehr geändert werden.</value>
+  </data>
+  <data name="ClubInvalidBookingsPerWeek" xml:space="preserve">
+    <value>Die Buchungen pro Woche müssen zwischen {0} und {1} liegen.</value>
   </data>
 </root>

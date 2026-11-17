@@ -1,6 +1,7 @@
 using System.Globalization;
 using Bookennis.Api.Business.Bookings;
 using Bookennis.Api.Business.ClubEvents;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.Members;
 using Bookennis.Api.Business.Payments;
 using Bookennis.Api.Business.Payments.Stripe;
@@ -121,7 +122,7 @@ public record GetCourtSaleOptions(int ClubId, int UserId) : IQuery<CourtSaleOpti
                 UpcomingPurchases = upcoming,
                 PlayModeId = settings.PlayModeId,
                 TimeZoneId = settings.TimeZoneId,
-                Currency = CourtPriceRule.DefaultCurrency,
+                Currency = (await context.GetClubRegion(request.ClubId, cancellationToken)).Currency,
                 MinutesCoveredByCredit = CourtSaleSettings.MinutesCoveredByCredit,
             };
         }
@@ -142,19 +143,20 @@ public record GetCourtPurchaseQuote(int ClubId, int UserId, int CourtId, DateTim
                 throw new EntityNotFoundException(typeof(Court));
 
             var settings = await context.GetCourtSaleSettings(request.ClubId, cancellationToken);
+            var currency = (await context.GetClubRegion(request.ClubId, cancellationToken)).Currency;
             if (request.To < request.From)
-                return NotForSale(CourtSaleQuoteUnavailableReason.InvalidDuration);
+                return NotForSale(CourtSaleQuoteUnavailableReason.InvalidDuration, currency);
 
             var interval = new DateTimeOffsetInterval(request.From.ToUniversalTime(), request.To.ToUniversalTime());
             if (CourtSlotRules.Check(settings, interval, DateTimeOffset.UtcNow) is { } reason)
-                return NotForSale(reason);
+                return NotForSale(reason, currency);
 
             var memberId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken);
             var credits = memberId is { } id ? await context.GetCreditBalance(request.ClubId, id, cancellationToken) : 0;
             var rules = await context.GetCourtPriceRules(request.ClubId, cancellationToken);
 
             if (CourtSlotRules.Price(rules, settings, request.CourtId, interval, credits) is not { } price)
-                return NotForSale(CourtSaleQuoteUnavailableReason.NotForSale);
+                return NotForSale(CourtSaleQuoteUnavailableReason.NotForSale, currency);
 
             return new CourtPurchaseQuoteResult
             {
@@ -167,14 +169,14 @@ public record GetCourtPurchaseQuote(int ClubId, int UserId, int CourtId, DateTim
             };
         }
 
-        private static CourtPurchaseQuoteResult NotForSale(CourtSaleQuoteUnavailableReason reason) => new()
+        private static CourtPurchaseQuoteResult NotForSale(CourtSaleQuoteUnavailableReason reason, string currency) => new()
         {
             IsForSale = false,
             Reason = reason,
             PriceCents = 0,
             CreditUsed = false,
             AmountDueCents = 0,
-            Currency = CourtPriceRule.DefaultCurrency,
+            Currency = currency,
             Lines = [],
         };
     }
@@ -243,7 +245,7 @@ public record StartCourtPurchase(int ClubId, int UserId, int CourtId, DateTimeOf
             // The rules of every booking: opening hours, court inactive or blocked, overlaps, grace period, prime time for bought slots
             var builder = await BookingContextBuilder.Load(context, settings.PlayModeId!.Value, [request.CourtId], [memberId], request.UserId, [interval], cancellationToken);
             var bookingContext = await builder.BuildContext(request.CourtId, interval, [], cancellationToken) with { IsPurchase = true };
-            var booking = context.Bookings.Add(bookingService.BookCourt(bookingContext, interval, settings.TimeZoneId, null)).Entity;
+            var booking = context.Bookings.Add(bookingService.BookCourt(bookingContext, interval, builder.Region.TimeZoneId, null)).Entity;
 
             var purchase = new CourtPurchase(request.ClubId, memberId, request.CourtId, booking.Id, interval, price.Quote, price.CreditUsed, price.AmountDueCents);
             context.CourtPurchases.Add(purchase);
@@ -260,7 +262,7 @@ public record StartCourtPurchase(int ClubId, int UserId, int CourtId, DateTimeOf
             var email = await context.Users.Where(u => u.Id == request.UserId).Select(u => u.Email).FirstOrDefaultAsync(cancellationToken);
             var session = await StripeCalls.Run(() => gateway.CreateCheckoutSession(
                 accountId!,
-                CheckoutData(purchase, court.Name, settings, holdExpiresAt, email),
+                CheckoutData(purchase, court.Name, builder.Region, holdExpiresAt, email),
                 cancellationToken));
 
             if (session.Url is null)
@@ -272,15 +274,15 @@ public record StartCourtPurchase(int ClubId, int UserId, int CourtId, DateTimeOf
             return new StartCourtPurchaseResult { PurchaseId = purchase.Id, Status = SharedStatus.AwaitingPayment, CheckoutUrl = session.Url };
         }
 
-        private StripeCheckoutData CheckoutData(CourtPurchase purchase, string courtName, CourtSaleSettings settings, DateTimeOffset expiresAt, string? email)
+        private StripeCheckoutData CheckoutData(CourtPurchase purchase, string courtName, ClubRegion region, DateTimeOffset expiresAt, string? email)
         {
-            var culture = languageAccessor.GetCultureInfo();
-            var timeZone = settings.GetTimeZone();
-            var from = TimeZoneInfo.ConvertTime(purchase.Interval.From, timeZone);
-            var to = TimeZoneInfo.ConvertTime(purchase.Interval.To, timeZone);
+            // The club's time zone and way of writing dates, in the buyer's language
+            var culture = region.Culture(languageAccessor.GetCultureInfo());
+            var from = region.ToLocalOffset(purchase.Interval.From);
+            var to = region.ToLocalOffset(purchase.Interval.To);
 
-            // e.g. "Court 2 · Sat, 18 Oct 17:00–18:00"
-            var productName = $"{courtName} · {from.ToString("ddd, d MMM", culture)} {from:HH:mm}–{to:HH:mm}";
+            // e.g. "Court 2 · Sat, 18 Oct 17:00–18:00" or "Court 2 · Sat, Oct 18 5:00 PM–6:00 PM"
+            var productName = $"{courtName} · {from.ToString(culture.WeekdayDayMonthNamePattern, culture)} {culture.Time(from)}–{culture.Time(to)}";
             var page = $"{appSettings.AppUri.AbsoluteUri.TrimEnd('/')}/clubs/{purchase.ClubId}/booking?purchase={purchase.Id}&date={from:yyyy-MM-dd}";
 
             return new StripeCheckoutData(

@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Business.Push;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Shared.Controller.Booking;
@@ -68,8 +69,9 @@ public record DeleteRecurringBooking(
                     // Update series end date to the day before the deleted booking
                     var series = await context.RecurringBookingSeries
                         .FindRequiredAsync(booking.RecurringBookingSeriesId.Value, cancellationToken);
-                    var tz = TimeZoneInfo.FindSystemTimeZoneById(series.TimeZoneInfoId);
-                    var bookingDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(booking.Interval.From.UtcDateTime, tz));
+                    // The day in the club's time zone; the series keeps its own zone: its start and end times are wall-clock times of it
+                    var region = await context.GetClubRegion(series.ClubId, cancellationToken);
+                    var bookingDate = region.LocalDate(booking.Interval.From);
                     series.Update(
                         series.CourtId,
                         series.PlayModeId,

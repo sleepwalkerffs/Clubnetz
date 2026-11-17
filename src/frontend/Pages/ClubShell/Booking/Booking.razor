@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @page "/clubs/{ClubId:int}/booking"
 @using System.Globalization
 @using Bookennis.Client.Components.Booking
@@ -47,7 +48,7 @@ else
                     </span>
                     @if (ownBookings.FirstOrDefault() is { } ownBooking)
                     {
-                        <span class="toolbar-chip toolbar-chip--mine">★ @string.Format(Locale["YourMatchAt"], ownBooking.Interval.From.ToString("HH:mm"))</span>
+                        <span class="toolbar-chip toolbar-chip--mine">★ @string.Format(Locale["YourMatchAt"], ownBooking.Interval.From.ToString("t", CultureInfo.CurrentCulture))</span>
                     }
                     @if (SelectedDate == Today && FreeCourtsNow is { } freeCourts)
                     {
@@ -74,7 +75,7 @@ else
                     </MudTooltip>
                     <MudDatePicker Date="@SelectedDate.ToDateTime(TimeOnly.MinValue)" DateChanged="OnDatePicked"
                                    PickerVariant="PickerVariant.Dialog" Variant="Variant.Outlined" Margin="Margin.Dense"
-                                   Label="@Locale["GoToDate"]" DateFormat="dd.MM.yy" Class="booking-toolbar__picker" />
+                                   Label="@Locale["GoToDate"]" DateFormat="@RegionalCulture.Current.ShortDateTwoDigitYearPattern" Class="booking-toolbar__picker" />
                     @if (CanManageBlockings)
                     {
                         <MudTooltip Text="@Locale["ManageCourtBlockings"]">

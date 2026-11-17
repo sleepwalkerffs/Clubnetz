@@ -15,3 +15,8 @@
     font-size: 0.8rem;
     color: var(--mud-palette-text-secondary);
 }
+
+/* Account and routing number of a US bank account: side by side, one under the other on a phone */
+.master-form__row--even {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}

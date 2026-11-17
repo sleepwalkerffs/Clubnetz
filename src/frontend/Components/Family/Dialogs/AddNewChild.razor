@@ -32,7 +32,7 @@
                 <div class="family-dialog__form">
                     <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Firstname"]" @bind-Value="formModel.FirstName" For="@(() => formModel.FirstName)" Required="true" MaxLength="100" />
                     <MudTextField Variant="Variant.Outlined" T="string" Label="@SharedLocale["Lastname"]" @bind-Value="formModel.LastName" For="@(() => formModel.LastName)" Required="true" MaxLength="100" />
-                    <MudDatePicker Variant="Variant.Outlined" Label="@SharedLocale["Birthday"]" @bind-Date="formModel.Birthday" For="@(() => formModel.Birthday)" DateFormat="dd.MM.yyyy"
+                    <MudDatePicker Variant="Variant.Outlined" Label="@SharedLocale["Birthday"]" @bind-Date="formModel.Birthday" For="@(() => formModel.Birthday)"
                                    Required="true" MaxDate="@DateTime.Today" OpenTo="OpenTo.Year" PickerVariant="PickerVariant.Dialog" />
                     <ChoiceChips TItem="Gender" Items="@Genders" @bind-Value="formModel.Gender" TextFunc="@(gender => FamilySharedLocale[$"Gender_{gender}"])" Label="@SharedLocale["Gender"]" />
                 </div>

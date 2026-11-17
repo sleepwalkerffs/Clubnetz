@@ -34,6 +34,7 @@ public record PlayRequestDto
     public string PlayModeName { get; init; } = "";
     public DateTimeOffset StartsAt { get; init; }
     public DateTimeOffset EndsAt { get; init; }
+    /// <summary>The club's time zone the request was made in.</summary>
     public string TimeZoneInfoId { get; init; } = "";
 
     /// <summary>The courts the requester would play on, in order of preference.</summary>
@@ -65,8 +66,8 @@ public record CreatePlayRequestModel
     [Required]
     public DateTimeOffset To { get; init; }
 
-    [Required]
-    public string TimeZoneInfoId { get; init; } = "";
+    /// <summary>Ignored, kept for older clients: the server uses the club's time zone (<c>Club.TimeZoneId</c>).</summary>
+    public string? TimeZoneInfoId { get; init; }
 
     /// <summary>Alternative courts in order of preference: the first free one is booked.</summary>
     [Required]

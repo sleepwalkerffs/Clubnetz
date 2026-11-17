@@ -1,5 +1,7 @@
 using System.Globalization;
+using Bookennis.Shared.Utils;
 using Bookennis.Api.Business.ClubEmails;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Business.Members;
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Config;
@@ -76,7 +78,7 @@ public class MembershipNotifier(AppDbContext context, IMediator mediator, AppSet
 
         foreach (var recipient in recipients.DistinctBy(r => r.Email!.ToLowerInvariant()))
         {
-            var culture = recipient.Language.ToCultureInfo();
+            var culture = recipient.Language.ToCultureInfo(details.Region);
             var member = new MemberVariables(recipient.FirstName, recipient.LastName);
             var variables = new MembershipNeedsAttentionEmailVariables(
                 member,
@@ -101,7 +103,7 @@ public class MembershipNotifier(AppDbContext context, IMediator mediator, AppSet
             return;
 
         var details = await LoadDetails(order, cancellationToken);
-        var culture = recipient.Language.ToCultureInfo();
+        var culture = recipient.Language.ToCultureInfo(details.Region);
         var member = new MemberVariables(recipient.FirstName, recipient.LastName);
         var url = $"{AppUrl}/clubs/{order.ClubId}/membership?season={order.SeasonId}&order={order.Id}";
 
@@ -136,15 +138,16 @@ public class MembershipNotifier(AppDbContext context, IMediator mediator, AppSet
             string.Join(", ", names.Where(n => covered.Contains(n.Id)).Select(n => n.Name)),
             names.FirstOrDefault(n => n.Id == order.PayerMemberId)?.Name,
             season.From,
-            season.To);
+            season.To,
+            await context.GetClubRegion(order.ClubId, cancellationToken));
     }
 
-    private sealed record OrderDetails(string MemberNames, string? PayerName, DateOnly SeasonFrom, DateOnly SeasonTo)
+    private sealed record OrderDetails(string MemberNames, string? PayerName, DateOnly SeasonFrom, DateOnly SeasonTo, ClubRegion Region)
     {
         public MembershipVariables ToVariables(MembershipOrder order, CultureInfo culture, string url) => new(
             order.PlanName,
             ClubEmailCatalog.FormatSeason(SeasonFrom, SeasonTo, culture).Period,
-            MembershipTexts.Amount(order.AmountCents, culture),
+            MembershipTexts.Amount(order.AmountCents, culture, order.Currency),
             MemberNames,
             order.PaymentMethod is { } method ? NotificationTexts.Get(culture, $"Membership_Method_{method}") : "",
             url);
@@ -153,22 +156,9 @@ public class MembershipNotifier(AppDbContext context, IMediator mediator, AppSet
 
 public static class MembershipTexts
 {
-    /// <summary>An amount in euro as it is written in the language: "€ 215,00" in German, "€215.00" in English.</summary>
-    public static string Amount(int amountCents, CultureInfo culture) => (amountCents / 100m).ToString("C2", MoneyFormat(culture));
-
-    // en-AT is written like German on some systems and like English on others, depending on the ICU data.
-    // English emails always get the English form.
-    private static NumberFormatInfo MoneyFormat(CultureInfo culture)
-    {
-        if (culture.TwoLetterISOLanguageName != "en")
-            return culture.NumberFormat;
-
-        var format = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
-        format.CurrencySymbol = "€";
-        format.CurrencyPositivePattern = 0;
-        format.CurrencyNegativePattern = 1;
-        return format;
-    }
-
-    public static CultureInfo Culture(Language language) => language.ToCultureInfo();
+    /// <summary>
+    /// An amount as it is written in the language and the club's country: "€ 215,00" in German, "€215.00" in English, "$215.00" in the United States.
+    /// Pass the club's <see cref="RegionalCulture"/> (a plain culture is an Austrian club) and the currency of the amount (the club's when <c>null</c>).
+    /// </summary>
+    public static string Amount(int amountCents, CultureInfo culture, string? currency = null) => RegionalCulture.Of(culture).Money(amountCents, currency);
 }

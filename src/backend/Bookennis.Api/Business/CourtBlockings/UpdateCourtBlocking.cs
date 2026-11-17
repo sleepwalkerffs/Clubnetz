@@ -13,7 +13,7 @@ public record UpdateCourtBlocking(int ClubId, int CourtBlockingId, CourtBlocking
         {
             var blocking = await context.CourtBlockings.GetBlockingWithDetails(request.ClubId, request.CourtBlockingId, cancellationToken);
 
-            blocking.Update(request.Data);
+            blocking.Update(await request.Data.InClubTimeZone(context, request.ClubId, cancellationToken));
 
             await context.EnsureCourtsBelongToClub(request.ClubId, request.Data.CourtIds, cancellationToken);
 

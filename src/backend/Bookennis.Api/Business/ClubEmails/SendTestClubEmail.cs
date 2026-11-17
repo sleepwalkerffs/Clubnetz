@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure.User;
 using Bookennis.Domain.Clubs.EmailTemplates;
@@ -28,6 +29,7 @@ public record SendTestClubEmail(int ClubId, ClubEmailType Type, Language Languag
             if (string.IsNullOrWhiteSpace(user.Email))
                 throw new PreconditionException(ErrorCode.CurrentUserHasNoEmail, "The current user has no email address.");
 
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
             await mediator.Send(
                 new SendClubEmail(
                     request.ClubId,
@@ -35,7 +37,7 @@ public record SendTestClubEmail(int ClubId, ClubEmailType Type, Language Languag
                     user.Email,
                     user.FullName,
                     request.Language,
-                    definition.CreateSample(request.Language),
+                    definition.CreateSample(request.Language, region.Culture(request.Language)),
                     template),
                 cancellationToken);
 

@@ -3,6 +3,8 @@
 @using Bookennis.Client.Services.Store.Admin
 @using Bookennis.Shared.Controller.Admin
 @using Bookennis.Global.Intervals
+@using Bookennis.Shared.Controller.Shared
+@using Bookennis.Shared.Utils
 @using Bookennis.Client.Utils
 
 @implements IDisposable
@@ -67,18 +69,45 @@
     <DialogContent>
         <div class="d-flex flex-column gap-3">
             <MudTextField @bind-Value="newClubName" Label="@L["ClubName"]" Required="true" Variant="Variant.Outlined" />
+            <MudSelect T="Country" Label="@SharedLocale["Country"]" Value="newCountry" ValueChanged="OnCountryChanged" Variant="Variant.Outlined"
+                       HelperText="@L["RegionHint"]">
+                @foreach (var option in Enum.GetValues<Country>())
+                {
+                    <MudSelectItem T="Country" Value="option">@RegionNames.Country(SharedLocale, option)</MudSelectItem>
+                }
+            </MudSelect>
             <MudGrid>
                 <MudItem xs="12" sm="6">
-                    <MudTimePicker @bind-Time="openStart" Label="@L["OpeningStart"]" Variant="Variant.Outlined" />
+                    <MudSelect T="string" Label="@SharedLocale["TimeZone"]" @bind-Value="newTimeZoneId" Variant="Variant.Outlined"
+                               ToStringFunc="@(id => id is null ? string.Empty : RegionNames.TimeZone(SharedLocale, id))">
+                        @foreach (var zone in RegionalCulture.SupportedTimeZones)
+                        {
+                            <MudSelectItem T="string" Value="zone">@RegionNames.TimeZone(SharedLocale, zone)</MudSelectItem>
+                        }
+                    </MudSelect>
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudTimePicker @bind-Time="openEnd" Label="@L["OpeningEnd"]" Variant="Variant.Outlined" />
+                    <MudSelect T="string" Label="@SharedLocale["Currency"]" @bind-Value="newCurrency" Variant="Variant.Outlined"
+                               ToStringFunc="@(code => code is null ? string.Empty : RegionNames.Currency(SharedLocale, code))">
+                        @foreach (var code in RegionalCulture.SupportedCurrencies)
+                        {
+                            <MudSelectItem T="string" Value="code">@RegionNames.Currency(SharedLocale, code)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+            <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudTimePicker @bind-Time="openStart" AmPm="@NewClubUsesTwelveHourClock" Label="@L["OpeningStart"]" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudTimePicker @bind-Time="primeStart" Label="@L["PrimeTimeStart"]" Variant="Variant.Outlined" />
+                    <MudTimePicker @bind-Time="openEnd" AmPm="@NewClubUsesTwelveHourClock" Label="@L["OpeningEnd"]" Variant="Variant.Outlined" />
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudTimePicker @bind-Time="primeEnd" Label="@L["PrimeTimeEnd"]" Variant="Variant.Outlined" />
+                    <MudTimePicker @bind-Time="primeStart" AmPm="@NewClubUsesTwelveHourClock" Label="@L["PrimeTimeStart"]" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTimePicker @bind-Time="primeEnd" AmPm="@NewClubUsesTwelveHourClock" Label="@L["PrimeTimeEnd"]" Variant="Variant.Outlined" />
                 </MudItem>
             </MudGrid>
         </div>
@@ -103,6 +132,19 @@
     private TimeSpan? openEnd = new TimeSpan(22, 0, 0);
     private TimeSpan? primeStart = new TimeSpan(17, 0, 0);
     private TimeSpan? primeEnd = new TimeSpan(21, 0, 0);
+    private Country newCountry = Country.Austria;
+    // The hours are entered on the clock of the new club
+    private bool NewClubUsesTwelveHourClock => newCountry == Country.UnitedStates;
+    private string newTimeZoneId = RegionalCulture.DefaultTimeZoneOf(Country.Austria);
+    private string newCurrency = RegionalCulture.DefaultCurrencyOf(Country.Austria);
+
+    // The country suggests its time zone and currency, the admin can still change both
+    private void OnCountryChanged(Country value)
+    {
+        newCountry = value;
+        newTimeZoneId = RegionalCulture.DefaultTimeZoneOf(value);
+        newCurrency = RegionalCulture.DefaultCurrencyOf(value);
+    }
 
     private List<AdminClubResult> FilteredClubs => string.IsNullOrWhiteSpace(searchString)
         ? AdminStore.Clubs
@@ -130,7 +172,10 @@
         {
             Name = newClubName,
             OpeningHours = new TimeOnlyInterval(TimeOnly.FromTimeSpan(openStart.Value), TimeOnly.FromTimeSpan(openEnd.Value)),
-            PrimeTimeHours = new TimeOnlyInterval(TimeOnly.FromTimeSpan(primeStart.Value), TimeOnly.FromTimeSpan(primeEnd.Value))
+            PrimeTimeHours = new TimeOnlyInterval(TimeOnly.FromTimeSpan(primeStart.Value), TimeOnly.FromTimeSpan(primeEnd.Value)),
+            TimeZoneId = newTimeZoneId,
+            Country = newCountry,
+            Currency = newCurrency
         });
 
         if (clubId is not null)

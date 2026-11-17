@@ -6,6 +6,7 @@
 @using Bookennis.Client.Services.Store.Admin
 @using Bookennis.Shared.Controller.Admin
 @using Bookennis.Shared.Controller.Shared
+@using Bookennis.Shared.Utils
 @using Bookennis.Client.Utils
 
 @implements IDisposable
@@ -107,6 +108,29 @@ else
                 <SectionCard Emoji="⚙️" Title="@L["PlatformSettingsTitle"]" Subtitle="@L["PlatformSettingsSubtitle"]">
                     <MudTextField @bind-Value="clubName" Label="@L["ClubName"]" Required="true" Variant="Variant.Outlined" />
                     <MudCheckBox @bind-Value="isAtpClub" Label="@L["IsAtpClub"]" Color="Color.Primary" Class="mt-2" />
+                    <div class="d-flex flex-column gap-3 mt-2">
+                        <MudSelect T="Country" Label="@SharedLocale["Country"]" Value="country" ValueChanged="OnCountryChanged" Variant="Variant.Outlined"
+                                   HelperText="@L["RegionHint"]">
+                            @foreach (var option in Enum.GetValues<Country>())
+                            {
+                                <MudSelectItem T="Country" Value="option">@RegionNames.Country(SharedLocale, option)</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect T="string" Label="@SharedLocale["TimeZone"]" @bind-Value="timeZoneId" Variant="Variant.Outlined"
+                                   ToStringFunc="@(id => id is null ? string.Empty : RegionNames.TimeZone(SharedLocale, id))">
+                            @foreach (var zone in TimeZoneOptions)
+                            {
+                                <MudSelectItem T="string" Value="zone">@RegionNames.TimeZone(SharedLocale, zone)</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect T="string" Label="@SharedLocale["Currency"]" @bind-Value="currency" Variant="Variant.Outlined"
+                                   ToStringFunc="@(code => code is null ? string.Empty : RegionNames.Currency(SharedLocale, code))">
+                            @foreach (var code in RegionalCulture.SupportedCurrencies)
+                            {
+                                <MudSelectItem T="string" Value="code">@RegionNames.Currency(SharedLocale, code)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </div>
                     <div class="admin-actions">
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveClub" StartIcon="@Icons.Material.Filled.Save">@L["SaveSettings"]</MudButton>
                     </div>
@@ -138,6 +162,9 @@ else
 
     private string clubName = "";
     private bool isAtpClub;
+    private Country country;
+    private string timeZoneId = RegionalCulture.DefaultTimeZoneOf(Country.Austria);
+    private string currency = RegionalCulture.DefaultCurrency;
     private AdminUserResult? selectedUser;
     private bool addAsAdmin;
 
@@ -170,9 +197,24 @@ else
         {
             clubName = club.Name;
             isAtpClub = club.IsAtpClub;
+            country = club.Country;
+            timeZoneId = club.TimeZoneId;
+            currency = club.Currency;
         }
 
         InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>The supported zones, plus the club's own one should it not be among them (so it is not lost on saving).</summary>
+    private IEnumerable<string> TimeZoneOptions
+        => RegionalCulture.SupportedTimeZones.Contains(timeZoneId) ? RegionalCulture.SupportedTimeZones : RegionalCulture.SupportedTimeZones.Append(timeZoneId);
+
+    // The country suggests its time zone and currency, the admin can still change both
+    private void OnCountryChanged(Country value)
+    {
+        country = value;
+        timeZoneId = RegionalCulture.DefaultTimeZoneOf(value);
+        currency = RegionalCulture.DefaultCurrencyOf(value);
     }
 
     // A full page load, the stores still hold the data of the club that was open before
@@ -196,7 +238,10 @@ else
             OpeningHours = club.OpeningHours,
             PrimeTimeSettings = club.PrimeTimeSettings,
             BookingGracePeriodInMinutes = club.BookingGracePeriodInMinutes,
-            IsAtpClub = isAtpClub
+            IsAtpClub = isAtpClub,
+            TimeZoneId = timeZoneId,
+            Country = country,
+            Currency = currency
         });
 
         if (success)

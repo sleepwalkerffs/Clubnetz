@@ -47,7 +47,7 @@ public class ClubhouseTab : TenantDomainEntity, IAggregateRoot
 #pragma warning restore CS8618
 
     /// <summary>A tab for a member of the club (<paramref name="memberId"/>) or for a guest from outside (<paramref name="guestName"/>).</summary>
-    public ClubhouseTab(int clubId, int? memberId, string? guestName, int? openedByMemberId, DateTimeOffset now)
+    public ClubhouseTab(int clubId, int? memberId, string? guestName, int? openedByMemberId, DateTimeOffset now, string currency = ClubhouseItem.DefaultCurrency)
     {
         var name = string.IsNullOrWhiteSpace(guestName) ? null : guestName.Trim();
         if ((memberId is null) == (name is null) || name?.Length > MaxGuestNameLength)
@@ -58,7 +58,7 @@ public class ClubhouseTab : TenantDomainEntity, IAggregateRoot
         GuestName = name;
         OpenedByMemberId = openedByMemberId;
         OpenedAt = now;
-        Currency = ClubhouseItem.DefaultCurrency;
+        Currency = currency.ToLowerInvariant();
         Status = ClubhouseTabStatus.Open;
     }
 
@@ -94,6 +94,10 @@ public class ClubhouseTab : TenantDomainEntity, IAggregateRoot
 
         if (item.ClubId != ClubId)
             throw new InvalidOperationException("The item belongs to another club.");
+
+        // A price is an amount in its currency: never book it onto a tab in another one
+        if (!string.Equals(item.Currency, Currency, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("The item is priced in another currency than the tab.");
 
         if (!item.IsAvailable)
             throw new PreconditionException(ClubhouseErrorCode.ClubhouseItemNotAvailable, "The item is not on the menu.");

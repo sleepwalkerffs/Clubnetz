@@ -885,4 +885,7 @@
   <data name="AuditChartLabel" xml:space="preserve">
     <value>Einträge im Zeitverlauf</value>
   </data>
+  <data name="RegionHint" xml:space="preserve">
+    <value>Das Land bestimmt, wie Datum, Uhrzeit und Beträge geschrieben werden. Bei der Auswahl werden Zeitzone und Währung vorgeschlagen, beide lassen sich noch ändern.</value>
+  </data>
 </root>

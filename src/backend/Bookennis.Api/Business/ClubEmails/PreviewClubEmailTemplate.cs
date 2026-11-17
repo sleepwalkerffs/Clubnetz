@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs.EmailTemplates;
 using Bookennis.Domain.User;
@@ -25,7 +26,8 @@ public record PreviewClubEmailTemplate(int ClubId, ClubEmailType Type, Language 
                 .AsNoTracking()
                 .SingleRequiredAsync(cancellationToken);
 
-            var rendered = await renderer.Render(template, definition.CreateSample(request.Language) with { Club = club });
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
+            var rendered = await renderer.Render(template, definition.CreateSample(request.Language, region.Culture(request.Language)) with { Club = club });
             return new PreviewClubEmailTemplateResult { Subject = rendered.Subject, Html = rendered.BodyHtml };
         }
     }

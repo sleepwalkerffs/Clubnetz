@@ -2,6 +2,7 @@ using Bookennis.Api.Business.Bookings;
 using Bookennis.Api.Tests.Business.CourtBlockings;
 using Bookennis.Api.Tests.TestUtils;
 using Bookennis.Domain.Bookings;
+using Bookennis.Domain.Clubs;
 using Bookennis.Global.Intervals;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -100,7 +101,8 @@ public class BookCourtTests : TestBase
 
         void ValidateInterval(DateTimeOffsetInterval interval) => interval.Should().Be(bookingInterval);
 
-        void ValidateTimeZoneId(string timeZoneId) => timeZoneId.Should().Be(TimeZoneInfo.Local.Id);
+        // The time zone of the club, not the one the client sent
+        void ValidateTimeZoneId(string timeZoneId) => timeZoneId.Should().Be(ClubTimeZone.DefaultId);
 
         void ValidateComment(string? comment) => comment.Should().Be("newBooking");
     }

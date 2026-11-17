@@ -21,7 +21,7 @@
 
     <div class="booking-item__body">
         <div class="booking-item__title">
-            @Booking.Interval.From.ToString("HH:mm") – @Booking.Interval.To.ToString("HH:mm") · @CourtName
+            @Booking.Interval.From.ToString("t", CultureInfo.CurrentCulture) – @Booking.Interval.To.ToString("t", CultureInfo.CurrentCulture) · @CourtName
         </div>
         <div class="booking-item__meta">
             <span class="booking-item__mode">@Booking.PlayMode.Name</span>

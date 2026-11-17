@@ -214,8 +214,71 @@ public class BankStatementTests
     [InlineData("12,00-", -1_200)]
     [InlineData("+12,00 EUR", 1_200)]
     [InlineData("€ 1.000", 100_000)]
+    [InlineData("$1,234.56", 123_456)]
+    [InlineData("-$12.00", -1_200)]
+    [InlineData("($12.00)", -1_200)]
+    [InlineData("(1,234.56)", -123_456)]
+    [InlineData("12.50 USD", 1_250)]
     [InlineData("abc", null)]
     public void Csv_Amounts(string text, int? cents) => BankStatementReader.Csv.ParseAmount(text).Should().Be(cents);
+
+    [Theory]
+    [InlineData("03/04/2026", false, 2026, 4, 3)]
+    [InlineData("03/04/2026", true, 2026, 3, 4)]
+    [InlineData("3/4/26", true, 2026, 3, 4)]
+    [InlineData("12/31/2026", true, 2026, 12, 31)]
+    [InlineData("2026-03-04", true, 2026, 3, 4)]
+    [InlineData("04.03.2026", false, 2026, 3, 4)]
+    public void Csv_Dates_FollowTheCountry(string text, bool monthFirst, int year, int month, int day)
+        => BankStatementReader.Csv.ParseDate(text, monthFirst).Should().Be(new DateOnly(year, month, day));
+
+    [Fact]
+    public void Csv_DayFirstDate_IsNoDate_InTheUnitedStates()
+        => BankStatementReader.Csv.ParseDate("31/12/2026", monthFirst: true).Should().BeNull();
+
+    [Fact]
+    public void Csv_OfAUsBank_WithDebitAndCreditColumns_IsRead()
+    {
+        const string capitalOne = """
+            Transaction Date,Posted Date,Card No.,Description,Category,Debit,Credit
+            2026-03-02,03/03/2026,1234,"USTA LEAGUE FEES",Fees,45.00,
+            2026-03-04,03/05/2026,1234,"JOHN DOE DUES",Payment,,"1,200.00"
+            """;
+
+        var statement = BankStatementReader.Read(Encoding.UTF8.GetBytes(capitalOne), null, monthFirst: true).Statement!;
+
+        statement.Lines.Select(l => (l.BookingDate, l.AmountCents)).Should().Equal((new DateOnly(2026, 3, 2), -4_500L), (new DateOnly(2026, 3, 4), 120_000L));
+        statement.Lines[1].Reference.Should().Contain("JOHN DOE DUES");
+    }
+
+    [Fact]
+    public void Csv_OfAUsBank_WithWithdrawalsAndDeposits_IsRead()
+    {
+        const string export = """
+            Date,Description,Withdrawals,Deposits,Balance
+            03/04/2026,Court resurfacing,"$4,500.00",,"$10,500.00"
+            03/05/2026,Member dues,,$300.00,"$10,800.00"
+            """;
+
+        var statement = BankStatementReader.Read(Encoding.UTF8.GetBytes(export), null, monthFirst: true).Statement!;
+
+        statement.Lines.Select(l => (l.BookingDate, l.AmountCents)).Should().Equal((new DateOnly(2026, 3, 4), -450_000L), (new DateOnly(2026, 3, 5), 30_000L));
+    }
+
+    [Fact]
+    public void Csv_WellsFargo_WithoutHeader_IsRead_OnlyForUsClubs()
+    {
+        const string wellsFargo = """
+            "03/04/2026","-45.00","*","","USTA MID-ATLANTIC"
+            "03/05/2026","1200.00","*","","DEPOSIT JOHN DOE"
+            """;
+
+        var statement = BankStatementReader.Read(Encoding.UTF8.GetBytes(wellsFargo), null, monthFirst: true).Statement!;
+
+        statement.Lines.Select(l => (l.BookingDate, l.AmountCents, l.Reference)).Should().Equal(
+            (new DateOnly(2026, 3, 4), -4_500L, "USTA MID-ATLANTIC"), (new DateOnly(2026, 3, 5), 120_000L, "DEPOSIT JOHN DOE"));
+        BankStatementReader.Read(Encoding.UTF8.GetBytes(wellsFargo), null).NeedsCsvLayout.Should().BeTrue("an Austrian club maps a file without header itself");
+    }
 
     [Fact]
     public void NoStatement_IsRefused()

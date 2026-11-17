@@ -716,5 +716,14 @@ namespace Bookennis.Client.Localization {
                 return ResourceManager.GetString("LastClubAdmin", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bookings per week must be between {0} and {1}.
+        /// </summary>
+        public static string ClubInvalidBookingsPerWeek {
+            get {
+                return ResourceManager.GetString("ClubInvalidBookingsPerWeek", resourceCulture);
+            }
+        }
     }
 }

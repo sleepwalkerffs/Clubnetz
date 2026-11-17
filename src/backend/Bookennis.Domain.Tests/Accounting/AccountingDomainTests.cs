@@ -326,4 +326,64 @@ public class AccountingMasterDataTests
         german.Select(c => (c.Kind, c.Name)).Should().OnlyHaveUniqueItems();
         AccountingTemplate.CreateMoneyAccounts(7, german: true).Select(a => a.Kind).Should().Equal(MoneyAccountKind.Bank, MoneyAccountKind.Cash);
     }
+
+    [Fact]
+    public void UsTemplate_HasTheCategoriesOfAUsClub_WithoutTaxSpheres()
+    {
+        var english = AccountingTemplate.CreateCategories(7, german: false, unitedStates: true).ToList();
+        var german = AccountingTemplate.CreateCategories(7, german: true, unitedStates: true).ToList();
+
+        english.Select(c => c.Name).Should().Contain(["Membership dues", "Court fees and guest fees", "Lessons and clinics", "Donations", "Sponsorships",
+            "Court maintenance and repairs", "Utilities", "Insurance", "USTA and league fees", "Bank and payment fees"]);
+        english.Should().OnlyContain(c => c.TaxSphere == TaxSphere.NonProfit);
+        english.Select(c => c.Number).Should().Equal(german.Select(c => c.Number)).And.OnlyHaveUniqueItems();
+        english.Select(c => (c.Kind, c.Name)).Should().OnlyHaveUniqueItems();
+        german.Select(c => (c.Kind, c.Name)).Should().OnlyHaveUniqueItems();
+        AccountingTemplate.CreateMoneyAccounts(7, german: false, unitedStates: true).Select(a => a.Name).Should().Equal("Checking account", "Cash");
+        AccountingTemplate.CreateCategories(7, german: true).Select(c => c.Name).Should().Contain("Verbandsbeiträge (ÖTV, Landesverband)", "Austrian clubs keep their chart");
+    }
+
+    [Theory]
+    [InlineData("021000021", "021000021")]
+    [InlineData("021 000 021", "021000021")]
+    [InlineData("0210-0002-1", "021000021")]
+    [InlineData("011000015", "011000015")]
+    [InlineData("", null)]
+    [InlineData(null, null)]
+    public void RoutingNumber_IsNormalized(string? input, string? expected)
+        => AbaRoutingNumber.Normalize(input).Should().Be(expected);
+
+    [Theory]
+    [InlineData("021000022")]
+    [InlineData("12345678")]
+    [InlineData("0210000210")]
+    [InlineData("02100002A")]
+    [InlineData("000000000")]
+    public void InvalidRoutingNumber_IsRejected(string input)
+        => FluentActions.Invoking(() => AbaRoutingNumber.Normalize(input)).Should().Throw<PreconditionException>()
+            .Which.ErrorCode.Should().Be(nameof(AccountingErrorCode.AccountingRoutingNumberInvalid));
+
+    [Fact]
+    public void UsBankAccount_NeedsAccountAndRoutingNumber()
+    {
+        MoneyAccount Account(string? number, string? routing, MoneyAccountKind kind = MoneyAccountKind.Bank)
+            => new(7, new MoneyAccount.AccountData("Checking", kind, null, 0, number, routing));
+
+        var account = Account("0001 2345 6789", "021000021");
+        account.AccountNumber.Should().Be("000123456789");
+        account.RoutingNumber.Should().Be("021000021");
+        account.HasBankDetails.Should().BeTrue();
+        UsBankAccount.Masked(account.AccountNumber!).Should().Be("••••6789");
+
+        Account(null, null).HasBankDetails.Should().BeFalse();
+        Account("123456789", "021000021", MoneyAccountKind.Cash).AccountNumber.Should().BeNull("only bank accounts have bank details");
+        FluentActions.Invoking(() => Account("123456789", null)).Should().Throw<PreconditionException>()
+            .Which.ErrorCode.Should().Be(nameof(AccountingErrorCode.AccountingRoutingNumberInvalid));
+        FluentActions.Invoking(() => Account(null, "021000021")).Should().Throw<PreconditionException>()
+            .Which.ErrorCode.Should().Be(nameof(AccountingErrorCode.AccountingAccountNumberInvalid));
+        FluentActions.Invoking(() => Account("123", "021000021")).Should().Throw<PreconditionException>()
+            .Which.ErrorCode.Should().Be(nameof(AccountingErrorCode.AccountingAccountNumberInvalid));
+        FluentActions.Invoking(() => Account("1234567890123456789", "021000021")).Should().Throw<PreconditionException>()
+            .Which.ErrorCode.Should().Be(nameof(AccountingErrorCode.AccountingAccountNumberInvalid));
+    }
 }

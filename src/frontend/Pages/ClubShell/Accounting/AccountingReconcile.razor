@@ -74,7 +74,7 @@
     </ChildContent>
 </SectionCard>
 
-<SectionCard Emoji="🏦" Title="@L["Bank_Title"]" Subtitle="@L["Bank_Subtitle"]">
+<SectionCard Emoji="🏦" Title="@L["Bank_Title"]" Subtitle="@L[AccountingHelpers.Regional("Bank_Subtitle")]">
     <ChildContent>
         <div class="acc-toolbar">
             <MudSelect T="int?" Value="@Store.BankAccountId" ValueChanged="OnAccountChanged" Label="@L["MoneyAccount"]" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="acc-toolbar__filter">

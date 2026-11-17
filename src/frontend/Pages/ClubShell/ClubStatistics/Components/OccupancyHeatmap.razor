@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Localization.Pages.ClubStatistics
@@ -32,7 +33,7 @@
                 <div class="heatmap__corner"></div>
                 @foreach (var hour in hours)
                 {
-                    <div class="heatmap__hour @(IsPrimeHour(hour) ? "heatmap__hour--prime" : null)">@hour</div>
+                    <div class="heatmap__hour @(IsPrimeHour(hour) ? "heatmap__hour--prime" : null)">@(RegionalCulture.Current.UsesTwelveHourClock ? RegionalCulture.Current.HourLabel(hour) : hour.ToString(CultureInfo.InvariantCulture))</div>
                 }
                 <div class="heatmap__hour heatmap__hour--avg">Ø</div>
 
@@ -77,7 +78,7 @@
             <div class="heatmap__detail">
                 @if (selected is { } sel)
                 {
-                    <strong>@sel.Row · @($"{sel.Hour:00}:00–{sel.Hour + 1:00}:00")</strong>
+                    <strong>@sel.Row · @RegionalCulture.Current.Time(TimeSpan.FromHours(sel.Hour))–@RegionalCulture.Current.Time(TimeSpan.FromHours(sel.Hour + 1))</strong>
                     <span>@string.Format(L["CellDetail"], Percent(sel.Cell.OccupancyPercentage), sel.Cell.BookedHours.ToString("0.#", CultureInfo.CurrentCulture))</span>
                 }
                 else
@@ -92,11 +93,11 @@
             <div class="heatmap__insights">
                 <div class="heatmap__insight heatmap__insight--hot">
                     <span aria-hidden="true">🔥</span>
-                    <span>@string.Format(L["HottestSlot"], extremes.Hot.Row, $"{extremes.Hot.Hour:00}:00", Percent(extremes.Hot.Value))</span>
+                    <span>@string.Format(L["HottestSlot"], extremes.Hot.Row, RegionalCulture.Current.Time(TimeSpan.FromHours(extremes.Hot.Hour)), Percent(extremes.Hot.Value))</span>
                 </div>
                 <div class="heatmap__insight heatmap__insight--cold">
                     <span aria-hidden="true">🧊</span>
-                    <span>@string.Format(L["QuietestSlot"], extremes.Cold.Row, $"{extremes.Cold.Hour:00}:00", Percent(extremes.Cold.Value))</span>
+                    <span>@string.Format(L["QuietestSlot"], extremes.Cold.Row, RegionalCulture.Current.Time(TimeSpan.FromHours(extremes.Cold.Hour)), Percent(extremes.Cold.Value))</span>
                 </div>
             </div>
         }
@@ -156,5 +157,5 @@
     private static string Percent(double value) => value.ToString("0.#", CultureInfo.CurrentCulture) + " %";
 
     private string CellTitle(string row, HeatmapHourResult cell)
-        => $"{row} · {cell.Hour:00}:00 – {Percent(cell.OccupancyPercentage)} ({cell.BookedHours.ToString("0.#", CultureInfo.CurrentCulture)} h)";
+        => $"{row} · {RegionalCulture.Current.Time(TimeSpan.FromHours(cell.Hour))} – {Percent(cell.OccupancyPercentage)} ({cell.BookedHours.ToString("0.#", CultureInfo.CurrentCulture)} h)";
 }

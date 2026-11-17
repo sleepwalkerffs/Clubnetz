@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Localization.Pages.MyClub
@@ -40,7 +41,7 @@
                     <div class="fact__value">@CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(weekday)</div>
                     @if (FavouriteHour is { } hour)
                     {
-                        <div class="fact__hint">@string.Format(Locale["MostlyAt"], $"{hour:00}:00")</div>
+                        <div class="fact__hint">@string.Format(Locale["MostlyAt"], RegionalCulture.Current.Time(TimeSpan.FromHours(hour)))</div>
                     }
                 </div>
             </div>

@@ -34,7 +34,7 @@
         var hasPrevious = statement.PreviousFiscalYearId is not null;
         var previousLabel = basics?.FiscalYears.FirstOrDefault(y => y.Id == statement.PreviousFiscalYearId)?.Label;
 
-        <SectionCard Emoji="📊" Title="@L["Report_IncomeStatement"]" Subtitle="@L["Report_IncomeStatementHint"]">
+        <SectionCard Emoji="📊" Title="@L["Report_IncomeStatement"]" Subtitle="@L[AccountingHelpers.Regional("Report_IncomeStatementHint")]">
             @if (statement.Spheres.Count == 0)
             {
                 <div class="acc-note">@L["Report_Empty"]</div>
@@ -53,12 +53,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var sphere in statement.Spheres)
+                        @* A US club has no tax spheres: one list, income first, without the result of each sphere *@
+                        @foreach (var (sphere, lines) in Groups(statement))
                         {
-                            <tr class="acc-table__group">
-                                <td colspan="@(hasPrevious ? 3 : 2)">@L[$"Sphere_{sphere.TaxSphere}"]</td>
-                            </tr>
-                            @foreach (var line in sphere.Categories)
+                            @if (sphere is not null)
+                            {
+                                <tr class="acc-table__group">
+                                    <td colspan="@(hasPrevious ? 3 : 2)">@L[$"Sphere_{sphere.TaxSphere}"]</td>
+                                </tr>
+                            }
+                            @foreach (var line in lines)
                             {
                                 var sign = line.Kind == AccountingCategoryKind.Income ? 1 : -1;
                                 <tr>
@@ -70,14 +74,17 @@
                                     }
                                 </tr>
                             }
-                            <tr class="acc-table__sum">
-                                <td>@L["Report_SphereResult"]</td>
-                                <td class="acc-table__num">@AccountingHelpers.SignedAmount(sphere.IncomeCents - sphere.ExpenseCents)</td>
-                                @if (hasPrevious)
-                                {
-                                    <td class="acc-table__num acc-table__previous">@AccountingHelpers.SignedAmount((sphere.PreviousIncomeCents ?? 0) - (sphere.PreviousExpenseCents ?? 0))</td>
-                                }
-                            </tr>
+                            @if (sphere is not null)
+                            {
+                                <tr class="acc-table__sum">
+                                    <td>@L["Report_SphereResult"]</td>
+                                    <td class="acc-table__num">@AccountingHelpers.SignedAmount(sphere.IncomeCents - sphere.ExpenseCents)</td>
+                                    @if (hasPrevious)
+                                    {
+                                        <td class="acc-table__num acc-table__previous">@AccountingHelpers.SignedAmount((sphere.PreviousIncomeCents ?? 0) - (sphere.PreviousExpenseCents ?? 0))</td>
+                                    }
+                                </tr>
+                            }
                         }
                     </tbody>
                     <tfoot>
@@ -135,9 +142,9 @@
                         <tr>
                             <td>
                                 @AccountingHelpers.AccountIcon(account?.Kind ?? MoneyAccountKind.Bank) @account?.Name
-                                @if (account?.Iban is { } iban)
+                                @if (account is not null && AccountingHelpers.BankDetails(account) is { } details)
                                 {
-                                    <div class="acc-note">@AccountingHelpers.Iban(iban)</div>
+                                    <div class="acc-note">@details</div>
                                 }
                             </td>
                             <td class="acc-table__num">@AccountingHelpers.Amount(balance.OpeningCents)</td>
@@ -260,6 +267,12 @@
     [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
 
     private ReportView view = ReportView.IncomeStatement;
+
+    /// <summary>The statement by tax sphere; a US club has no spheres: one group (income first, then expenses).</summary>
+    private static IEnumerable<(IncomeStatementSphereDto? Sphere, IEnumerable<IncomeStatementCategoryDto> Lines)> Groups(IncomeStatementDto statement)
+        => AccountingHelpers.IsUnitedStates
+            ? [(null, statement.Spheres.SelectMany(s => s.Categories).OrderBy(c => c.Kind).ToList())]
+            : statement.Spheres.Select(s => ((IncomeStatementSphereDto?)s, (IEnumerable<IncomeStatementCategoryDto>)s.Categories));
     private int? sheetAccountId;
 
     protected override async Task OnYearChangedAsync()

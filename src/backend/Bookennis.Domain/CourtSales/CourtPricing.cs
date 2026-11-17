@@ -41,6 +41,10 @@ public static class CourtPricing
             if (rule is null)
                 return null;
 
+            // Rules in different currencies can't be added up: the slot is not for sale
+            if (currentRule is not null && !string.Equals(rule.Currency, currentRule.Currency, StringComparison.OrdinalIgnoreCase))
+                return null;
+
             if (currentRule is not null && !ReferenceEquals(rule, currentRule))
             {
                 lines.Add(new CourtQuoteLine(lineStart, minute, currentRule.PricePerHourCents, currentRule.Name));

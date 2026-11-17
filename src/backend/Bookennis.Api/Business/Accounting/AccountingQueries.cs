@@ -3,7 +3,9 @@ using Bookennis.Domain.Accounting;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Members;
+using Bookennis.Domain.User;
 using Bookennis.Shared.Controller.Accounting;
+using Bookennis.Shared.Utils;
 using Fusonic.Extensions.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using AccountingCategoryKind = Bookennis.Domain.Accounting.AccountingCategoryKind;
@@ -11,6 +13,34 @@ using AccountingEntryKind = Bookennis.Domain.Accounting.AccountingEntryKind;
 using AccountingEntryStatus = Bookennis.Domain.Accounting.AccountingEntryStatus;
 
 namespace Bookennis.Api.Business.Accounting;
+
+/// <summary>
+/// Where a club keeps its books: "today" is the local day of its time zone, amounts are in its currency and dates, PDFs and bank details
+/// follow its country (US clubs: 12-hour clock, month first, US Letter, account and routing number instead of IBAN, no tax spheres).
+/// </summary>
+public sealed record AccountingRegion(TimeZoneInfo TimeZone, Country Country, string Currency)
+{
+    public static readonly AccountingRegion Austria = new(ClubTimeZone.Default, Country.Austria, Club.DefaultCurrency);
+
+    public bool IsUnitedStates => Country == Country.UnitedStates;
+
+    /// <summary>The EPC QR code ("Zahlen mit Code") only knows SEPA credit transfers in euros.</summary>
+    public bool IsEuro => string.Equals(Currency, "eur", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>The local day of the club at <paramref name="now"/>: what "today" means for fiscal years, invoices and automatic entries.</summary>
+    public DateOnly Today(DateTimeOffset now) => ClubTimeZone.Today(TimeZone, now);
+
+    /// <summary>The moment the local day <paramref name="date"/> starts in the club, in UTC (Npgsql only writes UTC offsets).</summary>
+    public DateTimeOffset StartOfDay(DateOnly date) => ClubTimeZone.StartOfDay(date, TimeZone).ToUniversalTime();
+
+    /// <summary>The local day of the club at <paramref name="value"/>.</summary>
+    public DateOnly LocalDate(DateTimeOffset value) => DateOnly.FromDateTime(ClubTimeZone.ToLocal(value, TimeZone));
+
+    public DateTime LocalTime(DateTimeOffset value) => ClubTimeZone.ToLocal(value, TimeZone);
+
+    /// <summary>How the club writes dates and amounts, in German or English.</summary>
+    public RegionalCulture Culture(bool german) => RegionalCulture.For(german, (global::Bookennis.Shared.Controller.Shared.Country)Country, Currency);
+}
 
 internal static class AccountingQueries
 {
@@ -42,8 +72,13 @@ internal static class AccountingQueries
         => context.FiscalYears.Include(y => y.OpeningBalances)
             .SingleOrDefaultAsync(y => y.ClubId == year.ClubId && y.StartDate == year.EndDate.AddDays(1), cancellationToken);
 
-    /// <summary>The local day of the club (Austria): what "today" means for fiscal years.</summary>
-    public static DateOnly Today(DateTimeOffset now) => DateOnly.FromDateTime(ClubTimeZone.ToLocal(now));
+    /// <summary>Where the club is: its time zone ("today" of fiscal years, invoices and automatic entries), country and currency.</summary>
+    public static async Task<AccountingRegion> GetAccountingRegion(this AppDbContext context, int clubId, CancellationToken cancellationToken, bool ignoreFilters = false)
+    {
+        var clubs = ignoreFilters ? context.Clubs.IgnoreQueryFilters() : context.Clubs;
+        var club = await clubs.Where(c => c.Id == clubId).Select(c => new { c.TimeZoneId, c.Country, c.Currency }).SingleAsync(cancellationToken);
+        return new AccountingRegion(ClubTimeZone.Get(club.TimeZoneId), club.Country, club.Currency);
+    }
 
     /// <summary>"First Last" of members of the club, for the names shown in the accounting (never more than the name).</summary>
     public static async Task<Dictionary<int, string>> MemberNames(this AppDbContext context, int clubId, IEnumerable<int?> memberIds, CancellationToken cancellationToken)

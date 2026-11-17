@@ -22,5 +22,8 @@ public class ClubEntityConfiguration : IEntityTypeConfiguration<Club>
         builder.Property(n => n.Latitude).HasPrecision(7, 4);
         builder.Property(n => n.Longitude).HasPrecision(7, 4);
         builder.Ignore(n => n.Location);
+        builder.Ignore(n => n.TimeZone);
+        builder.Property(n => n.TimeZoneId).HasMaxLength(64);
+        builder.Property(n => n.Currency).HasMaxLength(3);
     }
 }

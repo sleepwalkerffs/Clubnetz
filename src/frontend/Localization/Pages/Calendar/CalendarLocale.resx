@@ -117,12 +117,6 @@
   <data name="FromTime" xml:space="preserve">
     <value>from {0}</value>
   </data>
-  <data name="DateFormat" xml:space="preserve">
-    <value>ddd, d MMM</value>
-  </data>
-  <data name="DateFormatWithYear" xml:space="preserve">
-    <value>ddd, d MMM yyyy</value>
-  </data>
   <data name="YoureIn" xml:space="preserve">
     <value>You're in ({0})</value>
   </data>
@@ -418,7 +412,7 @@
     <value>Registration deadline (optional)</value>
   </data>
   <data name="DeadlineHint" xml:space="preserve">
-    <value>Without a time it ends at 23:59</value>
+    <value>Without a time it ends at the end of the day</value>
   </data>
   <data name="DeadlineTimeLabel" xml:space="preserve">
     <value>Deadline time</value>

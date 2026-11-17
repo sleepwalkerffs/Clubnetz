@@ -6,10 +6,11 @@ using Bookennis.Shared.Controller.Booking;
 
 namespace Bookennis.Api.Business.Bookings;
 
+/// <remarks><c>TimeZoneInfoId</c>: Ignored: bookings are stored with the club's time zone (<c>Club.TimeZoneId</c>).</remarks>
 public record BookCourt(
     [Required] int CourtId,
     [Required] DateTimeOffsetInterval Interval,
-    [Required] string TimeZoneInfoId,
+    string? TimeZoneInfoId,
     [Required] int PlayModeId,
     [Required] List<int> Players,
     string? Comment,
@@ -36,7 +37,7 @@ public record BookCourt(
 
             var bookingContext = await builder.BuildContext(request.CourtId, request.Interval, [], cancellationToken);
 
-            var booking = context.Add(bookingService.BookCourt(bookingContext, request.Interval, request.TimeZoneInfoId, request.Comment)).Entity;
+            var booking = context.Add(bookingService.BookCourt(bookingContext, request.Interval, builder.Region.TimeZoneId, request.Comment)).Entity;
             await context.SaveChangesAsync(cancellationToken);
 
             return new BookCourtResult { Id = booking.Id };

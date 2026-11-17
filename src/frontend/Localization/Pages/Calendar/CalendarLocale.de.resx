@@ -117,12 +117,6 @@
   <data name="FromTime" xml:space="preserve">
     <value>ab {0}</value>
   </data>
-  <data name="DateFormat" xml:space="preserve">
-    <value>ddd, d. MMM</value>
-  </data>
-  <data name="DateFormatWithYear" xml:space="preserve">
-    <value>ddd, d. MMM yyyy</value>
-  </data>
   <data name="YoureIn" xml:space="preserve">
     <value>Du bist dabei ({0})</value>
   </data>
@@ -418,7 +412,7 @@
     <value>Anmeldeschluss (optional)</value>
   </data>
   <data name="DeadlineHint" xml:space="preserve">
-    <value>Ohne Uhrzeit endet sie um 23:59</value>
+    <value>Ohne Uhrzeit endet sie am Ende des Tages</value>
   </data>
   <data name="DeadlineTimeLabel" xml:space="preserve">
     <value>Uhrzeit</value>

@@ -4,6 +4,7 @@ using Bookennis.Api.Business.Members;
 using Bookennis.Api.Business.Memberships;
 using Bookennis.Api.Business.Notifications;
 using Bookennis.Api.Config;
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Api.Infrastructure;
 using Bookennis.Domain.Clubhouse;
@@ -50,9 +51,10 @@ public class ClubhouseTabPaymentNotifier(AppDbContext context, IMediator mediato
         if (recipient?.Email is null)
             return;
 
-        var culture = recipient.Language.ToCultureInfo();
+        var region = await context.GetClubRegion(payment.ClubId, cancellationToken);
+        var culture = recipient.Language.ToCultureInfo(region);
         var member = new MemberVariables(recipient.FirstName, recipient.LastName);
-        var tab = await LoadTab(payment, culture, $"{AppUrl}/clubs/{payment.ClubId}/my-club", cancellationToken);
+        var tab = await LoadTab(payment, region, culture, $"{AppUrl}/clubs/{payment.ClubId}/my-club", cancellationToken);
 
         await mediator.Send(new SendClubEmail(payment.ClubId, ClubEmailType.ClubhouseTabPaid, recipient.Email, member.FullName, recipient.Language,
             new ClubhouseTabPaidEmailVariables(member, tab.Variables)), cancellationToken);
@@ -72,11 +74,12 @@ public class ClubhouseTabPaymentNotifier(AppDbContext context, IMediator mediato
         ).ToListAsync(cancellationToken);
 
         var recipients = staff.Any(s => s.IsHost) ? staff.Where(s => s.IsHost).ToList() : staff;
+        var region = await context.GetClubRegion(payment.ClubId, cancellationToken);
         foreach (var recipient in recipients.DistinctBy(r => r.Email!.ToLowerInvariant()))
         {
-            var culture = recipient.Language.ToCultureInfo();
+            var culture = recipient.Language.ToCultureInfo(region);
             var member = new MemberVariables(recipient.FirstName, recipient.LastName);
-            var tab = await LoadTab(payment, culture, $"{AppUrl}/clubs/{payment.ClubId}/clubhouse", cancellationToken);
+            var tab = await LoadTab(payment, region, culture, $"{AppUrl}/clubs/{payment.ClubId}/clubhouse", cancellationToken);
             var variables = new ClubhouseTabNeedsAttentionEmailVariables(
                 member,
                 tab.Variables,
@@ -89,7 +92,7 @@ public class ClubhouseTabPaymentNotifier(AppDbContext context, IMediator mediato
 
     private string AppUrl => appSettings.AppUri.AbsoluteUri.TrimEnd('/');
 
-    private async Task<(ClubhouseTabVariables Variables, string GuestName)> LoadTab(ClubhouseTabPayment payment, CultureInfo culture, string url, CancellationToken cancellationToken)
+    private async Task<(ClubhouseTabVariables Variables, string GuestName)> LoadTab(ClubhouseTabPayment payment, ClubRegion region, CultureInfo culture, string url, CancellationToken cancellationToken)
     {
         var tab = await context.ClubhouseTabs.IgnoreQueryFilters().AsNoTracking()
             .Include(t => t.Lines)
@@ -107,8 +110,8 @@ public class ClubhouseTabPaymentNotifier(AppDbContext context, IMediator mediato
 
         var paidAt = payment.PaidAt ?? payment.CreatedAt;
         var variables = new ClubhouseTabVariables(
-            MembershipTexts.Amount(payment.AmountCents, culture),
-            NotificationTexts.Date(culture, ClubhouseQueries.LocalDate(paidAt)),
+            MembershipTexts.Amount(payment.AmountCents, culture, payment.Currency),
+            NotificationTexts.Date(culture, ClubhouseQueries.LocalDate(paidAt, region.TimeZone)),
             items,
             payment.TransactionCode ?? "–",
             url);

@@ -81,14 +81,27 @@ public class MoneyAccount : AccountingMasterData
         Update(data);
     }
 
-    public record AccountData(string? Name, MoneyAccountKind Kind, string? Iban, int SortOrder);
+    /// <summary>
+    /// A bank account has an <c>Iban</c> (Europe) or an <c>AccountNumber</c> with its ABA <c>RoutingNumber</c> (United States), or
+    /// neither; the other kinds have no bank details.
+    /// </summary>
+    public record AccountData(string? Name, MoneyAccountKind Kind, string? Iban, int SortOrder, string? AccountNumber = null, string? RoutingNumber = null);
 
     public MoneyAccountKind Kind { get; private set; }
 
     /// <summary>The IBAN of the club's bank account, without spaces, upper case. Only for bank accounts.</summary>
     public string? Iban { get; private set; }
 
+    /// <summary>The number of a US bank account (digits only), always with <see cref="RoutingNumber"/>. Only for bank accounts.</summary>
+    public string? AccountNumber { get; private set; }
+
+    /// <summary>The 9-digit ABA routing number of the bank of <see cref="AccountNumber"/>.</summary>
+    public string? RoutingNumber { get; private set; }
+
     public int SortOrder { get; private set; }
+
+    /// <summary>Somebody can pay to it: an IBAN, or a US account number with its routing number.</summary>
+    public bool HasBankDetails => Iban is not null || AccountNumber is not null;
 
     public void Update(AccountData data)
     {
@@ -97,7 +110,15 @@ public class MoneyAccount : AccountingMasterData
 
         Name = ValidName(data.Name, MaxNameLength);
         Kind = data.Kind;
-        Iban = data.Kind == MoneyAccountKind.Bank ? IbanNumber.Normalize(data.Iban) : null;
+        var bank = data.Kind == MoneyAccountKind.Bank;
+        Iban = bank ? IbanNumber.Normalize(data.Iban) : null;
+        var accountNumber = bank ? UsBankAccount.NormalizeAccountNumber(data.AccountNumber) : null;
+        var routingNumber = bank ? AbaRoutingNumber.Normalize(data.RoutingNumber) : null;
+        if (accountNumber is null != routingNumber is null)
+            throw new PreconditionException(accountNumber is null ? AccountingErrorCode.AccountingAccountNumberInvalid : AccountingErrorCode.AccountingRoutingNumberInvalid,
+                "A US bank account needs both its account number and its routing number.");
+        AccountNumber = accountNumber;
+        RoutingNumber = routingNumber;
         SortOrder = data.SortOrder;
     }
 }
@@ -198,4 +219,53 @@ public static class IbanNumber
 
     /// <summary>In groups of four, as printed on a bank card.</summary>
     public static string Format(string compact) => string.Join(' ', compact.Chunk(4).Select(c => new string(c)));
+}
+
+/// <summary>Checks the 9-digit ABA routing number of a US bank (weights 3, 7, 1: the sum is a multiple of 10).</summary>
+public static class AbaRoutingNumber
+{
+    public const int Length = 9;
+
+    /// <summary>The digits, <c>null</c> for an empty one; throws for an invalid one.</summary>
+    public static string? Normalize(string? routingNumber)
+    {
+        if (string.IsNullOrWhiteSpace(routingNumber))
+            return null;
+
+        var compact = new string(routingNumber.Where(c => !char.IsWhiteSpace(c) && c != '-').ToArray());
+        if (!IsValid(compact))
+            throw new PreconditionException(AccountingErrorCode.AccountingRoutingNumberInvalid, "Invalid routing number.");
+        return compact;
+    }
+
+    public static bool IsValid(string compact)
+    {
+        if (compact.Length != Length || !compact.All(char.IsAsciiDigit))
+            return false;
+
+        int[] weights = [3, 7, 1, 3, 7, 1, 3, 7, 1];
+        var sum = compact.Select((c, i) => (c - '0') * weights[i]).Sum();
+        return sum % 10 == 0 && compact != "000000000";
+    }
+}
+
+/// <summary>The number of a US bank account: 4 to 17 digits (banks print them with spaces or dashes).</summary>
+public static class UsBankAccount
+{
+    public const int MinLength = 4;
+    public const int MaxLength = 17;
+
+    public static string? NormalizeAccountNumber(string? accountNumber)
+    {
+        if (string.IsNullOrWhiteSpace(accountNumber))
+            return null;
+
+        var compact = new string(accountNumber.Where(c => !char.IsWhiteSpace(c) && c != '-').ToArray());
+        if (compact.Length is < MinLength or > MaxLength || !compact.All(char.IsAsciiDigit))
+            throw new PreconditionException(AccountingErrorCode.AccountingAccountNumberInvalid, [MinLength.ToString(CultureInfo.InvariantCulture), MaxLength.ToString(CultureInfo.InvariantCulture)], "Invalid account number.");
+        return compact;
+    }
+
+    /// <summary>"••••6789": the last four digits, for lists that don't need the whole number.</summary>
+    public static string Masked(string accountNumber) => "••••" + accountNumber[^Math.Min(4, accountNumber.Length)..];
 }

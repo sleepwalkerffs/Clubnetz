@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Localization.Pages.Statistics
 @using Bookennis.Shared.Controller.Statistics
@@ -5,13 +6,14 @@
 <MudText Typo="Typo.body2" Class="mb-4">
     @((MarkupString)string.Format(Locale["FavouriteDaySentence"],
         $"<strong>{GetDayName(favouriteDayIndex)}</strong>",
-        $"<strong>{favouriteHour}:00</strong>"))
+        $"<strong>{RegionalCulture.Current.Time(TimeSpan.FromHours(favouriteHour))}</strong>"))
 </MudText>
 
 <div class="rhythm-section-title">@Locale["ByWeekday"]</div>
 <div class="weekday-bars">
-    @for (var i = 0; i < 7; i++)
+    @foreach (var day in RegionalCulture.Current.WeekDays)
     {
+        var i = ToDayIndex(day);
         var count = Data.WeekdayCounts[i];
         var height = maxWeekday > 0 ? Math.Max(count * 100.0 / maxWeekday, count > 0 ? 6 : 0) : 0;
         <div class="weekday-bar">
@@ -30,11 +32,11 @@
     {
         var count = Data.HourCounts[hour];
         var height = maxHour > 0 ? Math.Max(count * 100.0 / maxHour, count > 0 ? 6 : 0) : 0;
-        <div class="hour-bar" title="@($"{hour}:00 – {count} {(count == 1 ? Locale["Match"] : Locale["Matches"])}")">
+        <div class="hour-bar" title="@($"{RegionalCulture.Current.Time(TimeSpan.FromHours(hour))} – {count} {(count == 1 ? Locale["Match"] : Locale["Matches"])}")">
             <div class="hour-bar__track">
                 <div class="hour-bar__fill hour-bar__fill--@GetBucket(hour)" style="height: @height.ToString("0.#", CultureInfo.InvariantCulture)%"></div>
             </div>
-            <div class="hour-bar__label">@(hour % 3 == 0 ? hour.ToString() : "")</div>
+            <div class="hour-bar__label">@(hour % 3 == 0 ? AxisHour(hour) : "")</div>
         </div>
     }
 </div>
@@ -83,8 +85,13 @@
 
     private static string GetBucket(int hour) => hour < AfternoonStart ? "morning" : hour < EveningStart ? "afternoon" : "evening";
 
-    // dayIndex 0 = Monday
+    // dayIndex 0 = Monday (the order of the counts); the bars follow the club's first day of the week
     private static DayOfWeek ToDayOfWeek(int dayIndex) => (DayOfWeek)((dayIndex + 1) % 7);
+
+    private static int ToDayIndex(DayOfWeek day) => ((int)day + 6) % 7;
+
+    private static string AxisHour(int hour)
+        => RegionalCulture.Current.UsesTwelveHourClock ? RegionalCulture.Current.HourLabel(hour) : hour.ToString(CultureInfo.InvariantCulture);
 
     private static string GetDayName(int dayIndex) => CultureInfo.CurrentCulture.DateTimeFormat.GetDayName(ToDayOfWeek(dayIndex));
 

@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
 @using Bookennis.Client.Components.Shared.Dialogs
@@ -17,7 +18,7 @@
                 <MudTextField Variant="Variant.Outlined" T="string" Label="@L["Plan_Name"]" @bind-Value="name" Immediate="true" Required="true"
                               RequiredError="@L["Plan_NameRequired"]" MaxLength="100" Margin="Margin.Dense" Placeholder="@L["Plan_NamePlaceholder"]" />
                 <MudNumericField Variant="Variant.Outlined" T="decimal" Label="@L["Plan_Price"]" @bind-Value="price" Immediate="true" Min="0" Max="99999.99m" Step="5"
-                                 Format="N2" Culture="@CultureInfo.CurrentCulture" Adornment="Adornment.Start" AdornmentText="€" HideSpinButtons="true" Margin="Margin.Dense" />
+                                 Format="N2" Culture="@CultureInfo.CurrentCulture" Adornment="Adornment.Start" AdornmentText="@RegionalCulture.CurrencySymbol(RegionalCulture.Current.Currency)" HideSpinButtons="true" Margin="Margin.Dense" />
             </div>
             <div class="plan-edit__seasonhint">@string.Format(L["Plan_SeasonHint"], MemberAdminHelpers.SeasonLabel(Season))</div>
             <MudTextField Variant="Variant.Outlined" T="string" Label="@L["Plan_Description"]" @bind-Value="description" Immediate="true" Lines="2" AutoGrow="true" MaxLines="5"
@@ -192,7 +193,7 @@
                 Name = name,
                 Description = description,
                 PriceCents = model.PriceCents,
-                Currency = "eur",
+                Currency = Plan?.Currency ?? RegionalCulture.Current.Currency,
                 MaxAdults = model.MaxAdults,
                 IncludesChildren = model.IncludesChildren,
                 BirthYearFrom = model.BirthYearFrom,

@@ -1,3 +1,4 @@
+@using Bookennis.Shared.Utils
 @page "/clubs/{ClubId:int}/calendar/new"
 @page "/clubs/{ClubId:int}/calendar/{ClubEventId:int}/edit"
 @using Bookennis.Client.Components.Shared
@@ -57,9 +58,9 @@ else
                 @if (!draft.IsAllDay)
                 {
                     <div class="editor-row">
-                        <MudTimePicker @bind-Time="draft.StartTime" Variant="Variant.Outlined" Label="@Locale["StartTimeLabel"]"
+                        <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" @bind-Time="draft.StartTime" Variant="Variant.Outlined" Label="@Locale["StartTimeLabel"]"
                                        MinuteSelectionStep="15" PickerVariant="PickerVariant.Dialog" />
-                        <MudTimePicker @bind-Time="draft.EndTime" Variant="Variant.Outlined" Label="@Locale["EndTimeLabel"]"
+                        <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" @bind-Time="draft.EndTime" Variant="Variant.Outlined" Label="@Locale["EndTimeLabel"]"
                                        MinuteSelectionStep="15" PickerVariant="PickerVariant.Dialog" Clearable="true" />
                     </div>
                 }
@@ -136,7 +137,7 @@ else
                                        HelperText="@Locale["DeadlineHint"]" Clearable="true" PickerVariant="PickerVariant.Dialog" />
                         @if (draft.DeadlineDate is not null)
                         {
-                            <MudTimePicker @bind-Time="draft.DeadlineTime" Variant="Variant.Outlined" Label="@Locale["DeadlineTimeLabel"]"
+                            <MudTimePicker AmPm="@RegionalCulture.Current.UsesTwelveHourClock" @bind-Time="draft.DeadlineTime" Variant="Variant.Outlined" Label="@Locale["DeadlineTimeLabel"]"
                                            MinuteSelectionStep="15" Clearable="true" PickerVariant="PickerVariant.Dialog" />
                         }
                     </div>

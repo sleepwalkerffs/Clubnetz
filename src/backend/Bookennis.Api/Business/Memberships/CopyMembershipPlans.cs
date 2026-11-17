@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Memberships;
@@ -38,8 +39,9 @@ public record CopyMembershipPlans(int ClubId, int SourceSeasonId, int TargetSeas
 
             var yearOffset = targetSeason.Period.From.Year - sourceSeason.Period.From.Year;
             var sortOrder = 0;
+            var region = await context.GetClubRegion(request.ClubId, cancellationToken);
             foreach (var plan in sourcePlans)
-                context.MembershipPlans.Add(new MembershipPlan(request.ClubId, targetSeason.Id, plan.CopyData(yearOffset), ++sortOrder));
+                context.MembershipPlans.Add(new MembershipPlan(request.ClubId, targetSeason.Id, plan.CopyData(yearOffset), ++sortOrder, region.Currency));
 
             await context.SaveChangesAsync(cancellationToken);
             return default;

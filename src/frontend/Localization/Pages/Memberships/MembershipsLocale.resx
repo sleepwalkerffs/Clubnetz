@@ -945,4 +945,10 @@
   <data name="Plans_OrdersOne" xml:space="preserve">
     <value>Chosen once</value>
   </data>
+  <data name="Account_Subtitle_Us" xml:space="preserve">
+    <value>Members pay by card, straight to your club</value>
+  </data>
+  <data name="Account_Fact_Methods_Us" xml:space="preserve">
+    <value>Cards are on by default. You choose the payment methods in Stripe.</value>
+  </data>
 </root>
