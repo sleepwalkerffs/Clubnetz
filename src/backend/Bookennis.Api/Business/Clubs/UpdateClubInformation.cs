@@ -6,7 +6,7 @@ using Fusonic.Extensions.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Clubs;
 
-public record UpdateClubInformation(int ClubId, TimeOnlyInterval OpeningHours, PrimeTimeSettings PrimeTimeSettings, int? BookingGracePeriodInMinutes) : ICommand
+public record UpdateClubInformation(int ClubId, TimeOnlyInterval OpeningHours, PrimeTimeSettings PrimeTimeSettings, int? BookingGracePeriodInMinutes, int? BookingsPerWeek = null) : ICommand
 {
     public enum ErrorCode
     {
@@ -24,6 +24,9 @@ public record UpdateClubInformation(int ClubId, TimeOnlyInterval OpeningHours, P
             club.UpdateWorkingHours(request.OpeningHours, request.PrimeTimeSettings.PrimeTimeHours);
             club.SetBookingGracePeriod(request.BookingGracePeriodInMinutes);
             club.UpdatePrimeTimeSettings(request.PrimeTimeSettings);
+            // Older clients don't send it: the club keeps its value
+            if (request.BookingsPerWeek is { } bookingsPerWeek)
+                club.SetBookingsPerWeek(bookingsPerWeek);
 
             await context.SaveChangesAsync(cancellationToken);
             return default;

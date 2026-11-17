@@ -26,6 +26,7 @@ public record GetClubInformation(int ClubId) : IQuery<ClubInformationResult>
                                                 ChildAgeThreshold = c.PrimeTimeSettings.ChildAgeThreshold
                                             },
                                             BookingGracePeriodInMinutes = c.BookingGracePeriodInMinutes,
+                                            BookingsPerWeek = c.ConcurrentAllowedBookings,
                                             Latitude = c.Latitude,
                                             Longitude = c.Longitude,
                                         })

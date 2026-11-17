@@ -1121,5 +1121,32 @@ namespace Bookennis.Client.Localization.Pages.ClubSettings {
                 return ResourceManager.GetString("Years", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bookings per week.
+        /// </summary>
+        public static string BookingsPerWeek {
+            get {
+                return ResourceManager.GetString("BookingsPerWeek", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to How many upcoming bookings a member may have at the same time. Applies to every member, individual values on the member page can only be lower.
+        /// </summary>
+        public static string BookingsPerWeekHint {
+            get {
+                return ResourceManager.GetString("BookingsPerWeekHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to per week.
+        /// </summary>
+        public static string PerWeek {
+            get {
+                return ResourceManager.GetString("PerWeek", resourceCulture);
+            }
+        }
     }
 }

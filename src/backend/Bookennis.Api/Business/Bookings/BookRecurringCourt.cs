@@ -145,6 +145,7 @@ public record BookRecurringCourt(
                 IntersectingBookings = intersectingBookings,
                 PlayMode = queryResult.PlayMode,
                 BookingGracePeriodInMinutes = queryResult.Club.BookingGracePeriodInMinutes,
+                ClubBookingsPerWeek = queryResult.Club.ConcurrentAllowedBookings,
                 ActiveSeasonId = activeSeason.Id,
                 CourtBlockingTitles = await context.GetCourtBlockingTitles(request.CourtId, firstInterval, cancellationToken),
             };

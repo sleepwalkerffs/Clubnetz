@@ -32,6 +32,12 @@
             <NumberStepper Value="@(gracePeriod ?? 0)" ValueChanged="@(value => gracePeriod = value)" Min="0" Max="30" Unit="@L["Minutes"]" Label="@L["GracePeriod"]" />
         </section>
 
+        <section class="rules__group">
+            <h3 class="rules__title">🎾 @L["BookingsPerWeek"]</h3>
+            <p class="rules__hint">@L["BookingsPerWeekHint"]</p>
+            <NumberStepper @bind-Value="bookingsPerWeek" Min="@MinBookingsPerWeek" Max="@MaxBookingsPerWeek" Unit="@L["PerWeek"]" Label="@L["BookingsPerWeek"]" />
+        </section>
+
         <section class="rules__group rules__group--wide">
             <div class="rules__header">
                 <h3 class="rules__title">⚡ @L["PrimeTime"]</h3>
@@ -111,6 +117,7 @@
     private TimeSpan? primeFrom;
     private TimeSpan? primeTo;
     private int? gracePeriod;
+    private int bookingsPerWeek;
     private bool primeTimeEnabled;
     private List<DayOfWeek> weekdays = [];
     private bool restrictChildren;
@@ -127,6 +134,7 @@
            || primeFrom != Details.PrimeTimeSettings.PrimeTimeHours.From.ToTimeSpan()
            || primeTo != Details.PrimeTimeSettings.PrimeTimeHours.To.ToTimeSpan()
            || gracePeriod != Details.BookingGracePeriodInMinutes && !(gracePeriod == 0 && Details.BookingGracePeriodInMinutes is null)
+           || bookingsPerWeek != Details.BookingsPerWeek
            || primeTimeEnabled != Details.PrimeTimeSettings.IsEnabled
            || !weekdays.Order().SequenceEqual(Details.PrimeTimeSettings.ApplicableWeekdays.Order())
            || restrictChildren != Details.PrimeTimeSettings.RestrictChildren
@@ -142,6 +150,7 @@
         primeFrom = Details.PrimeTimeSettings.PrimeTimeHours.From.ToTimeSpan();
         primeTo = Details.PrimeTimeSettings.PrimeTimeHours.To.ToTimeSpan();
         gracePeriod = Details.BookingGracePeriodInMinutes;
+        bookingsPerWeek = Details.BookingsPerWeek;
         primeTimeEnabled = Details.PrimeTimeSettings.IsEnabled;
         weekdays = Details.PrimeTimeSettings.ApplicableWeekdays.ToList();
         restrictChildren = Details.PrimeTimeSettings.RestrictChildren;
@@ -149,6 +158,10 @@
         childAgeThreshold = Details.PrimeTimeSettings.ChildAgeThreshold;
         errors = [];
     }
+
+    // Same bounds as Club.SetBookingsPerWeek on the server
+    private const int MinBookingsPerWeek = 1;
+    private const int MaxBookingsPerWeek = 50;
 
     private static double Hours(TimeSpan? value) => value?.TotalHours ?? 0;
 
@@ -195,6 +208,7 @@
                     ChildAgeThreshold = childAgeThreshold,
                 },
                 BookingGracePeriodInMinutes = gracePeriod,
+                BookingsPerWeek = bookingsPerWeek,
             });
 
             if (!result.Success)

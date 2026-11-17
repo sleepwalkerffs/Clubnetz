@@ -1020,4 +1020,7 @@
   <data name="ClubCurrencyInUse" xml:space="preserve">
     <value>The club already has prices, payments or bookkeeping in its currency, so the currency can no longer be changed.</value>
   </data>
+  <data name="ClubInvalidBookingsPerWeek" xml:space="preserve">
+    <value>Bookings per week must be between {0} and {1}.</value>
+  </data>
 </root>

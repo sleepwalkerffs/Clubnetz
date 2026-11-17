@@ -192,6 +192,7 @@ internal sealed class BookingContextBuilder
             IntersectingBookings = intersectingBookings,
             PlayMode = PlayMode,
             BookingGracePeriodInMinutes = Club.BookingGracePeriodInMinutes,
+            ClubBookingsPerWeek = Club.ConcurrentAllowedBookings,
             ActiveSeasonId = ActiveSeason?.Id,
             CourtBlockingTitles = courtBlockingTitles,
         };

@@ -114,7 +114,7 @@ public class BookingDomainService : IBookingDomainService
             if (!isSpontaneousBooking && participant.BookingsOnThatDay > 0 && context.PlayMode.IsChargingBookingSubscription)
                 throw new PreconditionException(ErrorCode.CannotBookInAdvanceTwice, [participant.FullName], $"User {participant.FullName} cannot book twice in advance on a day");
 
-            if (!isSpontaneousBooking && context.PlayMode.IsChargingBookingSubscription && participant.UpcomingBookingsCount >= participant.Member.BookingsPerWeek)
+            if (!isSpontaneousBooking && context.PlayMode.IsChargingBookingSubscription && participant.UpcomingBookingsCount >= BookingsPerWeekLimit(participant.Member, context.ClubBookingsPerWeek))
                 throw new PreconditionException(ErrorCode.MaximumReservationsReached, [participant.FullName], $"User {participant.FullName} has reached the maximum amount of reservations");
 
             if (context.PlayMode.MaxBookingsPerSeason is not null && participant.PlayModeBookingsInSeasonCount >= context.PlayMode.MaxBookingsPerSeason.Value)
@@ -144,6 +144,15 @@ public class BookingDomainService : IBookingDomainService
             throw new InvalidOperationException("Play mode does not allow comments");
     }
 
+    /// <summary>The member's own bookings per week, or the club's when the member has none; never more than the club's.</summary>
+    public static int? BookingsPerWeekLimit(Member member, int? clubBookingsPerWeek)
+        => (member.BookingsPerWeek, clubBookingsPerWeek) switch
+        {
+            ({ } own, { } club) => Math.Min(own, club),
+            ({ } own, null) => own,
+            (null, var club) => club,
+        };
+
     public record Context
     {
         public required int ClubId { get; init; }
@@ -170,6 +179,12 @@ public class BookingDomainService : IBookingDomainService
         /// Opening hours, inactive or blocked courts, overlaps and the grace period apply as for every booking.
         /// </summary>
         public bool IsPurchase { get; init; }
+
+        /// <summary>
+        /// Bookings per week of the club (<see cref="Club.ConcurrentAllowedBookings"/>): the limit of members without an own value
+        /// and the upper bound of the own values. <c>null</c>: only the members' own values apply.
+        /// </summary>
+        public int? ClubBookingsPerWeek { get; init; }
 
         /// <summary>Titles of the court blockings that intersect the booked time.</summary>
         public IReadOnlyList<string> CourtBlockingTitles { get; init; } = [];

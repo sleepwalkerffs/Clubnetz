@@ -502,4 +502,13 @@
   <data name="RegionHint" xml:space="preserve">
     <value>Times in the app follow the club's time zone, dates and amounts the club's country and currency. To change them, please contact the Clubnetz support.</value>
   </data>
+  <data name="BookingsPerWeek" xml:space="preserve">
+    <value>Bookings per week</value>
+  </data>
+  <data name="BookingsPerWeekHint" xml:space="preserve">
+    <value>How many upcoming bookings a member may have at the same time. Applies to every member, individual values on the member page can only be lower.</value>
+  </data>
+  <data name="PerWeek" xml:space="preserve">
+    <value>per week</value>
+  </data>
 </root>

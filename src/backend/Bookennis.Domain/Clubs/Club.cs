@@ -46,7 +46,28 @@ public class Club : DomainEntity, IAggregateRoot
     }
 
     public string Name { get; private set; }
+
+    /// <summary>
+    /// Bookings per week: how many upcoming bookings in charging play modes a member may have at the same time.
+    /// Applies to every member without an own value (<see cref="Member.BookingsPerWeek"/>) and is the upper bound of the own values.
+    /// </summary>
     public int ConcurrentAllowedBookings { get; private set; } = ConcurrentAllowedBookingsForNewClubs;
+
+    public const int MinBookingsPerWeek = 1;
+    public const int MaxBookingsPerWeek = 50;
+
+    public enum BookingsPerWeekErrorCode
+    {
+        ClubInvalidBookingsPerWeek = 0,
+    }
+
+    public void SetBookingsPerWeek(int bookingsPerWeek)
+    {
+        if (bookingsPerWeek is < MinBookingsPerWeek or > MaxBookingsPerWeek)
+            throw new PreconditionException(BookingsPerWeekErrorCode.ClubInvalidBookingsPerWeek, [MinBookingsPerWeek.ToString(), MaxBookingsPerWeek.ToString()],
+                $"Bookings per week must be between {MinBookingsPerWeek} and {MaxBookingsPerWeek}.");
+        ConcurrentAllowedBookings = bookingsPerWeek;
+    }
     public TimeOnlyInterval OpeningHours { get; private set; }
     public IReadOnlyList<PlayMode> PlayModes => playModes.AsReadOnly();
     public IReadOnlyList<Season> Seasons => seasons.AsReadOnly();
