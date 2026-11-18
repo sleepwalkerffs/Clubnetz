@@ -36,7 +36,7 @@
 
         @if (ShowPlayerSelection)
         {
-            <PlayerSelection @ref="playerSelection" AvailablePlayers="@Players" MaxPlayers="@selectedPlayMode.FixedPlayerCount"
+            <PlayerSelection @ref="playerSelection" AvailablePlayers="@Players" Sport="@SportOfSlots" MaxPlayers="@selectedPlayMode.FixedPlayerCount"
                              FixedPlayer="@FixedPlayer" FixedPlayerAlternative="@FixedPlayerAlternatives" InitialPlayers="@InitialPlayers" OnSelectionChanged="ScheduleCheck" />
         }
 
@@ -197,6 +197,10 @@
         if (firstRender)
             await Check();
     }
+
+    /// <summary>The sport of the selected courts when they share one: only players enrolled for it are offered (otherwise the dry run tells).</summary>
+    private Bookennis.Shared.Controller.Shared.Sport? SportOfSlots
+        => Slots.Select(slot => Courts.FirstOrDefault(c => c.CourtId == slot.CourtId)?.Sport).Distinct().ToList() is [{ } sport] ? sport : null;
 
     private string CourtName(int courtId) => Courts.FirstOrDefault(c => c.CourtId == courtId)?.Name ?? string.Empty;
 

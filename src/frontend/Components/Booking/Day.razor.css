@@ -43,6 +43,11 @@
     border-left: 1px solid var(--mud-palette-lines-default);
 }
 
+.day__court-sport {
+    margin-right: 2px;
+    font-size: 0.75rem;
+}
+
 .day__court-alias {
     font-size: 0.85rem;
     font-weight: 800;

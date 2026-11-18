@@ -24,9 +24,9 @@ public class PlayRequestsStore(IPlayRequestsHttpClient httpClient, IPlayerGroups
         }
     }, nameof(LoadRequests));
 
-    public Task LoadCandidates() => RunInLoadingContextAsync(async cancellationToken =>
+    public Task LoadCandidates(Bookennis.Shared.Controller.Shared.Sport? sport = null) => RunInLoadingContextAsync(async cancellationToken =>
     {
-        var response = await httpClient.GetCandidates(cancellationToken);
+        var response = await httpClient.GetCandidates(sport, cancellationToken);
         if (response is { Success: true, Dto: not null })
             Candidates = response.Dto;
     }, nameof(LoadCandidates));

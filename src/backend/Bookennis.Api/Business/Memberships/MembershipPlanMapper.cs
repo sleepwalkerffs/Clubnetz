@@ -19,7 +19,8 @@ public static class MembershipPlanMapper
         model.GrantsSeasonEnrollment,
         model.AvailableFrom,
         model.AvailableUntil,
-        model.IsSelfService);
+        model.IsSelfService,
+        (model.Sports ?? []).Select(s => (Domain.Courts.Sport)s).ToList());
 
     public static MembershipPlanDto ToDto(this MembershipPlan plan, int orderCount = 0) => new()
     {
@@ -40,6 +41,7 @@ public static class MembershipPlanMapper
         AvailableFrom = plan.AvailableFrom,
         AvailableUntil = plan.AvailableUntil,
         IsSelfService = plan.IsSelfService,
+        Sports = plan.Sports.Select(s => (Bookennis.Shared.Controller.Shared.Sport)s).ToList(),
         SortOrder = plan.SortOrder,
         OrderCount = orderCount,
     };

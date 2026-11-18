@@ -1,6 +1,7 @@
 using Bookennis.Api.Business.Clubs;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Members;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,6 +44,25 @@ public static class ActiveMembership
         var season = await context.GetActiveSeason(clubId, cancellationToken);
         return season is not null && await context.MemberSeasons.AnyAsync(ms => ms.MemberId == memberId && ms.SeasonId == season.Id, cancellationToken);
     }
+
+    /// <summary>
+    /// The sports of the member's own enrollment in the active season: <c>null</c> = not enrolled, empty = every sport.
+    /// Being active (see <see cref="IsActive"/>) does not depend on the sport; booking a court for free does.
+    /// </summary>
+    public static async Task<Sport[]?> EnrolledSportsInActiveSeason(AppDbContext context, int clubId, int memberId, CancellationToken cancellationToken)
+    {
+        var season = await context.GetActiveSeason(clubId, cancellationToken);
+        return season is null
+            ? null
+            : await context.MemberSeasons
+                .Where(ms => ms.MemberId == memberId && ms.SeasonId == season.Id)
+                .Select(ms => ms.Sports)
+                .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    /// <summary>The sports of the club's courts (one entry per sport, ordered).</summary>
+    public static Task<List<Sport>> ClubSports(this AppDbContext context, int clubId, CancellationToken cancellationToken)
+        => Bookennis.Api.Business.Shared.SportFilter.OrderedClubSports(context, clubId, cancellationToken);
 
     /// <summary>See <see cref="ActiveMembership"/>. <c>false</c> for a member of another club or a member that does not exist.</summary>
     public static async Task<bool> IsActive(AppDbContext context, int clubId, int memberId, CancellationToken cancellationToken)

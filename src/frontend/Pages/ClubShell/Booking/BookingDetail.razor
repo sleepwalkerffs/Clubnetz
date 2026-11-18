@@ -60,7 +60,7 @@ else
                     <span class="detail-hero__duration">@FormatDuration(booking.Interval.To - booking.Interval.From)</span>
                 </div>
                 <div class="detail-hero__chips">
-                    <span class="detail-chip">📍 @GetCourtName(booking.CourtId)</span>
+                    <span class="detail-chip">📍 @GetCourtName(booking.CourtId)@(SeveralSports && SportOfBooking is { } sport ? $" · {sport.Emoji()} {sport.Name(SharedLocale)}" : null)</span>
                     <span class="detail-chip detail-chip--mode">@booking.PlayMode.Name</span>
                     @if (WeatherOf(booking) is { } weather)
                     {
@@ -126,7 +126,7 @@ else
                                      ColorFunc="@(playMode => BookingColors.ToHex(playMode.Color))" />
                     }
                     <ChoiceChips TItem="CourtResult" Label="@Locale["Court"]" Items="@EditCourts" Value="@editCourt"
-                                 ValueChanged="@(court => editCourt = court)" TextFunc="@(court => court.Name)" />
+                                 ValueChanged="@(court => editCourt = court)" TextFunc="@(court => SeveralSports ? $"{court.Sport.Emoji()} {court.Name}" : court.Name)" />
 
                     <div class="detail-edit__times">
                         <MudDatePicker @bind-Date="editDate" Variant="Variant.Outlined" Label=@Locale["Date"] />
@@ -139,7 +139,7 @@ else
 
                     @if ((editPlayMode?.FixedPlayerCount.HasValue ?? false) || ChildIsParticipantInBooking)
                     {
-                        <PlayerSelection @ref="PlayerSelectionComponent" AvailablePlayers="@ClubStore.ClubPlayers" MaxPlayers="@(editPlayMode?.FixedPlayerCount ?? 1)" FixedPlayer="@EditFixedPlayer" FixedPlayerAlternative="@EditFixedPlayerAlternatives" InitialPlayers="@EditInitialPlayers" />
+                        <PlayerSelection @ref="PlayerSelectionComponent" AvailablePlayers="@ClubStore.ClubPlayers" Sport="@editCourt?.Sport" MaxPlayers="@(editPlayMode?.FixedPlayerCount ?? 1)" FixedPlayer="@EditFixedPlayer" FixedPlayerAlternative="@EditFixedPlayerAlternatives" InitialPlayers="@EditInitialPlayers" />
                     }
                     @if (editPlayMode?.CommentAllowed ?? false)
                     {
@@ -300,7 +300,15 @@ else
         ClubStore.PlayModes.Where(mode => mode.AllowedRoles.Any(ProfileStore.Roles.Contains)).ToList();
 
     /// <summary>The courts the chosen play mode can be booked on (<see cref="PlayModeDto.CourtIds"/>).</summary>
-    private List<CourtResult> EditCourts => ClubStore.Courts.Where(court => editPlayMode?.IsAllowedOnCourt(court.CourtId) ?? true).ToList();
+    /// <remarks>Members move a booking only to courts of the same sport (tennis and padel are separate memberships); staff move it freely, the server decides.</remarks>
+    private List<CourtResult> EditCourts => ClubStore.Courts
+        .Where(court => editPlayMode?.IsAllowedOnCourt(court.CourtId) ?? true)
+        .Where(court => HasElevatedRole || ProfileStore.IsSupportMode || SportOfBooking is not { } sport || court.Sport == sport)
+        .ToList();
+
+    private bool SeveralSports => ClubStore.Courts.HasSeveralSports();
+
+    private Sport? SportOfBooking => ClubStore.Courts.FirstOrDefault(c => c.CourtId == booking?.CourtId)?.Sport;
 
     /// <summary>A play mode limited to other courts moves the booking to the first court it allows.</summary>
     private void OnEditPlayModeChanged(PlayModeDto playMode)

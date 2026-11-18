@@ -32,6 +32,11 @@ public class Court : TenantDomainEntity, IAggregateRoot
 
     public void SetIndoor(bool isIndoor) => IsIndoor = isIndoor;
 
+    /// <summary>What is played on the court. Decides which enrollments may book it for free (<see cref="Members.MemberSeason.Sports"/>).</summary>
+    public Sport Sport { get; private set; } = Sport.Tennis;
+
+    public void SetSport(Sport sport) => Sport = Sports.EnsureKnown(sport);
+
     public void RenameCourt(string newName) => Name = newName;
     public void RenameCourtAlias(string alias) => Alias = alias;
     public void Order(int sortOrder) => SortOrder = sortOrder;

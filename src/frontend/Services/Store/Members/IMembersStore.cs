@@ -41,7 +41,7 @@ public interface IMembersStore : ISemaphoreStore
     public bool LoadedMemberId(int memberId);
     public void ResetMembers();
     public void ResetMember();
-    public Task<HttpResult> UpdateMemberBookingOptions(int memberId, int[] allowedSeasonIds, int bookingsPerWeek);
+    public Task<HttpResult> UpdateMemberBookingOptions(int memberId, int[] allowedSeasonIds, int bookingsPerWeek, List<SeasonSports>? seasonSports = null);
     public Task<HttpResult> UpdateMemberRoles(int memberId, MemberRole[] roles);
     public Task LoadBookingHistory(int memberId, int seasonId);
 }

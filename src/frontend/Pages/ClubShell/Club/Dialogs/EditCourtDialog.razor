@@ -7,6 +7,7 @@
 @using Bookennis.Client.Utils
 @using Bookennis.Global.Intervals
 @using Bookennis.Shared.Controller.Club
+@using Bookennis.Shared.Controller.Shared
 
 <BaseDialog CanSubmit="@CanSubmit" SubmitFunc="Submit" SubmitCaption="@(IsNew ? L["Add"] : SharedLocale["Update"])" CancelFunc="Cancel" CancelCaption="@SharedLocale["Cancel"]"
             Loading="@ClubStore.IsSaving" Title="@(IsNew ? L["AddCourt"] : Court!.Name)">
@@ -19,6 +20,12 @@
                 <MudTextField Variant="Variant.Outlined" T="string" Label="@L["CourtAlias"]" @bind-Value="@Alias" Immediate="true" Required="true"
                               RequiredError="@L["CourtAliasRequired"]" HelperText="@L["CourtAliasHint"]" Margin="Margin.Dense" />
             </div>
+        </section>
+
+        <section>
+            <ChoiceChips TItem="Sport" Label="@SharedLocale["Sport_Label"]" Items="@SportExtensions.All" @bind-Value="sport"
+                         TextFunc="@(s => s.Label(SharedLocale))" />
+            <p class="court-edit__hint">@L["CourtSportHint"]</p>
         </section>
 
         <section class="court-edit__indoor">
@@ -63,6 +70,7 @@
     private string Alias = string.Empty;
     private bool closed;
     private bool isIndoor;
+    private Sport sport;
 
     private bool CanSubmit => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Alias)
                               && (!closed || From is { } from && To is { } to && to > from);
@@ -72,7 +80,11 @@
     protected override void OnInitialized()
     {
         if (Court is null)
+        {
+            // A new court is for the sport most courts of the club are for
+            sport = ClubStore.Courts.GroupBy(c => c.Sport).OrderByDescending(g => g.Count()).Select(g => g.Key).FirstOrDefault();
             return;
+        }
 
         From = Court.Inactive?.From;
         To = Court.Inactive?.To;
@@ -80,14 +92,15 @@
         Name = Court.Name;
         Alias = Court.Alias;
         isIndoor = Court.IsIndoor;
+        sport = Court.Sport;
     }
 
     private async Task<DialogResult?> Submit()
     {
         var inactive = closed && From is not null && To is not null ? new DateTimeOffsetInterval(From.Value, To.Value) : null;
         var result = Court is null
-            ? await ClubStore.AddCourt(Name.Trim(), Alias.Trim(), isIndoor)
-            : await ClubStore.UpdateCourt(Court.CourtId, Name.Trim(), Alias.Trim(), inactive, Court.SortOrder, isIndoor);
+            ? await ClubStore.AddCourt(Name.Trim(), Alias.Trim(), isIndoor, sport)
+            : await ClubStore.UpdateCourt(Court.CourtId, Name.Trim(), Alias.Trim(), inactive, Court.SortOrder, isIndoor, sport);
         if (!result.Success)
         {
             Snackbar.ShowErrorDetails(result, BackendLocale);

@@ -50,6 +50,20 @@ public record CreatePlayRequest(
             if (!activeIds.Contains(requesterId) || askedIds.Any(id => id != requesterId && !activeIds.Contains(id)))
                 throw new PreconditionException(PlayRequest.ErrorCode.PlayRequestMemberNotActive, "Only active members of the club can play together");
 
+            // Tennis and padel are separate memberships: nobody is asked who could not play on these courts
+            var sport = await PlayRequestBooking.SportOfCourts(context, request.ClubId, request.CourtIds, cancellationToken);
+            var otherSports = await PlayRequestBooking.EnrolledForOtherSports(context, request.ClubId, [requesterId, .. askedIds], sport, cancellationToken);
+            if (otherSports.Count > 0)
+            {
+                var names = await (
+                    from member in context.ClubMembers
+                    join user in context.Users on member.UserId equals user.Id
+                    where otherSports.Contains(member.Id)
+                    select user.FirstName + " " + user.LastName
+                ).ToListAsync(cancellationToken);
+                throw new PreconditionException(PlayRequest.ErrorCode.PlayRequestMemberNotEnrolledForSport, [string.Join(", ", names.Order()), sport.ToString()], "A member is not enrolled for the sport of the courts");
+            }
+
             // The times of the request are local times of the club, whatever the browser's time zone is
             var region = await context.GetClubRegion(request.ClubId, cancellationToken);
 

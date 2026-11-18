@@ -71,6 +71,7 @@ public record MembershipPaymentsOverview(Season Season, List<MembershipPaymentMe
             Id = o.Id,
             MembershipPlanId = o.MembershipPlanId,
             PlanName = o.PlanName,
+            Sports = o.Sports.Select(s => (Bookennis.Shared.Controller.Shared.Sport)s).ToList(),
             AmountCents = o.AmountCents,
             Currency = o.Currency,
             Status = (SharedOrderStatus)o.Status,

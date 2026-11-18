@@ -84,9 +84,10 @@ public class MembershipPlanTests
 
         var copy = plan.CopyData(yearOffset: 1);
 
-        copy.Should().Be(Data() with
+        copy.Should().BeEquivalentTo(Data() with
         {
             Name = "Youth",
+            Sports = Array.Empty<Bookennis.Domain.Courts.Sport>(),
             BirthYearFrom = 2010,
             BirthYearTo = 2014,
             AvailableUntil = new DateOnly(2027, 3, 31),

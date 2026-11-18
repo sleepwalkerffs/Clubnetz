@@ -1023,4 +1023,13 @@
   <data name="ClubInvalidBookingsPerWeek" xml:space="preserve">
     <value>Die Buchungen pro Woche müssen zwischen {0} und {1} liegen.</value>
   </data>
+  <data name="PlayerNotEnrolledForSport" xml:space="preserve">
+    <value>{0} ist in dieser Saison nicht für {1} angemeldet.</value>
+  </data>
+  <data name="PlayRequestCourtsOfDifferentSports" xml:space="preserve">
+    <value>Die Plätze einer Spielersuche müssen für dieselbe Sportart sein.</value>
+  </data>
+  <data name="PlayRequestMemberNotEnrolledForSport" xml:space="preserve">
+    <value>{0} ist in dieser Saison nicht für {1} angemeldet und kann hier nicht mitspielen.</value>
+  </data>
 </root>

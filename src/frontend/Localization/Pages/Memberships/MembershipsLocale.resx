@@ -672,6 +672,9 @@
   <data name="Record_Member" xml:space="preserve">
     <value>Member</value>
   </data>
+  <data name="Record_MemberHintSports" xml:space="preserve">
+    <value>Only members who don't have a membership for every sport of this season yet.</value>
+  </data>
   <data name="Record_MemberHint" xml:space="preserve">
     <value>Only members without a membership in this season.</value>
   </data>
@@ -950,5 +953,17 @@
   </data>
   <data name="Account_Fact_Methods_Us" xml:space="preserve">
     <value>Cards are on by default. You choose the payment methods in Stripe.</value>
+  </data>
+  <data name="Sentence_Sports" xml:space="preserve">
+    <value>For {0}.</value>
+  </data>
+  <data name="Sentence_EverySport" xml:space="preserve">
+    <value>For every sport of the club.</value>
+  </data>
+  <data name="Plan_Sports" xml:space="preserve">
+    <value>Sports</value>
+  </data>
+  <data name="Plan_SportsHint" xml:space="preserve">
+    <value>None selected: every sport. A member can have one membership per sport, e.g. tennis and padel separately.</value>
   </data>
 </root>

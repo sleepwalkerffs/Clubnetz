@@ -1,3 +1,5 @@
+using Bookennis.Shared.Controller.Shared;
+
 namespace Bookennis.Shared.Controller.Memberships;
 
 public record GetMembershipPlansResult
@@ -48,6 +50,9 @@ public record MembershipPlanDto
     /// <summary>Members choose the plan themselves. Switched off, only the treasurer assigns it.</summary>
     public required bool IsSelfService { get; init; }
 
+    /// <summary>The sports an order enrolls for. Empty: every sport (a club with one sport never sets them).</summary>
+    public List<Sport> Sports { get; init; } = [];
+
     public required int SortOrder { get; init; }
 
     /// <summary>The number of orders of the plan; only filled for treasurers. A plan with orders can't be deleted.</summary>
@@ -77,6 +82,9 @@ public record SaveMembershipPlanModel
     public DateOnly? AvailableFrom { get; init; }
     public DateOnly? AvailableUntil { get; init; }
     public bool IsSelfService { get; init; } = true;
+
+    /// <summary>Empty or missing: every sport.</summary>
+    public List<Sport>? Sports { get; init; }
 }
 
 /// <summary>Copies all plans of a season into another one. Birth years and dates move by the difference of the season years.</summary>

@@ -11,6 +11,7 @@
 @using Bookennis.Shared.Controller.Booking.Shared
 @using Bookennis.Shared.Controller.Club
 @using Bookennis.Shared.Controller.CourtBlockings
+@using Bookennis.Shared.Controller.Shared
 @using Bookennis.Shared.Controller.Weather
 
 @implements IDisposable
@@ -24,8 +25,14 @@
         @for (var i = 0; i < Courts.Count; i++)
         {
             var court = Courts[i];
-            <div class="day__court" style="grid-column: @(i + ColumnOffset)" title="@court.Name">
-                <span class="day__court-alias">@court.Alias@(court.IsIndoor && ShowWeather ? " 🏠" : null)</span>
+            <div class="day__court" style="grid-column: @(i + ColumnOffset)" title="@(SeveralSports ? $"{court.Name} · {court.Sport.Name(SharedLocale)}" : court.Name)">
+                <span class="day__court-alias">
+                    @if (SeveralSports)
+                    {
+                        <span class="day__court-sport" role="img" aria-label="@court.Sport.Name(SharedLocale)">@court.Sport.Emoji()</span>
+                    }
+                    @court.Alias@(court.IsIndoor && ShowWeather ? " 🏠" : null)
+                </span>
                 <span class="day__court-count">@BookingsPerCourt(court.CourtId)</span>
             </div>
         }
@@ -68,10 +75,10 @@
         @if (CanBook || CanBuy)
         {
             var firstFutureRow = PastEndRow;
-            var buyPrimeRows = !CanBook && ClubInformation.PrimeTimeSettings.RestrictGuests ? PrimeTimeRows : null;
             @for (var i = 0; i < Courts.Count; i++)
             {
                 var court = Courts[i];
+                var buyPrimeRows = !CanBookOn(court) && ClubInformation.PrimeTimeSettings.RestrictGuests ? PrimeTimeRows : null;
                 @for (var slot = 0; slot < SlotCount; slot++)
                 {
                     var row = slot + RowOffset;
@@ -252,6 +259,14 @@
     [Parameter]
     public bool CanBuy { get; set; }
 
+    /// <summary>The sports the member books for free (<c>GetBookingOptionsResult.EnrolledSports</c>); empty = every sport.</summary>
+    [Parameter]
+    public List<Sport> EnrolledSports { get; set; } = [];
+
+    /// <summary>The member may buy court time on courts of a sport the enrollment does not cover (court sales on, see <see cref="EnrolledSports"/>).</summary>
+    [Parameter]
+    public bool CanBuyOtherSports { get; set; }
+
     /// <summary>A free slot was clicked to buy it: court, local start time and the longest it can last there.</summary>
     [Parameter]
     public EventCallback<BuySlot> OnBuySlot { get; set; }
@@ -272,6 +287,10 @@
     private IJSRuntime JSRuntime { get; set; } = null!;
     [Inject]
     private IStringLocalizer<BookingSharedLocale> Locale { get; set; } = null!;
+    [Inject]
+    private IStringLocalizer<Bookennis.Client.Localization.SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
 
     private ElementReference scrollContainer;
     private ElementReference nowLine;
@@ -362,6 +381,15 @@
     private bool IsOwnBooking(BookingResult booking)
         => booking.Players.Any(p => p.MemberId == MemberId || MemberChildren.Any(c => c.MemberId == p.MemberId));
 
+    /// <summary>Courts of more than one sport (tennis and padel): the headers show the sport.</summary>
+    private bool SeveralSports => Courts.HasSeveralSports();
+
+    /// <summary>The member books the court for free: the enrollment covers its sport (staff book for others on every court, the server decides).</summary>
+    private bool CanBookOn(CourtResult court) => CanBook && (CanBookForAnyMember || EnrolledSports.Covers(court.Sport));
+
+    /// <summary>A court the member does not book for free is bought, when the club sells court time.</summary>
+    private bool CanBuyOn(CourtResult court) => !CanBookOn(court) && (CanBuy || CanBuyOtherSports);
+
     private bool ShowWeather => Weather.Count > 0 && Courts.Any(c => !c.IsIndoor);
 
     /// <summary>
@@ -404,9 +432,13 @@
 
     private async Task OpenBookCourtDialog(TimeSpan? time, CourtResult? court)
     {
-        if (!CanBook && CanBuy && time is { } start && court is not null)
+        if (court is not null && !CanBookOn(court))
         {
-            await OnBuySlot.InvokeAsync(new BuySlot(court, start, FreeMinutesFrom(court, start)));
+            if (CanBuyOn(court) && time is { } start)
+                await OnBuySlot.InvokeAsync(new BuySlot(court, start, FreeMinutesFrom(court, start)));
+            else if (CanBook)
+                // Enrolled, but for another sport (tennis and padel are separate memberships)
+                Snackbar.Add(string.Format(Locale["NotEnrolledForSport"], court.Sport.Name(SharedLocale)), Severity.Info);
             return;
         }
 
@@ -414,7 +446,7 @@
             return;
 
         var parameters = new DialogParameters<BookCourt>();
-        parameters.Add(dialog => dialog.Courts, Courts);
+        parameters.Add(dialog => dialog.Courts, Courts.Where(CanBookOn).ToList());
         parameters.Add(dialog => dialog.Players, Players.Where(x => !x.IsGuest).ToList());
         parameters.Add(dialog => dialog.Date, DateOfDay);
         parameters.Add(dialog => dialog.MemberId, MemberId);

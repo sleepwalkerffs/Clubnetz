@@ -10,6 +10,25 @@
     gap: 6px;
 }
 
+.enrollment__item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.enrollment__sports {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 0 12px 4px 60px;
+}
+
+.enrollment__sports-hint {
+    font-size: 0.72rem;
+    color: var(--mud-palette-text-secondary);
+}
+
 .enrollment__season {
     display: flex;
     align-items: center;

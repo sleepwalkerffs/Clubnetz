@@ -1,9 +1,20 @@
+using Bookennis.Shared.Controller.Shared;
+
 namespace Bookennis.Shared.Controller.Leaderboards;
 
 public class GetLeaderboardResult
 {
     public required List<SeasonLeaderboardResult> SeasonLeaderboards { get; init; }
     public required LeaderboardData AllTime { get; init; }
+
+    /// <summary>The sport the numbers are for (only bookings on its courts); <c>null</c> = every sport.</summary>
+    public Sport? Sport { get; init; }
+
+    /// <summary>The sports of the club's courts. The app offers a sport filter only when there are more than one.</summary>
+    public List<Sport> Sports { get; init; } = [];
+
+    /// <summary>The sport the app selects first: the first sport the member is enrolled for (clubs with several sports only); <c>null</c> = every sport.</summary>
+    public Sport? DefaultSport { get; init; }
 }
 
 public class SeasonLeaderboardResult

@@ -2,10 +2,12 @@
 @layout ClubWithStoreLayout
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Sports
 @using Bookennis.Client.Localization.Pages.Leaderboards
 @using Bookennis.Client.Pages.ClubShell.Leaderboards.Components
 @using Bookennis.Client.Services.Store.Leaderboards
 @using Bookennis.Shared.Controller.Leaderboards
+@using Bookennis.Shared.Controller.Shared
 
 @implements IDisposable
 
@@ -25,6 +27,8 @@ else
     var title = season is null ? Locale["AllTime"].Value : string.Format(Locale["SeasonTitle"], season.StartDate.Year);
 
     <div class="lb-page">
+        <SportFilter Sports="@LeaderboardStore.Leaderboard.Sports" Value="@selectedSport" ValueChanged="@SelectSport" Disabled="@LeaderboardStore.IsLoading" />
+
         <ChoiceChips TItem="Scope" Items="@Scopes" Value="@selectedScope" ValueChanged="@(scope => selectedScope = scope)" TextFunc="@(scope => scope.Label)" />
 
         <LeaderboardHero Data="@data" Title="@title" IsOptedOut="@(season?.IsOptedOut ?? false)" />
@@ -110,6 +114,10 @@ else
 
     private Scope? selectedScope;
 
+    // The sport chips: null = all sports. The first load picks the member's sport (DefaultSport) once.
+    private Sport? selectedSport;
+    private bool isSportChosen;
+
     private List<Scope> Scopes =>
     [
         .. (LeaderboardStore.Leaderboard?.SeasonLeaderboards ?? [])
@@ -127,6 +135,24 @@ else
         LeaderboardStore.OnLeaderboardChanged += OnLeaderboardChanged;
         await LeaderboardStore.LoadLeaderboard();
         SelectDefaultScope();
+        await SelectDefaultSport();
+    }
+
+    private async Task SelectDefaultSport()
+    {
+        if (isSportChosen || LeaderboardStore.Leaderboard is not { } leaderboard)
+            return;
+
+        isSportChosen = true;
+        if (leaderboard.Sports.Count > 1 && leaderboard.DefaultSport is { } sport)
+            await SelectSport(sport);
+    }
+
+    private async Task SelectSport(Sport? sport)
+    {
+        isSportChosen = true;
+        selectedSport = sport;
+        await LeaderboardStore.LoadLeaderboard(sport);
     }
 
     private void OnLeaderboardChanged()

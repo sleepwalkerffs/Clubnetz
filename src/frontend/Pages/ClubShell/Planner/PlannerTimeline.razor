@@ -45,7 +45,7 @@
                 @foreach (var court in Courts)
                 {
                     <div class="planner-name" title="@court.Name">
-                        <span class="planner-name__alias">@court.Alias</span>
+                        <span class="planner-name__alias">@(Courts.HasSeveralSports() ? $"{court.Sport.Emoji()} " : null)@court.Alias</span>
                         <span class="planner-name__full">@court.Name</span>
                     </div>
                 }

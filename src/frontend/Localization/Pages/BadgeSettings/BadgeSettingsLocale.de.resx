@@ -205,4 +205,10 @@
   <data name="NoAccess" xml:space="preserve">
     <value>Nur wer die Abzeichen des Vereins verwaltet, sieht diese Seite.</value>
   </data>
+  <data name="CountsSport" xml:space="preserve">
+    <value>Zählt nur {0}-Matches</value>
+  </data>
+  <data name="SportHint" xml:space="preserve">
+    <value>Es zählen nur Matches auf Plätzen dieser Sportart. Die Stufen werden je Sportart gezählt. Lässt sich später nicht mehr ändern.</value>
+  </data>
 </root>

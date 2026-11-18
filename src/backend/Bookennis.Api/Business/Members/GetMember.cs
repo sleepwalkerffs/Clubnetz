@@ -76,6 +76,7 @@ public record GetMember(int MemberId) : ICommand<MembersDetailResult>
                 {
                     memberSeason.SeasonId,
                     memberSeason.MembershipOrderId,
+                    memberSeason.Sports,
                     Method = context.MembershipOrders.IgnoreQueryFilters()
                         .Where(o => o.Id == memberSeason.MembershipOrderId)
                         .Select(o => o.PaymentMethod)
@@ -89,7 +90,10 @@ public record GetMember(int MemberId) : ICommand<MembersDetailResult>
                     e.SeasonId,
                     e.MembershipOrderId is null ? MembershipEnrollmentSource.ByHand
                     : e.Method == Domain.Memberships.MembershipPaymentMethod.Online ? MembershipEnrollmentSource.PaidOnline
-                    : MembershipEnrollmentSource.MarkedAsPaid))
+                    : MembershipEnrollmentSource.MarkedAsPaid)
+                {
+                    Sports = e.Sports.Select(s => (Bookennis.Shared.Controller.Shared.Sport)s).ToList(),
+                })
                 .ToList();
 
             return result;

@@ -42,7 +42,8 @@ else
     var orders = options.Orders.Where(o => o.Status is not (MembershipOrderStatus.Cancelled or MembershipOrderStatus.Refunded)).ToList();
     var myOrder = me is null ? null : orders.FirstOrDefault(o => o.Members.Any(m => m.MemberId == me.MemberId));
     var state = State(me, myOrder);
-    var canOrder = options.People.Any(p => !p.HasMembership);
+    // One membership per sport: a member with tennis can still order padel, so the plans decide (the server checks again)
+    var canOrder = options.People.Any(p => !p.HasMembership) || options.Plans.Any(p => p.IsEligible);
     var eligible = options.Plans.Where(p => p.IsEligible).ToList();
     var notEligible = options.Plans.Where(p => !p.IsEligible).ToList();
 
@@ -168,7 +169,7 @@ else
                                     <div class="my-plan__description">@plan.Description</div>
                                 }
                                 <div class="my-plan__chips">
-                                    @foreach (var (emoji, text) in MembershipHelpers.Chips(L, plan))
+                                    @foreach (var (emoji, text) in MembershipHelpers.Chips(L, plan, ClubStore.Courts.HasSeveralSports() ? SharedLocale : null))
                                     {
                                         <span class="my-chip"><span aria-hidden="true">@emoji</span> @text</span>
                                     }
@@ -284,12 +285,13 @@ else
     {
         Store.OnOptionsChanged += OnChanged;
         ClubProfileStore.OnClubProfileChanged += OnChanged;
+        ClubStore.OnCourtsDataChanged += OnChanged;
 
         if (ClubProfileStore.IsSupportMode || ClubProfileStore.Roles.Contains(MemberRole.Guest))
             return;
 
         seasonId = Season;
-        await Task.WhenAll(Store.LoadOptions(seasonId), ClubStore.LoadSeasons());
+        await Task.WhenAll(Store.LoadOptions(seasonId), ClubStore.LoadSeasons(), ClubStore.Courts.Count == 0 ? ClubStore.LoadCourts() : Task.CompletedTask);
         loaded = true;
 
         if (Order is { } orderId && Checkout == "success")
@@ -526,5 +528,6 @@ else
         disposed.Dispose();
         Store.OnOptionsChanged -= OnChanged;
         ClubProfileStore.OnClubProfileChanged -= OnChanged;
+        ClubStore.OnCourtsDataChanged -= OnChanged;
     }
 }

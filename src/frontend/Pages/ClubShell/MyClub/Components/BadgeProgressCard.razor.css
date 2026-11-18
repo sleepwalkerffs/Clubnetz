@@ -141,3 +141,26 @@
         flex-basis: 64px;
     }
 }
+
+/* Badges per sport: one row per track with the sport above it */
+.badge-track + .badge-track__sport {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.badge-track__sport {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--mud-palette-text-primary);
+}
+
+.badge-track__sport-caption {
+    font-weight: 500;
+    color: var(--mud-palette-text-secondary);
+}

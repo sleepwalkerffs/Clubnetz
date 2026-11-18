@@ -1,6 +1,7 @@
 using Bookennis.Api.Business.ClubEvents;
 using Bookennis.Api.Business.Statistics;
 using Bookennis.Api.Business.Clubs;
+using Bookennis.Api.Business.Shared;
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
 using Bookennis.Domain.Exceptions;
@@ -95,6 +96,11 @@ public record GetSeasonWrapped(int UserId, int ClubId, int SeasonId, bool CanMan
                 ClubName = clubName,
                 FirstName = firstName,
                 Matches = ownBookings.Count,
+                MatchesPerSport = ownBookings
+                    .GroupBy(b => b.Sport)
+                    .OrderBy(g => g.Key)
+                    .Select(g => new WrappedSportDto { Sport = g.Key.ToDto(), Matches = g.Count() })
+                    .ToList(),
                 HoursOnCourt = Math.Round(ownBookings.Sum(b => b.DurationHours), 1),
                 FirstMatch = playDates.Count > 0 ? playDates[0] : null,
                 LastMatch = playDates.Count > 0 ? playDates[^1] : null,
@@ -279,6 +285,7 @@ public record GetSeasonWrapped(int UserId, int ClubId, int SeasonId, bool CanMan
                 {
                     Name = tier.Name,
                     Level = tier.Level,
+                    Sport = (Bookennis.Shared.Controller.Shared.Sport?)tier.Sport,
                     AwardedAt = badge.EarnedAt,
                     ImageUrl = context.BadgeTierImages.Any(i => i.BadgeTierId == tier.Id)
                         ? "/api/Clubs/" + tier.ClubId + "/BadgeTiers/" + tier.Id + "/image"

@@ -43,6 +43,9 @@ public class BookingDomainService : IBookingDomainService
 
         /// <summary>The play mode is limited to other courts (<see cref="PlayMode.CourtIds"/>).</summary>
         PlayModeNotAllowedOnCourt = 19,
+
+        /// <summary>The player is enrolled in the season, but not for the sport of the court (<see cref="MemberSeason.Sports"/>).</summary>
+        PlayerNotEnrolledForSport = 20,
     }
 
     public Booking BookCourt(Context context, DateTimeOffsetInterval offsetInterval, string timeZoneInfoId, string? comment)
@@ -107,6 +110,10 @@ public class BookingDomainService : IBookingDomainService
         {
             if (!context.IsPurchase && !participant.Member.CanParticipate && !participant.IsAtpParticipant && !participant.IsAllowedInCurrentSeason)
                 throw new PreconditionException(ErrorCode.PlayerIsNotAllwedToPlay, [participant.FullName], $"User {participant.FullName} is not allowed to play");
+
+            // Enrolled, but for other sports: the membership of a club with tennis and padel courts is sold per sport
+            if (!context.IsPurchase && !participant.Member.CanParticipate && !participant.IsAtpParticipant && !Sports.Covers(participant.EnrolledSports, context.Court.Sport))
+                throw new PreconditionException(ErrorCode.PlayerNotEnrolledForSport, [participant.FullName, context.Court.Sport.ToString()], $"User {participant.FullName} is not enrolled for {context.Court.Sport}");
 
             if (participant.ActiveBookingsAtTimeOfReservation > 0 && context.PlayMode.IsChargingBookingSubscription)
                 throw new PreconditionException(ErrorCode.PlayerHasActiveBookingAtBookedInterval, [participant.FullName], $"User {participant.FullName} has already an booked at that time");
@@ -198,6 +205,9 @@ public class BookingDomainService : IBookingDomainService
             public required int ActiveBookingsAtTimeOfReservation { get; init; }
             public required int BookingsOnThatDay { get; init; }
             public required bool IsAllowedInCurrentSeason { get; init; }
+
+            /// <summary>The sports of the player's enrollment in the active season; empty = every sport (also when not enrolled, see <see cref="IsAllowedInCurrentSeason"/>).</summary>
+            public IReadOnlyCollection<Sport> EnrolledSports { get; init; } = [];
             public required bool IsAtpParticipant { get; init; }
             public required int PlayModeBookingsInSeasonCount { get; init; }
         }
