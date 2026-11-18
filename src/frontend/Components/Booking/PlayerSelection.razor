@@ -156,6 +156,11 @@
             lastFixedPlayerParameter = FixedPlayer;
             currentFixedPlayer = FixedPlayer;
         }
+        else if (currentFixedPlayer is not null && FixedPlayerAlternative.Count > 0 && FixedPlayerAlternative.All(p => p.MemberId != currentFixedPlayer.MemberId))
+        {
+            // The alternatives changed (another court: a child of the other sport is no longer one), so start over with the first
+            currentFixedPlayer = FixedPlayer;
+        }
 
         if (!initialized && InitialPlayers.Count > 0)
         {

@@ -73,6 +73,13 @@ public class MembershipOrder : TenantDomainEntity, IAggregateRoot
     /// </summary>
     public Sport[] Sports { get; private set; } = [];
 
+    /// <summary>An order for every sport whose plan became a plan for some sports (see <c>UpdateMembershipPlan</c>).</summary>
+    public void NarrowSports(IReadOnlyCollection<Sport> sports)
+    {
+        if (Sports.Length == 0)
+            Sports = Courts.Sports.Normalize(sports);
+    }
+
     /// <summary><c>null</c> once the payer left the club: the order stays as the club's record without a person.</summary>
     public int? PayerMemberId { get; private set; }
 

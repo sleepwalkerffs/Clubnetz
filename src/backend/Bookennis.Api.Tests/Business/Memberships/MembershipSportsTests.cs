@@ -134,6 +134,67 @@ public class MembershipSportsTests(TestFixture fixture) : TestBase(fixture)
     }
 
     [Fact]
+    public async Task PadelPaidOnAnEnrollmentMadeByHand_CancellingTheOrderTakesPadelBack()
+    {
+        var (_, padelId) = await SeedPlans();
+        await EnrollByHand(Sport.Tennis);
+        var padel = await Record(padelId);
+        (await QueryAsync(ctx => ctx.MemberSeasons.SingleAsync())).Sports.Should().Equal(Sport.Tennis, Sport.Padel);
+
+        // A failed SEPA debit revokes the same way
+        await SendAsync(new CancelMembershipOrder(TestDataSeed.ClubId, padel.Id, ByTreasurer: true, RemoveEnrollments: true));
+
+        var enrollment = await QueryAsync(ctx => ctx.MemberSeasons.SingleAsync());
+        enrollment.Sports.Should().Equal(Sport.Tennis);
+        enrollment.MembershipOrderId.Should().BeNull("it stays the enrollment made by hand");
+    }
+
+    [Fact]
+    public async Task APlanForEverySportOnAnEnrollmentMadeByHand_CancellingItTakesBackOnlyWhatItAdded()
+    {
+        await SeedPlans();
+        var allId = await QueryAsync(async ctx => (await MembershipSeed.SeedPlan(ctx, await SeasonId(ctx), MembershipSeed.Data("Everything"), 3)).Id);
+        await EnrollByHand(Sport.Tennis);
+        var all = await Record(allId);
+
+        await SendAsync(new CancelMembershipOrder(TestDataSeed.ClubId, all.Id, ByTreasurer: true, RemoveEnrollments: true));
+
+        (await QueryAsync(ctx => ctx.MemberSeasons.SingleAsync())).Sports.Should().Equal(Sport.Tennis);
+    }
+
+    [Fact]
+    public async Task WithdrawingAnUnpaidOrder_KeepsTheSportsTheTreasurerAddedByHand()
+    {
+        var (tennisId, padelId) = await SeedPlans();
+        await Record(tennisId);
+        var padel = await SendAsync(new CreateMembershipOrder(TestDataSeed.ClubId, TestDataSeed.UserId, padelId, [TestDataSeed.Member1Id]));
+        await QueryAsync(async ctx =>
+        {
+            (await ctx.MemberSeasons.SingleAsync()).SetSports([Sport.Tennis, Sport.Padel]);
+            await ctx.SaveChangesAsync();
+            return 0;
+        });
+
+        await SendAsync(new CancelMembershipOrder(TestDataSeed.ClubId, padel.Id, ByTreasurer: false));
+
+        (await QueryAsync(ctx => ctx.MemberSeasons.SingleAsync())).Sports.Should().Equal(Sport.Tennis, Sport.Padel);
+    }
+
+    [Fact]
+    public async Task NarrowingAPlanForEverySport_LetsItsMembersBuyTheOtherSport()
+    {
+        var (_, padelId) = await SeedPlans();
+        var allId = await QueryAsync(async ctx => (await MembershipSeed.SeedPlan(ctx, await SeasonId(ctx), MembershipSeed.Data("Everything"), 3)).Id);
+        var old = await Record(allId);
+
+        // The club adds padel courts: its plan becomes a tennis plan, and so do the orders bought with it
+        await SendAsync(new UpdateMembershipPlan(TestDataSeed.ClubId, allId, MembershipSeed.Data("Everything") with { Sports = [Sport.Tennis] }));
+        (await QueryAsync(ctx => ctx.MembershipOrders.SingleAsync(o => o.Id == old.Id))).Sports.Should().Equal(Sport.Tennis);
+
+        await Record(padelId);
+    }
+
+    [Fact]
     public async Task ChangingTheSportsOfAPlan_DoesNotChangeExistingOrders()
     {
         var (tennisId, padelId) = await SeedPlans();
@@ -198,6 +259,13 @@ public class MembershipSportsTests(TestFixture fixture) : TestBase(fixture)
         var tennis = await MembershipSeed.SeedPlan(ctx, season.Id, MembershipSeed.Data("Tennis") with { Sports = [Sport.Tennis] }, 1);
         var padel = await MembershipSeed.SeedPlan(ctx, season.Id, MembershipSeed.Data("Padel", 9000) with { Sports = [Sport.Padel] }, 2);
         return (tennis.Id, padel.Id);
+    });
+
+    private Task EnrollByHand(params Sport[] sports) => QueryAsync(async ctx =>
+    {
+        ctx.MemberSeasons.Add(new Domain.Members.MemberSeason(TestDataSeed.Member1Id, await SeasonId(ctx), sports: sports));
+        await ctx.SaveChangesAsync();
+        return 0;
     });
 
     private static Task<int> SeasonId(Data.AppDbContext ctx) => ctx.Seasons.Select(s => s.Id).FirstAsync();

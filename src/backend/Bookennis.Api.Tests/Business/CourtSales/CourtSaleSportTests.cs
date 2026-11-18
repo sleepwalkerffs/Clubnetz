@@ -34,6 +34,22 @@ public class CourtSaleSportTests(TestFixture fixture) : CourtSaleTestBase(fixtur
     }
 
     [Fact]
+    public async Task Options_TheOnlyCourtOfTheOtherSportIsClosed_AlreadyEnrolled()
+    {
+        var (userId, memberId) = await SeedBuyer(credits: 1);
+        await SeedPadelCourtAndEnroll(memberId, [Sport.Tennis]);
+        await QueryAsync(async ctx =>
+        {
+            var now = DateTimeOffset.UtcNow;
+            (await ctx.Courts.SingleAsync(c => c.Id == TestDataSeed.Court2Id)).SetInactive(new Bookennis.Global.Intervals.DateTimeOffsetInterval(now.AddDays(-1), now.AddDays(90)));
+            await ctx.SaveChangesAsync();
+            return 0;
+        });
+
+        (await SendAsync(new GetCourtSaleOptions(TestDataSeed.ClubId, userId))).Reason.Should().Be(CourtSaleUnavailableReason.AlreadyEnrolled);
+    }
+
+    [Fact]
     public async Task Purchase_CourtOfAnotherSport_IsSold()
     {
         var (userId, memberId) = await SeedBuyer(credits: 1);

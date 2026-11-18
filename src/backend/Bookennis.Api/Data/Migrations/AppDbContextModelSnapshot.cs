@@ -3142,6 +3142,9 @@ namespace Bookennis.Api.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "MembershipOrderMembers_Id_Sequence");
 
+                    b.PrimitiveCollection<int[]>("AddedSports")
+                        .HasColumnType("integer[]");
+
                     b.Property<int>("MemberId")
                         .HasColumnType("integer");
 

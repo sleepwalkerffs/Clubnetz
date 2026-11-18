@@ -11,10 +11,7 @@ public class BadgeTier : TenantDomainEntity
 
     public BadgeTier(int clubId, int seasonId, int level, string name, string description, int matchesRequired, int sortOrder, Sport? sport = null)
     {
-        if (sport is { } s && !Enum.IsDefined(s))
-            throw new ArgumentOutOfRangeException(nameof(sport));
-
-        Sport = sport;
+        Sport = sport is { } s ? Sports.EnsureKnown(s) : null;
         ClubId = clubId;
         SeasonId = seasonId;
         Level = level;

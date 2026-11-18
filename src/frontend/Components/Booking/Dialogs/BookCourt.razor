@@ -156,8 +156,31 @@
     private bool submitting;
 
     private PlayerResult? FixedPlayer => Players.SingleOrDefault(player => player.MemberId == MemberId);
-    private List<PlayerResult> FixedPlayerAlternatives => FixedPlayer is null ? [] : [.. MemberChildren, FixedPlayer];
-    private List<PlayerResult> EligibleChildren => MemberChildren.Where(c => EligibleChildMemberIds.Contains(c.MemberId)).ToList();
+    // The member and the children who can play on the court (the player list knows their sports): a tennis parent books a padel
+    // court for the padel child, so the dialog starts with the child
+    private List<PlayerResult> FixedPlayerAlternatives
+    {
+        get
+        {
+            if (FixedPlayer is null)
+                return [];
+
+            List<PlayerResult> all = [.. MemberChildren.Select(c => Players.FirstOrDefault(p => p.MemberId == c.MemberId) ?? c), FixedPlayer];
+            var playing = SelectedCourt is null ? all : all.Where(p => p.Sports.Covers(SelectedCourt.Sport)).ToList();
+            return playing.Count > 0 ? playing : all;
+        }
+    }
+
+    private PlayerResult? FixedPlayerForCourt
+        => FixedPlayer is null || SelectedCourt is null || FixedPlayer.Sports.Covers(SelectedCourt.Sport)
+            ? FixedPlayer
+            : FixedPlayerAlternatives.FirstOrDefault(p => p.Sports.Covers(SelectedCourt.Sport)) ?? FixedPlayer;
+    // The children enrolled for the sport of the court (the player list knows their sports; a child with tennis only can't play padel)
+    private List<PlayerResult> EligibleChildren => MemberChildren
+        .Where(c => EligibleChildMemberIds.Contains(c.MemberId))
+        .Select(c => Players.FirstOrDefault(p => p.MemberId == c.MemberId) ?? c)
+        .Where(c => SelectedCourt is null || c.Sports.Covers(SelectedCourt.Sport))
+        .ToList();
 
     // A grant can limit booking for others to single play modes: in the others the member books as a player, like everyone
     private bool ForAnyMember => CanBookForAnyMember
@@ -177,7 +200,7 @@
             ? null
             : IsBookingOnlyForChildren
                 ? EligibleChildren.FirstOrDefault()
-                : FixedPlayer;
+                : FixedPlayerForCourt;
 
     private List<PlayerResult> BookingFixedPlayerAlternatives =>
         ForAnyMember

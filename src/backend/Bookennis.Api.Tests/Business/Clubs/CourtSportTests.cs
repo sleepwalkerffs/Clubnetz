@@ -61,6 +61,25 @@ public class CourtSportTests(TestFixture fixture) : TestBase(fixture)
     }
 
     [Fact]
+    public async Task GetBookingOptions_TennisParentWithAPadelChild_CanBookBothSports()
+    {
+        var userId = await QueryAsync(async ctx =>
+        {
+            var seasonId = await CourtSaleSeed.AddActiveSeason(ctx);
+            ctx.MemberSeasons.Add(new MemberSeason(TestDataSeed.Member1Id, seasonId, sports: [Sport.Tennis]));
+            ctx.MemberSeasons.Add(new MemberSeason(TestDataSeed.Member2Id, seasonId, sports: [Sport.Padel]));
+            await ctx.SaveChangesAsync();
+            await MemberSeed.AddFamily(ctx, [TestDataSeed.Member1Id], [TestDataSeed.Member2Id]);
+            return ctx.TestData().User.Id;
+        });
+
+        var result = await SendAsync(new GetBookingOptions(userId, TestDataSeed.ClubId));
+
+        result.IsBookingOnlyForChildren.Should().BeFalse();
+        result.EnrolledSports.Should().Equal(SharedSport.Tennis, SharedSport.Padel);
+    }
+
+    [Fact]
     public async Task GetPlayers_ReturnsTheSportsOfEachPlayer()
     {
         await QueryAsync(async ctx =>

@@ -88,10 +88,17 @@ public record GetCourtSaleOptions(int ClubId, int UserId) : IQuery<CourtSaleOpti
 {
     public class Handler(AppDbContext context, IPaymentAvailability payments) : IRequestHandler<GetCourtSaleOptions, CourtSaleOptionsResult>
     {
-        /// <summary>Enrolled for the sport of every court of the club: nothing to buy.</summary>
+        /// <summary>Enrolled for the sport of every court of the club that is open now: nothing to buy.</summary>
         private static async Task<bool> IsEnrolledForEverySport(AppDbContext context, int clubId, int memberId, CancellationToken cancellationToken)
-            => await ActiveMembership.EnrolledSportsInActiveSeason(context, clubId, memberId, cancellationToken) is { } sports
-               && (await context.ClubSports(clubId, cancellationToken)).All(sport => Sports.Covers(sports, sport));
+        {
+            if (await ActiveMembership.EnrolledSportsInActiveSeason(context, clubId, memberId, cancellationToken) is not { } sports)
+                return false;
+
+            // A closed padel court (e.g. over the winter) is nothing a tennis member could buy now
+            var now = DateTimeOffset.UtcNow;
+            var courts = await context.Courts.Where(c => c.ClubId == clubId).ToListAsync(cancellationToken);
+            return courts.Where(c => !c.IsInactive(new DateTimeOffsetInterval(now, now.AddMinutes(1)))).All(c => Sports.Covers(sports, c.Sport));
+        }
 
         public async Task<CourtSaleOptionsResult> Handle(GetCourtSaleOptions request, CancellationToken cancellationToken)
         {

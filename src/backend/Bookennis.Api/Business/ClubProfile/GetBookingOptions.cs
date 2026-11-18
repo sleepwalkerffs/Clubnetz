@@ -66,6 +66,17 @@ public record GetBookingOptions(int UserId, int ClubId) : IQuery<GetBookingOptio
                 }
             }
 
+            // A parent books for the children too: a tennis parent can book a padel court for a padel child
+            if (ownSports is { Length: > 0 } && activeSeason is not null)
+            {
+                var childSports = await context.Families
+                    .Where(f => f.ClubId == request.ClubId && f.Parents.Any(p => p.MemberId == member.Id))
+                    .SelectMany(f => f.Children.Select(c => c.MemberId))
+                    .Join(context.MemberSeasons.Where(ms => ms.SeasonId == activeSeason.Id), id => id, ms => ms.MemberId, (_, ms) => ms.Sports)
+                    .ToListAsync(cancellationToken);
+                ownSports = childSports.Aggregate(ownSports, Sports.Union);
+            }
+
             return new GetBookingOptionsResult
             {
                 IsAllowedToBook = isInActiveSeason,

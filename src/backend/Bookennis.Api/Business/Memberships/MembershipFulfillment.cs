@@ -51,24 +51,35 @@ public class MembershipFulfillment(AppDbContext context) : IMembershipFulfillmen
         {
             // One membership per sport: a member enrolled for tennis who pays for padel gets padel added
             var enrollment = enrollments.FirstOrDefault(ms => ms.MemberId == memberId);
+            Sport[] added;
             if (enrollment is null)
+            {
                 context.MemberSeasons.Add(new MemberSeason(memberId, order.SeasonId, order.Id, order.Sports));
+                added = Sports.Expand(order.Sports);
+            }
             else
+            {
+                var before = Sports.Expand(enrollment.Sports);
                 enrollment.SetSports(Sports.Union(enrollment.Sports, order.Sports));
+                added = Sports.Expand(enrollment.Sports).Except(before).ToArray();
+            }
+
+            // A revoke takes back exactly this, also from an enrollment made by hand
+            order.Members.First(m => m.MemberId == memberId).RecordAddedSports(added);
         }
     }
 
     /// <summary>
-    /// The enrollments an order made follow the orders of the member that are still paid or being paid: their sports are
-    /// recomputed from those orders, and the enrollment goes when none is left. An enrollment made by hand is never touched
-    /// (the treasurer decides), so an order that was never paid (a member withdrawing it) changes nothing either.
+    /// Takes back what the order added to the enrollments (<see cref="MembershipOrderMember.AddedSports"/>), except sports another
+    /// paid (or processing) order of the member still pays for. An enrollment the order made goes when no other order pays for it;
+    /// sports the treasurer set by hand stay, and an order that was never paid (a member withdrawing it) changes nothing.
     /// </summary>
     public async Task Revoke(MembershipOrder order, CancellationToken cancellationToken)
     {
         var memberIds = order.Members.Select(m => m.MemberId).ToList();
 
         var enrollments = await context.MemberSeasons
-            .Where(ms => ms.SeasonId == order.SeasonId && ms.MembershipOrderId != null && (ms.MembershipOrderId == order.Id || memberIds.Contains(ms.MemberId)))
+            .Where(ms => ms.SeasonId == order.SeasonId && (ms.MembershipOrderId == order.Id || memberIds.Contains(ms.MemberId)))
             .ToListAsync(cancellationToken);
         var enrolledIds = enrollments.ConvertAll(ms => ms.MemberId);
 
@@ -91,21 +102,33 @@ public class MembershipFulfillment(AppDbContext context) : IMembershipFulfillmen
         foreach (var enrollment in enrollments)
         {
             var paid = others.Where(o => o.MemberId == enrollment.MemberId).ToList();
-            if (paid.Count > 0)
-            {
-                enrollment.SetSports(paid.Skip(1).Aggregate(paid[0].Sports, (all, o) => Sports.Union(all, o.Sports)));
-                if (enrollment.MembershipOrderId == order.Id)
-                    enrollment.SetMembershipOrder(paid[0].OrderId);
-            }
-            else if (enrollment.MembershipOrderId == order.Id)
+            var madeByThisOrder = enrollment.MembershipOrderId == order.Id;
+            if (madeByThisOrder && paid.Count == 0)
             {
                 context.MemberSeasons.Remove(enrollment);
+                continue;
             }
-            else if (order.Sports.Length > 0 && enrollment.Sports.Length > 0 && enrollment.Sports.Except(order.Sports).ToArray() is { Length: > 0 } left)
+
+            // Orders fulfilled before the added sports were recorded: the enrollment they made had their sports
+            var added = order.Members.FirstOrDefault(m => m.MemberId == enrollment.MemberId)?.AddedSports
+                ?? (madeByThisOrder ? Sports.Expand(order.Sports) : []);
+            var stillPaid = paid.SelectMany(o => Sports.Expand(o.Sports)).ToHashSet();
+            var lost = added.Where(s => !stillPaid.Contains(s)).ToHashSet();
+
+            if (lost.Count > 0)
             {
-                // Made by an order the treasurer refunded without revoking it: keep that, take back only what this order added
-                enrollment.SetSports(left);
+                var left = Sports.Expand(enrollment.Sports).Where(s => !lost.Contains(s)).ToArray();
+                if (left.Length == 0)
+                {
+                    context.MemberSeasons.Remove(enrollment);
+                    continue;
+                }
+
+                enrollment.SetSports(Sports.Compress(left));
             }
+
+            if (madeByThisOrder)
+                enrollment.SetMembershipOrder(paid[0].OrderId);
         }
     }
 }
