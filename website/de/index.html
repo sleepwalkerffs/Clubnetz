@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Clubnetz – kostenlose Open-Source-Vereinsverwaltung und Platzbuchung für Tennisvereine</title>
-    <meta name="description" content="Clubnetz ist eine kostenlose Open-Source-Web-App für Tennisvereine. Mitglieder buchen Plätze am Handy und zahlen den Mitgliedsbeitrag online, der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Platzverkauf, Termine, Neuigkeiten, das Clubhaus und die Buchhaltung. Auch zum Selbsthosten." />
+    <title>Clubnetz – kostenlose Open-Source-Vereinsverwaltung und Platzbuchung für Tennis- und Padelvereine</title>
+    <meta name="description" content="Clubnetz ist eine kostenlose Open-Source-Web-App für Tennis- und Padelvereine. Mitglieder buchen Plätze am Handy und zahlen den Mitgliedsbeitrag online, der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Platzverkauf, Termine, Neuigkeiten, das Clubhaus und die Buchhaltung. Auch zum Selbsthosten." />
     <link rel="canonical" href="https://clubnetz.app/de/" />
     <link rel="alternate" hreflang="en" href="https://clubnetz.app/" />
     <link rel="alternate" hreflang="de" href="https://clubnetz.app/de/" />
@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Clubnetz" />
-    <meta property="og:title" content="Clubnetz – Vereinsverwaltung und Platzbuchung für Tennisvereine" />
+    <meta property="og:title" content="Clubnetz – Vereinsverwaltung und Platzbuchung für Tennis- und Padelvereine" />
     <meta property="og:description" content="Kostenlos und Open Source. Mitglieder buchen Plätze am Handy, der Vorstand verwaltet den Verein an einem Ort." />
     <meta property="og:url" content="https://clubnetz.app/de/" />
     <meta property="og:image" content="https://clubnetz.app/icon-512.png" />
@@ -27,7 +27,7 @@
         "@type": "SoftwareApplication",
         "name": "Clubnetz",
         "url": "https://clubnetz.app/de/",
-        "description": "Kostenlose Open-Source-Web-App für Vereinsverwaltung und Platzbuchung in Tennisvereinen und anderen Sportvereinen mit Plätzen.",
+        "description": "Kostenlose Open-Source-Web-App für Vereinsverwaltung und Platzbuchung in Tennis- und Padelvereinen und anderen Sportvereinen mit Plätzen.",
         "applicationCategory": "BusinessApplication",
         "applicationSubCategory": "Vereinsverwaltung, Platzbuchung",
         "operatingSystem": "Web, Android, iOS (installierbare Web-App)",
@@ -72,7 +72,7 @@
             {
                 "@type": "Question",
                 "name": "Ist Clubnetz nur für Tennisvereine?",
-                "acceptedAnswer": { "@type": "Answer", "text": "Clubnetz ist für einen Tennisverein entstanden und wird täglich im Tennis eingesetzt. Es eignet sich für jeden Verein, der Plätze zu vergeben und Mitglieder zu verwalten hat." }
+                "acceptedAnswer": { "@type": "Answer", "text": "Nein. Ein Verein kann Tennis- und Padelplätze nebeneinander haben und Mitgliedschaften je Sportart verkaufen: nur Tennis, nur Padel oder beides. Buchung, Statistik und Abzeichen kennen die Sportart jedes Platzes. Clubnetz eignet sich für jeden Verein, der Plätze zu vergeben und Mitglieder zu verwalten hat." }
             },
             {
                 "@type": "Question",
@@ -144,7 +144,7 @@
         <div class="hero">
             <div class="wrap hero__grid">
                 <div>
-                    <h1>Vereinsverwaltung und Platzbuchung für Tennisvereine</h1>
+                    <h1>Vereinsverwaltung und Platzbuchung für Tennis- und Padelvereine</h1>
                     <p class="hero__lead">Clubnetz ist eine kostenlose Open-Source-Web-App. Mitglieder buchen einen Platz mit wenigen Klicks am Handy und zahlen ihren Mitgliedsbeitrag online. Der Vorstand verwaltet Mitglieder, Saisonen, Beiträge, Platzverkauf, Termine, Neuigkeiten, das Clubhaus und die Buchhaltung an einem Ort.</p>
                     <div class="hero__actions">
                         <a class="btn btn--primary" href="mailto:hello@clubnetz.app?subject=Clubnetz%20f%C3%BCr%20unseren%20Verein">Clubnetz für euren Verein</a>
@@ -190,6 +190,7 @@
                             <ul class="checks">
                                 <li>Öffnungszeiten, Prime Time und Kontingente werden automatisch geprüft</li>
                                 <li>Serien, Platzsperren und Turniere im selben Plan</li>
+                                <li>Tennis- und Padelplätze nebeneinander, jedes Mitglied bucht die Sportarten seiner Mitgliedschaft</li>
                                 <li>Alle kommenden Vereinstermine im Kalender</li>
                             </ul>
                         </div>
@@ -441,8 +442,8 @@
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">🏟️</div>
-                        <h3>Plätze und Regeln</h3>
-                        <p>Plätze, Öffnungszeiten, Prime Time, Spielarten und wer was buchen darf.</p>
+                        <h3>Plätze, Sportarten und Regeln</h3>
+                        <p>Tennis- und Padelplätze, Öffnungszeiten, Prime Time, Spielarten und wer was buchen darf. Mitgliedschaften auch je Sportart.</p>
                     </li>
                     <li class="card">
                         <div class="card__icon" aria-hidden="true">🚧</div>
@@ -577,7 +578,7 @@ curl -H "Authorization: Bearer cnz_..." \
                     </details>
                     <details>
                         <summary>Ist Clubnetz nur für Tennisvereine?</summary>
-                        <p>Clubnetz ist für einen Tennisverein entstanden und wird täglich im Tennis eingesetzt. Es eignet sich für jeden Verein, der Plätze zu vergeben und Mitglieder zu verwalten hat.</p>
+                        <p>Nein. Ein Verein kann Tennis- und Padelplätze nebeneinander haben und Mitgliedschaften je Sportart verkaufen: nur Tennis, nur Padel oder beides. Buchung, Statistik und Abzeichen kennen die Sportart jedes Platzes. Clubnetz eignet sich für jeden Verein, der Plätze zu vergeben und Mitglieder zu verwalten hat.</p>
                     </details>
                     <details>
                         <summary>Müssen Mitglieder eine App installieren?</summary>
