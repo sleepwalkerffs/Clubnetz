@@ -47,6 +47,11 @@ $$ select case when current_setting('screens.lang') = 'en' then en else de end f
 
 select set_config('screens.lang', :'lang', false) as lang \gset
 
+-- The screenshots show a running season: between two seasons the latest one is stretched to today.
+update "Seasons" set "Period_To" = current_date + 30
+where "Id" = (select "Id" from "Seasons" where "ClubId" = 1 order by "Period_From" desc limit 1)
+  and not exists (select 1 from "Seasons" where "ClubId" = 1 and current_date between "Period_From" and "Period_To");
+
 -- No "complete your profile" banner on the screenshots.
 update "AspNetUsers" set "ProfileCompletionBannerDismissedAt" = now();
 
@@ -71,6 +76,64 @@ using "Bookings" b
 where a."ClubId" = 1 and a."RecurringBookingSeriesId" is null and b."RecurringBookingSeriesId" is not null
   and a."CourtId" = b."CourtId" and a."Interval_From" < b."Interval_To" and b."Interval_From" < a."Interval_To"
   and a."Interval_From" >= date_trunc('week', now()) and a."Interval_From" < date_trunc('week', now()) + interval '7 days';
+
+-- Padel: two padel courts next to the tennis courts (the dev database may already have some), named
+-- "Padel 1", "Padel 2", ..., with doubles on them in the moved week. The players come from older doubles
+-- bookings, so nobody plays on two courts at the same time.
+insert into "Courts"("Id", "Name", "Alias", "ClubId", "SortOrder", "IsIndoor", "Sport")
+select nextval('"Courts_Id_Sequence"'), 'Padel ' || n, 'P' || n, 1, 100 + n, false, 1
+from generate_series(1, 2) n
+where not exists (select 1 from "Courts" where "ClubId" = 1 and "Sport" = 1);
+
+-- More than two padel courts don't fit next to the seven tennis courts on a 1280 pixel screen.
+create temp table extra_padel as
+select "Id" from (select "Id", row_number() over (order by "SortOrder", "Id") as n from "Courts" where "ClubId" = 1 and "Sport" = 1) p where n > 2;
+delete from "Bookings" where "CourtId" in (select "Id" from extra_padel);
+delete from "Courts" where "Id" in (select "Id" from extra_padel);
+
+with padel as (select "Id", row_number() over (order by "SortOrder", "Id") as n from "Courts" where "ClubId" = 1 and "Sport" = 1)
+update "Courts" c set "Name" = 'Padel ' || p.n, "Alias" = 'P' || p.n, "Inactive_From" = null, "Inactive_To" = null
+from padel p where p."Id" = c."Id";
+
+do $$
+declare
+    doubles int := (select "Id" from "PlayModes" where "ClubId" = 1 and "FixedPlayerCount" = 4 order by "Id" limit 1);
+    b record;
+    court int;
+    booking int;
+    source int;
+    k int := 0;
+begin
+    -- Two of three tennis bookings of the week give a start time for a padel doubles (90 minutes).
+    for b in
+        select x."Id", x."Interval_From", x."Interval_From" + interval '90 minutes' as "Interval_To", x."TimeZoneInfoId", x."Metadata_CreationUserId"
+        from "Bookings" x
+        join "Courts" t on t."Id" = x."CourtId" and t."Sport" = 0
+        where x."ClubId" = 1 and x."RecurringBookingSeriesId" is null and x."Id" % 3 <> 0
+          and x."Interval_From" >= date_trunc('week', now()) and x."Interval_From" < date_trunc('week', now()) + interval '7 days'
+        order by x."Interval_From", x."Id"
+    loop
+        select c."Id" into court from "Courts" c
+        where c."ClubId" = 1 and c."Sport" = 1
+          and not exists (select 1 from "Bookings" o where o."CourtId" = c."Id"
+                          and o."Interval_From" < b."Interval_To" and b."Interval_From" < o."Interval_To")
+        order by (c."SortOrder" + b."Id") % 2, c."Id" limit 1;
+        continue when court is null;
+
+        select o."Id" into source from "Bookings" o
+        where o."ClubId" = 1 and o."PlayModeId" = doubles and o."Interval_From" < date_trunc('week', now()) - interval '14 days'
+          and (select count(*) from "BookingPlayers" p where p."BookingEntryId" = o."Id") = 4
+        order by o."Interval_From" desc offset k limit 1;
+        k := k + 1;
+        continue when source is null;
+
+        booking := nextval('"Bookings_Id_Sequence"');
+        insert into "Bookings"("Id", "Interval_From", "Interval_To", "CourtId", "PlayModeId", "ClubId", "TimeZoneInfoId", "Metadata_CreationUserId")
+        values (booking, b."Interval_From", b."Interval_To", court, doubles, 1, b."TimeZoneInfoId", b."Metadata_CreationUserId");
+        insert into "BookingPlayers"("Id", "BookingEntryId", "MemberId")
+        select nextval('"BookingPlayers_Id_Sequence"'), booking, p."MemberId" from "BookingPlayers" p where p."BookingEntryId" = source;
+    end loop;
+end $$;
 
 -- The local test admin plays in three of the coming bookings.
 with next as (
