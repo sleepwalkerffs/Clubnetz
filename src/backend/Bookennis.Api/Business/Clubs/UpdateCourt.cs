@@ -1,10 +1,11 @@
 using Bookennis.Api.Data;
+using Bookennis.Domain.Courts;
 using Bookennis.Global.Intervals;
 using Fusonic.Extensions.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Clubs;
 
-public record UpdateCourt(int CourtId, string Name, string Alias, DateTimeOffsetInterval? Inactive, int SortOrder, bool? IsIndoor = null) : ICommand
+public record UpdateCourt(int CourtId, string Name, string Alias, DateTimeOffsetInterval? Inactive, int SortOrder, bool? IsIndoor = null, Sport? Sport = null) : ICommand
 {
     public class Handler(AppDbContext context) : IRequestHandler<UpdateCourt>
     {
@@ -18,6 +19,9 @@ public record UpdateCourt(int CourtId, string Name, string Alias, DateTimeOffset
             // Not sent by older clients and scripts: the court stays as it is
             if (request.IsIndoor is { } isIndoor)
                 court.SetIndoor(isIndoor);
+            // Existing bookings stay when the sport changes; new ones follow the enrollments for the new sport
+            if (request.Sport is { } sport)
+                court.SetSport(sport);
             if (request.Inactive is null)
             {
                 court.ReactivateCourt();

@@ -26,7 +26,7 @@ internal sealed class BookingContextBuilder
     private readonly AppDbContext context;
     private readonly int excludedBookingId;
     private readonly List<ParticipantInfo> participants;
-    private readonly HashSet<int> enrolledMemberIds;
+    private readonly IReadOnlyDictionary<int, Sport[]> enrollments;
     private readonly ILookup<int, PlayerBooking> chargingBookingsByMember;
 
     private BookingContextBuilder(
@@ -36,7 +36,7 @@ internal sealed class BookingContextBuilder
         IReadOnlyDictionary<int, Court> courts,
         List<ParticipantInfo> participants,
         Season? activeSeason,
-        HashSet<int> enrolledMemberIds,
+        IReadOnlyDictionary<int, Sport[]> enrollments,
         List<PlayerBooking> chargingBookings,
         int excludedBookingId)
     {
@@ -48,7 +48,7 @@ internal sealed class BookingContextBuilder
         Courts = courts;
         this.participants = participants;
         ActiveSeason = activeSeason;
-        this.enrolledMemberIds = enrolledMemberIds;
+        this.enrollments = enrollments;
         chargingBookingsByMember = chargingBookings.ToLookup(b => b.MemberId);
     }
 
@@ -121,16 +121,16 @@ internal sealed class BookingContextBuilder
         if (!participants.Any(i => i.IsAllowedUser))
             throw new PreconditionException(BookCourt.ErrorCode.UserNotAllowedToBook, "User is not allowed to make booking for the provided memberIds");
 
-        var enrolledMemberIds = activeSeason is not null
+        // The enrollments of the players with their sports (the sport of the court is checked per slot)
+        var enrollments = activeSeason is not null
             ? await context.MemberSeasons
                 .Where(ms => ms.SeasonId == activeSeason.Id && players.Contains(ms.MemberId))
-                .Select(ms => ms.MemberId)
-                .ToListAsync(cancellationToken)
-            : [];
+                .ToDictionaryAsync(ms => ms.MemberId, ms => ms.Sports, cancellationToken)
+            : new Dictionary<int, Sport[]>();
 
         var chargingBookings = await LoadChargingBookings(context, participants, intervals, excludedBookingId, cancellationToken);
 
-        return new BookingContextBuilder(context, club, clubAndPlayMode.PlayMode, courts, participants, activeSeason, enrolledMemberIds.ToHashSet(), chargingBookings, excludedBookingId);
+        return new BookingContextBuilder(context, club, clubAndPlayMode.PlayMode, courts, participants, activeSeason, enrollments, chargingBookings, excludedBookingId);
     }
 
     /// <summary>
@@ -184,7 +184,8 @@ internal sealed class BookingContextBuilder
                     UpcomingBookingsCount = i.UpcomingBookingsCount + pendingUpcoming,
                     ActiveBookingsAtTimeOfReservation = chargingBookings.Count(b => b.Interval.Intersects(interval)) + pendingActive,
                     BookingsOnThatDay = chargingBookings.Count(b => Region.LocalDate(b.To) == day) + pendingOnThatDay,
-                    IsAllowedInCurrentSeason = enrolledMemberIds.Contains(i.Member.Id),
+                    IsAllowedInCurrentSeason = enrollments.ContainsKey(i.Member.Id),
+                    EnrolledSports = enrollments.GetValueOrDefault(i.Member.Id, []),
                     IsAtpParticipant = Club.IsAtpClub && i.IsFromAtpClub && i.Member.MemberType == MemberType.ClubMember,
                     PlayModeBookingsInSeasonCount = i.PlayModeBookingsInSeasonCount + pendingInSeason,
                 };

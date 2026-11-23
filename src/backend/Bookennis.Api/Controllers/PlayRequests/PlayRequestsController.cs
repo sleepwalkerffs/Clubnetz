@@ -26,8 +26,8 @@ public class PlayRequestsController(IMediator mediator, IUserAccessor userAccess
 
     /// <summary>The members the caller can ask (name only).</summary>
     [HttpGet("candidates")]
-    public Task<List<PlayRequestCandidateDto>> GetPlayRequestCandidates(int clubId, CancellationToken cancellationToken)
-        => mediator.Send(new GetPlayRequestCandidates(clubId, userAccessor.GetUserId()), cancellationToken);
+    public Task<List<PlayRequestCandidateDto>> GetPlayRequestCandidates(int clubId, [FromQuery] Bookennis.Shared.Controller.Shared.Sport? sport, CancellationToken cancellationToken)
+        => mediator.Send(new GetPlayRequestCandidates(clubId, userAccessor.GetUserId(), (Domain.Courts.Sport?)sport), cancellationToken);
 
     [HttpPost]
     public Task<int> CreatePlayRequest(int clubId, [FromBody] CreatePlayRequestModel model, CancellationToken cancellationToken)

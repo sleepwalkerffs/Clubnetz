@@ -48,6 +48,12 @@ public class PlayRequest : TenantDomainEntity, IAggregateRoot
         PlayRequestOwnRequest = 12,
         PlayRequestMemberNotActive = 13,
         PlayRequestPlayModeNotAllowed = 14,
+
+        /// <summary>The courts of a request are for different sports (tennis and padel).</summary>
+        PlayRequestCourtsOfDifferentSports = 15,
+
+        /// <summary>A member is enrolled in the season, but not for the sport of the courts (details: the names, the sport).</summary>
+        PlayRequestMemberNotEnrolledForSport = 16,
     }
 
     public record RequestData(

@@ -240,6 +240,23 @@ Recurring bookings allow members to reserve a court on a repeating weekly schedu
 - **Stripe**: `ConnectPaymentAccount.AccountCountry`: a US club gets a "US" account (card payments + transfers), European accounts card + SEPA debit as before.
 - Statistics, wrapped, badges and leaderboard count days and weeks in the club's time zone with its first day of the week. Tests: `ClubRegionTests` (a New York club next to the Austrian one), `BookingDomainServiceTimeZoneTests`.
 
+## Sports (tennis & padel)
+
+### Overview
+
+A club can have courts of more than one sport (`Court.Sport`: `Tennis` = 0, `Padel` = 1; enum in `Bookennis.Domain.Courts`, copy in `Bookennis.Shared.Controller.Shared`, same values, stored as numbers). Clubs that charge separately sell memberships per sport: some members play tennis only, some padel only, some both. **A club whose courts all have one sport sees no change**: the FE shows sport controls only when the courts have more than one sport.
+
+### Rules
+
+- **Lists of sports where empty means every sport**: `MemberSeason.Sports` (what an enrollment books for free) and `MembershipPlan.Sports` (what an order enrolls for). Helpers in `Sports` (`Covers`, `Overlap`, `Union`, `Normalize`). Every enrollment and plan made before sports existed is for every sport.
+- **Booking**: `BookingDomainService` rejects a player who is enrolled, but not for the sport of the court, with `PlayerNotEnrolledForSport` (details: name, sport). `PlayerContext.EnrolledSports` is filled by `BookingContextBuilder` and `BookRecurringCourt`. Bought slots (`IsPurchase`) and players of sharing (ATP) clubs are not checked. Staff stay active members for every sport (they see names, leaderboards, ...), but as players they need an enrollment for the sport like everybody else.
+- **One membership per sport and season**: an order keeps a snapshot of its plan's sports (`MembershipOrder.Sports`, like name and amount: editing a plan never changes existing orders, except that narrowing a plan for every sport narrows its orders for every sport too, see `UpdateMembershipPlan`: a club that adds padel turns its plan into a tennis plan, and its members can then buy padel). An order conflicts with another active order of the member only when their sports overlap (`MembershipPerson.HasMembershipFor`, used by eligibility, `RecordMembershipPayment`, `MarkMembershipOrderPaid`/`SetMembers`, `StartMembershipCheckout`). `IMembershipFulfillment.Complete` adds the order's sports to an existing enrollment (`Sports.Union`, also to one made by hand) instead of skipping it, and records per member what it really added (`MembershipOrderMember.AddedSports`, spelled out, never "empty = every sport"). `Revoke` takes back exactly those sports, minus the ones another paid or processing order of the member pays for, from any enrollment, so a sport added by hand stays and a failed SEPA debit can't leave a paid-for sport on a hand-made enrollment; an enrollment the revoked order made goes when no other order pays for it (otherwise `MembershipOrderId` moves to the first other one). An order never fulfilled has no `AddedSports` and changes nothing; orders fulfilled before the column existed fall back to their sports for the enrollment they made. An enrolled parent's `EnrolledSports` in the booking options include the sports of the enrolled children (a tennis parent books padel for a padel child; the dialog starts with the child). The member's page offers plans as long as one is eligible (a tennis member orders padel).
+- **By hand**: `UpdateMemberBookingOptions(..., SeasonSports)` sets the sports per season; a season without an entry keeps its sports, a new one is for every sport. `MembersDetailResult.SeasonEnrollments[].Sports` shows them. The admin-panel handler `AdminUpdateClubMember` does not touch sports.
+- **Court sales**: a member enrolled for tennis buys padel time (and the other way round). `StartCourtPurchase` refuses `AlreadyEnrolled` only when the enrollment covers the sport of the court; `GetCourtSaleOptions` says `AlreadyEnrolled` only when it covers every sport of the club (`ActiveMembership.ClubSports`).
+- **Play requests**: all courts of a request must be of one sport (`PlayRequestCourtsOfDifferentSports`); members enrolled for other sports only can't be asked or accept (`PlayRequestMemberNotEnrolledForSport`, details: names, sport; `PlayRequestBooking.EnrolledForOtherSports`). `GET PlayRequests/candidates?sport=` leaves them out.
+- **What the FE gets**: `CourtResult.Sport`, `GetBookingOptionsResult.EnrolledSports` (a court of another sport is treated like for a member who is not enrolled: bought), `PlayerResult.Sports` (pickers only offer players who can play on the court), `MembershipPlanDto.Sports`.
+- Tests: `BookingDomainServiceSportTests`, `MembershipSportsTests`, `CourtSaleSportTests`, `PlayRequestSportTests`, `CourtSportTests`.
+
 ## Permissions (roles & resource grants)
 
 - **The club admin decides what a role may do.** `Bookennis.Domain/Permissions`: `Permission` (enum, stored as text; `Bookennis.Shared.Controller.Permissions.Permission` mirrors it, `PermissionTests` checks that), `PermissionCatalog` (area, money flag, the resource type a permission can be limited to, and the **defaults = what the policies had before**), `RolePermission` (one cell of the matrix per club) and `PermissionGrant` (a single member, optional resource, `Allow`/`Deny`).
@@ -317,14 +334,14 @@ Recurring bookings allow members to reserve a court on a repeating weekly schedu
 
 ### Overview
 
-There are two kinds of badges, both **scoped to a season** and per-club (not per-play-mode):
+There are two kinds of badges, both **scoped to a season** and per-club (not per-play-mode). Tier badges can also be per sport (see "Tracks per sport" below):
 
 - **Tier badges** — earned automatically by completing bookings within a season. Each season has its own set of tiers (e.g., Bronze, Silver, Gold) with configurable thresholds.
 - **One-time badges** — manually awarded by club staff for special achievements (e.g., club champion). They have no level/threshold.
 
 ### Domain Model
 
-- `BadgeTier` (`TenantDomainEntity`) — a badge variant for a club **and season**. Has `SeasonId`, `Name`, `Level` (int, higher = better), `MatchesRequired` (int threshold), `Description`, `SortOrder`. Unique index on `(ClubId, SeasonId, Level)`; FK to `Season` with cascade delete. Image is stored separately in `BadgeTierImage`.
+- `BadgeTier` (`TenantDomainEntity`) — a badge variant for a club **and season**. Has `SeasonId`, `Name`, `Level` (int, higher = better), `MatchesRequired` (int threshold), `Description`, `SortOrder` and `Sport?` (the track: `null` = matches of every sport). Levels are unique per track: two partial unique indexes `(ClubId, SeasonId, Level) WHERE Sport IS NULL` and `(ClubId, SeasonId, Sport, Level) WHERE Sport IS NOT NULL` (instead of `NULLS NOT DISTINCT`, works on every Postgres version); FK to `Season` with cascade delete. Image is stored separately in `BadgeTierImage`.
 - `MemberBadge` — awarded to a member when they reach a badge tier threshold within a season. Linked to `MemberId`, `BadgeTierId`, `SeasonId`, `EarnedAt`. Raises `MemberBadgeAwardedDomainEvent`.
 - `OneTimeBadge` (`TenantDomainEntity`) — `SeasonId`, `Name`, `Description`. Unique index on `(ClubId, SeasonId, Name)`; cascade-deleted with its club/season. Image is stored separately in `OneTimeBadgeImage` (keyed by `OneTimeBadgeId`).
 - `MemberOneTimeBadge` — award of a one-time badge to a member: `MemberId`, `OneTimeBadgeId`, `AwardedAt`. Unique on `(MemberId, OneTimeBadgeId)`. Raises `MemberOneTimeBadgeAwardedDomainEvent`.
@@ -334,9 +351,15 @@ There are two kinds of badges, both **scoped to a season** and per-club (not per
 ### Seasonal Badge Tiers
 
 - All tier queries (`GetBadgeTiers`, `BadgeProgressionService`, `GetMemberBadgeProgress`) filter by `ClubId` **and** `SeasonId`. `GET BadgeTiers` requires a `seasonId` query parameter.
-- `CreateBadgeTier` assigns the next `Level` (max level in that season + 1) automatically; `SortOrder` = `Level`.
+- `CreateBadgeTier` assigns the next `Level` (max level of that season **and track** + 1) automatically; `SortOrder` = `Level`. The sport is chosen when the tier is created and can't be changed afterwards (`UpdateBadgeTier` keeps it).
 - `DeleteBadgeTier` is rejected once any member has earned the tier (`ErrorCode.BadgeTierAlreadyEarned`).
-- `CopyBadgeTiers(SourceSeasonId, TargetSeasonId)` copies tiers + images into another season. Fails if the source has no tiers or the target already has tiers.
+- `CopyBadgeTiers(SourceSeasonId, TargetSeasonId)` copies tiers + images (and their sport) into another season. Fails if the source has no tiers or the target already has tiers.
+
+### Tracks per sport
+
+- A club with courts of more than one sport (see `Court.Sport`) can give tiers a sport: such a tier only counts matches on courts of that sport; a tier without a sport counts every sport (the behaviour of clubs with one sport and of every tier made before sports existed; migration `AddBadgeTierSports` left them `null`). The tiers with the same sport form a **track** with its own levels 1, 2, 3, ...
+- `BadgeMatches` (in `BadgeProgressionService.cs`) counts the matches of a track (`SportFilter.OfSport`: the sport of a booking is the sport of its court); `CheckAndAwardBadges` compares each tier with the count of its track.
+- `GetBadgeTiers` returns the tiers ordered by track (every sport first, then by sport and level) plus `Sports` (the club's sports). `EarnedBadgeDto.Sport` / `WrappedBadgeDto.Sport` carry the sport of a tier badge; the app shows it next to the name (`SportNames.BadgeName`, "Gold · Padel") in the trophy case, profile, badge settings dialog and Wrapped.
 - Migration `MakeBadgeTiersSeasonal` split the former club-global tiers into one copy per existing season, re-pointed existing `MemberBadges` to the copy of the season they were earned in, and deleted the old season-less tiers. Its `Down()` only reverts the schema, not the data.
 
 ### One-Time Badges
@@ -350,7 +373,7 @@ There are two kinds of badges, both **scoped to a season** and per-club (not per
 
 ### Badge Awarding
 
-- `BadgeProgressionService.CheckAndAwardBadges` handles the tier awarding logic: counts completed bookings for the member in the current season (only in play modes with `IsChargingBookingSubscription = true`), compares against each of **that season's** `BadgeTier.MatchesRequired`, and creates missing `MemberBadge` records.
+- `BadgeProgressionService.CheckAndAwardBadges` handles the tier awarding logic: counts completed bookings for the member in the current season (only in play modes with `IsChargingBookingSubscription = true`, per track: a tier with a sport only counts bookings on courts of that sport), compares against each of **that season's** `BadgeTier.MatchesRequired`, and creates missing `MemberBadge` records.
 - Awarding is triggered **inline** when `GetMemberBadgeProgress` is called (i.e., when the member loads their badge progress in My Club). There is no background job — the check runs on demand.
 - An EF Core migration (`AddMissingMemberBadgesForPreviousSeasons`) backfills badges for past seasons based on historical booking counts.
 
@@ -370,8 +393,8 @@ There are two kinds of badges, both **scoped to a season** and per-club (not per
 
 ### Badge Progress (My Club)
 
-- `GetMemberBadgeProgress` returns the member's progress toward the next badge tier in the current season: `CurrentBadgeLevel`, `CurrentBadgeImageUrl`, `NextBadgeLevel`, `NextBadgeImageUrl`, `RequiredMatches`, `CurrentMatches`, `EarnedBadges` (list with season info), `OneTimeBadges` (current season), `DisplayOneTimeBadgeId`.
-- `BadgeProgressCard.razor` — three-column layout: current badge icon + name (left) → progress bar + match count (center) → next badge icon at 55% opacity + name (right). Settings gear at top-right. Trophy case link at bottom.
+- `GetMemberBadgeProgress` returns the member's progress toward the next badge tier in the current season: `CurrentBadgeLevel`, `CurrentBadgeImageUrl`, `NextBadgeLevel`, `NextBadgeImageUrl`, `RequiredMatches`, `CurrentMatches`, `EarnedBadges` (list with season info), `OneTimeBadges` (current season), `DisplayOneTimeBadgeId`. The match/badge fields are those of the first track; `Tracks` (`BadgeTrackProgressDto`) lists every track of the season (every sport first, then the sports with tiers; one entry for every sport when the season has no tiers).
+- `BadgeProgressCard.razor` — three-column layout per track: current badge icon + name (left) → progress bar + match count (center) → next badge icon at 55% opacity + name (right). With several tracks every row gets the sport and its "x matches to ..." above it. Settings gear at top-right. Trophy case link at bottom.
 
 ### Badge Display Settings
 
@@ -380,7 +403,7 @@ There are two kinds of badges, both **scoped to a season** and per-club (not per
 
 ### Badge Settings Page (Club Administration)
 
-- `Pages/ClubShell/Club/BadgeSettings.razor` (`/clubs/{id}/badge-settings`) — season selector (defaults to the active season) plus two tabs: **Tiers** (add/edit/delete/copy tiers, upload images; admin only) and **One-Time Badges** (add/edit/delete/copy, upload images, award/revoke).
+- `Pages/ClubShell/Club/BadgeSettings.razor` (`/clubs/{id}/badge-settings`) — season selector (defaults to the active season) plus two tabs: **Tiers** (add/edit/delete/copy tiers, upload images; admin only) and **One-Time Badges** (add/edit/delete/copy, upload images, award/revoke). With several sports (or tiers that have a sport) the tiers are shown as one ladder per track, and `CreateBadgeTierDialog` has a sport select ("All sports" or a sport; disabled when editing).
 - Dialogs live in `Pages/ClubShell/Club/Dialogs/`: `CreateBadgeTierDialog`, `CopyBadgeTiersDialog`, `CreateOneTimeBadgeDialog`, `CopyOneTimeBadgesDialog`, `AwardOneTimeBadgeDialog`.
 - `NavMenu.razor` shows the Badge Settings link to admins and additionally to `SportsDirector` / `YouthSportsDirector`.
 
@@ -478,7 +501,8 @@ The club admin enters where the courts are (`Club.Latitude`/`Longitude`, `GeoLoc
 At the end of a season every active club member gets a story-style review of their season ("Wrapped"): matches, hours, place among the enrolled members, favourite partners, play style, home court, records, regular slot, badges, events and the numbers of the whole club. A season is the club's existing `Season` (`Period`), nothing new to define.
 
 - **The club admins release it** (`Season.WrappedPublishedAt`, `PublishWrapped`/`UnpublishWrapped`): any season that has started, also past ones and the running one (`ErrorCode.WrappedSeasonNotStarted` for upcoming seasons). Repeating keeps the first date. Before that only `ClubAdministrator`s can open it, as a preview.
-- **Nothing is stored**: `GetSeasonWrapped` calculates it from the bookings whenever it is opened, so every past season can be generated and the numbers always match the statistics. Same counting rule as statistics and badges (`WrappedBookings.Load`: play modes with `IsChargingBookingSubscription`, local date of the booking within the season). Reuses `GetMemberStatistics.Handler.GetPlayerType`/`GetLongestWeekStreak`.
+- **Nothing is stored**: `GetSeasonWrapped` calculates it from the bookings whenever it is opened, so every past season can be generated and the numbers always match the statistics. Same counting rule as statistics and badges (`WrappedBookings.Load`: play modes with `IsChargingBookingSubscription`, local date of the booking within the season, with the sport of the court). Reuses `GetMemberStatistics.Handler.GetPlayerType`/`GetLongestWeekStreak`.
+- `MatchesPerSport` (only sports with matches): a member who played more than one sport gets a line "By sport: 12 Tennis · 5 Padel" on the matches slide. Everything else (rank included) counts every sport.
 - Rank: place by matches among the members enrolled in the season (ties share a place), only for a member who played. Other members only appear as top partners with name and picture (see Member Data & Privacy); club numbers are anonymous totals.
 
 ### API
@@ -493,6 +517,14 @@ At the end of a season every active club member gets a story-style review of the
 - Auto-advance is driven by the CSS animation of the active progress segment (`@onanimationend`); pausing only pauses that animation, never the entrance animations of the slide content (they would stay invisible).
 - `WrappedTeaser` on My Club advertises a season released within the last `WrappedHelpers.TeaserDays` (60) days. `SeasonsCard` links to the page and marks released seasons with 🎁. Store: `IWrappedStore`, texts in `WrappedLocale(.de).resx`. Times of day are sent as `TimeSpan`.
 - Not built yet: a notification when a season is released, Wrapped for the children of a family.
+
+## Sports in Statistics & Leaderboards
+
+- A booking's sport is the sport of its court (`Court.Sport`). `Business/Shared/SportFilter.cs`: `OfSport(context, sport)` on `Booking`/`BookingPlayer` queries (no-op for `null`), `OrderedClubSports` (the club's sports, Tennis first) and the casts between the domain and shared `Sport` enums.
+- `GET Leaderboards?sport=`, `GET Statistics?sport=` and `GET Statistics/club?sport=` take an optional sport (`Tennis`/`Padel` or the number). **Without it nothing changes**: every sport, so existing clients and API keys get the same numbers. The results carry `Sport` (what they are for) and `Sports` (the club's sports); the leaderboard also `DefaultSport` (the first sport the member is enrolled for in the active season, only for clubs with several sports).
+- Member statistics with a sport: only bookings on its courts, and the club comparison only with the members whose enrollment covers it. The play mode quotas always count every sport.
+- Club statistics with a sport: only the courts of the sport (occupancy, heatmaps), the bookings on them and the members whose enrollment covers it (demographics, activity).
+- FE: `Components/Sports/SportFilter.razor` (chips "All sports" + one per sport, renders nothing for a club with one sport), `SportNames` (name, emoji, badge name), texts in `Localization/Components/Sports/SportLocale(.de).resx`. The leaderboard starts with `DefaultSport`, the statistics pages with all sports; switching reloads the store (`LoadLeaderboard(sport)`, `LoadStatistics(sport)`, `LoadClubStatistics(sport)`) and keeps the selected season/tab.
 
 ## Play Mode Quotas
 
@@ -785,7 +817,7 @@ A club enters its price list as membership plans per season. Members choose a pl
 - `MembershipPlan` (`TenantDomainEntity`, aggregate root): `SeasonId` (cascade), `Name` (unique per club and season), `Description?` (plain text), `PriceCents` (0 = free plan, confirmed instead of paid), `Currency` (the club's currency when created or copied), and the rules: `MaxAdults` (1-2) + `IncludesChildren` (1/false = one member, 2/false = couple, otherwise a family: `IsGroupPlan`), `BirthYearFrom?`/`BirthYearTo?`, `RequiresApproval`, `NewMembersOnly`, `RequiresEnrolledFamilyAdult` (partner card, discount on children; only for plans for one member), `GrantsSeasonEnrollment` (`false` = passive member: paid, but not enrolled), `AvailableFrom?`/`AvailableUntil?`, `IsSelfService` (off = only the treasurer assigns it), `SortOrder`. **The price is per order, however many members it covers.**
 - `MembershipOrder` (`TenantDomainEntity`, aggregate root): plan, season, a snapshot of `PlanName`/`AmountCents`/`Currency` (a plan that changes later never changes an order), `PayerMemberId?`, `Members` (`MembershipOrderMember`), `Status`, `PaymentMethod?` (`Online`, `BankTransfer`, `Cash`, `Other`; `null` for a confirmed free plan), `StripeCheckoutSessionId?`, `StripePaymentIntentId?`, `ApprovedAt?`, `PaidAt?`, `MarkedPaidByMemberId?`, `Note?` (treasurers only).
     - `MembershipOrderStatus` (Domain + a copy in Shared): `AwaitingApproval` → `AwaitingPayment` → `Processing` (SEPA debit started) → `Paid`; `Failed`, `Cancelled`, `Refunded`, `Disputed`. The transitions are methods of the order (`Approve`, `Reject`, `StartCheckout`, `MarkProcessing`, `MarkPaid`, `ConfirmFree`, `MarkFailed`, `CancelByMember`, `CancelByTreasurer`, `MarkRefunded`, `MarkDisputed`); an invalid one throws `MembershipOrderInvalidStatus`. **`MarkPaid`, `MarkProcessing`, `MarkFailed`, `MarkRefunded` and `MarkDisputed` are no-ops when repeated**, because Stripe reports things twice.
-    - **A member has one membership per season**: one order whose status is in `MembershipOrder.ActiveStatuses` (everything except `Cancelled`, `Failed`, `Refunded`). The join table can't carry a unique index for that, so every handler that creates an order (or reopens a failed one) calls `context.LockMembershipOrders(clubId, seasonId)` (advisory lock until the transaction ends) before it checks.
+    - **A member has one membership per season and sport** (see Sports): one order whose status is in `MembershipOrder.ActiveStatuses` and whose plan shares a sport (everything except `Cancelled`, `Failed`, `Refunded`). The join table can't carry a unique index for that, so every handler that creates an order (or reopens a failed one) calls `context.LockMembershipOrders(clubId, seasonId)` (advisory lock until the transaction ends) before it checks.
 - `MembershipEligibility` (static domain service): `Check(plan, today, candidates, otherFamilyAdults)` returns the reasons a plan can't be chosen (`BirthYearOutOfRange`, `TooManyAdults`, `ChildrenNotIncluded`, `NotANewMember`, `NoEnrolledFamilyAdult`, `PlanNotAvailable`, `MemberNotInFamily`, `AlreadyHasMembership`, `OnlyOneMember`, `AdultRequired`). For a plan for one member the birth years and "new member" apply to that member, for couples and families to the adults. Its tests (`Bookennis.Domain.Tests/Memberships`) are the price lists of three real clubs - add a case there when a rule changes.
 - `ClubPaymentAccount` (`TenantDomainEntity`, unique per club): `StripeAccountId`, `ChargesEnabled`, `PayoutsEnabled`, `DetailsSubmitted`. Deleting the row disconnects the club.
 - `StripeWebhookEvent` (not tenant specific): `EventId` (unique), `Type`, `StripeAccountId?`, `ObjectId`, `ProcessedAt?`. No payload is stored.
@@ -794,7 +826,7 @@ A club enters its price list as membership plans per season. Members choose a pl
 ### Rules of the handlers (`Business/Memberships`)
 
 - `MembershipPeople.Load` gives the handlers what the rules need about members (family, birth year, earlier seasons, enrollment, active order). `OrderableBy(memberId)` is who a member may order for: themself and, **as a parent**, the family - the same right that lets a parent book for children. `CreateMembershipOrder` answers anything else with 403.
-- `IMembershipFulfillment.Complete(order)` is the **only** place that turns an order into `MemberSeason`s (unless the plan does not enroll). Call it when an order becomes paid or its debit starts, and save together with the status change. It skips members who are already enrolled, so calling it twice does no harm. `Revoke(order)` takes back the enrollments **this order** created (`MemberSeason.MembershipOrderId`), never the ones made by hand or by another order. It runs when a SEPA debit fails (`checkout.session.async_payment_failed`; paying again enrolls again), when a member withdraws an order, and when a treasurer cancels a paid order with "also remove from the season" (`cancel?removeEnrollments=true`, ticked by default in `CancelOrderDialog`). Refunds and disputes don't revoke: the treasurers get an email and decide. Bookings already made stay.
+- `IMembershipFulfillment.Complete(order)` is the **only** place that turns an order into `MemberSeason`s (unless the plan does not enroll). Call it when an order becomes paid or its debit starts, and save together with the status change. It adds the order's sports to members who are already enrolled, so calling it twice does no harm. `Revoke(order)` takes back what **this order** added (`MembershipOrderMember.AddedSports`, the enrollment it created via `MemberSeason.MembershipOrderId`), never what was set by hand or another order pays for. It runs when a SEPA debit fails (`checkout.session.async_payment_failed`; paying again enrolls again), when a member withdraws an order, and when a treasurer cancels a paid order with "also remove from the season" (`cancel?removeEnrollments=true`, ticked by default in `CancelOrderDialog`). Refunds and disputes don't revoke: the treasurers get an email and decide. Bookings already made stay.
 - The treasurer decides who gets which plan: `RecordMembershipPayment` does **not** check the rules of the plan, only that the members belong to the club and have no membership yet.
 - The payments list (`GetMembershipPayments`) is the treasurers' only list of members (they are no `ClubMemberViewer`). It carries names, family, plan and payment - **never email, birthday or address**. The one exception outside the list: treasurers may open and change a family (`FamiliesController`) to set it up for a couple or family plan, and a family shows the birthdays of its children. `MembershipOrderDto` (what members see) never carries the note or anything of Stripe.
 - Support mode has no member: treasurer handlers use the nullable `GetClubMemberId` (`MarkedPaidByMemberId` stays `null`). The member's own endpoints (`MembershipsController`) need a member.

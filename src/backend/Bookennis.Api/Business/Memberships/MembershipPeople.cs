@@ -1,5 +1,6 @@
 using Bookennis.Api.Data;
 using Bookennis.Domain.Clubs;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Families;
 using Bookennis.Domain.Memberships;
 using Microsoft.EntityFrameworkCore;
@@ -18,20 +19,34 @@ public record MembershipPerson(
     bool EnrolledInEarlierSeason,
     int? EnrolledByOrderId,
     bool IsEnrolled,
-    int? ActiveOrderId,
-    MembershipOrderStatus? ActiveOrderStatus)
+    IReadOnlyList<MembershipActiveOrder> ActiveOrders)
 {
     public bool IsChild => Role == MembershipEligibility.FamilyRole.Child;
 
-    /// <summary>Covered by an order of the season that is not cancelled, failed or refunded.</summary>
-    public bool HasMembership => ActiveOrderId is not null;
+    /// <summary>The first order of the season that covers the member and is not cancelled, failed or refunded.</summary>
+    public int? ActiveOrderId => ActiveOrders.Count > 0 ? ActiveOrders[0].OrderId : null;
+
+    public MembershipOrderStatus? ActiveOrderStatus => ActiveOrders.Count > 0 ? ActiveOrders[0].Status : null;
+
+    /// <summary>Covered by an order of the season that is not cancelled, failed or refunded (for any sport).</summary>
+    public bool HasMembership => ActiveOrders.Count > 0;
+
+    /// <summary>
+    /// <b>One membership per sport and season</b>: covered by an active order (other than <paramref name="ignoreOrderId"/>)
+    /// whose plan shares a sport with <paramref name="sports"/>. A plan without sports is for every sport.
+    /// </summary>
+    public bool HasMembershipFor(IReadOnlyCollection<Sport> sports, int? ignoreOrderId = null)
+        => ActiveOrders.Any(o => o.OrderId != ignoreOrderId && Sports.Overlap(o.Sports, sports));
 
     /// <summary>Counts as a member of the season for the family discount: enrolled, or covered by an order that is paid or being paid.</summary>
     public bool HasPaidMembership => IsEnrolled || ActiveOrderStatus is MembershipOrderStatus.Paid or MembershipOrderStatus.Processing;
 
-    public MembershipEligibility.Candidate ToCandidate(int? ignoreOrderId = null)
-        => new(MemberId, BirthYear, Role, FamilyId, EnrolledInEarlierSeason, HasMembership && ActiveOrderId != ignoreOrderId);
+    public MembershipEligibility.Candidate ToCandidate(IReadOnlyCollection<Sport> sports, int? ignoreOrderId = null)
+        => new(MemberId, BirthYear, Role, FamilyId, EnrolledInEarlierSeason, HasMembershipFor(sports, ignoreOrderId));
 }
+
+/// <summary>An active order of the season that covers a member, with the sports of its plan (empty = every sport).</summary>
+public record MembershipActiveOrder(int OrderId, MembershipOrderStatus Status, Sport[] Sports);
 
 /// <summary>The club members of a club (or some of them) with their family and what they have in a season.</summary>
 public class MembershipPeople(IReadOnlyList<MembershipPerson> people)
@@ -55,7 +70,7 @@ public class MembershipPeople(IReadOnlyList<MembershipPerson> people)
     }
 
     public IReadOnlyList<MembershipEligibility.ErrorCode> Check(MembershipPlan plan, DateOnly today, IReadOnlyCollection<MembershipPerson> members, int? ignoreOrderId = null)
-        => MembershipEligibility.Check(plan, today, members.Select(m => m.ToCandidate(ignoreOrderId)).ToList(), OtherFamilyAdults(members));
+        => MembershipEligibility.Check(plan, today, members.Select(m => m.ToCandidate(plan.Sports, ignoreOrderId)).ToList(), OtherFamilyAdults(members));
 
     /// <summary>
     /// The members a member may order for: themself and, as a parent, everybody in the family.
@@ -122,16 +137,15 @@ public class MembershipPeople(IReadOnlyList<MembershipPerson> people)
                && MembershipOrder.ActiveStatuses.Contains(order.Status)
                && memberIds.Contains(orderMember.MemberId)
             orderby order.Id
-            select new { orderMember.MemberId, OrderId = order.Id, order.Status }
+            select new { orderMember.MemberId, OrderId = order.Id, order.Status, order.Sports }
         ).ToListAsync(cancellationToken);
-        var activeOrderByMember = activeOrders.GroupBy(o => o.MemberId).ToDictionary(g => g.Key, g => g.First());
+        var activeOrdersByMember = activeOrders.ToLookup(o => o.MemberId, o => new MembershipActiveOrder(o.OrderId, o.Status, o.Sports));
 
         var people = rows.ConvertAll(row =>
         {
             var family = familyByMember.GetValueOrDefault(row.Id);
             var memberEnrollments = enrollmentsByMember[row.Id].ToList();
             var current = memberEnrollments.FirstOrDefault(e => e.SeasonId == season.Id);
-            var activeOrder = activeOrderByMember.GetValueOrDefault(row.Id);
 
             return new MembershipPerson(
                 row.Id,
@@ -145,8 +159,7 @@ public class MembershipPeople(IReadOnlyList<MembershipPerson> people)
                 memberEnrollments.Any(e => e.From < season.Period.From),
                 current?.MembershipOrderId,
                 current is not null,
-                activeOrder?.OrderId,
-                activeOrder?.Status);
+                activeOrdersByMember[row.Id].ToList());
         });
 
         return new MembershipPeople(people);

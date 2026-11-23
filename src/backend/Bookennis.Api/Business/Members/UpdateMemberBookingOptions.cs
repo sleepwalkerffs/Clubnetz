@@ -1,4 +1,5 @@
 using Bookennis.Api.Data;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Exceptions;
 using Bookennis.Domain.Members;
 using Fusonic.Extensions.EntityFrameworkCore;
@@ -6,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Members;
 
-public record UpdateMemberBookingOptions(int MemberId, int[] AllowedSeasonIds, int BookingsPerWeek) : ICommand
+/// <summary><c>SeasonSports</c>: sports per season id (empty = every sport); a season without an entry keeps its sports, a new one is for every sport.</summary>
+public record UpdateMemberBookingOptions(int MemberId, int[] AllowedSeasonIds, int BookingsPerWeek, IReadOnlyDictionary<int, Sport[]>? SeasonSports = null) : ICommand
 {
     public enum ErrorCode
     {
@@ -43,8 +45,14 @@ public record UpdateMemberBookingOptions(int MemberId, int[] AllowedSeasonIds, i
             var toRemove = existingSeasonLinks.Where(ms => !allowedSeasonIds.Contains(ms.SeasonId)).ToList();
             var toAdd = allowedSeasonIds
                 .Where(sid => existingSeasonLinks.All(ms => ms.SeasonId != sid))
-                .Select(sid => new MemberSeason(request.MemberId, sid))
+                .Select(sid => new MemberSeason(request.MemberId, sid, sports: request.SeasonSports?.GetValueOrDefault(sid)))
                 .ToList();
+
+            foreach (var enrollment in existingSeasonLinks.Where(ms => allowedSeasonIds.Contains(ms.SeasonId)))
+            {
+                if (request.SeasonSports?.TryGetValue(enrollment.SeasonId, out var sports) == true)
+                    enrollment.SetSports(sports);
+            }
 
             context.MemberSeasons.RemoveRange(toRemove);
             context.MemberSeasons.AddRange(toAdd);

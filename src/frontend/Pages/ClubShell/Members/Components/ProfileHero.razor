@@ -1,4 +1,6 @@
 @using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Sports
+@using Bookennis.Client.Localization.Components.Sports
 @using Bookennis.Client.Localization.Pages.Trophies
 
 <div class="profile-hero">
@@ -44,7 +46,7 @@
         <div class="profile-hero__top" style="--badge-color: @BadgeColors.ForLevel(top.Level)">
             <div class="profile-hero__top-caption">🏆 @Locale["TopAchievement"]</div>
             <BadgeIcon ImageUrl="@top.ImageUrl" Level="@top.Level" Alt="@top.Name" Size="Size.Large" Class="profile-hero__top-icon" />
-            <div class="profile-hero__top-name">@top.Name</div>
+            <div class="profile-hero__top-name">@SportNames.BadgeName(SportLocale, top.Name, top.Sport)</div>
             <div class="profile-hero__top-meta">@string.Format(Locale["LevelInSeason"], top.Level, top.SeasonFrom.Year)</div>
         </div>
     }
@@ -75,4 +77,5 @@
     [Parameter] public RenderFragment? Actions { get; set; }
 
     [Inject] private IStringLocalizer<TrophyLocale> Locale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SportLocale> SportLocale { get; set; } = null!;
 }

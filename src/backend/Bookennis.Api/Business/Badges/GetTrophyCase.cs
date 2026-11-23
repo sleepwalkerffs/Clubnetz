@@ -61,7 +61,7 @@ public record GetTrophyCase(int RequestingUserId, int TargetMemberId) : IQuery<G
                 join s in context.Seasons on mb.SeasonId equals s.Id
                 join c in context.Clubs.IgnoreQueryFilters() on bt.ClubId equals c.Id
                 where userMemberIds.Contains(mb.MemberId)
-                orderby c.Name, s.Period.From descending, bt.Level
+                orderby c.Name, s.Period.From descending, bt.Sport.HasValue, bt.Sport, bt.Level
                 select new
                 {
                     ClubId = c.Id,
@@ -74,6 +74,7 @@ public record GetTrophyCase(int RequestingUserId, int TargetMemberId) : IQuery<G
                         MemberBadgeId = mb.Id,
                         BadgeTierId = bt.Id,
                         Level = bt.Level,
+                        Sport = (Bookennis.Shared.Controller.Shared.Sport?)bt.Sport,
                         Name = bt.Name,
                         Description = bt.Description,
                         ImageUrl = context.BadgeTierImages.Any(i => i.BadgeTierId == bt.Id)

@@ -1,11 +1,12 @@
 using Bookennis.Shared.Controller.PlayRequests;
+using Bookennis.Shared.Controller.Shared;
 
 namespace Bookennis.Client.Services.HttpClients.PlayRequests;
 
 public interface IPlayRequestsHttpClient
 {
     Task<HttpResult<List<PlayRequestDto>>> GetPlayRequests(CancellationToken cancellationToken = default);
-    Task<HttpResult<List<PlayRequestCandidateDto>>> GetCandidates(CancellationToken cancellationToken = default);
+    Task<HttpResult<List<PlayRequestCandidateDto>>> GetCandidates(Sport? sport = null, CancellationToken cancellationToken = default);
     Task<HttpResult<int>> CreatePlayRequest(CreatePlayRequestModel model, CancellationToken cancellationToken = default);
     Task<HttpResult<PlayRequestAcceptResult>> AcceptPlayRequest(int playRequestId, CancellationToken cancellationToken = default);
     Task<HttpResult> DeclinePlayRequest(int playRequestId, CancellationToken cancellationToken = default);

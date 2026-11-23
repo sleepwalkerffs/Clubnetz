@@ -1,4 +1,5 @@
 using Bookennis.Global.Intervals;
+using Bookennis.Shared.Controller.Shared;
 
 namespace Bookennis.Shared.Controller.Club;
 
@@ -18,4 +19,7 @@ public record CourtResult
 
     /// <summary>In a hall or under a roof: no weather forecast for it.</summary>
     public bool IsIndoor { get; init; }
+
+    /// <summary>What is played on the court. Members book it for free when their enrollment covers the sport.</summary>
+    public Sport Sport { get; init; }
 }

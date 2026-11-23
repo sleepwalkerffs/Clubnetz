@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Members;
 using Bookennis.Api.Data;
 using Bookennis.Shared.Controller.Booking.Shared;
 using Bookennis.Shared.Controller.Club;
@@ -50,8 +51,20 @@ public record GetPlayers(IReadOnlySet<int>? OnlyMemberIds = null) : ICommand<Get
                 clubPlayers = clubPlayers.DistinctBy(p => p.MemberId).ToList();
             }
 
+            // The sports of the enrollments, so a booking dialog only offers players who can play on the court
+            var localIds = clubPlayers.Where(p => !p.IsAtpPlayer).Select(p => p.MemberId).ToList();
+            // The same season the booking rules check (overlapping seasons: the one that started last)
+            var activeSeasonId = (await context.GetActiveSeason(currentClub.Id, cancellationToken))?.Id;
+            var sportsByMember = activeSeasonId is null
+                ? []
+                : await context.MemberSeasons
+                    .Where(ms => localIds.Contains(ms.MemberId) && ms.SeasonId == activeSeasonId)
+                    .ToDictionaryAsync(ms => ms.MemberId, ms => ms.Sports, cancellationToken);
+
             // Guests were removed: former guest members are no players any more
-            return new GetPlayersResult(clubPlayers);
+            return new GetPlayersResult(clubPlayers.ConvertAll(p => sportsByMember.TryGetValue(p.MemberId, out var sports) && sports.Length > 0
+                ? p with { Sports = sports.Select(s => (Bookennis.Shared.Controller.Shared.Sport)s).ToList() }
+                : p));
         }
     }
 }

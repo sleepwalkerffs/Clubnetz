@@ -37,8 +37,8 @@ public class MemberHttpService(HttpClient httpClient, JsonSerializerOptions json
     public async Task<HttpResult<MemberProfileResult>> GetMemberProfile(int memberId, CancellationToken cancellationToken = default)
         => await (await httpClient.GetAsync($"{memberId}/profile", cancellationToken)).AsHttpResult<MemberProfileResult>(jsonOptions, cancellationToken);
 
-    public async Task<HttpResult> UpdateMemberBookingOptions(int memberId, int[] allowedSeasonIds, int bookingsPerWeek, CancellationToken cancellationToken)
-        => await (await httpClient.PatchAsJsonAsync($"{memberId}/BookingOptions", new UpdateMemberBookingOptionsRequest(allowedSeasonIds, bookingsPerWeek), jsonOptions, cancellationToken))
+    public async Task<HttpResult> UpdateMemberBookingOptions(int memberId, int[] allowedSeasonIds, int bookingsPerWeek, List<SeasonSports>? seasonSports, CancellationToken cancellationToken)
+        => await (await httpClient.PatchAsJsonAsync($"{memberId}/BookingOptions", new UpdateMemberBookingOptionsRequest(allowedSeasonIds, bookingsPerWeek, seasonSports), jsonOptions, cancellationToken))
               .AsHttpResult(jsonOptions, cancellationToken);
 
     public async Task<HttpResult> UpdateMemberRoles(int memberId, MemberRole[] roles, CancellationToken cancellationToken)

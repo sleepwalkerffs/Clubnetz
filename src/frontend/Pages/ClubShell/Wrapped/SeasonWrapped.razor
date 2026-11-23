@@ -2,6 +2,8 @@
 @page "/clubs/{ClubId:int}/wrapped/{SeasonId:int}"
 @using System.Globalization
 @using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Components.Sports
+@using Bookennis.Client.Localization.Components.Sports
 @using Bookennis.Client.Localization
 @using Bookennis.Client.Localization.Pages.Statistics
 @using Bookennis.Client.Localization.Pages.Wrapped
@@ -109,6 +111,7 @@
     [Inject] private IStringLocalizer<WrappedLocale> L { get; set; } = null!;
     [Inject] private IStringLocalizer<StatisticsLocale> StatisticsLocale { get; set; } = null!;
     [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
+    [Inject] private IStringLocalizer<SportLocale> SportLocale { get; set; } = null!;
     [Inject] private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
 
     private sealed record Slide(string Key, string Theme, int Seconds = 7);
@@ -186,6 +189,10 @@
         return list;
     }
 
+    /// <summary>"<b>12</b> Tennis · <b>5</b> Padel": the matches per sport of a member who played more than one sport.</summary>
+    private string MatchesPerSport(SeasonWrappedResult w)
+        => string.Join(" · ", w.MatchesPerSport.Select(m => $"{Strong(m.Matches.ToString(CultureInfo.CurrentCulture))} {System.Net.WebUtility.HtmlEncode(SportNames.Name(SportLocale, m.Sport))}"));
+
     private RenderFragment RenderSlide(string key, SeasonWrappedResult w) => key switch
     {
         "intro" => @<div class="wrapped__slide-inner wrapped__slide--center">
@@ -211,9 +218,16 @@
                           <div class="w-mega w-pop" style="--d: 1">@w.Matches</div>
                           <div class="w-title w-in" style="--d: 2">@L[w.Matches == 1 ? "MatchSingular" : "MatchPlural"]</div>
                           <div class="w-facts">
+                              @if (w.MatchesPerSport.Count > 1)
+                              {
+                                  <div class="w-fact w-in" style="--d: 3">
+                                      <span class="w-fact__emoji">@SportNames.Emoji(w.MatchesPerSport[0].Sport)</span>
+                                      <span>@((MarkupString)string.Format(L["MatchesPerSport"], MatchesPerSport(w)))</span>
+                                  </div>
+                              }
                               <div class="w-fact w-in" style="--d: 4">
                                   <span class="w-fact__emoji">⏱️</span>
-                                  <span>@((MarkupString)string.Format(L["HoursOnCourt"], Strong(Number(w.HoursOnCourt)), Strong(Number(Math.Round(w.HoursOnCourt * 60)))))</span>
+                                  <span>@((MarkupString)string.Format(L[w.MatchesPerSport.Any(m => m.Sport != Bookennis.Shared.Controller.Shared.Sport.Tennis) ? "HoursOnCourtAnySport" : "HoursOnCourt"], Strong(Number(w.HoursOnCourt)), Strong(Number(Math.Round(w.HoursOnCourt * 60)))))</span>
                               </div>
                               <div class="w-fact w-in" style="--d: 5">
                                   <span class="w-fact__emoji">📅</span>
@@ -329,7 +343,7 @@
                                  var badge = w.Badges[i];
                                  <div class="w-badge w-pop" style="--d: @(i + 2)">
                                      <BadgeIcon ImageUrl="@badge.ImageUrl" Level="@badge.Level" Alt="@badge.Name" Size="Size.Large" ExtraStyle="width: 72px; height: 72px;" />
-                                     <span class="w-badge__name">@badge.Name</span>
+                                     <span class="w-badge__name">@SportNames.BadgeName(SportLocale, badge.Name, badge.Sport)</span>
                                  </div>
                              }
                          </div>

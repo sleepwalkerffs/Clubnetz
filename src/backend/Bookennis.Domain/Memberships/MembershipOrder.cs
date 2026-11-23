@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Bookennis.Domain.Base;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Exceptions;
 
 namespace Bookennis.Domain.Memberships;
@@ -52,6 +53,7 @@ public class MembershipOrder : TenantDomainEntity, IAggregateRoot
         PlanName = plan.Name;
         AmountCents = plan.PriceCents;
         Currency = plan.Currency;
+        Sports = plan.Sports;
         PayerMemberId = payerMemberId;
         Status = plan.RequiresApproval ? MembershipOrderStatus.AwaitingApproval : MembershipOrderStatus.AwaitingPayment;
         SetNote(note);
@@ -64,6 +66,19 @@ public class MembershipOrder : TenantDomainEntity, IAggregateRoot
     public string PlanName { get; private set; }
     public int AmountCents { get; private set; }
     public string Currency { get; private set; }
+
+    /// <summary>
+    /// A snapshot of the plan's sports (empty = every sport): what the order enrolls for. One membership per sport and season is
+    /// checked against it, so changing the sports of a plan later never changes what existing orders hold.
+    /// </summary>
+    public Sport[] Sports { get; private set; } = [];
+
+    /// <summary>An order for every sport whose plan became a plan for some sports (see <c>UpdateMembershipPlan</c>).</summary>
+    public void NarrowSports(IReadOnlyCollection<Sport> sports)
+    {
+        if (Sports.Length == 0)
+            Sports = Courts.Sports.Normalize(sports);
+    }
 
     /// <summary><c>null</c> once the payer left the club: the order stays as the club's record without a person.</summary>
     public int? PayerMemberId { get; private set; }

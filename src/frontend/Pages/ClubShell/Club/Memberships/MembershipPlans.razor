@@ -102,7 +102,7 @@ else
                                         <div class="plan-card__description">@plan.Description</div>
                                     }
                                     <div class="plan-card__chips">
-                                        @foreach (var (emoji, text) in MembershipHelpers.Chips(L, plan))
+                                        @foreach (var (emoji, text) in MembershipHelpers.Chips(L, plan, ClubStore.Courts.HasSeveralSports() ? SharedLocale : null))
                                         {
                                             <span class="plan-chip"><span aria-hidden="true">@emoji</span> @text</span>
                                         }
@@ -164,11 +164,12 @@ else
         Store.OnPlansChanged += OnChanged;
         AccountStore.OnAccountChanged += OnChanged;
         ClubProfileStore.OnClubProfileChanged += OnChanged;
+        ClubStore.OnCourtsDataChanged += OnChanged;
 
         if (!CanManage)
             return;
 
-        await ClubStore.LoadSeasons();
+        await Task.WhenAll(ClubStore.LoadSeasons(), ClubStore.Courts.Count == 0 ? ClubStore.LoadCourts() : Task.CompletedTask);
         seasonsLoaded = true;
 
         // The running season, else the next one, else the latest
@@ -261,5 +262,6 @@ else
         Store.OnPlansChanged -= OnChanged;
         AccountStore.OnAccountChanged -= OnChanged;
         ClubProfileStore.OnClubProfileChanged -= OnChanged;
+        ClubStore.OnCourtsDataChanged -= OnChanged;
     }
 }

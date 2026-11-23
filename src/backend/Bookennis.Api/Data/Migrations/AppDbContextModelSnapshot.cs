@@ -2214,13 +2214,22 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("Sport")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SeasonId");
 
                     b.HasIndex("ClubId", "SeasonId", "Level")
                         .IsUnique()
-                        .HasDatabaseName("UX_BadgeTiers_ClubId_SeasonId_Level");
+                        .HasDatabaseName("UX_BadgeTiers_ClubId_SeasonId_Level")
+                        .HasFilter("\"Sport\" IS NULL");
+
+                    b.HasIndex("ClubId", "SeasonId", "Sport", "Level")
+                        .IsUnique()
+                        .HasDatabaseName("UX_BadgeTiers_ClubId_SeasonId_Sport_Level")
+                        .HasFilter("\"Sport\" IS NOT NULL");
 
                     b.ToTable("BadgeTiers");
                 });
@@ -2694,6 +2703,9 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Sport")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ClubId");
@@ -2983,6 +2995,10 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("SeasonId")
                         .HasColumnType("integer");
 
+                    b.PrimitiveCollection<int[]>("Sports")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
                     b.HasKey("Id");
 
                     b.HasIndex("MembershipOrderId");
@@ -3086,6 +3102,10 @@ namespace Bookennis.Api.Data.Migrations
                     b.Property<int>("SeasonId")
                         .HasColumnType("integer");
 
+                    b.PrimitiveCollection<int[]>("Sports")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -3121,6 +3141,9 @@ namespace Bookennis.Api.Data.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "MembershipOrderMembers_Id_Sequence");
+
+                    b.PrimitiveCollection<int[]>("AddedSports")
+                        .HasColumnType("integer[]");
 
                     b.Property<int>("MemberId")
                         .HasColumnType("integer");
@@ -3205,6 +3228,10 @@ namespace Bookennis.Api.Data.Migrations
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
+
+                    b.PrimitiveCollection<int[]>("Sports")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
 
                     b.HasKey("Id");
 

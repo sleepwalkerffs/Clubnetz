@@ -1,9 +1,17 @@
+using Bookennis.Shared.Controller.Shared;
+
 namespace Bookennis.Shared.Controller.Statistics;
 
 public class GetMemberStatisticsResult
 {
     public required List<SeasonStatisticsResult> SeasonStatistics { get; init; }
     public required StatisticsData AllTime { get; init; }
+
+    /// <summary>The sport the numbers are for (only bookings on its courts); <c>null</c> = every sport. Play mode quotas count every sport.</summary>
+    public Sport? Sport { get; init; }
+
+    /// <summary>The sports of the club's courts. The app offers a sport filter only when there are more than one.</summary>
+    public List<Sport> Sports { get; init; } = [];
 }
 
 public class SeasonStatisticsResult

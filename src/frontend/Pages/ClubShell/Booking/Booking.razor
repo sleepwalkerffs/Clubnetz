@@ -22,6 +22,7 @@
 @using Bookennis.Shared.Controller.Booking.Shared
 @using Bookennis.Shared.Controller.Club
 @using Bookennis.Shared.Controller.CourtBlockings
+@using Bookennis.Shared.Controller.Shared
 
 @implements IDisposable
 
@@ -184,6 +185,8 @@ else
                  ClubId="@ClubProfileStore.SelectedClubId"
                  CanBook="@CanBook"
                  CanBuy="@CanBuyOnSelectedDate"
+                 EnrolledSports="@EnrolledSports"
+                 CanBuyOtherSports="@CanBuyOtherSportsOnSelectedDate"
                  OnBuySlot="@OpenBuyDialog"
                  IsBookingOnlyForChildren="@(ClubProfileStore.BookingOptions?.IsBookingOnlyForChildren ?? false)"
                  CanBookForAnyMember="@(ClubProfileStore.IsSupportMode || ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.BookingsManageForAnyMember))"
@@ -282,8 +285,18 @@ else
     private bool IsBuyerView => !ClubProfileStore.IsSupportMode && !ClubProfileStore.IsActiveMember;
 
     private bool CanBuyOnSelectedDate
-        => IsBuyerView && !CanBook && CourtSalesStore.Options is { CanBuy: true } options
-           && SelectedDate >= Today && SelectedDate.DayNumber - Today.DayNumber <= options.MaxDaysInAdvance;
+        => IsBuyerView && !CanBook && IsSaleDay;
+
+    /// <summary>The sports the member books for free (empty = every sport); a court of another sport is bought like by a member who is not enrolled.</summary>
+    private List<Sport> EnrolledSports => ClubProfileStore.BookingOptions?.EnrolledSports ?? [];
+
+    /// <summary>An enrolled member of a club with tennis and padel courts whose enrollment leaves out the sport of some courts.</summary>
+    private bool HasCourtsOfOtherSports => !ClubProfileStore.IsSupportMode && !IsBuyerView && CanBook && Courts.Any(c => !EnrolledSports.Covers(c.Sport));
+
+    private bool CanBuyOtherSportsOnSelectedDate => HasCourtsOfOtherSports && IsSaleDay;
+
+    private bool IsSaleDay => CourtSalesStore.Options is { CanBuy: true } options
+                              && SelectedDate >= Today && SelectedDate.DayNumber - Today.DayNumber <= options.MaxDaysInAdvance;
 
     private bool CanManageBlockings => ClubProfileStore.HasPermission(Bookennis.Shared.Controller.Permissions.Permission.CourtBlockingsManage);
 
@@ -338,6 +351,10 @@ else
 
         Courts = ClubStore.Courts;
         Players = ClubStore.ClubPlayers;
+
+        // Courts of a sport the member is not enrolled for can be bought (needs the options of the court sales)
+        if (HasCourtsOfOtherSports)
+            await CourtSalesStore.LoadOptions();
         MemberId = ClubProfileStore.MemberId;
         AllowedPlaymodes = ClubStore.PlayModes.Where(mode => mode.AllowedRoles.Any(ClubProfileStore.Roles.Contains)).ToList();
         MemberChildren = familyId is null ? [] : FamilyStore.Family?.Children.ConvertAll(child => new PlayerResult(child.MemberId, child.FirstName, child.LastName, false)) ?? [];

@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using Bookennis.Shared.Controller.PlayRequests;
+using Bookennis.Shared.Controller.Shared;
 
 namespace Bookennis.Client.Services.HttpClients.PlayRequests;
 
@@ -9,8 +10,8 @@ public class PlayRequestsHttpClient(HttpClient httpClient, JsonSerializerOptions
     public async Task<HttpResult<List<PlayRequestDto>>> GetPlayRequests(CancellationToken cancellationToken = default)
         => await (await httpClient.GetAsync("", cancellationToken)).AsHttpResult<List<PlayRequestDto>>(jsonOptions, cancellationToken);
 
-    public async Task<HttpResult<List<PlayRequestCandidateDto>>> GetCandidates(CancellationToken cancellationToken = default)
-        => await (await httpClient.GetAsync("candidates", cancellationToken)).AsHttpResult<List<PlayRequestCandidateDto>>(jsonOptions, cancellationToken);
+    public async Task<HttpResult<List<PlayRequestCandidateDto>>> GetCandidates(Sport? sport = null, CancellationToken cancellationToken = default)
+        => await (await httpClient.GetAsync(sport is null ? "candidates" : $"candidates?sport={sport}", cancellationToken)).AsHttpResult<List<PlayRequestCandidateDto>>(jsonOptions, cancellationToken);
 
     public async Task<HttpResult<int>> CreatePlayRequest(CreatePlayRequestModel model, CancellationToken cancellationToken = default)
         => await (await httpClient.PostAsJsonAsync("", model, jsonOptions, cancellationToken)).AsHttpResult<int>(jsonOptions, cancellationToken);

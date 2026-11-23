@@ -4,6 +4,7 @@ using Bookennis.Client.Services.Store.Base;
 using Bookennis.Client.Utils;
 using Bookennis.Shared.Controller.Booking.Shared;
 using Bookennis.Shared.Controller.Members;
+using Bookennis.Shared.Controller.Memberships;
 using Bookennis.Shared.Controller.Shared;
 using Bookennis.Shared.Utils.Paging;
 using Bookennis.Shared.Utils.Sorting;
@@ -124,18 +125,33 @@ public class MembersStore(IMemberHttpService memberHttpService) : SemaphoreStore
         OnMemberChanged?.Invoke();
     }
 
-    public Task<HttpResult> UpdateMemberBookingOptions(int memberId, int[] allowedSeasonIds, int bookingsPerWeek)
+    public Task<HttpResult> UpdateMemberBookingOptions(int memberId, int[] allowedSeasonIds, int bookingsPerWeek, List<SeasonSports>? seasonSports = null)
         => RunInSavingContextAsync(async cancellationToken =>
         {
-            var result = await memberHttpService.UpdateMemberBookingOptions(memberId, allowedSeasonIds, bookingsPerWeek, cancellationToken);
+            var result = await memberHttpService.UpdateMemberBookingOptions(memberId, allowedSeasonIds, bookingsPerWeek, seasonSports, cancellationToken);
             if (result is { Success: true })
             {
                 UpdateMember(Members.SingleOrDefault(i => i.MemberId == memberId));
                 UpdateMember(MemberDetail);
+                if (MemberDetail?.MemberId == memberId)
+                    UpdateEnrollments(MemberDetail);
                 OnMemberChanged?.Invoke();
             }
 
             return result;
+
+            // Like the server: a season that is not listed keeps its sports, a new enrollment without an entry is for every sport
+            void UpdateEnrollments(MembersDetailResult detail)
+            {
+                detail.SeasonEnrollments = allowedSeasonIds.Select(seasonId =>
+                {
+                    var enrollment = detail.SeasonEnrollments.FirstOrDefault(e => e.SeasonId == seasonId)
+                                     ?? new MemberSeasonEnrollment(seasonId, MembershipEnrollmentSource.ByHand);
+                    return seasonSports?.FirstOrDefault(s => s.SeasonId == seasonId) is { } sports
+                        ? enrollment with { Sports = sports.Sports }
+                        : enrollment;
+                }).ToList();
+            }
 
             void UpdateMember(MemberResult? member)
             {

@@ -1,12 +1,19 @@
+using Bookennis.Api.Business.ClubEvents;
 using Bookennis.Api.Business.Clubs;
+using Bookennis.Api.Business.Members;
+using Bookennis.Api.Business.Shared;
 using Bookennis.Api.Data;
+using Bookennis.Domain.Courts;
 using Bookennis.Domain.Members;
 using Bookennis.Shared.Controller.Leaderboards;
 using Microsoft.EntityFrameworkCore;
 
 namespace Bookennis.Api.Business.Leaderboards;
 
-public record GetLeaderboard(int UserId) : IQuery<GetLeaderboardResult>
+/// <param name="UserId">The signed-in user.</param>
+/// <param name="ClubId">The club.</param>
+/// <param name="Sport">Only bookings on courts of this sport; <c>null</c> = every sport.</param>
+public record GetLeaderboard(int UserId, int ClubId, Sport? Sport = null) : IQuery<GetLeaderboardResult>
 {
     private const int MaxEntries = 25;
 
@@ -52,7 +59,7 @@ public record GetLeaderboard(int UserId) : IQuery<GetLeaderboardResult>
 
             // Only bookings that already took place count, future bookings are not played yet
             var bookings = (await (
-                from booking in context.Bookings
+                from booking in context.Bookings.OfSport(context, request.Sport)
                 where chargingPlayModeIds.Contains(booking.PlayModeId) && booking.Interval.From <= now
                 select new
                 {
@@ -151,11 +158,30 @@ public record GetLeaderboard(int UserId) : IQuery<GetLeaderboardResult>
                 memberDict,
                 currentMemberIds);
 
+            var sports = await context.OrderedClubSports(request.ClubId, cancellationToken);
+
             return new GetLeaderboardResult
             {
                 SeasonLeaderboards = seasonLeaderboards,
                 AllTime = allTimeData,
+                Sport = request.Sport.ToDto(),
+                Sports = sports.ConvertAll(s => s.ToDto()),
+                DefaultSport = (await DefaultSport(request, sports, cancellationToken)).ToDto(),
             };
+        }
+
+        /// <summary>The first sport of the club the member is enrolled for in the active season; <c>null</c> (every sport) otherwise.</summary>
+        private async Task<Sport?> DefaultSport(GetLeaderboard request, List<Sport> clubSports, CancellationToken cancellationToken)
+        {
+            if (clubSports.Count < 2)
+                return null;
+
+            var memberId = await context.GetClubMemberId(request.UserId, request.ClubId, cancellationToken);
+            if (memberId is null)
+                return null;
+
+            var enrolledSports = await ActiveMembership.EnrolledSportsInActiveSeason(context, request.ClubId, memberId.Value, cancellationToken);
+            return enrolledSports is { Length: > 0 } ? clubSports.Cast<Sport?>().FirstOrDefault(s => enrolledSports.Contains(s!.Value)) : null;
         }
 
         private static Dictionary<int, Totals> Aggregate(IEnumerable<BookingRow> bookings, Func<int, BookingRow, bool> include)

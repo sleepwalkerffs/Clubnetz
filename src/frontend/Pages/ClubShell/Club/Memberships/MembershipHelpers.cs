@@ -1,6 +1,8 @@
 using Bookennis.Shared.Utils;
 using System.Globalization;
+using Bookennis.Client.Localization;
 using Bookennis.Client.Localization.Pages.Memberships;
+using Bookennis.Client.Utils;
 using Bookennis.Shared.Controller.Memberships;
 using Bookennis.Shared.Controller.Shared;
 using Microsoft.Extensions.Localization;
@@ -93,10 +95,19 @@ public static class MembershipHelpers
         (null, { } u) => string.Format(locale["Available_Until"], Date(u)),
     };
 
-    /// <summary>The rules of a plan as short chips (emoji and text), most important first.</summary>
-    public static List<(string Emoji, string Text)> Chips(IStringLocalizer<MembershipsLocale> locale, MembershipPlanDto plan)
+    /// <summary>The emoji of the sports of a plan or enrollment: the sport's own for one sport, a medal for several or every sport.</summary>
+    public static string SportsEmoji(IReadOnlyCollection<Sport> sports) => sports.Distinct().Count() == 1 ? sports.First().Emoji() : "🏅";
+
+    /// <summary>
+    /// The rules of a plan as short chips (emoji and text), most important first.
+    /// <paramref name="sportLocale"/>: only for a club with courts of several sports (<see cref="SportExtensions.HasSeveralSports"/>), adds the sports of the plan.
+    /// </summary>
+    public static List<(string Emoji, string Text)> Chips(IStringLocalizer<MembershipsLocale> locale, MembershipPlanDto plan, IStringLocalizer<SharedLocale>? sportLocale = null)
     {
         var chips = new List<(string, string)> { (plan.IsGroupPlan ? "👨‍👩‍👧" : "👤", CoverageText(locale, plan.Coverage())) };
+
+        if (sportLocale is not null)
+            chips.Add((SportsEmoji(plan.Sports), plan.Sports.Names(sportLocale)));
 
         if (BirthYearText(locale, plan.BirthYearFrom, plan.BirthYearTo) is { } born)
             chips.Add(("🎂", born));
@@ -119,10 +130,15 @@ public static class MembershipHelpers
         return chips;
     }
 
-    /// <summary>Reads the rules of a plan back as sentences, so the treasurer sees what members will get.</summary>
-    public static List<string> Sentences(IStringLocalizer<MembershipsLocale> locale, MembershipPlanDto plan, int seasonYear)
+    /// <summary>Reads the rules of a plan back as sentences, so the treasurer sees what members will get. <paramref name="sportLocale"/>: see <see cref="Chips"/>.</summary>
+    public static List<string> Sentences(IStringLocalizer<MembershipsLocale> locale, MembershipPlanDto plan, int seasonYear, IStringLocalizer<SharedLocale>? sportLocale = null)
     {
         var sentences = new List<string> { locale[$"Sentence_{plan.Coverage()}"] };
+
+        if (sportLocale is not null)
+            sentences.Add(plan.Sports.Count == 0 || SportExtensions.All.All(plan.Sports.Contains)
+                ? locale["Sentence_EverySport"]
+                : string.Format(locale["Sentence_Sports"], plan.Sports.Names(sportLocale)));
 
         if (BirthYearText(locale, plan.BirthYearFrom, plan.BirthYearTo) is { } born)
         {
@@ -189,13 +205,33 @@ public static class MembershipHelpers
         return text.ResourceNotFound ? locale["Reason_Other"] : text;
     }
 
-    /// <summary>An order holds the membership of its members: it is not cancelled, failed or refunded.</summary>
-    /// <summary>The members a payment can be recorded for: those no running order of the season covers.</summary>
-    public static List<MembershipPaymentMemberDto> MembersWithoutMembership(GetMembershipPaymentsResult payments)
+    /// <summary>
+    /// The members a payment can be recorded for: those no running order of the season covers - for the sports of <paramref name="sports"/>
+    /// (one membership per sport and season; empty = every sport). Without sports: those who could still get a membership for some sport,
+    /// i.e. no running order of theirs is for every sport and theirs together don't cover <paramref name="clubSports"/>.
+    /// </summary>
+    public static List<MembershipPaymentMemberDto> MembersWithoutMembership(
+        GetMembershipPaymentsResult payments, IReadOnlyCollection<Sport>? sports = null, IReadOnlyCollection<Sport>? clubSports = null)
     {
-        var withMembership = payments.Orders.Where(o => o.Status.IsActive()).SelectMany(o => o.MemberIds).ToHashSet();
-        return payments.Members.Where(m => !withMembership.Contains(m.MemberId)).ToList();
+        var running = payments.Orders.Where(o => o.Status.IsActive()).ToList();
+        return payments.Members.Where(m =>
+        {
+            var own = running.Where(o => o.MemberIds.Contains(m.MemberId)).ToList();
+            if (own.Count == 0)
+                return true;
+
+            if (sports is not null)
+                return !own.Any(o => Overlap(o.Sports, sports));
+
+            if (own.Any(o => o.Sports.Count == 0) || clubSports is not { Count: > 1 })
+                return false;
+
+            return clubSports.Any(sport => !own.Any(o => o.Sports.Contains(sport)));
+        }).ToList();
     }
+
+    /// <summary>Two lists of sports share one (an empty list is every sport).</summary>
+    public static bool Overlap(IReadOnlyCollection<Sport> a, IReadOnlyCollection<Sport> b) => a.Count == 0 || b.Count == 0 || a.Intersect(b).Any();
 
     /// <summary>
     /// Who the treasurer can put on an existing order: the payer, the members it already covers and the rest of the payer's family,
@@ -203,7 +239,7 @@ public static class MembershipHelpers
     /// </summary>
     public static List<MembershipPaymentMemberDto> CoverableBy(GetMembershipPaymentsResult payments, MembershipPaymentOrderDto order, MembershipPaymentMemberDto payer)
     {
-        var free = MembersWithoutMembership(payments).Select(m => m.MemberId).ToHashSet();
+        var free = MembersWithoutMembership(payments, order.Sports).Select(m => m.MemberId).ToHashSet();
         return payments.Members
             .Where(m => order.MemberIds.Contains(m.MemberId)
                      || (free.Contains(m.MemberId) && (m.MemberId == payer.MemberId || (payer.FamilyId is not null && m.FamilyId == payer.FamilyId))))

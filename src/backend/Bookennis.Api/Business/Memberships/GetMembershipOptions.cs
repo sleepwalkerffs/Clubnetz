@@ -104,7 +104,7 @@ public record GetMembershipOptions(int ClubId, int UserId, int? SeasonId) : IQue
 
         private static List<MembershipPerson> GroupMembers(MembershipPlan plan, List<MembershipPerson> orderable)
         {
-            var open = orderable.Where(p => !p.HasMembership).ToList();
+            var open = orderable.Where(p => !p.HasMembershipFor(plan.Sports)).ToList();
 
             // The caller comes first in the list, so with one adult it is the caller
             var adults = open.Where(p => !p.IsChild).Take(plan.MaxAdults);

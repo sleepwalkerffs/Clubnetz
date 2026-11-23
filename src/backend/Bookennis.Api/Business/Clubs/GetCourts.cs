@@ -22,6 +22,7 @@ public record GetCourts : ICommand<GetCourtsResult>
                     Alias = c.Alias,
                     SortOrder = c.SortOrder,
                     IsIndoor = c.IsIndoor,
+                    Sport = (Bookennis.Shared.Controller.Shared.Sport)c.Sport,
                 }).ToListAsync(cancellationToken);
 
             return new GetCourtsResult() { Courts = courts };

@@ -4,6 +4,9 @@
 @using Bookennis.Client.Localization
 @using Bookennis.Shared.Controller.Members
 @using Bookennis.Shared.Controller.Memberships
+@using Bookennis.Shared.Controller.Shared
+@using Bookennis.Client.Components.Shared
+@using Bookennis.Client.Utils
 
 @if (Seasons.Count == 0)
 {
@@ -16,6 +19,8 @@ else
         {
             var enrolled = SelectedIds.Contains(season.Id);
             var overview = Overview?.FirstOrDefault(o => o.SeasonId == season.Id);
+            var seasonId = season.Id;
+            <div class="enrollment__item">
             <button type="button" class="enrollment__season @(enrolled ? "enrollment__season--on" : null)"
                     aria-pressed="@(enrolled ? "true" : "false")" disabled="@Disabled" @onclick="() => Toggle(season.Id)">
                 <span class="enrollment__switch" aria-hidden="true"><span></span></span>
@@ -44,6 +49,18 @@ else
                     </span>
                 }
             </button>
+            @if (enrolled && Sports is not null)
+            {
+                <div class="enrollment__sports">
+                    <MultiChoiceChips TItem="Sport" Items="@SportExtensions.All" Values="@SportsOf(seasonId)" ValuesChanged="@(values => SetSports(seasonId, values))"
+                                      TextFunc="@(sport => sport.Label(SharedLocale))" Disabled="@Disabled" Dense="true" Label="@SharedLocale["Sports_Label"]" />
+                    @if (SportsOf(seasonId).Count == 0)
+                    {
+                        <span class="enrollment__sports-hint">@SharedLocale["Sports_NoneMeansEvery"]</span>
+                    }
+                </div>
+            }
+            </div>
         }
     </div>
 }
@@ -64,9 +81,25 @@ else
     /// <summary>The seasons that came from a membership order. Switching one of them off asks for confirmation.</summary>
     [Parameter] public IReadOnlyCollection<int> PaidSeasonIds { get; set; } = [];
 
+    /// <summary>
+    /// The sports of each enrolled season (empty = every sport); only for a club with courts of several sports.
+    /// <c>null</c> hides the sports.
+    /// </summary>
+    [Parameter] public IReadOnlyDictionary<int, IReadOnlyCollection<Sport>>? Sports { get; set; }
+    [Parameter] public EventCallback<IReadOnlyDictionary<int, IReadOnlyCollection<Sport>>> SportsChanged { get; set; }
+
     [Inject] private IStringLocalizer<MembersAdminLocale> L { get; set; } = null!;
     [Inject] private IStringLocalizer<SharedLocale> SharedLocale { get; set; } = null!;
     [Inject] private IDialogService DialogService { get; set; } = null!;
+
+    private IReadOnlyCollection<Sport> SportsOf(int seasonId) => Sports?.GetValueOrDefault(seasonId) ?? [];
+
+    private async Task SetSports(int seasonId, IReadOnlyCollection<Sport> sports)
+    {
+        var all = new Dictionary<int, IReadOnlyCollection<Sport>>(Sports ?? new Dictionary<int, IReadOnlyCollection<Sport>>()) { [seasonId] = sports };
+        Sports = all;
+        await SportsChanged.InvokeAsync(all);
+    }
 
     private MembershipEnrollmentSource? Source(int seasonId) => Enrollments?.FirstOrDefault(e => e.SeasonId == seasonId)?.Source;
 
