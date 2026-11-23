@@ -49,7 +49,10 @@ $buyDay = $day.AddDays(1)
 $buyPath = "/clubs/1/booking?Start=$($buyDay.ToString('MM/dd/yyyy', $us))&End=$($buyDay.AddDays(6).ToString('MM/dd/yyyy', $us))&Day=$($buyDay.ToString('MM/dd/yyyy', $us))"
 $openBuyDialog = Get-Content -Raw "$PSScriptRoot/open-buy-dialog.js"
 $showSalesTab = "document.querySelectorAll('.choice-chip')[1].click(); true"
-$scrollToAfternoon = "document.querySelector('.day-scroll-container').scrollTop = 420; true"
+# Seven tennis and two padel courts only fit next to each other without the menu; on the phone the grid is
+# scrolled to its right end, where the padel courts are.
+$bookingDesktop = "(async () => { document.querySelector('.mud-appbar .mud-icon-button').click(); await new Promise(r => setTimeout(r, 800)); document.querySelector('.day-scroll-container').scrollTop = 420; return true })()"
+$bookingPhone = "const g = document.querySelector('.day-scroll-container'); g.scrollTop = 420; g.scrollLeft = g.scrollWidth; true"
 # The tabs of the accounting page, by position: 4 = reconcile, 5 = reports.
 $showAccountingTab = { param($i) "document.querySelectorAll('.choice-chip')[$i].click(); true" }
 $belowChips = "Math.round([...document.querySelectorAll('.choice-chip')].pop().getBoundingClientRect().bottom + scrollY + 12)"
@@ -62,7 +65,7 @@ $phone = @{ Width = 390; Height = 844; Mobile = $true }
 
 $shots = @(
     @{ Name = "dashboard"; Path = "/clubs/1/my-club"; Email = $AdminEmail } + $desktop
-    @{ Name = "booking"; Path = $bookingPath; Email = $AdminEmail; Script = $scrollToAfternoon } + $desktop
+    @{ Name = "booking"; Path = $bookingPath; Email = $AdminEmail; Script = $bookingDesktop } + $desktop
     @{ Name = "event"; Path = "/clubs/1/calendar/$barbecueId"; Email = $AdminEmail } + $desktop
     @{ Name = "membership-fees"; Path = "/clubs/1/membership-payments"; Email = $AdminEmail } + $desktop
     @{ Name = "members"; Path = "/clubs/1/members"; Email = $AdminEmail } + $desktop
@@ -71,7 +74,7 @@ $shots = @(
     @{ Name = "accounting"; Path = "/clubs/1/finances"; Email = $AdminEmail; Script = (& $showAccountingTab 5) } + $desktop
     @{ Name = "clubhouse"; Path = "/clubs/1/clubhouse/tabs/$tabId"; Email = $AdminEmail } + $desktop
     @{ Name = "play-requests"; Path = "/clubs/1/play-requests"; Email = $AdminEmail } + $desktop
-    @{ Name = "phone-booking"; Path = $bookingPath; Email = $AdminEmail; Script = $scrollToAfternoon } + $phone
+    @{ Name = "phone-booking"; Path = $bookingPath; Email = $AdminEmail; Script = $bookingPhone } + $phone
     @{ Name = "phone-calendar"; Path = "/clubs/1/calendar"; Email = $AdminEmail } + $phone
     @{ Name = "phone-news"; Path = "/clubs/1/news"; Email = $AdminEmail } + $phone
     @{ Name = "phone-trophies"; Path = "/clubs/1/members/$topMemberId/trophy-case"; Email = $AdminEmail } + $phone
