@@ -459,6 +459,54 @@ h2 {
     font-size: 0.97rem;
 }
 
+/* Compact feature list: icon, name and one line each */
+
+.features__group + .features__group {
+    margin-top: 36px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+}
+
+.features__title {
+    color: var(--accent-text);
+    font-size: 1.15rem;
+    margin-bottom: 18px;
+}
+
+.features__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 22px 32px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.features__list li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.features__icon {
+    flex: none;
+    width: 1.6em;
+    font-size: 1.35rem;
+    line-height: 1.25;
+    text-align: center;
+}
+
+.features__list strong {
+    display: block;
+    font-size: 1.02rem;
+}
+
+.features__list p {
+    margin-top: 2px;
+    color: var(--text-soft);
+    font-size: 0.95rem;
+}
+
 .alt {
     background: var(--surface);
     border-top: 1px solid var(--line);

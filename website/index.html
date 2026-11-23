@@ -37,6 +37,7 @@
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
         "featureList": [
             "Court booking with play modes, opening hours and prime time rules",
+            "Tennis and padel courts with memberships, statistics and badges per sport",
             "Recurring bookings",
             "Member, season and family management",
             "Membership plans and online payment of membership fees",
@@ -88,31 +89,6 @@
                 "@type": "Question",
                 "name": "What about data protection?",
                 "acceptedAnswer": { "@type": "Answer", "text": "The hosted Clubnetz runs on servers in the EU. Other members only see your name and profile picture. Members can export their personal data, leave a club and delete their account themselves." }
-            },
-            {
-                "@type": "Question",
-                "name": "Can members pay their membership fee online?",
-                "acceptedAnswer": { "@type": "Answer", "text": "Yes, if the club wants to. The club enters its price list as membership plans, members choose a plan for themselves or their family and pay by card or SEPA direct debit. The money goes straight to the club's own Stripe account, and a paid fee enrolls the members in the season. Bank transfers and cash are recorded by the treasurer." }
-            },
-            {
-                "@type": "Question",
-                "name": "Can players without a membership book a court?",
-                "acceptedAnswer": { "@type": "Answer", "text": "Yes, if the club wants to. The club sets prices per court, weekday and time. Players who are not enrolled in the season tap a free slot and pay online, or use a credit the club gave them. Members of the season keep booking for free." }
-            },
-            {
-                "@type": "Question",
-                "name": "Can Clubnetz do the club's accounting?",
-                "acceptedAnswer": { "@type": "Answer", "text": "Yes. The treasurer keeps the books in Clubnetz: fiscal years, income and expenses by category and tax sphere, receipts, reports and the annual report. Membership fees, court sales and Stripe payouts are suggested as entries, bank statements are imported and matched, and invoices go out as a PDF with a payment QR code. The auditors get a role of their own to check the year." }
-            },
-            {
-                "@type": "Question",
-                "name": "Does Clubnetz help in the clubhouse?",
-                "acceptedAnswer": { "@type": "Answer", "text": "Yes. The clubhouse host keeps the tabs of members and guests in the app instead of on a paper list and records how each tab was paid. Members can pay their tab online with SumUp. The money goes to the host, Clubnetz only keeps the list." }
-            },
-            {
-                "@type": "Question",
-                "name": "Is there an API?",
-                "acceptedAnswer": { "@type": "Answer", "text": "Yes. Club admins create API keys in the app and use them to read and change the data of their club from their own scripts and tools, for example to show free courts on the club website or to export the member list." }
             }
         ]
     }
@@ -129,8 +105,7 @@
             </a>
             <nav class="top__nav" aria-label="Main">
                 <a class="nav-section" href="#tour">Tour</a>
-                <a class="nav-section" href="#members">For members</a>
-                <a class="nav-section" href="#board">For the board</a>
+                <a class="nav-section" href="#features">Features</a>
                 <a class="nav-section" href="#open-source">Open source</a>
                 <a class="nav-section" href="/docs/api/">API</a>
                 <a class="nav-section" href="https://github.com/sleepwalkerffs/Clubnetz">GitHub</a>
@@ -185,6 +160,7 @@
                 <div class="tour">
                     <article class="tour__row">
                         <div class="tour__text">
+                            <p class="tour__new">New: padel</p>
                             <h3>Every court and every booking at a glance</h3>
                             <p>The booking grid shows all courts of a day with play modes, prime time, blocked courts and your own matches. Tap a free slot to book it, partners included.</p>
                             <ul class="checks">
@@ -227,8 +203,9 @@
                             <p>The club enters its price list once per season. Members choose their plan, for themselves or the whole family, and pay online. The treasurer sees at a glance who has paid and who has not.</p>
                             <ul class="checks">
                                 <li>Card and SEPA direct debit through the club's own Stripe account</li>
-                                <li>A paid fee enrolls the members in the season</li>
+                                <li>A paid fee enrolls the members in the season, for tennis, padel or both</li>
                                 <li>Bank transfers and cash recorded by hand, export to Excel</li>
+                                <li>Players without a membership buy free court time at the club's prices</li>
                             </ul>
                         </div>
                         <figure class="shot">
@@ -236,24 +213,6 @@
                                  alt="The treasurer's overview of membership fees: amounts received and open, and who has paid" />
                             <img class="shot__phone" src="/screenshots/en/phone-membership.webp" width="780" height="1688" loading="lazy"
                                  alt="A member chooses a membership plan on the phone and pays it online" />
-                        </figure>
-                    </article>
-
-                    <article class="tour__row">
-                        <div class="tour__text">
-                            <h3>Sell free court time to non-members</h3>
-                            <p>Players without a season membership sign up for free, tap a free slot, see the price and pay online. The court is booked for them right away, and the treasurer sees every sale in one list.</p>
-                            <ul class="checks">
-                                <li>Prices per court, weekday and time, for example a cheaper daytime rate</li>
-                                <li>Paid online straight to the club's Stripe account, or with a credit from the club</li>
-                                <li>Members of the season keep booking for free</li>
-                            </ul>
-                        </div>
-                        <figure class="shot">
-                            <img class="shot__desktop" src="/screenshots/en/court-sales.webp" width="2560" height="1600" loading="lazy"
-                                 alt="The treasurer's court sales: bookings sold, amount paid online, credits used and the list of purchases" />
-                            <img class="shot__phone" src="/screenshots/en/phone-court-buy.webp" width="780" height="1688" loading="lazy"
-                                 alt="A player without membership buys an hour on court 1 on the phone and pays it online" />
                         </figure>
                     </article>
 
@@ -278,49 +237,12 @@
 
                     <article class="tour__row">
                         <div class="tour__text">
-                            <p class="tour__new">New</p>
-                            <h3>The clubhouse tab, without the paper list</h3>
-                            <p>The clubhouse host sees the open tabs, today's players and the regulars at a glance and books a round with a few taps. Guests pay at the end, in cash, by card or in the app.</p>
-                            <ul class="checks">
-                                <li>Works on a phone or a tablet behind the bar</li>
-                                <li>Members see their tab and pay it online with SumUp</li>
-                                <li>The money goes to the host, Clubnetz only keeps the list</li>
-                            </ul>
-                        </div>
-                        <figure class="shot">
-                            <img class="shot__desktop" src="/screenshots/en/clubhouse.webp" width="2560" height="1600" loading="lazy"
-                                 alt="A member's clubhouse tab: the menu of drinks and food, what is on the tab and the button to pay" />
-                            <img class="shot__phone" src="/screenshots/en/phone-clubhouse.webp" width="780" height="1688" loading="lazy"
-                                 alt="The clubhouse host's start screen on the phone with the open tabs of members and guests" />
-                        </figure>
-                    </article>
-
-                    <article class="tour__row">
-                        <div class="tour__text">
-                            <h3>Events people actually sign up for</h3>
-                            <p>Work efforts, parties, tournaments and meetings with registration, head count and the organizer's questions. News reach members by push notification or email.</p>
-                            <ul class="checks">
-                                <li>"Sausage or steak?" answered right in the registration</li>
-                                <li>Share an event by link or WhatsApp</li>
-                                <li>Pinned news, attachments and expiry dates</li>
-                            </ul>
-                        </div>
-                        <figure class="shot">
-                            <img class="shot__desktop" src="/screenshots/en/event.webp" width="2560" height="1600" loading="lazy"
-                                 alt="An event page with description, registration, a question about the food and the list of participants" />
-                            <img class="shot__phone" src="/screenshots/en/phone-news.webp" width="780" height="1688" loading="lazy"
-                                 alt="Club news on a phone with a pinned announcement" />
-                        </figure>
-                    </article>
-
-                    <article class="tour__row">
-                        <div class="tour__text">
                             <h3>A season to look back on</h3>
-                            <p>The board sees how the courts are used, hour by hour and court by court. Members collect badges by playing and keep them in their trophy case.</p>
+                            <p>The board sees how the courts are used, hour by hour and court by court. Members collect badges by playing, and at the end of the season everyone gets their season as a story.</p>
                             <ul class="checks">
-                                <li>Occupancy, prime time share and the busiest days</li>
-                                <li>Comparison with last season at the same point</li>
-                                <li>Leaderboards, tier badges and special awards</li>
+                                <li>Occupancy, prime time share and the busiest days, compared with last season</li>
+                                <li>Leaderboards, tier badges and special awards, per sport if you have tennis and padel</li>
+                                <li>Season Wrapped: hours on court, favourite partners and badges</li>
                             </ul>
                         </div>
                         <figure class="shot">
@@ -330,168 +252,46 @@
                                  alt="The trophy case of a member with the top badge" />
                         </figure>
                     </article>
-
-                    <article class="tour__row">
-                        <div class="tour__text">
-                            <h3>A member list that stays up to date</h3>
-                            <p>Members keep their own details current. The board filters by season, age group and role, and copies email addresses for its mailings.</p>
-                            <ul class="checks">
-                                <li>Who is new this season and who has not come back yet</li>
-                                <li>Families, roles and season enrollment in one place</li>
-                                <li>Other members only see name and profile picture</li>
-                            </ul>
-                        </div>
-                        <figure class="shot">
-                            <img class="shot__desktop" src="/screenshots/en/members.webp" width="2560" height="1600" loading="lazy"
-                                 alt="The member administration with filters for the season and the list of members" />
-                        </figure>
-                    </article>
                 </div>
             </div>
         </section>
 
-        <section id="members" class="alt">
+        <section id="features" class="alt">
             <div class="wrap">
                 <div class="section-head">
-                    <p class="eyebrow">For members</p>
-                    <h2>Book a court in seconds, from anywhere</h2>
-                    <p>No phone calls and no paper list at the clubhouse. Members see what is free and book it themselves.</p>
+                    <p class="eyebrow">Features</p>
+                    <h2>And everything else a club needs</h2>
+                    <p>Less paperwork for the people who run the club in their spare time, and no phone calls or paper lists for the members.</p>
                 </div>
-                <ul class="cards">
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🎾</div>
-                        <h3>Court booking</h3>
-                        <p>Pick a court and a time and add your partners. The club's rules for opening hours, prime time and quotas are applied automatically.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🔁</div>
-                        <h3>Recurring bookings</h3>
-                        <p>Reserve the same slot every week or every few weeks. Change or cancel one date, or all following ones.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🤝</div>
-                        <h3>Finding players</h3>
-                        <p>Ask a few members or a saved group to play. When the last spot is filled, the court is booked.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">💳</div>
-                        <h3>Membership</h3>
-                        <p>Choose a plan for yourself or the whole family and pay the fee online by card or SEPA direct debit.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🍺</div>
-                        <h3>Clubhouse tab</h3>
-                        <p>See what's on your tab at the clubhouse and pay it in the app.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">👨‍👩‍👧</div>
-                        <h3>Families</h3>
-                        <p>Parents book and manage on behalf of their children.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">📅</div>
-                        <h3>Club calendar</h3>
-                        <p>Work efforts, parties, tournaments and meetings, with registration and head counts. Share an event by link or WhatsApp.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🔔</div>
-                        <h3>Notifications</h3>
-                        <p>Booking added or cancelled, a reminder before the match, new events and news. By push, by email, or not at all.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🏆</div>
-                        <h3>Statistics and badges</h3>
-                        <p>Who plays the most and with whom, leaderboards, and badges earned over the season.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">✨</div>
-                        <h3>Season Wrapped</h3>
-                        <p>Your season as a story: hours on court, favourite partners, badges and events, once the club releases it.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🗓️</div>
-                        <h3>Subscription planner</h3>
-                        <p>Plans a fair schedule for shared winter court subscriptions and exports it to Excel.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🔀</div>
-                        <h3>Several clubs, one account</h3>
-                        <p>Member of two clubs? Join both with the same account and switch between them in the menu.</p>
-                    </li>
-                </ul>
-            </div>
-        </section>
-
-        <section id="board">
-            <div class="wrap">
-                <div class="section-head">
-                    <p class="eyebrow">For the board</p>
-                    <h2>The whole club in one place</h2>
-                    <p>Less paperwork for the people who run the club in their spare time.</p>
+                <div class="features">
+                    <div class="features__group">
+                        <h3 class="features__title">For members</h3>
+                        <ul class="features__list">
+                            <li><span class="features__icon" aria-hidden="true">🔁</span><div><strong>Recurring bookings</strong><p>The same slot every week. Change one date or all following ones.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">👨‍👩‍👧</span><div><strong>Families</strong><p>Parents book and manage on behalf of their children.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">📅</span><div><strong>Club calendar</strong><p>Events with registration, head count and the organizer's questions. Share them by link or WhatsApp.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🔔</span><div><strong>Notifications</strong><p>Bookings, reminders, events and news by push, by email or not at all.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🍺</span><div><strong>Clubhouse tab</strong><p>See what's on your tab at the clubhouse and pay it in the app.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🗓️</span><div><strong>Subscription planner</strong><p>A fair schedule for shared winter court subscriptions, exported to Excel.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🔀</span><div><strong>Several clubs, one account</strong><p>Member of two clubs? Switch between them in the menu.</p></div></li>
+                        </ul>
+                    </div>
+                    <div class="features__group">
+                        <h3 class="features__title">For the board</h3>
+                        <ul class="features__list">
+                            <li><span class="features__icon" aria-hidden="true">👥</span><div><strong>Members and seasons</strong><p>Member list with filters, roles and enrollment per season. Members keep their own details current.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🏟️</span><div><strong>Courts, sports and rules</strong><p>Tennis and padel courts, opening hours, prime time, play modes and who may book what.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🔐</span><div><strong>Roles and permissions</strong><p>Decide which role may do what, and give single members extra rights.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🚧</span><div><strong>Court blockings</strong><p>Tournaments, maintenance, weather or weekly training. Affected players are informed.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🎟️</span><div><strong>Court sales</strong><p>Sell free court time to non-members at your own prices, paid online or with a credit.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🍻</span><div><strong>Clubhouse</strong><p>Digital tabs for the clubhouse host, paid in cash, by card or in the app with SumUp.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🧾</span><div><strong>Invoices</strong><p>To members, sponsors or other clubs as a PDF with a payment QR code, with reminders.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🧭</span><div><strong>Planner</strong><p>Tournaments on a timeline over several days: drag bookings and book many slots at once.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">📣</span><div><strong>News and emails</strong><p>Club news with attachments, by email to everyone, the youth or selected roles.</p></div></li>
+                            <li><span class="features__icon" aria-hidden="true">🔌</span><div><strong>API for your own tools</strong><p>Connect your club website or your own scripts with an API key. <a href="/docs/api/">Documentation</a></p></div></li>
+                        </ul>
+                    </div>
                 </div>
-                <ul class="cards">
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">👥</div>
-                        <h3>Members and seasons</h3>
-                        <p>Member list, roles such as sports director, treasurer or trainer, and enrollment per season.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">💶</div>
-                        <h3>Membership fees</h3>
-                        <p>Your own price list per season: adult, youth by birth year, couple, family, student and more. Members pay online straight to the club's account and are enrolled automatically. The treasurer sees who has paid, records transfers and cash, and exports the list.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🏟️</div>
-                        <h3>Courts, sports and rules</h3>
-                        <p>Tennis and padel courts, opening hours, prime time, play modes and who may book what. Memberships can also be sold per sport.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🚧</div>
-                        <h3>Court blockings</h3>
-                        <p>Block courts for tournaments, maintenance, weather or weekly training. Affected players are informed.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🎟️</div>
-                        <h3>Court sales</h3>
-                        <p>Sell free court time to non-members at your own prices. They pay online or with a credit the club gives them.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">📒</div>
-                        <h3>Accounting</h3>
-                        <p>Fiscal years, income and expenses by category and cost center, receipts from the phone, reports and the annual report. Fees, court sales and bank statements turn into entries almost by themselves.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🧾</div>
-                        <h3>Invoices</h3>
-                        <p>Invoices to members, sponsors or other clubs as a PDF with a payment QR code, sent by email, with reminders.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🍻</div>
-                        <h3>Clubhouse</h3>
-                        <p>Digital tabs for the clubhouse host: a round booked in seconds, paid in cash, by card or in the app.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🧭</div>
-                        <h3>Planner</h3>
-                        <p>Plan tournaments on a timeline over several days: drag bookings to another court or time and book many slots at once. Trainers and the board can book for any member without playing themselves.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">📣</div>
-                        <h3>News and emails</h3>
-                        <p>Publish club news with attachments and send it by email to all members, the youth or selected roles. Every email text can be adapted.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">📈</div>
-                        <h3>Club statistics</h3>
-                        <p>Court utilization and activity over the season.</p>
-                    </li>
-                    <li class="card">
-                        <div class="card__icon" aria-hidden="true">🔌</div>
-                        <h3>API for your own tools</h3>
-                        <p>Connect your club website, a spreadsheet or your own scripts with an API key.</p>
-                        <a class="card__link" href="/docs/api/">API documentation →</a>
-                    </li>
-                </ul>
             </div>
         </section>
 
@@ -591,26 +391,6 @@ curl -H "Authorization: Bearer cnz_..." \
                     <details>
                         <summary>What about data protection?</summary>
                         <p>The hosted Clubnetz runs on servers in the EU. Other members only see your name and profile picture. Members can export their personal data, leave a club and delete their account themselves.</p>
-                    </details>
-                    <details>
-                        <summary>Can members pay their membership fee online?</summary>
-                        <p>Yes, if the club wants to. The club enters its price list as membership plans, members choose a plan for themselves or their family and pay by card or SEPA direct debit. The money goes straight to the club's own Stripe account, and a paid fee enrolls the members in the season. Bank transfers and cash are recorded by the treasurer.</p>
-                    </details>
-                    <details>
-                        <summary>Can players without a membership book a court?</summary>
-                        <p>Yes, if the club wants to. The club sets prices per court, weekday and time. Players who are not enrolled in the season tap a free slot and pay online, or use a credit the club gave them. Members of the season keep booking for free.</p>
-                    </details>
-                    <details>
-                        <summary>Can Clubnetz do the club's accounting?</summary>
-                        <p>Yes. The treasurer keeps the books in Clubnetz: fiscal years, income and expenses by category and tax sphere, receipts, reports and the annual report. Membership fees, court sales and Stripe payouts are suggested as entries, bank statements are imported and matched, and invoices go out as a PDF with a payment QR code. The auditors get a role of their own to check the year.</p>
-                    </details>
-                    <details>
-                        <summary>Does Clubnetz help in the clubhouse?</summary>
-                        <p>Yes. The clubhouse host keeps the tabs of members and guests in the app instead of on a paper list and records how each tab was paid. Members can pay their tab online with SumUp. The money goes to the host, Clubnetz only keeps the list.</p>
-                    </details>
-                    <details>
-                        <summary>Is there an API?</summary>
-                        <p>Yes. Club admins create API keys in the app and use them to read and change the data of their club from their own scripts and tools, for example to show free courts on the club website or to export the member list. <a href="/docs/api/">API documentation</a></p>
                     </details>
                 </div>
             </div>
