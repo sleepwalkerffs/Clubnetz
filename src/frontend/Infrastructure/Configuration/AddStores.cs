@@ -1,3 +1,4 @@
+using Bookennis.Client.Services.Store.Demo;
 using Bookennis.Client.Services.Store.Weather;
 using Bookennis.Client.Services;
 using Bookennis.Client.Services.Store.Admin;
@@ -60,6 +61,7 @@ public static class AddStores
         builder.Services.AddSingleton<IClubApiKeysStore, ClubApiKeysStore>();
         builder.Services.AddSingleton<IPushStore, PushStore>();
         builder.Services.AddSingleton<ILegalStore, LegalStore>();
+        builder.Services.AddSingleton<IDemoStore, DemoStore>();
         builder.Services.AddSingleton<INotificationPreferencesStore, NotificationPreferencesStore>();
         builder.Services.AddSingleton<IMembershipPlansStore, MembershipPlansStore>();
         builder.Services.AddSingleton<IMembershipsStore, MembershipsStore>();

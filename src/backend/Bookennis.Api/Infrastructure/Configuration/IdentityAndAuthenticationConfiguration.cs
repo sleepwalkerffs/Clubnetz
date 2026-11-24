@@ -42,6 +42,8 @@ public static class IdentityAndAuthenticationConfiguration
             return Task.CompletedTask;
         });
 
+        var demo = builder.Configuration.GetValue<bool>("Demo:Enabled");
+
         // Club API keys: not a default scheme, it is only used by the policies that list it
         services.AddAuthentication()
                 .AddScheme<AuthenticationSchemeOptions, ClubApiKeyAuthenticationHandler>(CustomAuthenticationSchemes.ClubApiKey, configureOptions: null);
@@ -76,6 +78,18 @@ public static class IdentityAndAuthenticationConfiguration
                 // never ended the other sessions. It compares the security stamp every ValidationInterval (30 minutes by default).
                 OnValidatePrincipal = SecurityStampValidator.ValidatePrincipalAsync,
             };
+
+            // The public demo replaces all users every night: the cookie of a user that is gone ends, instead of a signed-in visitor without
+            // an account. Chained in front of the stamp check, never instead of it.
+            if (demo)
+            {
+                options.Events.OnValidatePrincipal = async context =>
+                {
+                    await Business.Demo.DemoSignIn.EndWhenIssuedBeforeReset(context);
+                    if (context.Principal is not null)
+                        await SecurityStampValidator.ValidatePrincipalAsync(context);
+                };
+            }
         });
     }
 }

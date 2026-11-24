@@ -27,6 +27,8 @@ public class AppSettings
 
     public WeatherSettings Weather { get; set; } = new();
 
+    public DemoSettings Demo { get; set; } = new();
+
     public static IReadOnlyList<CultureInfo> SupportedCultures
         => new[] { "de-AT", "en-AT" }
           .Select(c => new CultureInfo(c))

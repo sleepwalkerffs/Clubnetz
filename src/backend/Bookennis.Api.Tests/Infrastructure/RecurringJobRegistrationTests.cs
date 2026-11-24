@@ -24,6 +24,7 @@ public partial class RecurringJobRegistrationTests
     [InlineData(typeof(Bookennis.Api.Business.Clubhouse.ClubhouseTabPaymentJob))]
     [InlineData(typeof(Bookennis.Api.Business.Accounting.AccountingAutomationJob))]
     [InlineData(typeof(Bookennis.Api.Infrastructure.Audit.AuditRetentionJob))]
+    [InlineData(typeof(Bookennis.Api.Business.Demo.DemoResetJob))]
     public void RecurringJob_IsRegisteredInTheContainer(Type jobType)
     {
         var container = new Container();

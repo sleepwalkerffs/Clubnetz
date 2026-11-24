@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Demo;
 using Bookennis.Api.Business.Push;
 using Bookennis.Api.Infrastructure.Authorization;
 using Bookennis.Api.Infrastructure.Configuration;
@@ -16,6 +17,7 @@ public class PushController(IMediator mediator) : ControllerBase
     public Task<GetPushConfigurationResult> GetConfiguration(CancellationToken cancellationToken)
         => mediator.Send(new GetPushConfiguration(), cancellationToken);
 
+    [DisabledInDemo]
     [HttpPut("Subscription")]
     public async Task SaveSubscription(SavePushSubscriptionModel model, CancellationToken cancellationToken)
         => await mediator.Send(new SavePushSubscription(model.Endpoint, model.P256dh, model.Auth), cancellationToken);
@@ -24,6 +26,7 @@ public class PushController(IMediator mediator) : ControllerBase
     public async Task DeleteSubscription(DeletePushSubscriptionModel model, CancellationToken cancellationToken)
         => await mediator.Send(new DeletePushSubscription(model.Endpoint), cancellationToken);
 
+    [DisabledInDemo]
     [HttpPost("Test")]
     [EnableRateLimiting(RateLimitingConfiguration.AuthenticationPolicy)]
     public async Task SendTest(CancellationToken cancellationToken)

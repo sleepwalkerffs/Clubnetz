@@ -1032,4 +1032,7 @@
   <data name="PlayRequestMemberNotEnrolledForSport" xml:space="preserve">
     <value>{0} ist in dieser Saison nicht für {1} angemeldet und kann hier nicht mitspielen.</value>
   </data>
+  <data name="DisabledInDemo" xml:space="preserve">
+    <value>Das ist in der Demo ausgeschaltet.</value>
+  </data>
 </root>

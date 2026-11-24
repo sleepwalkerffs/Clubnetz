@@ -14,6 +14,13 @@
       "runtimeArgs": ["run", "--project", "src/backend/Bookennis.Api/Bookennis.Api.csproj", "--urls", "http://localhost:5080"],
       "port": 5080,
       "url": "http://localhost:5080"
+    },
+    {
+      "name": "clubnetz-demo",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "-c", "Release", "--project", "src/backend/Bookennis.Api/Bookennis.Api.csproj", "--", "--urls", "http://localhost:5082", "--Demo:Enabled=true", "--ConnectionString=Server=127.0.0.1;Port=8432;Database=clubnetz_demo;User Id=postgres;Password=password"],
+      "port": 5082,
+      "url": "http://localhost:5082"
     }
   ]
 }

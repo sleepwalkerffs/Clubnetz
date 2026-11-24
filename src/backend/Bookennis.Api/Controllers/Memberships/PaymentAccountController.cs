@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Demo;
 using Bookennis.Api.Business.Payments;
 using Bookennis.Api.Infrastructure.Authorization;
 using Bookennis.Shared.Controller.Memberships;
@@ -15,10 +16,12 @@ namespace Bookennis.Api.Controllers.Memberships;
 [Authorize(AuthorizationPolicies.ClubPaymentAccountManager)]
 public class PaymentAccountController(IMediator mediator) : ClubControllerBase
 {
+    [DisabledInDemo]
     [HttpPost("connect")]
     public Task<ConnectPaymentAccountResult> ConnectPaymentAccount(int clubId, [FromBody] ConnectPaymentAccountModel model, CancellationToken cancellationToken)
         => mediator.Send(new ConnectPaymentAccount(clubId, ToCountryCode(model.Country)), cancellationToken);
 
+    [DisabledInDemo]
     [HttpPost("refresh")]
     public Task<PaymentAccountDto> RefreshPaymentAccount(int clubId, CancellationToken cancellationToken)
         => mediator.Send(new RefreshPaymentAccount(clubId), cancellationToken);

@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Demo;
 using Bookennis.Api.Business.Badges;
 using Bookennis.Api.Infrastructure.Authorization;
 using Bookennis.Api.Infrastructure.Configuration;
@@ -42,6 +43,7 @@ public class OneTimeBadgesController(IMediator mediator) : ClubControllerBase
     public Task CopyOneTimeBadges(int clubId, [FromBody] CopyOneTimeBadgesModel model, CancellationToken cancellationToken)
         => mediator.Send(new CopyOneTimeBadges(clubId, model.SourceSeasonId, model.TargetSeasonId), cancellationToken);
 
+    [DisabledInDemo]
     [HttpPost("{oneTimeBadgeId:int}/image")]
     [Authorize(AuthorizationPolicies.OneTimeBadgeManager)]
     public Task UploadOneTimeBadgeImage(int clubId, int oneTimeBadgeId, IFormFile file, CancellationToken cancellationToken)

@@ -1,4 +1,7 @@
+using Bookennis.Api.Business.Demo;
+using Bookennis.Api.Config;
 using Bookennis.Api.Data;
+using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -39,6 +42,13 @@ public class MigrationStartupFilter : IStartupFilter
                 dbContext.Database.Migrate();
 
                 logger.LogInformation("Migrated database for {DbContext}", contextName);
+
+                // The public demo starts with fresh demo data after every deployment (refuses a database with real users)
+                if (scope.ServiceProvider.GetRequiredService<IOptions<AppSettings>>().Value.Demo.Enabled)
+                {
+                    DemoReset.Run(dbContext, DateTimeOffset.UtcNow, CancellationToken.None).GetAwaiter().GetResult();
+                    logger.LogInformation("Filled the database with the demo data");
+                }
             }
             catch (Exception e)
             {

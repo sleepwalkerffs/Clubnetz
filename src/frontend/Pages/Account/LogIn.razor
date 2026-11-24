@@ -12,11 +12,14 @@
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Account
 @using Bookennis.Client.Components.Shared.Buttons
+@using Bookennis.Client.Components.Demo
+@using Bookennis.Client.Services.Store.Demo
 
 <PageTitle>@Locale["Login"]</PageTitle>
 
 <AuthShell Title="@Locale["Login_Title"]" Subtitle="@Locale["Login_Subtitle"]">
     <ChildContent>
+        <DemoAccountPicker Disabled="@processing" OnPick="LogInAsDemoAccount" />
         <EditForm Model="@model" OnValidSubmit="Submit">
             <DataAnnotationsValidator />
             <div class="d-flex gap-3 flex-column">
@@ -44,14 +47,18 @@
         </EditForm>
     </ChildContent>
     <Footer>
-        <span>@Locale["Login_NoAccount"]</span>
-        <MudButton Href="account/register"
-                   Variant="Variant.Outlined"
-                   Color="Color.Primary"
-                   FullWidth="true"
-                   StartIcon="@Icons.Material.Filled.PersonAddAlt">
-            @Locale["CreateFreeAccount"]
-        </MudButton>
+        @* Nobody registers in the demo: no email would confirm the account *@
+        @if (!DemoStore.IsDemo)
+        {
+            <span>@Locale["Login_NoAccount"]</span>
+            <MudButton Href="account/register"
+                       Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       StartIcon="@Icons.Material.Filled.PersonAddAlt">
+                @Locale["CreateFreeAccount"]
+            </MudButton>
+        }
     </Footer>
 </AuthShell>
 
@@ -73,6 +80,8 @@
     [Inject]
     private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
     [Inject]
+    private IDemoStore DemoStore { get; set; } = null!;
+    [Inject]
     private IProfileStore ProfileStore { get; set; } = null!;
 
     private LoginUserForm model = new();
@@ -83,6 +92,17 @@
     private string ForgotPasswordHref => string.IsNullOrWhiteSpace(model.Email)
         ? "account/forgot-password"
         : $"account/forgot-password?email={Uri.EscapeDataString(model.Email.Trim())}";
+
+    protected override async Task OnInitializedAsync() => await DemoStore.Load();
+
+    private Task LogInAsDemoAccount((string Email, string Password) account)
+    {
+        model.Email = account.Email;
+        model.Password = account.Password;
+        // The ids of the demo change with every reset: a page remembered from yesterday may not exist any more
+        ReturnUrl = null;
+        return Submit();
+    }
 
     public async Task Submit()
     {

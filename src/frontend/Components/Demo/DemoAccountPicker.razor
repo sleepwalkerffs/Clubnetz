@@ -1,0 +1,52 @@
+@using Bookennis.Client.Localization.Components.Demo
+@using Bookennis.Client.Services.Store.Demo
+@using Bookennis.Shared.Controller.Demo
+
+@implements IDisposable
+
+@* The login page of the public demo: one click logs in as one of the known people *@
+@if (DemoStore.Info is { IsEnabled: true } info)
+{
+    <section class="demo-accounts" aria-labelledby="demo-accounts-title">
+        <div id="demo-accounts-title" class="demo-accounts__title">🎾 @Locale["Accounts_Title"]</div>
+        <div class="demo-accounts__text">@string.Format(Locale["Accounts_Text"], info.Password)</div>
+        @foreach (var club in info.Clubs)
+        {
+            <div class="demo-accounts__club">
+                <div class="demo-accounts__club-name">@club.Name</div>
+                <div class="demo-accounts__club-region">@Locale[$"Region_{club.Region}"]</div>
+            </div>
+            <div class="demo-accounts__list">
+                @foreach (var account in club.Accounts)
+                {
+                    <button type="button" class="demo-accounts__account" disabled="@Disabled"
+                            aria-label="@string.Format(Locale["Accounts_LogInAs"], account.Name)"
+                            @onclick="() => OnPick.InvokeAsync((account.Email, info.Password ?? string.Empty))">
+                        <span class="demo-accounts__name">@account.Name</span>
+                        <span class="demo-accounts__role">@Locale[$"Persona_{account.Persona}"]</span>
+                    </button>
+                }
+            </div>
+        }
+    </section>
+}
+
+@code {
+    /// <summary>Email and password of the account that was picked.</summary>
+    [Parameter] public EventCallback<(string Email, string Password)> OnPick { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    [Inject] private IDemoStore DemoStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<DemoLocale> Locale { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        DemoStore.OnDemoChanged += OnDemoChanged;
+        await DemoStore.Load();
+    }
+
+    private void OnDemoChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => DemoStore.OnDemoChanged -= OnDemoChanged;
+}
