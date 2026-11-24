@@ -101,7 +101,13 @@ public class AuditLogSecurityTests(ApiSecurityFixture app)
         var response = await app.Send(HttpMethod.Post, "/api/Account/Impersonation/Stop", configure: Cookie(await app.Login(app.OtherMemberOfA)));
 
         response.Status.Should().Be(HttpStatusCode.PreconditionFailed);
-        response.Headers.Contains("Set-Cookie").Should().BeFalse();
+
+        // The security stamp check may renew the cookie of the session; it must stay the member's own session
+        if (response.Headers.Contains("Set-Cookie"))
+        {
+            var after = await app.Send(HttpMethod.Get, "/api/Profile", configure: Cookie(SessionCookie(response)));
+            after.UserId.Should().Be(app.OtherMemberOfA.UserId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
     }
 
     [Theory]

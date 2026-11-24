@@ -70,7 +70,11 @@ public static class IdentityAndAuthenticationConfiguration
                         context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
 
                     return Task.CompletedTask;
-                }
+                },
+
+                // Replacing the events dropped the check Identity installs: without it a changed password, email or a deleted account
+                // never ended the other sessions. It compares the security stamp every ValidationInterval (30 minutes by default).
+                OnValidatePrincipal = SecurityStampValidator.ValidatePrincipalAsync,
             };
         });
     }
