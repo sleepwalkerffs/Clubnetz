@@ -72,12 +72,24 @@ public static class IdentityAndAuthenticationConfiguration
                         context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
 
                     return Task.CompletedTask;
-                }
+                },
+
+                // Replacing the events dropped the check Identity installs: without it a changed password, email or a deleted account
+                // never ended the other sessions. It compares the security stamp every ValidationInterval (30 minutes by default).
+                OnValidatePrincipal = SecurityStampValidator.ValidatePrincipalAsync,
             };
 
-            // The public demo replaces all users every night: the cookie of a user that is gone ends, instead of a signed-in visitor without an account
+            // The public demo replaces all users every night: the cookie of a user that is gone ends, instead of a signed-in visitor without
+            // an account. Chained in front of the stamp check, never instead of it.
             if (demo)
-                options.Events.OnValidatePrincipal = Business.Demo.DemoSignIn.EndWhenIssuedBeforeReset;
+            {
+                options.Events.OnValidatePrincipal = async context =>
+                {
+                    await Business.Demo.DemoSignIn.EndWhenIssuedBeforeReset(context);
+                    if (context.Principal is not null)
+                        await SecurityStampValidator.ValidatePrincipalAsync(context);
+                };
+            }
         });
     }
 }

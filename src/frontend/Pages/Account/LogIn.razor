@@ -7,6 +7,7 @@
 @using Bookennis.Client.Localization.Pages.Account
 @using Bookennis.Client.Services
 @using Bookennis.Client.Services.HttpClients.Account
+@using Bookennis.Client.Services.Store.Profile
 @using Bookennis.Client.Shared
 @using Bookennis.Client.Utils
 @using Bookennis.Shared.Controller.Account
@@ -80,6 +81,8 @@
     private IStringLocalizer<BackendErrorCodeLocale> BackendLocale { get; set; } = null!;
     [Inject]
     private IDemoStore DemoStore { get; set; } = null!;
+    [Inject]
+    private IProfileStore ProfileStore { get; set; } = null!;
 
     private LoginUserForm model = new();
 
@@ -106,6 +109,8 @@
         processing = true;
         try
         {
+            // The stores still hold the data of an earlier sign-in in this tab (logged out, account deleted, session expired)
+            var earlierSession = ProfileStore.IsProfileLoaded;
             var result = await AccountHttpClient.LoginUser(new LoginUserModel(model.Email!, model.Password!, model.RememberMe));
 
             if (!result.Success)
@@ -114,7 +119,16 @@
             }
             else if (result.Success)
             {
-                navigation.NavigateTo(Services.NavigationManagerExtensions.IsLocalReturnUrl(ReturnUrl) ? ReturnUrl! : "/");
+                var target = Services.NavigationManagerExtensions.IsLocalReturnUrl(ReturnUrl) ? ReturnUrl! : "/";
+
+                // Start from scratch: the user may be somebody else, maybe of another club, and nothing of the earlier one may stay
+                if (earlierSession)
+                {
+                    navigation.NavigateTo(target, forceLoad: true);
+                    return;
+                }
+
+                navigation.NavigateTo(target);
                 authState.AuthStateChanged();
             }
         }

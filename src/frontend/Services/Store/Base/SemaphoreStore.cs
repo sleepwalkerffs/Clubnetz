@@ -106,7 +106,10 @@ public abstract class SemaphoreStore : ISemaphoreStore, IDisposable
             context.IsExecuting = true;
             await context.CancelAsync();
             await context.WaitAsync();
-            return await action(context.GetCancellationToken());
+            context.Executed = false;
+            var result = await action(context.GetCancellationToken());
+            context.Executed = true;
+            return result;
         }
         finally
         {
@@ -131,6 +134,7 @@ public abstract class SemaphoreStore : ISemaphoreStore, IDisposable
         private readonly SemaphoreSlim semaphore = new(initialCount: 1);
         private CancellationTokenSource? tokenSource;
         public bool IsExecuting { get; set; }
+        /// <summary>The last run finished (it was not cancelled and did not fail): what <see cref="WaitUntilLoaded"/> reports.</summary>
         public bool Executed { get; set; }
 
         public CancellationToken GetCancellationToken()

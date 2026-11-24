@@ -27,7 +27,14 @@ public sealed class ProfileStore(IProfileHttpClient profileHttpClient) : Semapho
     public IReadOnlyList<int> AvailableClubs => availableClubIds;
     public IReadOnlyList<ProfileClubDto> Clubs => clubs;
 
+    private Task? runningLoad;
+
+    // The app, the layout and the start page all ask for the profile when the app starts: they share the load that is running.
+    // A second load would cancel the first one, and whoever waited for the first would see no profile.
     public Task LoadProfileAsync()
+        => runningLoad is { IsCompleted: false } running ? running : runningLoad = LoadProfile();
+
+    private Task LoadProfile()
         => RunInLoadingContextAsync(async cancellationToken =>
         {
             Loaded = false;
