@@ -16,7 +16,8 @@ public record GetMemberBookingHistory(int MemberId, int SeasonId) : ICommand<Get
         {
             var currentClub = await context.Clubs.SingleRequiredAsync(cancellationToken);
 
-            var season = await context.Seasons.SingleAsync(s => s.Id == request.SeasonId, cancellationToken);
+            // A season of another club (e.g. left over in the app after switching clubs) is not found: 404, not 500
+            var season = await context.Seasons.SingleRequiredAsync(s => s.Id == request.SeasonId, cancellationToken);
 
             var fromUtc = DateTime.SpecifyKind(season.Period.From.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
             var toUtc = DateTime.SpecifyKind(season.Period.To.ToDateTime(TimeOnly.MaxValue), DateTimeKind.Utc);
@@ -24,7 +25,7 @@ public record GetMemberBookingHistory(int MemberId, int SeasonId) : ICommand<Get
             var userId = await context.Set<Member>()
                 .Where(m => m.Id == request.MemberId)
                 .Select(m => m.UserId)
-                .SingleAsync(cancellationToken);
+                .SingleRequiredAsync(cancellationToken);
 
             var bookings = await (
                 from booking in context.Bookings

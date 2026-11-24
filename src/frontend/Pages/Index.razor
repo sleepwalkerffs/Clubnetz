@@ -37,7 +37,7 @@
     {
         ProfileStore.OnProfileChanged += NavigateToFavouriteClub;
 
-        if (await ProfileStore.WaitUntilLoaded())
+        if (!ProfileStore.IsProfileLoaded)
             await ProfileStore.LoadProfileAsync();
 
         if (!ProfileStore.IsProfileLoaded)

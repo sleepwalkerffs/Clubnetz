@@ -7,6 +7,8 @@ using Bookennis.Global.Intervals;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+using Bookennis.Domain.Clubs;
+using Fusonic.Extensions.Common.Entities;
 
 namespace Bookennis.Api.Tests.Business.Members;
 
@@ -229,5 +231,28 @@ public class GetMemberBookingHistoryTests(TestFixture fixture) : TestBase(fixtur
         var players = result.Bookings.Should().ContainSingle().Subject.Players;
         players.Single(p => p.MemberId == TestDataSeed.Member1Id).ProfilePictureUrl.Should().BeNull();
         players.Single(p => p.MemberId != TestDataSeed.Member1Id).ProfilePictureUrl.Should().Be($"/api/Profile/picture/{member2UserId}");
+    }
+
+    [Fact]
+    public async Task GetMemberBookingHistory_SeasonOfAnotherClub_IsNotFound()
+    {
+        var otherSeasonId = await QueryAsync(async ctx =>
+        {
+            var other = new Club("Other club", new TimeOnlyInterval(new TimeOnly(8, 0), new TimeOnly(22, 0)), new TimeOnlyInterval(new TimeOnly(17, 0), new TimeOnly(20, 0)), []);
+            ctx.Clubs.Add(other);
+            await ctx.SaveChangesAsync();
+            var season = other.AddSeason(new DateOnlyInterval(new DateOnly(2025, 1, 1), new DateOnly(2025, 12, 31)));
+            await ctx.SaveChangesAsync();
+            return season.Id;
+        });
+
+        // The request runs for the own club (like the route of the controller), the season belongs to the other one
+        var act = () => ScopedAsync(async () =>
+        {
+            GetInstance<Bookennis.Api.Infrastructure.Tenant.ITenantService>().SetTenantId(TestDataSeed.ClubId);
+            await GetInstance<Fusonic.Extensions.Mediator.IMediator>().Send(new GetMemberBookingHistory(TestDataSeed.Member1Id, otherSeasonId));
+        });
+
+        await act.Should().ThrowAsync<EntityNotFoundException>();
     }
 }
