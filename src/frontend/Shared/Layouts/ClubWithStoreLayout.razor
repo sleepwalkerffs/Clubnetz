@@ -39,7 +39,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (!await ProfileStore.WaitUntilLoaded() || !ProfileStore.IsProfileLoaded)
+        if (!ProfileStore.IsProfileLoaded)
             await ProfileStore.LoadProfileAsync();
 
         // Not signed in: the 401 already redirects to the login, which returns to this page afterwards
@@ -60,7 +60,7 @@
 
         TenantProvider.SetCurrentClub(selectedClubId);
 
-        if (!await ClubProfileStore.WaitUntilLoaded() || !ClubProfileStore.IsClubProfileLoaded || ClubProfileStore.SelectedClubId != selectedClubId)
+        if (!ClubProfileStore.IsClubProfileLoaded || ClubProfileStore.SelectedClubId != selectedClubId)
             await ClubProfileStore.LoadClubProfile(selectedClubId);
 
 

@@ -26,7 +26,16 @@ public class ClubProfileStore(IClubProfileHttpClient clubProfileHttpClient, IJSR
            && SelectedClub!.PermissionScopes.Where(s => s.Permission == permission && s.ResourceType == resourceType).All(s => s.Allows(resourceId));
     public GetBookingOptionsResult? BookingOptions { get; private set; }
 
+    private (int ClubId, Task Load)? runningLoad;
+
+    // The app and the club layout load the club when the app starts: a load of the same club that is running is shared (a second one
+    // would cancel it, see LoadProfileAsync). Another club cancels it as before.
     public Task LoadClubProfile(int clubId)
+        => runningLoad is { Load.IsCompleted: false } running && running.ClubId == clubId
+            ? running.Load
+            : (runningLoad = (clubId, LoadClub(clubId))).Value.Load;
+
+    private Task LoadClub(int clubId)
         => RunInLoadingContextAsync(async cancellationToken =>
         {
             IsClubProfileLoaded = false;
