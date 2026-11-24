@@ -34,6 +34,13 @@
     white-space: normal;
 }
 
+/* The selected entry has two lines: MudSelect sizes the field for one line and would cut off the second */
+.demo-accounts__fields ::deep .mud-input-slot.mud-select-input {
+    height: auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
 .demo-accounts ::deep .demo-accounts__login {
     margin-top: 14px;
     text-transform: none;
