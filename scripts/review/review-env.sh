@@ -3,7 +3,7 @@
 # called by the GitHub workflow through ssh-entry.sh (see README.md).
 #
 #   review-env.sh deploy <pull request number> <commit sha>   start or update https://pr-<n>.<REVIEW_DOMAIN>
-#   review-env.sh remove <pull request number>                 remove the container, its keys, database and role
+#   review-env.sh remove <pull request number>                 remove the container, its keys, database, role and image
 #   review-env.sh list                                          show the review environments
 #   review-env.sh reconnect-proxy                               put the proxy back into the review network (cron)
 #
@@ -86,7 +86,7 @@ deploy() {
     for _ in $(seq 1 60); do
         status=$(docker inspect -f '{{.State.Health.Status}}' "$name")
         case $status in
-            healthy) echo "Ready: https://$host/"; return 0 ;;
+            healthy) echo "Ready: https://$host/"; remove_unused_review_images; return 0 ;;
             unhealthy) break ;;
         esac
         sleep 5
@@ -101,7 +101,24 @@ remove() {
     docker volume rm "$name-keys" >/dev/null 2>&1 || true
     drop_database "pr_$pr"
     review_psql -c "drop role if exists \"pr_$pr\";"
+    remove_unused_review_images
     echo "Removed the review environment of pull request $pr"
+}
+
+# Deletes the review images (one per commit, ~600 MB each) that no container uses any more: the one of a removed
+# pull request and the older commits of a redeployed one. Only images of the review repository itself, never the
+# production, stage or demo image (ghcr.io/sleepwalkerffs/clubnetz). docker rmi without -f refuses an image
+# that a container (also a stopped one) still uses.
+remove_unused_review_images() {
+    [[ $REVIEW_IMAGE == *-review ]] || { echo "REVIEW_IMAGE ($REVIEW_IMAGE) is not a review repository, keeping the images"; return 0; }
+
+    local used image
+    used=$(docker ps -a --filter label=clubnetz.review=true --format '{{.Image}}')
+    while read -r image; do
+        [[ -z $image ]] && continue
+        grep -qxF "$image" <<<"$used" && continue
+        docker rmi "$image" >/dev/null 2>&1 && echo "Deleted the unused image $image" || true
+    done < <(docker images "$REVIEW_IMAGE" --format '{{.Repository}}:{{.Tag}}')
 }
 
 list() {

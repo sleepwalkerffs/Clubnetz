@@ -17,7 +17,9 @@ Every pull request from a branch of this repository gets its own copy of the app
   Push notifications and payments (Stripe, SumUp) are switched off.
 - **Lifecycle:** opening a pull request creates the environment with a fresh copy of the template database,
   every push updates the app (the database is kept, migrations run at startup), closing the pull request
-  removes it. Reopen a pull request to start over with fresh data.
+  removes it. Reopen a pull request to start over with fresh data. The server deletes the review images
+  (~600 MB per commit) that no container uses any more: after every deployment and when a pull request is closed.
+  Only images of the `clubnetz-review` repository, never the production, stage or demo image.
 - At most 3 environments run at the same time (`REVIEW_MAX_ENVIRONMENTS`), the server also runs production.
 - Pull requests from forks and from Dependabot never get one. Pull requests with merge conflicts don't get
   updated (GitHub runs no workflow for them), and neither do pushes made with a workflow's `GITHUB_TOKEN`.
@@ -120,6 +122,6 @@ When a migration adds a column that can hold personal data, free text or a secre
 
 - Each review hostname gets its own Let's Encrypt certificate, so `pr-<n>.review.clubnetz.app` shows up in
   public certificate logs. That reveals that review environments exist, nothing more.
-- The review images stay in the `clubnetz-review` package after a pull request is closed. Delete old ones in
-  the package settings on GitHub now and then.
+- The review images stay in the `clubnetz-review` package on GitHub after a pull request is closed (the server
+  deletes its own copies). Delete old ones in the package settings on GitHub now and then.
 - After closing a pull request, GitHub still shows its last deployment; the link no longer works.
