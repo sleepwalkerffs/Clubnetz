@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Demo;
 using Bookennis.Api.Business.ClubAnnouncements;
 using Bookennis.Api.Infrastructure.Authorization;
 using Bookennis.Api.Infrastructure.User;
@@ -56,6 +57,7 @@ public class ClubAnnouncementsController(IMediator mediator, IUserAccessor userA
     public Task<PreviewClubAnnouncementResult> PreviewClubAnnouncement([FromBody] PreviewClubAnnouncementModel model, CancellationToken cancellationToken)
         => mediator.Send(new PreviewClubAnnouncement(model.Body ?? ""), cancellationToken);
 
+    [DisabledInDemo]
     [HttpPost("{clubAnnouncementId:int}/attachments")]
     [Authorize(AuthorizationPolicies.ClubAnnouncementManager)]
     public Task<ClubAnnouncementDto> AddClubAnnouncementAttachment(int clubId, int clubAnnouncementId, IFormFile file, CancellationToken cancellationToken)

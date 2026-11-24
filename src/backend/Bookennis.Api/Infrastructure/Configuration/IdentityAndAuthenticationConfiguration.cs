@@ -42,6 +42,8 @@ public static class IdentityAndAuthenticationConfiguration
             return Task.CompletedTask;
         });
 
+        var demo = builder.Configuration.GetValue<bool>("Demo:Enabled");
+
         // Club API keys: not a default scheme, it is only used by the policies that list it
         services.AddAuthentication()
                 .AddScheme<AuthenticationSchemeOptions, ClubApiKeyAuthenticationHandler>(CustomAuthenticationSchemes.ClubApiKey, configureOptions: null);
@@ -72,6 +74,10 @@ public static class IdentityAndAuthenticationConfiguration
                     return Task.CompletedTask;
                 }
             };
+
+            // The public demo replaces all users every night: the cookie of a user that is gone ends, instead of a signed-in visitor without an account
+            if (demo)
+                options.Events.OnValidatePrincipal = Business.Demo.DemoSignIn.EndWhenIssuedBeforeReset;
         });
     }
 }

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Banner_Title" xml:space="preserve">
+    <value>Du bist in der Demo</value>
+  </data>
+  <data name="Banner_Text" xml:space="preserve">
+    <value>Zwei erfundene Clubs zum Ausprobieren. Alles wird jede Nacht zurückgesetzt und es werden keine E-Mails verschickt – die Vorschauen zeigen, wie sie aussehen.</value>
+  </data>
+  <data name="Banner_OtherAccount" xml:space="preserve">
+    <value>Anderes Konto</value>
+  </data>
+  <data name="Accounts_Title" xml:space="preserve">
+    <value>Demo ausprobieren</value>
+  </data>
+  <data name="Accounts_Text" xml:space="preserve">
+    <value>Melde dich mit einem Klick als eine dieser Personen an. Alle haben das Passwort {0}.</value>
+  </data>
+  <data name="Region_eu" xml:space="preserve">
+    <value>Club in Österreich · Texte auf Deutsch</value>
+  </data>
+  <data name="Region_us" xml:space="preserve">
+    <value>Club in den USA · Englisch</value>
+  </data>
+  <data name="Persona_Admin" xml:space="preserve">
+    <value>Vorstand (Admin) – alles, was sich einstellen lässt</value>
+  </data>
+  <data name="Persona_Member" xml:space="preserve">
+    <value>Mitglied – spielt viel, Clubmeister</value>
+  </data>
+  <data name="Persona_Parent" xml:space="preserve">
+    <value>Elternteil – bucht für die Kinder, Familienmitgliedschaft</value>
+  </data>
+  <data name="Persona_Trainer" xml:space="preserve">
+    <value>Trainer – Kindertraining und Mannschaft</value>
+  </data>
+  <data name="Persona_Treasurer" xml:space="preserve">
+    <value>Kassier – Mitgliedsbeiträge, Zahlungen, Buchhaltung</value>
+  </data>
+  <data name="Persona_ClubhouseHost" xml:space="preserve">
+    <value>Wirt – führt die Deckel im Clubhaus</value>
+  </data>
+  <data name="Persona_TwoClubs" xml:space="preserve">
+    <value>Mitglied in beiden Clubs – zwischen Clubs wechseln</value>
+  </data>
+  <data name="Accounts_LogInAs" xml:space="preserve">
+    <value>Als {0} anmelden</value>
+  </data>
+</root>

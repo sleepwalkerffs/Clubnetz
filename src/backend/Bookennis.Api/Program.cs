@@ -58,6 +58,16 @@ app.UseForwardedHeaders();
 // responses, so the app doesn't need its own app.UseHsts() call.
 app.UseSecurityHeaders();
 
+// The public demo stays out of search engines
+if (appSettings.Demo.Enabled)
+{
+    app.Use(async (context, next) =>
+    {
+        context.Response.Headers["X-Robots-Tag"] = "noindex, nofollow";
+        await next();
+    });
+}
+
 // Configure the HTTP request pipeline.
 // The OpenAPI document of what a club API key can do is public. The document with all endpoints only exists in Development.
 // It may be read from any website (it is public and needs no sign-in), e.g. by the API reference on the landing page.
@@ -180,6 +190,12 @@ recurringJobs.AddOrUpdate<Bookennis.Api.Business.Weather.WeatherRefreshJob>(Book
 
 // Audit entries older than the retention period
 recurringJobs.AddOrUpdate<Bookennis.Api.Infrastructure.Audit.AuditRetentionJob>(Bookennis.Api.Infrastructure.Audit.AuditRetentionJob.JobId, job => job.Run(), Bookennis.Api.Infrastructure.Audit.AuditRetentionJob.Schedule);
+
+// The public demo wipes and fills its database every night
+if (appSettings.Demo.Enabled)
+    recurringJobs.AddOrUpdate<Bookennis.Api.Business.Demo.DemoResetJob>(Bookennis.Api.Business.Demo.DemoResetJob.JobId, job => job.Run(), Bookennis.Api.Business.Demo.DemoResetJob.Schedule(appSettings.Demo), new RecurringJobOptions { TimeZone = Bookennis.Domain.Clubs.ClubTimeZone.Default });
+else
+    recurringJobs.RemoveIfExists(Bookennis.Api.Business.Demo.DemoResetJob.JobId);
 
 container.Verify();
 

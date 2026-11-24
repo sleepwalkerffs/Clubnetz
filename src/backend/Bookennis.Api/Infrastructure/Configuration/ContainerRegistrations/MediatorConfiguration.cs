@@ -10,6 +10,8 @@ public static class MediatorConfiguration
 {
     public static void AddMediator(this Container container, IServiceCollection services)
     {
+        // The public demo only mails demo addresses (does nothing outside the demo)
+        container.RegisterDecorator<IRequestHandler<Fusonic.Extensions.Email.SendEmail, Unit>, Business.Demo.DemoEmailGuard>();
         container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(RequestValidationDecorator<,>));
         container.RegisterOutOfBandDecorators();
         container.RegisterDecorator(typeof(IRequestHandler<,>), typeof(TransactionalRequestHandlerDecorator<,>));

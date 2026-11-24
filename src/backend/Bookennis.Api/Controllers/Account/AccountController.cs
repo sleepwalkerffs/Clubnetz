@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Demo;
 using Bookennis.Api.Business.Account;
 using Bookennis.Api.Business.Admin;
 using Bookennis.Api.Infrastructure.Configuration;
@@ -11,6 +12,7 @@ namespace Bookennis.Api.Controllers.Account;
 public class AccountController(IMediator mediator) : ControllerBase
 {
     [EnableRateLimiting(RateLimitingConfiguration.EmailPolicy)]
+    [DisabledInDemo]
     [HttpPost("Register")]
     public Task RegisterUser(RegisterUserModel model, CancellationToken cancellationToken) =>
         mediator.Send(

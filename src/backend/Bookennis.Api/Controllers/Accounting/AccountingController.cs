@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Demo;
 using Bookennis.Api.Business.Accounting;
 using Bookennis.Api.Infrastructure.Authorization;
 using Bookennis.Api.Infrastructure.User;
@@ -189,6 +190,7 @@ public class AccountingController(IMediator mediator, IUserAccessor userAccessor
     public Task<List<AccountingReceiptDto>> GetAccountingReceiptInbox(int clubId, CancellationToken cancellationToken)
         => mediator.Send(new GetAccountingReceiptInbox(clubId), cancellationToken);
 
+    [DisabledInDemo]
     [HttpPost("receipts")]
     [Authorize(AuthorizationPolicies.AccountingManager)]
     [RequestSizeLimit(12 * 1024 * 1024)]

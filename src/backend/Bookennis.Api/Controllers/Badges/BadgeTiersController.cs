@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Demo;
 using Bookennis.Api.Business.Badges;
 using Bookennis.Api.Infrastructure.Authorization;
 using Bookennis.Shared.Controller.BadgeTiers;
@@ -35,6 +36,7 @@ public class BadgeTiersController(IMediator mediator) : ClubControllerBase
     public Task CopyBadgeTiers(int clubId, [FromBody] CopyBadgeTiersModel model, CancellationToken cancellationToken)
         => mediator.Send(new CopyBadgeTiers(clubId, model.SourceSeasonId, model.TargetSeasonId), cancellationToken);
 
+    [DisabledInDemo]
     [HttpPost("{tierId:int}/image")]
     [Authorize(AuthorizationPolicies.ClubAdministrator)]
     public Task UploadBadgeTierImage(int clubId, int tierId, IFormFile file, CancellationToken cancellationToken)

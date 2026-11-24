@@ -1,3 +1,4 @@
+using Bookennis.Client.Services.HttpClients.Demo;
 using Bookennis.Client.Services.HttpClients.Permissions;
 using Bookennis.Client.Services.HttpClients.Weather;
 using Bookennis.Client.Services.HttpClients.Profile;
@@ -87,6 +88,15 @@ public static class AddHttpClients
                 {
                     var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
                     client.BaseAddress = new Uri(apiUrl! + "Push/");
+                }
+            );
+
+        services
+            .AddHttpClient<IDemoHttpClient, DemoHttpClient>(
+                (serviceProvider, client) =>
+                {
+                    var apiUrl = serviceProvider.GetRequiredService<NavigationManager>().BaseApiUrl();
+                    client.BaseAddress = new Uri(apiUrl!);
                 }
             );
 

@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Demo;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Bookennis.Api.Business.Profile;
@@ -30,12 +31,14 @@ public class ProfileController(IMediator mediator, IUserAccessor userAccessor) :
     public async Task UpdateUserProfile(UpdateUserProfileModel model, CancellationToken cancellationToken) =>
         await mediator.Send(new UpdateUserProfile(model.FirstName, model.LastName, model.Birthday, (Gender)model.Gender, (Language)model.Language, model.Street, model.City, model.ZipCode, (Domain.User.Country)model.Country), cancellationToken);
 
+    [DisabledInDemo]
     [HttpPost("ChangeEmail")]
     [Authorize(AuthorizationPolicies.AccountOwner)]
     [EnableRateLimiting(RateLimitingConfiguration.EmailPolicy)]
     public async Task RequestEmailChange(ChangeEmailModel model, CancellationToken cancellationToken)
         => await mediator.Send(new RequestEmailChange(model.CurrentPassword, model.NewEmail), cancellationToken);
 
+    [DisabledInDemo]
     [HttpPost("ChangePassword")]
     [Authorize(AuthorizationPolicies.AccountOwner)]
     [EnableRateLimiting(RateLimitingConfiguration.AuthenticationPolicy)]
@@ -50,6 +53,7 @@ public class ProfileController(IMediator mediator, IUserAccessor userAccessor) :
     public async Task BecomeClubMember(BecomeClubMemberModel model, CancellationToken cancellationToken)
         => await mediator.Send(new BecomeClubMember(model.ClubId), cancellationToken);
 
+    [DisabledInDemo]
     [HttpPost("LeaveClub")]
     [Authorize(AuthorizationPolicies.AccountOwner)]
     public async Task LeaveClub(LeaveClubModel model, CancellationToken cancellationToken)
@@ -66,6 +70,7 @@ public class ProfileController(IMediator mediator, IUserAccessor userAccessor) :
     }
 
     /// <summary>Deletes the account of the current user with all personal data (GDPR Art. 17) and signs them out.</summary>
+    [DisabledInDemo]
     [HttpPost("DeleteAccount")]
     [Authorize(AuthorizationPolicies.AccountOwner)]
     [EnableRateLimiting(RateLimitingConfiguration.AuthenticationPolicy)]
@@ -76,6 +81,7 @@ public class ProfileController(IMediator mediator, IUserAccessor userAccessor) :
     public async Task<GetAvailableClubsResult> GetAvailableClubs(CancellationToken cancellationToken)
         => await mediator.Send(new GetAvailableClubs(), cancellationToken);
 
+    [DisabledInDemo]
     [HttpPost("picture")]
     [Consumes("multipart/form-data")]
     public async Task UploadProfilePicture(IFormFile file, CancellationToken cancellationToken)

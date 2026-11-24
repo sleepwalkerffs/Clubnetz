@@ -1,0 +1,53 @@
+@using Bookennis.Client.Localization.Components.Demo
+@using Bookennis.Client.Services
+@using Bookennis.Client.Services.HttpClients.Account
+@using Bookennis.Client.Services.Store.Demo
+@using Bookennis.Client.Services.Store.Push
+
+@implements IDisposable
+
+@* The public demo: makes clear that the clubs are invented, everything is reset at night and no email leaves *@
+@if (DemoStore.IsDemo)
+{
+    <div class="demo-banner" role="status">
+        <span class="demo-banner__emoji" aria-hidden="true">🎾</span>
+        <div class="demo-banner__body">
+            <div class="demo-banner__title">@Locale["Banner_Title"]</div>
+            <div class="demo-banner__text">@Locale["Banner_Text"]</div>
+        </div>
+        <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small" StartIcon="@Icons.Material.Filled.SwitchAccount"
+                   OnClick="SwitchAccount" Class="demo-banner__button">
+            @Locale["Banner_OtherAccount"]
+        </MudButton>
+    </div>
+}
+
+@code {
+    [Inject] private IDemoStore DemoStore { get; set; } = null!;
+    [Inject] private IStringLocalizer<DemoLocale> Locale { get; set; } = null!;
+    [Inject] private IPushStore PushStore { get; set; } = null!;
+    [Inject] private IAccountHttpClient AccountHttpClient { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        DemoStore.OnDemoChanged += OnDemoChanged;
+        await DemoStore.Load();
+    }
+
+    // Like logging out in the menu: this device must not keep the notifications of the account it leaves
+    private async Task SwitchAccount()
+    {
+        await PushStore.DetachDevice();
+        var result = await AccountHttpClient.LogoutUser();
+        if (result.Success)
+        {
+            // A full load: the next account may be in the other club, nothing of this one may stay in the stores
+            NavigationManager.NavigateTo("account/login", forceLoad: true);
+        }
+    }
+
+    private void OnDemoChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => DemoStore.OnDemoChanged -= OnDemoChanged;
+}

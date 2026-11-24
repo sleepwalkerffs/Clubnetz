@@ -1,3 +1,4 @@
+using Bookennis.Api.Business.Demo;
 using Bookennis.Api.Business.Clubhouse;
 using Bookennis.Api.Infrastructure;
 using Bookennis.Api.Infrastructure.Authorization;
@@ -103,6 +104,7 @@ public class ClubhouseController(IMediator mediator, IUserAccessor userAccessor,
         => mediator.Send(new GetClubhouseSumUpAccount(clubId), cancellationToken);
 
     /// <summary>The page of SumUp where the host allows Clubnetz to take payments to their account; it leads back to <c>api/SumUp/Callback</c>.</summary>
+    [DisabledInDemo]
     [HttpPost("sumup/connect")]
     [Authorize(AuthorizationPolicies.ClubhouseHost)]
     public Task<ClubhouseRedirectResult> ConnectClubhouseSumUp(int clubId, CancellationToken cancellationToken)
