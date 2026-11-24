@@ -290,6 +290,9 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
     /// <summary>The cookie header of a user who signed in with email and password like in the app.</summary>
     public Task<string> Login(SeededUser user) => Task.FromResult(cookies[user.UserId]);
 
+    /// <summary>A new sign-in (a session of its own) of a user the test created, e.g. a second device.</summary>
+    public Task<string> SignInAgain(SeededUser user) => SignIn(user);
+
     private async Task<string> SignIn(SeededUser user)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/Account/Login");
@@ -614,7 +617,13 @@ public sealed class ApiSecurityFixture : IAsyncLifetime
             // The sweeps set club locations: no weather is fetched from MET Norway
             builder.UseSetting("Weather:IsEnabled", "false");
 
-            builder.ConfigureTestServices(services => services.AddTransient<IStartupFilter, ProbeStartupFilter>());
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddTransient<IStartupFilter, ProbeStartupFilter>();
+
+                // The security stamp is checked on every request (30 minutes in the app), so every test also runs through the check
+                services.Configure<SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.Zero);
+            });
         }
     }
 
