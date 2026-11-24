@@ -52,7 +52,7 @@
     <value>Demo ausprobieren</value>
   </data>
   <data name="Accounts_Text" xml:space="preserve">
-    <value>Melde dich mit einem Klick als eine dieser Personen an. Alle haben das Passwort {0}.</value>
+    <value>Wähle einen Club und eine Person, ganz ohne Registrierung. Alle haben das Passwort {0}.</value>
   </data>
   <data name="Region_eu" xml:space="preserve">
     <value>Club in Österreich · Texte auf Deutsch</value>
@@ -83,5 +83,11 @@
   </data>
   <data name="Accounts_LogInAs" xml:space="preserve">
     <value>Als {0} anmelden</value>
+  </data>
+  <data name="Accounts_Club" xml:space="preserve">
+    <value>Club</value>
+  </data>
+  <data name="Accounts_Person" xml:space="preserve">
+    <value>Anmelden als</value>
   </data>
 </root>

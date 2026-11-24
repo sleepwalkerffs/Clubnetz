@@ -259,6 +259,35 @@ a {
     background: rgba(255, 255, 255, 0.1);
 }
 
+/* The public demo in the hero: no registration, one click */
+.demo-badge {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 1px 9px;
+    border-radius: 999px;
+    background: var(--amber);
+    color: #422006;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    vertical-align: 1px;
+}
+
+.hero__note + .hero__note {
+    margin-top: 4px;
+}
+
+.cta .btn + .btn {
+    margin-left: 8px;
+}
+
+@media (max-width: 520px) {
+    .cta .btn + .btn {
+        margin: 12px 0 0;
+    }
+}
+
 .btn--solid {
     background: var(--green);
     color: #fff;

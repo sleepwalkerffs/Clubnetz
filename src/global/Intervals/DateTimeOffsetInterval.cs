@@ -9,9 +9,8 @@ public record DateTimeOffsetInterval
         if (to < from)
             throw new ArgumentException("To value can't be before from value");
 
-        if (to.Offset != from.Offset)
-            throw new ArgumentException("Values don't have the same offset");
-
+        // The offsets may differ: the client reads times in local time, so an interval across a daylight saving change
+        // starts at +01:00 and ends at +02:00. Comparing and subtracting DateTimeOffset values works on the instant.
         From = from;
         To = to;
     }

@@ -18,58 +18,25 @@
     color: var(--mud-palette-text-secondary);
 }
 
-.demo-accounts__club {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    column-gap: 8px;
-    margin-top: 14px;
-    margin-bottom: 6px;
-}
-
-.demo-accounts__club-name {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--mud-palette-text-primary);
-}
-
-.demo-accounts__club-region {
-    font-size: 0.78rem;
-    color: var(--mud-palette-text-secondary);
-}
-
-.demo-accounts__list {
+.demo-accounts__fields {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
 }
 
-.demo-accounts__account {
+/* Entries of the two lists: the name and what the club or person stands for */
+.demo-accounts__option {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 2px;
-    padding: 8px 10px;
-    border-radius: 12px;
-    border: 1px solid var(--mud-palette-lines-default);
-    background: var(--mud-palette-surface);
-    color: var(--mud-palette-text-primary);
-    text-align: left;
-    cursor: pointer;
-    font: inherit;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    padding: 2px 0;
+    white-space: normal;
 }
 
-.demo-accounts__account:hover:not(:disabled),
-.demo-accounts__account:focus-visible {
-    border-color: var(--mud-palette-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mud-palette-primary) 25%, transparent);
-    outline: none;
-}
-
-.demo-accounts__account:disabled {
-    opacity: 0.6;
-    cursor: progress;
+.demo-accounts ::deep .demo-accounts__login {
+    margin-top: 14px;
+    text-transform: none;
 }
 
 .demo-accounts__name {

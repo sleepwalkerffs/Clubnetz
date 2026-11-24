@@ -1,32 +1,58 @@
+@using System.Globalization
 @using Bookennis.Client.Localization.Components.Demo
 @using Bookennis.Client.Services.Store.Demo
 @using Bookennis.Shared.Controller.Demo
 
 @implements IDisposable
 
-@* The login page of the public demo: one click logs in as one of the known people *@
-@if (DemoStore.Info is { IsEnabled: true } info)
+@* The login page of the public demo: pick a club, then one of its known people, and log in with one click *@
+@if (DemoStore.Info is { IsEnabled: true } info && info.Clubs.Count > 0)
 {
+    var club = info.Clubs[Math.Clamp(clubIndex, 0, info.Clubs.Count - 1)];
+    var account = club.Accounts.FirstOrDefault(a => a.Email == accountEmail) ?? club.Accounts.FirstOrDefault();
+
     <section class="demo-accounts" aria-labelledby="demo-accounts-title">
         <div id="demo-accounts-title" class="demo-accounts__title">🎾 @Locale["Accounts_Title"]</div>
         <div class="demo-accounts__text">@string.Format(Locale["Accounts_Text"], info.Password)</div>
-        @foreach (var club in info.Clubs)
-        {
-            <div class="demo-accounts__club">
-                <div class="demo-accounts__club-name">@club.Name</div>
-                <div class="demo-accounts__club-region">@Locale[$"Region_{club.Region}"]</div>
-            </div>
-            <div class="demo-accounts__list">
-                @foreach (var account in club.Accounts)
+
+        <div class="demo-accounts__fields">
+            <MudSelect T="int" Value="clubIndex" ValueChanged="SelectClub" Label="@Locale["Accounts_Club"]" Variant="Variant.Outlined"
+                       Dense="true" Disabled="Disabled"
+                       ToStringFunc="@(i => i >= 0 && i < info.Clubs.Count ? info.Clubs[i].Name : string.Empty)">
+                @for (var i = 0; i < info.Clubs.Count; i++)
                 {
-                    <button type="button" class="demo-accounts__account" disabled="@Disabled"
-                            aria-label="@string.Format(Locale["Accounts_LogInAs"], account.Name)"
-                            @onclick="() => OnPick.InvokeAsync((account.Email, info.Password ?? string.Empty))">
-                        <span class="demo-accounts__name">@account.Name</span>
-                        <span class="demo-accounts__role">@Locale[$"Persona_{account.Persona}"]</span>
-                    </button>
+                    var option = info.Clubs[i];
+                    <MudSelectItem T="int" Value="i">
+                        <span class="demo-accounts__option">
+                            <span class="demo-accounts__name">@option.Name</span>
+                            <span class="demo-accounts__role">@Locale[$"Region_{option.Region}"]</span>
+                        </span>
+                    </MudSelectItem>
                 }
-            </div>
+            </MudSelect>
+
+            <MudSelect T="string" Value="account?.Email" ValueChanged="@(email => accountEmail = email)" Label="@Locale["Accounts_Person"]"
+                       Variant="Variant.Outlined" Dense="true" Disabled="Disabled"
+                       ToStringFunc="@(email => club.Accounts.FirstOrDefault(a => a.Email == email)?.Name ?? string.Empty)">
+                @foreach (var option in club.Accounts)
+                {
+                    <MudSelectItem T="string" Value="option.Email">
+                        <span class="demo-accounts__option">
+                            <span class="demo-accounts__name">@option.Name</span>
+                            <span class="demo-accounts__role">@Locale[$"Persona_{option.Persona}"]</span>
+                        </span>
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+
+        @if (account is not null)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="demo-accounts__login" Disabled="Disabled"
+                       StartIcon="@Icons.Material.Filled.Login"
+                       OnClick="() => OnPick.InvokeAsync((account.Email, info.Password ?? string.Empty))">
+                @string.Format(Locale["Accounts_LogInAs"], account.Name)
+            </MudButton>
         }
     </section>
 }
@@ -40,13 +66,37 @@
     [Inject] private IDemoStore DemoStore { get; set; } = null!;
     [Inject] private IStringLocalizer<DemoLocale> Locale { get; set; } = null!;
 
+    private int clubIndex = -1;
+    private string? accountEmail;
+
     protected override async Task OnInitializedAsync()
     {
         DemoStore.OnDemoChanged += OnDemoChanged;
         await DemoStore.Load();
+        PreselectClub();
     }
 
-    private void OnDemoChanged() => InvokeAsync(StateHasChanged);
+    // German speakers start with the Austrian club, everyone else with the US club
+    private void PreselectClub()
+    {
+        if (clubIndex >= 0 || DemoStore.Info is not { IsEnabled: true } info || info.Clubs.Count == 0)
+            return;
+
+        var region = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de" ? "eu" : "us";
+        clubIndex = Math.Max(0, info.Clubs.ToList().FindIndex(c => c.Region == region));
+    }
+
+    private void SelectClub(int index)
+    {
+        clubIndex = index;
+        accountEmail = null; // the first person of the club (its admin)
+    }
+
+    private void OnDemoChanged() => InvokeAsync(() =>
+    {
+        PreselectClub();
+        StateHasChanged();
+    });
 
     public void Dispose() => DemoStore.OnDemoChanged -= OnDemoChanged;
 }
