@@ -52,7 +52,7 @@
     <value>Try the demo</value>
   </data>
   <data name="Accounts_Text" xml:space="preserve">
-    <value>Log in with one click as one of these people. They all have the password {0}.</value>
+    <value>Pick a club and a person, no registration needed. Everyone has the password {0}.</value>
   </data>
   <data name="Region_eu" xml:space="preserve">
     <value>Club in Austria · texts in German</value>
@@ -83,5 +83,11 @@
   </data>
   <data name="Accounts_LogInAs" xml:space="preserve">
     <value>Log in as {0}</value>
+  </data>
+  <data name="Accounts_Club" xml:space="preserve">
+    <value>Club</value>
+  </data>
+  <data name="Accounts_Person" xml:space="preserve">
+    <value>Log in as</value>
   </data>
 </root>
